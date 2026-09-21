@@ -1,0 +1,29 @@
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('session_id') || undefined;
+
+    const result = await db.getMapData(sessionId);
+    const mapPoints = result.points;
+    const totalCampaignVisits = mapPoints.reduce((sum: number, p: any) => sum + (p.total_visits || 0), 0);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        totalCampaignVisits,
+        totalRestaurants: result.stats.foodSpots,
+        points: mapPoints,
+        stats: result.stats,
+        currentUserPoint: result.currentUserPoint
+      }
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch map data';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}
