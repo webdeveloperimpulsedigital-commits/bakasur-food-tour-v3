@@ -719,12 +719,47 @@ export default function CampaignPage() {
     });
   };
 
+  const getVideoContainerHeightClass = (frame: number) => {
+    switch (frame) {
+      case 1:
+        // Welcome Frame: Bakasur pointing down
+        return 'h-[62%] xs:h-[64%] sm:h-[66%]';
+      case 2:
+        // Restaurant search: Search bar and dropdown suggestions
+        return 'h-[48%] xs:h-[50%] sm:h-[52%]';
+      case 3:
+      case 4:
+        // Dish selection: Dish cards and confirm button
+        return 'h-[48%] xs:h-[50%] sm:h-[52%]';
+      case 6:
+        // Food Tour Eating Spot (Dosa / Pav Bhaji) / Trailer
+        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
+      case 7:
+        // Acidity: Plot twist - Pet ne emergency brake laga di
+        return 'h-[60%] xs:h-[62%] sm:h-[64%]';
+      case 8:
+        // Help Bakasur: Ab Bakasur ko khaana nahi...
+        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
+      case 9:
+        // Gastrium In: Large vertical video
+        return 'h-[72%] xs:h-[74%] sm:h-[76%]';
+      case 10:
+        // Shukriya Dost: Thumbs up video
+        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
+      case 12:
+        // Registration form: Needs space for input fields
+        return 'h-[44%] xs:h-[46%] sm:h-[48%]';
+      default:
+        return 'h-[58%] xs:h-[60%] sm:h-[62%]';
+    }
+  };
+
   return (
     <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#050b1e] overflow-hidden select-none p-0 md:p-6 lg:p-8">
       {/* Responsive Canvas: Mobile portrait stack (< md), Desktop split screen (md:flex-row, Left: Video, Right: Content) */}
       {/* If Frame 5: FULL SCREEN EATING STAGE (auto-transitions after 10s) */}
       {currentFrame === 5 ? (
-        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#182858] md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative">
+        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#031058] md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative">
           <BakasurEatingStage
             dishName={selectedDish?.name || 'Signature Food'}
             dishImage={selectedDish?.image}
@@ -787,7 +822,7 @@ export default function CampaignPage() {
         <div className={`w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] ${currentFrame === 1 ? 'bg-[#f4f6fa]' : 'bg-white'} md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden flex flex-col md:flex-row relative`}>
           
           {/* Left Side on Desktop / Top Half on Mobile: Royal Blue Character Stage */}
-          <div className="w-full md:w-1/2 h-[46%] sm:h-[48%] md:h-full relative overflow-hidden bg-[#182858] shrink-0">
+          <div className={`w-full md:w-1/2 ${getVideoContainerHeightClass(currentFrame)} md:h-full relative overflow-hidden bg-[#182858] shrink-0`}>
             <BakasurVideoPlayer
               videoUrl={
                 currentFrame === 1
@@ -800,6 +835,8 @@ export default function CampaignPage() {
                   ? "/images/all-frames/Showing Love.mp4"
                   : currentFrame === 7 || currentFrame === 8
                   ? "/images/all-frames/Fire on stomach v2.mp4"
+                  : currentFrame === 9
+                  ? "/images/all-frames/Drinking Gastrium.mp4"
                   : currentFrame === 10
                   ? "/images/all-frames/Thumbs Up.mp4"
                   : currentFrame === 12
@@ -829,7 +866,7 @@ export default function CampaignPage() {
           </div>
 
           {/* Right Side on Desktop / Bottom Half on Mobile: Content Card */}
-          <div className={`w-full md:w-1/2 flex-1 md:h-full flex flex-col overflow-y-auto ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : currentFrame <= 3 ? 'bg-white p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start md:justify-center`}>
+          <div className={`w-full md:w-1/2 flex-1 md:h-full flex flex-col overflow-y-auto ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : currentFrame <= 3 || currentFrame === 9 ? 'bg-white p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start md:justify-center`}>
             <main className="flex-1 w-full flex flex-col justify-start md:justify-center min-h-0 relative">
               {/* Frame 1: Welcome */}
               {currentFrame === 1 && (

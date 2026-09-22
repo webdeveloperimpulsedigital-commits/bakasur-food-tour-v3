@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Restaurant, Dish } from '@/lib/db';
 
 interface Frame6FeedingLoopProps {
@@ -14,65 +14,34 @@ interface Frame6FeedingLoopProps {
 export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
   onCompleteLoop
 }) => {
-  const [secondsRemaining, setSecondsRemaining] = useState(10.0);
-
   // Auto-advance to next frame (Frame 7 - Acidity Appears) after 10 seconds if user doesn't click "AUR KHILAO"
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        const next = parseFloat((prev - 0.1).toFixed(1));
-        return next > 0 ? next : 0;
-      });
-    }, 100);
-
     const timeout = setTimeout(() => {
       onCompleteLoop();
     }, 10000);
 
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
+    return () => clearTimeout(timeout);
   }, [onCompleteLoop]);
 
-  const progressPercent = Math.min(100, Math.max(0, ((10 - secondsRemaining) / 10) * 100));
-
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-4 sm:py-6 md:py-8 px-4 sm:px-6 md:px-8 gap-5 sm:gap-6 md:gap-8">
+    <div className="w-full h-full min-h-0 flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-3 xs:py-4 sm:py-6 md:py-8 px-4 xs:px-6 sm:px-8 md:px-10 gap-2.5 xs:gap-3.5 sm:gap-5 overflow-y-auto scrollbar-thin">
       {/* 2. Headline matching Image 1: Itne mein Food Tour nahi, sirf food trailer banta hai */}
-      <div className="space-y-1 sm:space-y-2">
-        <h1 className="text-[26px] xs:text-[30px] sm:text-[34px] md:text-[40px] font-black text-[#0B1B48] tracking-tight leading-[1.15]">
-          Itne mein Food Tour nahi,<br />
+      <div className="space-y-1 shrink-0">
+        <h1 className="text-[22px] xs:text-[26px] sm:text-[32px] md:text-[40px] font-black text-[#0B1B48] tracking-tight leading-[1.15]">
+          Itne mein Food Tour nahi,<br className="hidden xs:inline" />
           sirf <span className="text-[#D4380D]">food trailer</span> banta hai.
         </h1>
       </div>
 
       {/* 3. Primary CTA: AUR KHILAO */}
-      <div className="shrink-0 w-full pt-1 sm:pt-2 space-y-3">
+      <div className="shrink-0 w-full pt-0.5 xs:pt-1 sm:pt-2">
         <button
           onClick={onCompleteLoop}
           type="button"
-          className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base sm:text-lg md:text-xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
+          className="w-full py-3 xs:py-3.5 sm:py-4 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base xs:text-lg sm:text-xl md:text-2xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
         >
           AUR KHILAO
         </button>
-
-        {/* 10s Auto-Advance Progress & Timer Indicator */}
-        <div className="w-full space-y-1.5 px-1">
-          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
-            <div
-              className="h-full bg-gradient-to-r from-orange-400 to-[#D4380D] transition-all duration-100 ease-linear rounded-full"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 font-semibold">
-            <div className="inline-flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#D4380D] animate-ping" />
-              <span>Next up in {Math.ceil(secondsRemaining)}s</span>
-            </div>
-            <span className="text-slate-400 font-medium">Tap button to skip</span>
-          </div>
-        </div>
       </div>
     </div>
   );
