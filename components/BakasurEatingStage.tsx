@@ -53,22 +53,15 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const hasBittenThisCycleRef = useRef<boolean>(false);
   const lastCycleIndexRef = useRef<number>(0);
 
-  // 1. Prepare user's selected dish visual asset (Strictly the exact selected dish image)
+  // 1. Prepare user's selected dish visual asset (Strictly matches the exact selected dish)
   const selectedDishItem = useMemo(() => {
     const safeDishName = dishName || 'Food';
-    let finalImage = '';
-
-    // Prioritize the exact dishImage selected by the user
-    if (dishImage && !dishImage.includes('bakasur') && (dishImage.startsWith('/') || dishImage.startsWith('http') || dishImage.startsWith('data:'))) {
-      finalImage = dishImage;
-    } else {
-      const primaryVisual = getDishVisualAssets(safeDishName, dishImage);
-      finalImage = primaryVisual.flyingImage || primaryVisual.plateImage;
-    }
+    const visual = getDishVisualAssets(safeDishName, dishImage);
+    const resolvedImage = visual.flyingImage || visual.plateImage || dishImage;
 
     return {
       name: safeDishName,
-      image: finalImage || '/images/eating/thali_dish.jpg'
+      image: resolvedImage || '/images/eating/bhakri_bhaji_dish_flying.png'
     };
   }, [dishName, dishImage]);
 
@@ -173,7 +166,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
   // Dish position & scale as it flies in ONE BY ONE from the left side into mouth:
   // Coordinates are relative to Bakasur's mouth: (0, 0) is the mouth cavity opening
-  let dishX = -320;
+  let dishX = -420;
   let dishScale = 1.0;
   let dishOpacity = 1.0;
 
@@ -182,7 +175,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     const t = cycleProgress / 0.60;
     // Smooth ease-out curve
     const ease = 1 - Math.pow(1 - t, 2.2);
-    dishX = -320 * (1 - ease);
+    dishX = -420 * (1 - ease);
     dishScale = 0.75 + ease * 0.35;
     dishOpacity = Math.min(1, t * 3.5);
   } else if (cycleProgress >= 0.60 && cycleProgress < 0.72) {
@@ -292,12 +285,12 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </div>
 
         {/* RIGHT SIDE: BAKASUR WITH SYNCHRONIZED CHEWING & MOUTH ANIMATION */}
-        <div className="absolute right-0 bottom-0 w-[85%] xs:w-[80%] sm:w-[72%] md:w-[65%] h-[80%] sm:h-[86%] max-h-[600px] flex items-end justify-end pointer-events-none select-none z-10 mr-0 sm:mr-2 md:mr-6">
+        <div className="absolute -right-6 xs:-right-10 sm:-right-14 md:-right-20 lg:-right-24 bottom-0 h-[84%] xs:h-[88%] sm:h-[93%] md:h-[98%] max-h-[740px] aspect-[640/800] flex items-end justify-end pointer-events-none select-none z-10">
           <div className="relative w-full h-full flex items-end justify-end">
 
             {/* BITE CRUNCH IMPACT SPARK & CHOMP FLASH */}
             {biteFlash && (
-              <div className="absolute top-[57.5%] left-[10%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-35">
+              <div className="absolute top-[48.8%] left-[8.8%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-35">
                 <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-amber-300/90 blur-xs animate-ping" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-black text-sm sm:text-lg drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] whitespace-nowrap">
                   CHOMP! 💥
@@ -306,12 +299,12 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             )}
 
             {/* SELECTED DISH FEEDING TRACK */}
-            {/* Origin (0,0) is calibrated directly at Bakasur's mouth cavity opening */}
+            {/* Origin (0,0) is calibrated directly at Bakasur's mouth cavity opening (x=56px, y=390px in 640x800 frame) */}
             <div
               className="absolute pointer-events-none z-25"
               style={{
-                top: '57.5%',
-                left: '10%'
+                top: '48.8%',
+                left: '8.8%'
               }}
             >
               {/* THE USER'S SELECTED FOOD DISH (Coming one by one from left side) */}
@@ -332,13 +325,14 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                 </div>
 
                 {/* User-Selected Dish Image (Circular dish with clean border) */}
-                <div className="relative w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 rounded-full overflow-hidden bg-slate-900/60 p-0.5 border-2 border-amber-300/80 shadow-[0_4px_20px_rgba(0,0,0,0.8)] shrink-0 flex items-center justify-center">
+                <div className="relative w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-slate-900/70 p-0.5 border-2 border-amber-300 shadow-[0_4px_24px_rgba(0,0,0,0.85)] shrink-0 flex items-center justify-center">
                   <img
                     src={selectedDishItem.image}
                     alt={selectedDishItem.name}
                     className="w-full h-full object-cover rounded-full"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/images/eating/butter_chicken_dish_flying.png';
+                      const fallback = getDishVisualAssets(selectedDishItem.name);
+                      (e.currentTarget as HTMLImageElement).src = fallback.flyingImage || fallback.plateImage || '/images/eating/bhakri_bhaji_dish_flying.png';
                     }}
                   />
                 </div>
@@ -354,7 +348,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             <img
               src={`/images/chewing/frame_${String(frameIndex).padStart(3, '0')}.webp`}
               alt="Bakasur Eating Action"
-              className={`w-full h-full object-contain object-bottom pointer-events-none transition-transform duration-75 ${
+              className={`w-full h-full object-contain object-right-bottom pointer-events-none transition-transform duration-75 ${
                 biteFlash ? 'scale-[1.03] brightness-110' : 'scale-100'
               }`}
             />

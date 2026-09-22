@@ -152,14 +152,27 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 13. Puran Poli / Roti / Paratha / Naan
+  // 13. Bhakri / Bhakri Bhaji / Pithla Bhakri / Jowar Bhakri / Thecha
+  if (
+    n.includes('bhakri') ||
+    n.includes('pithla') ||
+    n.includes('thecha') ||
+    (n.includes('bhaji') && !n.includes('pav')) ||
+    img.includes('bhakri')
+  ) {
+    return {
+      plateImage: '/images/eating/bhakri_bhaji_dish.jpg',
+      flyingImage: '/images/eating/bhakri_bhaji_dish_flying.png'
+    };
+  }
+
+  // 14. Puran Poli / Roti / Paratha / Naan
   if (
     n.includes('puran') ||
     n.includes('poli') ||
     n.includes('roti') ||
     n.includes('paratha') ||
     n.includes('naan') ||
-    n.includes('bhakri') ||
     img.includes('puran_poli')
   ) {
     return {
