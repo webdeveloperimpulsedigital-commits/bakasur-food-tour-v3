@@ -17,7 +17,7 @@ export const Frame10Submitted: React.FC<Frame10SubmittedProps> = ({
   const restaurantName = restaurant?.name || 'Tumhara Favourite Spot';
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-6 sm:py-8 md:py-10 px-5 sm:px-8 md:px-10 gap-3.5 sm:gap-5 md:gap-6 overflow-y-auto scrollbar-thin">
+    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-3.5 sm:py-5 md:py-8 px-5 sm:px-8 md:px-10 gap-2.5 sm:gap-4 overflow-y-auto scrollbar-thin">
       {/* 2. Main Headline - Exactly matching User Mockup 2 */}
       <div className="space-y-1 sm:space-y-2">
         <h1 className="text-[30px] xs:text-[34px] sm:text-[40px] md:text-[46px] font-black tracking-tight leading-[1.12]">

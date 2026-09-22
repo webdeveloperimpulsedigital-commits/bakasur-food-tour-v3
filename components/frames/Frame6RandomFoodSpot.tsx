@@ -102,7 +102,7 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
       className="w-full h-full flex flex-col md:flex-row bg-white overflow-hidden relative select-none cursor-pointer"
     >
       {/* LEFT (Desktop) / TOP (Mobile): Visual Media Showcase */}
-      <div className="w-full md:w-1/2 h-[64%] xs:h-[66%] sm:h-[68%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
+      <div className="w-full md:w-1/2 h-[66%] xs:h-[68%] sm:h-[70%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
         {/* Media (Eating video or Empty plate video - clean without top overlay buttons) */}
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
           {isVideo ? (
@@ -137,10 +137,10 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
       </div>
 
       {/* RIGHT (Desktop) / BOTTOM (Mobile): Clean Punchy Copy & Action Section */}
-      <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col justify-center items-start text-left bg-white py-5 sm:py-7 md:py-9 px-5 sm:px-8 md:px-10 z-20 gap-3.5 sm:gap-5 overflow-y-auto scrollbar-thin">
+      <div className="w-full md:w-1/2 flex-1 md:h-full min-h-0 flex flex-col justify-center items-start text-left bg-white py-4 xs:py-5 sm:py-7 md:py-9 px-5 sm:px-8 md:px-10 z-20 gap-3 sm:gap-4 overflow-y-auto scrollbar-thin">
         {/* Comedic Headline matching reference mockup */}
-        <div className="space-y-1 sm:space-y-2 min-h-[70px] sm:min-h-[85px] flex flex-col justify-center">
-          <h1 className="text-[30px] xs:text-[34px] sm:text-[40px] md:text-[46px] font-black text-[#0B1B48] tracking-tight leading-[1.12]">
+        <div className="space-y-1 shrink-0 flex flex-col justify-center">
+          <h1 className="text-[28px] xs:text-[32px] sm:text-[38px] md:text-[44px] font-black text-[#0B1B48] tracking-tight leading-[1.12]">
             {activeCopy.line1}
             <br />
             {activeCopy.line2Prefix}
@@ -150,7 +150,7 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
         </div>
 
         {/* Step 2: Clean "AUR KHILAO" Button */}
-        <div className="w-full pt-1 sm:pt-2">
+        <div className="w-full pt-1 shrink-0">
           {currentStep === 2 && (
             <div className="w-full space-y-2 animate-in fade-in duration-200">
               {/* Action Button: Click to advance immediately */}
@@ -160,7 +160,7 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
                   onFeedMore();
                 }}
                 type="button"
-                className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-lg sm:text-xl md:text-2xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
+                className="w-full py-3.5 sm:py-4 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base sm:text-lg md:text-xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
               >
                 AUR KHILAO
               </button>

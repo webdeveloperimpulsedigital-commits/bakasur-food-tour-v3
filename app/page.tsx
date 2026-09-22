@@ -722,33 +722,35 @@ export default function CampaignPage() {
   const getVideoContainerHeightClass = (frame: number) => {
     switch (frame) {
       case 1:
-        // Welcome Frame: Bakasur pointing down - full view of horns, torso, and pointing hands
-        return 'h-[68%] xs:h-[69%] sm:h-[70%]';
+        // Welcome Frame: Bakasur pointing down
+        return 'h-[62%] xs:h-[64%] sm:h-[66%]';
       case 2:
         // Restaurant search: Search bar and dropdown suggestions
-        return 'h-[52%] xs:h-[53%] sm:h-[54%]';
+        return 'h-[48%] xs:h-[50%] sm:h-[52%]';
       case 3:
       case 4:
         // Dish selection: Dish cards and confirm button
-        return 'h-[50%] xs:h-[51%] sm:h-[52%]';
+        return 'h-[48%] xs:h-[50%] sm:h-[52%]';
       case 6:
-        // Food Tour Eating Spot (Dosa / Pav Bhaji)
-        return 'h-[64%] xs:h-[66%] sm:h-[68%]';
+        // Food Tour Eating Spot (Dosa / Pav Bhaji) / Trailer
+        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
       case 7:
+        // Acidity: Plot twist - Pet ne emergency brake laga di
+        return 'h-[60%] xs:h-[62%] sm:h-[64%]';
       case 8:
-        // Acidity / Help Bakasur: Burning stomach video needs to show his stomach & hands
-        return 'h-[66%] xs:h-[68%] sm:h-[70%]';
+        // Help Bakasur: Ab Bakasur ko khaana nahi...
+        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
       case 9:
-        // Gastrium In: Large vertical video (~72-74%) matching mockup
-        return 'h-[72%] xs:h-[73%] sm:h-[74%]';
+        // Gastrium In: Large vertical video
+        return 'h-[72%] xs:h-[74%] sm:h-[76%]';
       case 10:
         // Shukriya Dost: Thumbs up video
-        return 'h-[64%] xs:h-[66%] sm:h-[68%]';
+        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
       case 12:
         // Registration form: Needs space for input fields
-        return 'h-[46%] xs:h-[48%] sm:h-[50%]';
+        return 'h-[44%] xs:h-[46%] sm:h-[48%]';
       default:
-        return 'h-[62%] xs:h-[64%] sm:h-[66%]';
+        return 'h-[58%] xs:h-[60%] sm:h-[62%]';
     }
   };
 

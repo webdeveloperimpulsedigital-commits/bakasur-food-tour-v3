@@ -24,21 +24,21 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
   }, [onCompleteLoop]);
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-4 sm:py-6 md:py-8 px-4 sm:px-6 md:px-8 gap-5 sm:gap-6 md:gap-8">
+    <div className="w-full h-full min-h-0 flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-3 xs:py-4 sm:py-6 md:py-8 px-4 xs:px-6 sm:px-8 md:px-10 gap-2.5 xs:gap-3.5 sm:gap-5 overflow-y-auto scrollbar-thin">
       {/* 2. Headline matching Image 1: Itne mein Food Tour nahi, sirf food trailer banta hai */}
-      <div className="space-y-1 sm:space-y-2">
-        <h1 className="text-[30px] xs:text-[34px] sm:text-[40px] md:text-[46px] font-black text-[#0B1B48] tracking-tight leading-[1.12]">
-          Itne mein Food Tour nahi,<br />
+      <div className="space-y-1 shrink-0">
+        <h1 className="text-[22px] xs:text-[26px] sm:text-[32px] md:text-[40px] font-black text-[#0B1B48] tracking-tight leading-[1.15]">
+          Itne mein Food Tour nahi,<br className="hidden xs:inline" />
           sirf <span className="text-[#D4380D]">food trailer</span> banta hai.
         </h1>
       </div>
 
       {/* 3. Primary CTA: AUR KHILAO */}
-      <div className="shrink-0 w-full pt-1 sm:pt-2">
+      <div className="shrink-0 w-full pt-0.5 xs:pt-1 sm:pt-2">
         <button
           onClick={onCompleteLoop}
           type="button"
-          className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-lg sm:text-xl md:text-2xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
+          className="w-full py-3 xs:py-3.5 sm:py-4 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base xs:text-lg sm:text-xl md:text-2xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
         >
           AUR KHILAO
         </button>
