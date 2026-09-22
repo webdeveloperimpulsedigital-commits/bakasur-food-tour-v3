@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Volume2, VolumeX, ArrowLeft, Flame } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 
 import { DishVisualAssets, getDishVisualAssets, getDishExactPlateImage, getDishExactFlyingImage } from '@/lib/dishAssets';
@@ -26,12 +27,11 @@ interface BakasurEatingStageProps {
   onPlayBite?: () => void;
 }
 
-// Calibrated cycle for streaming food items into mouth
-const BITE_CYCLE_MS = 1350; // ms per food item consumed
-const SPACING_PX = 100; // distance between consecutive flying items in the flight path
+// 2200ms per food consumption cycle (smooth flight from left + bite + active chewing)
+const BITE_CYCLE_MS = 2200;
 
 export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
-  dishName = 'Samosa',
+  dishName = 'Food',
   dishImage,
   soundEnabled = true,
   onToggleSound,
@@ -46,7 +46,6 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [biteFlash, setBiteFlash] = useState<boolean>(false);
   const [cycleProgress, setCycleProgress] = useState<number>(0); // 0 to 1 in each bite cycle
   const [dishesDevouredCount, setDishesDevouredCount] = useState<number>(0);
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(10);
 
   const cycleStartTimeRef = useRef<number>(performance.now());
   const hasBittenThisCycleRef = useRef<boolean>(false);
@@ -70,7 +69,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     }
   }, []);
 
-  // 3. Slide rotation timer: toggles between Slide 1 and Slide 2 every 4 seconds
+  // 3. Slide rotation timer: toggles between Slide 1 and Slide 2 every 3.5 seconds
   useEffect(() => {
     const slideTimer = setInterval(() => {
       setIsSlideTransitioning(true);
@@ -78,28 +77,21 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         setActiveSlide((prev) => (prev === 0 ? 1 : 0));
         setIsSlideTransitioning(false);
       }, 250);
-    }, 4000);
+    }, 3500);
 
     return () => clearInterval(slideTimer);
   }, []);
 
   // 4. Overall stage 10s countdown to auto-advance to Frame 6
   useEffect(() => {
-    const countdownInterval = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          if (onComplete) onComplete();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const timer = setTimeout(() => {
+      if (onComplete) onComplete();
+    }, 10000);
 
-    return () => clearInterval(countdownInterval);
+    return () => clearTimeout(timer);
   }, [onComplete]);
 
-  // 5. Continuous high-fps animation loop for flying samosas & mouth synchronization
+  // 5. Continuous high-fps animation loop for single-dish flight & mouth chewing synchronization
   useEffect(() => {
     let animId: number;
 
@@ -115,38 +107,43 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         hasBittenThisCycleRef.current = false;
       }
 
-      // Mouth phases synchronized with food approach:
-      // Phase 1 (0 to 65% of cycle): Food approaching -> Mouth is wide open (Frame 000) anticipating!
-      if (progress < 0.65) {
+      // Synchronized Mouth Animation:
+      // Phase 1 (0 to 60% of cycle): Dish flies in from left -> Mouth is wide open (Frame 000) anticipating!
+      if (progress < 0.60) {
         setFrameIndex(0);
       }
-      // Phase 2 (65% to 82% of cycle): Leading samosa enters mouth -> Jaw snaps shut & crunches!
-      else if (progress >= 0.65 && progress < 0.82) {
+      // Phase 2 (60% to 72% of cycle): Dish enters mouth -> Jaw snaps shut & crunches!
+      else if (progress >= 0.60 && progress < 0.72) {
         if (!hasBittenThisCycleRef.current) {
           hasBittenThisCycleRef.current = true;
           if (onPlayBite) onPlayBite();
           setBiteFlash(true);
-          setTimeout(() => setBiteFlash(false), 200);
+          setTimeout(() => setBiteFlash(false), 220);
           setDishesDevouredCount((prev) => prev + 1);
         }
 
-        if (progress < 0.72) {
+        if (progress < 0.64) {
           setFrameIndex(2);
-        } else if (progress < 0.78) {
+        } else if (progress < 0.68) {
           setFrameIndex(4);
         } else {
           setFrameIndex(6); // mouth fully closed on food
         }
       }
-      // Phase 3 (82% to 94% of cycle): Quick energetic chewing
-      else if (progress >= 0.82 && progress < 0.94) {
-        const chewProgress = (progress - 0.82) / 0.12;
-        const chewFrame = 8 + Math.floor(chewProgress * 10);
+      // Phase 3 (72% to 92% of cycle): Active energetic chewing
+      else if (progress >= 0.72 && progress < 0.92) {
+        const chewProgress = (progress - 0.72) / 0.20;
+        const chewCycle = (chewProgress * 2.5) % 1;
+        const chewFrame = 8 + Math.floor(chewCycle * 13);
         setFrameIndex(chewFrame);
       }
-      // Phase 4 (94% to 100% of cycle): Swallows and opens mouth wide again for next samosa
+      // Phase 4 (92% to 100% of cycle): Swallows and opens mouth wide again for the next dish
       else {
-        setFrameIndex(progress > 0.97 ? 0 : 22);
+        if (progress < 0.97) {
+          setFrameIndex(22); // swallowing
+        } else {
+          setFrameIndex(0); // opens wide anticipating next dish!
+        }
       }
 
       animId = requestAnimationFrame(loop);
@@ -156,33 +153,32 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     return () => cancelAnimationFrame(animId);
   }, [onPlayBite]);
 
-  // Calculate 3-samosa stream offsets:
-  // Each samosa i has offset x = - (i * SPACING_PX) + (cycleProgress * SPACING_PX)
-  // When i = 0 reaches 0px, it enters mouth. As progress -> 1, samosa 0 shrinks & disappears into mouth.
-  const samosasToRender = [0, 1, 2, 3].map((slotIndex) => {
-    // Current horizontal offset relative to mouth center (0px is mouth center)
-    const baseOffset = -slotIndex * SPACING_PX + cycleProgress * SPACING_PX;
+  // Dish position & scale as it flies in ONE BY ONE from the left side into mouth:
+  // Coordinates are relative to Bakasur's mouth: (0, 0) is the mouth cavity opening
+  let dishX = -580;
+  let dishScale = 1.0;
+  let dishOpacity = 1.0;
 
-    // Calculate scale and opacity for leading samosa (when baseOffset > -20px entering mouth)
-    let scale = 1.0;
-    let opacity = 1.0;
-
-    if (baseOffset > -25) {
-      const enterRatio = Math.min(1, Math.max(0, (baseOffset + 25) / 25));
-      scale = Math.max(0.02, 1.0 - enterRatio * 0.95);
-      opacity = Math.max(0, 1.0 - enterRatio * 1.1);
-    } else if (baseOffset < -320) {
-      // Fade in as it enters from far left
-      opacity = Math.max(0, 1 - (-320 - baseOffset) / 50);
-    }
-
-    return {
-      slotIndex,
-      x: baseOffset,
-      scale,
-      opacity
-    };
-  });
+  if (cycleProgress < 0.60) {
+    // Phase 1: Gliding smoothly from far left into mouth
+    const t = cycleProgress / 0.60;
+    // Smooth ease-out curve
+    const ease = 1 - Math.pow(1 - t, 2.2);
+    dishX = -560 * (1 - ease);
+    dishScale = 0.75 + ease * 0.35;
+    dishOpacity = Math.min(1, t * 3.5);
+  } else if (cycleProgress >= 0.60 && cycleProgress < 0.72) {
+    // Phase 2: Entering mouth cavity, shrinking & vanishing
+    const t = (cycleProgress - 0.60) / 0.12;
+    dishX = t * 25; // enters 25px deep into mouth
+    dishScale = Math.max(0.01, 1.1 - t * 1.05);
+    dishOpacity = Math.max(0, 1.0 - t * 1.25);
+  } else {
+    // Phase 3 & 4: Food consumed inside mouth, jaw chewing
+    dishX = 25;
+    dishScale = 0.01;
+    dishOpacity = 0;
+  }
 
   return (
     <div
@@ -191,7 +187,6 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       }}
       className="relative w-full h-full min-h-full overflow-hidden bg-[#182858] flex flex-col justify-between select-none cursor-pointer"
     >
-
       {/* 1. TOP HEADER: Clean brand header matching mockup */}
       <div className="relative z-40 px-6 sm:px-8 pt-7 sm:pt-9 flex items-center justify-between text-white w-full">
         <div className="flex items-center gap-3">
@@ -213,7 +208,13 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Devoured dishes badge */}
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black shadow-md">
+            <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400 animate-pulse" />
+            <span>Devoured: {dishesDevouredCount}</span>
+          </div>
+
           {onToggleSound && (
             <button
               onClick={(e) => {
@@ -237,7 +238,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       {/* 2. MAIN CANVAS ARENA */}
       <div className="relative flex-1 w-full h-full overflow-hidden">
 
-        {/* TOP-LEFT HEADLINE BILLBOARD (Strictly left column to guarantee ZERO overlap with Bakasur's horn) */}
+        {/* TOP-LEFT HEADLINE BILLBOARD (Strictly left column to guarantee ZERO overlap with Bakasur) */}
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -272,64 +273,72 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           </div>
         </div>
 
-        {/* RIGHT SIDE: BAKASUR HEAD-ONLY CHARACTER (Exact Reference Mockup Cutout, NO BODY/CHEST) */}
-        {/* Anchored to right edge, upper-middle vertical alignment leaving bottom ~22% empty dark blue space */}
-        <div className="absolute right-0 top-[14%] sm:top-[12%] md:top-[10%] h-[60%] sm:h-[64%] md:h-[68%] aspect-[295/530] pointer-events-none select-none z-10">
-          <div className="relative w-full h-full">
+        {/* RIGHT SIDE: BAKASUR WITH SYNCHRONIZED CHEWING & MOUTH ANIMATION */}
+        <div className="absolute right-0 bottom-0 h-[66%] sm:h-[73%] md:h-[80%] max-h-[480px] sm:max-h-[550px] md:max-h-[620px] aspect-[640/800] flex items-end justify-end pointer-events-none select-none z-10 mr-0 sm:mr-2 md:mr-6">
+          <div className="relative w-full h-full flex items-end justify-end">
 
-            {/* FLYING FOOD HORIZONTAL STREAM (Streams User-Selected Dish) */}
-            {/* Calibrated directly at Bakasur's mouth cavity: top: 72.2%, left: 35.6% of the 295x530 head */}
+            {/* BITE CRUNCH IMPACT SPARK & CHOMP FLASH */}
+            {biteFlash && (
+              <div className="absolute top-[57.5%] left-[10%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-35">
+                <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-amber-300/90 blur-xs animate-ping" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-black text-sm sm:text-lg drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] whitespace-nowrap">
+                  CHOMP! 💥
+                </div>
+              </div>
+            )}
+
+            {/* SELECTED DISH FEEDING TRACK */}
+            {/* Origin (0,0) is calibrated directly at Bakasur's mouth cavity opening */}
             <div
               className="absolute pointer-events-none z-25"
               style={{
-                top: '72.2%',
-                left: '35.6%'
+                top: '57.5%',
+                left: '10%'
               }}
             >
-              {samosasToRender.map(({ slotIndex, x, scale, opacity }) => (
-                <div
-                  key={`food-stream-${slotIndex}`}
-                  className="absolute top-1/2 -translate-y-1/2 flex items-center shrink-0 pointer-events-none"
-                  style={{
-                    left: `${x}px`,
-                    transform: `translate(-50%, -50%) scale(${scale})`,
-                    opacity,
-                    transition: 'none'
-                  }}
-                >
-                  {/* Clean Horizontal White Speed Lines behind food item (Matching Mockup) */}
-                  <div className="flex flex-col gap-1 items-end justify-center mr-1.5 sm:mr-2 shrink-0">
-                    <div className="h-[2px] sm:h-[2.5px] w-4 sm:w-6 bg-white/70 rounded-full" />
-                    <div className="h-[2.5px] sm:h-[3px] w-7 sm:w-11 bg-white/90 rounded-full" />
-                    <div className="h-[2px] sm:h-[2.5px] w-5 sm:w-8 bg-white/60 rounded-full" />
-                  </div>
+              {/* THE USER'S SELECTED FOOD DISH (Coming one by one from left side) */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none"
+                style={{
+                  left: `${dishX}px`,
+                  transform: `translate(-50%, -50%) scale(${dishScale})`,
+                  opacity: dishOpacity,
+                  transition: 'none'
+                }}
+              >
+                {/* Horizontal White Speed Lines behind food item coming from left */}
+                <div className="flex flex-col gap-1 items-end justify-center mr-2 sm:mr-3 shrink-0">
+                  <div className="h-[2px] sm:h-[2.5px] w-6 sm:w-10 bg-white/70 rounded-full" />
+                  <div className="h-[2.5px] sm:h-[3px] w-10 sm:w-16 bg-white/95 rounded-full" />
+                  <div className="h-[2px] sm:h-[2.5px] w-7 sm:w-12 bg-white/60 rounded-full" />
+                </div>
 
-                  {/* User-Selected Dish Cutout Flying into Mouth */}
+                {/* User-Selected Dish Image (Circular dish with clean border) */}
+                <div className="relative w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 rounded-full overflow-hidden bg-slate-900/60 p-0.5 border-2 border-amber-300/80 shadow-[0_4px_20px_rgba(0,0,0,0.8)] shrink-0 flex items-center justify-center">
                   <img
                     src={selectedDishItem.image}
                     alt={selectedDishItem.name}
-                    className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain rounded-full select-none pointer-events-none drop-shadow-md shrink-0"
+                    className="w-full h-full object-cover rounded-full"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src = '/images/eating/butter_chicken_dish_flying.png';
                     }}
                   />
                 </div>
-              ))}
 
-              {/* BITE CRUNCH IMPACT FLASH */}
-              {biteFlash && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30">
-                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-amber-300/80 blur-xs animate-ping" />
+                {/* Dish Name Tag underneath */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-black text-center whitespace-nowrap shadow-lg">
+                  {selectedDishItem.name}
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* BAKASUR HEAD-ONLY IMAGE (Matching Mockup with Horn, Earring, Open Mouth & Clean Neck Cutoff) */}
+            {/* BAKASUR CHARACTER (Synchronized mouth opening, closing & chewing) */}
             <img
-              src="/images/eating/bakasur_head_only_transparent.png"
-              alt="Bakasur"
-              className={`w-full h-full object-contain pointer-events-none transition-transform duration-100 ${biteFlash ? 'scale-[1.03] brightness-110' : 'scale-100'
-                }`}
+              src={`/images/chewing/frame_${String(frameIndex).padStart(3, '0')}.webp`}
+              alt="Bakasur Eating Action"
+              className={`w-full h-full object-contain object-bottom pointer-events-none transition-transform duration-75 ${
+                biteFlash ? 'scale-[1.03] brightness-110' : 'scale-100'
+              }`}
             />
           </div>
         </div>
@@ -342,4 +351,3 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     </div>
   );
 };
-

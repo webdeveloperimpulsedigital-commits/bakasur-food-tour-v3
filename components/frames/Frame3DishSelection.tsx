@@ -364,7 +364,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
               <span className="text-[10px] text-slate-400 font-normal">Tap to select</span>
             </div>
 
-            <div className="max-h-56 sm:max-h-64 overflow-y-auto divide-y divide-slate-100">
+            <div className="max-h-48 sm:max-h-56 overflow-y-auto divide-y divide-slate-100">
               {suggestions.slice(0, 10).map((dish) => {
                 const visual = getDishVisualAssets(dish.name, dish.image);
                 return (
@@ -372,49 +372,17 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                     key={dish.id || dish.name}
                     type="button"
                     onClick={() => handleSelectSuggestion(dish)}
-                    className="w-full px-4 py-2.5 text-left hover:bg-blue-50/80 active:bg-blue-100/80 transition-colors flex items-center justify-between gap-3 group cursor-pointer"
+                    className="w-full px-3 py-2 text-left hover:bg-blue-50/80 active:bg-blue-100/80 transition-colors flex items-center justify-between gap-2.5 group cursor-pointer"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <img
                         src={visual.plateImage}
                         alt={dish.name}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-slate-200/90 shadow-2xs shrink-0"
+                        className="w-8 h-8 rounded-lg object-cover border border-slate-200/90 shadow-2xs shrink-0"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).src = '/images/eating/momos_dish.jpg';
                         }}
                       />
-                      <div className="min-w-0">
-                        <div className="text-xs sm:text-sm font-black text-[#0B1B48] group-hover:text-[#1E40AF] truncate">
-                          {dish.name}
-                        </div>
-                        {dish.description && (
-                          <div className="text-[10px] sm:text-[11px] text-slate-500 truncate">
-                            {dish.description}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="shrink-0 flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-xs border border-emerald-200">
-                        ₹{dish.price}
-                      </span>
-                      <span className="text-xs text-slate-400 group-hover:text-[#1E40AF] font-bold">
-                        →
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-              <div className="max-h-48 sm:max-h-56 overflow-y-auto divide-y divide-slate-100">
-                {suggestions.slice(0, 10).map((dish) => (
-                  <button
-                    key={dish.id || dish.name}
-                    type="button"
-                    onClick={() => handleSelectSuggestion(dish)}
-                    className="w-full px-3 py-2 text-left hover:bg-blue-50/80 active:bg-blue-100/80 transition-colors flex items-center justify-between gap-2.5 group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="text-sm sm:text-base shrink-0">🍽️</span>
                       <div className="min-w-0">
                         <div className="text-xs sm:text-sm font-black text-[#0B1B48] group-hover:text-[#0047BA] truncate">
                           {dish.name}
@@ -435,23 +403,24 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                       </span>
                     </div>
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-        )}
           </div>
+        )}
+      </div>
 
       {/* 5. Primary CTA: YEH WALI KHILAO (Matching Image 3) */}
-        <div className="shrink-0 w-full pt-1">
-          <button
-            onClick={onConfirmDish}
-            disabled={!selectedDish && !customDishInput.trim()}
-            type="button"
-            className="w-full py-3.5 sm:py-4 px-5 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
-          >
-            YEH WALI KHILAO
-          </button>
-        </div>
+      <div className="shrink-0 w-full pt-1">
+        <button
+          onClick={onConfirmDish}
+          disabled={!selectedDish && !customDishInput.trim()}
+          type="button"
+          className="w-full py-3.5 sm:py-4 px-5 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
+        >
+          YEH WALI KHILAO
+        </button>
       </div>
-      );
+    </div>
+  );
 };
