@@ -55,11 +55,11 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
   // 1. Prepare user's selected dish visual asset
   const selectedDishItem = useMemo(() => {
-    const safeDishName = dishName || 'Samosa';
+    const safeDishName = dishName || 'Food';
     const primaryVisual = getDishVisualAssets(safeDishName, dishImage);
     return {
       name: safeDishName,
-      image: primaryVisual.flyingImage || '/images/eating/samosa_hero_clean.png'
+      image: primaryVisual.flyingImage || '/images/eating/butter_chicken_dish_flying.png'
     };
   }, [dishName, dishImage]);
 
@@ -279,12 +279,12 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           <div className="relative w-full h-full">
 
             {/* FLYING FOOD HORIZONTAL STREAM (Streams User-Selected Dish) */}
-            {/* Calibrated directly at Bakasur's mouth cavity: top: 58.3%, left: 25.3% of the 295x530 head */}
+            {/* Calibrated directly at Bakasur's mouth cavity: top: 72.2%, left: 35.6% of the 295x530 head */}
             <div
               className="absolute pointer-events-none z-25"
               style={{
-                top: '58.3%',
-                left: '25.3%'
+                top: '72.2%',
+                left: '35.6%'
               }}
             >
               {samosasToRender.map(({ slotIndex, x, scale, opacity }) => (
@@ -309,9 +309,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                   <img
                     src={selectedDishItem.image}
                     alt={selectedDishItem.name}
-                    className="w-11 h-10 sm:w-14 sm:h-13 md:w-16 md:h-15 object-contain select-none pointer-events-none drop-shadow-md shrink-0"
+                    className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain rounded-full select-none pointer-events-none drop-shadow-md shrink-0"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_hero_clean.png';
+                      (e.currentTarget as HTMLImageElement).src = '/images/eating/butter_chicken_dish_flying.png';
                     }}
                   />
                 </div>
