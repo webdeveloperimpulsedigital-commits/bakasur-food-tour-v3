@@ -10,34 +10,37 @@ interface Frame1WelcomeProps {
 
 export const Frame1Welcome: React.FC<Frame1WelcomeProps> = ({ onStart }) => {
   return (
-    <div className="w-full h-full flex flex-col justify-between md:justify-center items-start text-left animate-in fade-in duration-300 py-6 sm:py-8 md:py-10 px-5 sm:px-7 md:px-10 lg:px-12 gap-5 sm:gap-6 md:gap-8 bg-[#f4f6fa]">
-      {/* Headline & Subtitle matching reference */}
-      <div className="space-y-2 sm:space-y-3">
-        <h1 className="text-[32px] xs:text-[36px] sm:text-[40px] md:text-[46px] lg:text-[50px] font-black text-[#0B1B48] tracking-tight leading-[1.08]">
+    <div className="w-full h-full flex flex-col justify-center items-center text-center animate-in fade-in duration-300 py-5 sm:py-7 px-5 sm:px-8 md:px-10 gap-3.5 sm:gap-5 bg-white">
+      {/* 1. Skewed Top Badge: BAKASUR KA FOOD TOUR */}
+      <div className="inline-block transform -skew-x-6 bg-[#0B1B48] px-5 sm:px-6 py-1.5 sm:py-2 shadow-sm shrink-0">
+        <span className="inline-block font-black italic tracking-wider text-white text-xs sm:text-sm md:text-base uppercase">
+          BAKASUR KA FOOD TOUR
+        </span>
+      </div>
+
+      {/* 2. Main Headline & Subtitle (Prominent and bold, matching Reference) */}
+      <div className="space-y-1.5 sm:space-y-2 flex flex-col items-center text-center max-w-md">
+        <h1 className="text-[30px] xs:text-[34px] sm:text-[38px] md:text-[44px] font-black text-[#0B1B48] tracking-tight leading-[1.08] text-center">
           Aapke sheher mein<br />Bakasur ka agla stop?
         </h1>
-        <p className="text-sm sm:text-base md:text-lg text-slate-700 font-medium leading-snug max-w-lg mt-2">
+        <p className="text-xs sm:text-sm md:text-base text-[#0B1B48] font-semibold leading-snug max-w-xs sm:max-w-sm text-center">
           Woh jagah batao jahan aapke andar ka Bakasur jaag uthe.
         </p>
       </div>
 
-      {/* CTA Button & Powered by Footer */}
-      <div className="shrink-0 w-full pt-1 sm:pt-2 flex flex-col items-center gap-3">
+      {/* 3. CTA Button: BAKASUR KO KHILAO -> */}
+      <div className="shrink-0 w-full max-w-sm sm:max-w-md pt-1 sm:pt-2">
         <button
           onClick={onStart}
           type="button"
-          className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base sm:text-lg md:text-xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer border-0"
+          className="w-full py-3.5 sm:py-4 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer border-0"
         >
           <span>BAKASUR KO KHILAO</span>
           <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3]" />
         </button>
-
-        <div className="text-center">
-          <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400 select-none">
-            POWERED BY GASTRIUM
-          </span>
-        </div>
       </div>
     </div>
   );
 };
+
+

@@ -65,7 +65,7 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
       className="w-full h-full flex flex-col md:flex-row bg-white overflow-hidden relative select-none"
     >
       {/* LEFT (Desktop) / TOP (Mobile): Visual Media Showcase */}
-      <div className="w-full md:w-1/2 h-[50%] sm:h-[52%] md:h-full relative overflow-hidden bg-[#04115b] shrink-0 flex items-center justify-center">
+      <div className="w-full md:w-1/2 h-[50%] sm:h-[52%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
         {/* Top Header matching reference mockup */}
         <div className="absolute top-0 inset-x-0 z-40 px-4 py-3 sm:py-3.5 flex items-center justify-between text-white pointer-events-auto bg-gradient-to-b from-black/60 to-transparent">
           <div className="flex items-center gap-2">
@@ -121,14 +121,14 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
               autoPlay
               loop
               muted={!soundEnabled}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover object-[center_20%]"
             />
           ) : (
             <img
               key={`${spot.id}-${currentStep}`}
               src={activeMedia}
               alt={`${spot.dishName} at ${spot.spotName}`}
-              className="w-full h-full object-contain md:object-cover object-center transition-opacity duration-300"
+              className="w-full h-full object-cover object-[center_20%] transition-opacity duration-300"
             />
           )}
 

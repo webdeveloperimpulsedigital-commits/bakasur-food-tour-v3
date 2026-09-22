@@ -297,21 +297,21 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-4 sm:py-8 px-4 sm:px-8 md:px-10 gap-5 sm:gap-7">
-      {/* 1. Main Headline & Subtitle (Matching Frame 2 Reference Image) */}
-      <div className="space-y-1 sm:space-y-1.5">
-        <h2 className="text-[28px] sm:text-[34px] md:text-[42px] lg:text-[46px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
+    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-4 sm:py-6 md:py-8 px-5 sm:px-8 md:px-10 gap-4 sm:gap-6 bg-white">
+      {/* 1. Main Headline & Subtitle (Left-aligned matching Image 2) */}
+      <div className="space-y-1 sm:space-y-1.5 text-left">
+        <h2 className="text-[28px] sm:text-[34px] md:text-[42px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
           Apna favourite<br />restaurant batao.
         </h2>
-        <p className="text-xs sm:text-sm md:text-base font-semibold text-slate-700 leading-snug">
+        <p className="text-xs sm:text-sm md:text-base font-semibold text-[#0B1B48] leading-snug">
           Jahan jaakar Bakasur kahe: isi ke liye toh prakat hua tha.
         </p>
       </div>
 
       {/* 2. SEARCH BAR (Google Maps Search) */}
       <div className="w-full relative" ref={containerRef}>
-        <div className="flex items-center w-full px-4 py-3 sm:py-3.5 rounded-xl bg-white border-2 border-[#1E40AF] focus-within:ring-2 focus-within:ring-[#1E40AF]/20 shadow-xs transition-all">
-          <MapPin className="w-5 h-5 text-[#0052FF] fill-[#0052FF] shrink-0 mr-3" />
+        <div className="flex items-center w-full px-4 py-3 sm:py-3.5 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
+          <MapPin className="w-5 h-5 text-[#0047BA] fill-[#0047BA] shrink-0 mr-3" />
           <input
             type="text"
             value={searchQuery}
@@ -321,7 +321,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
             }}
             onFocus={() => setShowDropdown(true)}
             placeholder="Restaurant ka naam search karo"
-            className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none"
+            className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 placeholder-[#64748B] focus:outline-none"
           />
           {searchQuery ? (
             <button
@@ -335,9 +335,9 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               <X className="w-4 h-4" />
             </button>
           ) : null}
-          <Search className="w-5 h-5 text-[#0052FF] shrink-0" />
+          <Search className="w-5 h-5 text-[#0047BA] shrink-0 stroke-[2.5]" />
         </div>
-        <div className="text-xs text-slate-400 font-medium mt-1 ml-1">
+        <div className="text-xs text-[#64748B] font-medium mt-1.5 ml-1 text-left">
           Search powered by Google Maps
         </div>
 
@@ -356,7 +356,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <MapPin className="w-4 h-4 text-[#0052FF] shrink-0" />
+                    <MapPin className="w-4 h-4 text-[#0047BA] shrink-0" />
                     <div className="min-w-0">
                       <p className="font-black text-xs sm:text-sm text-[#0B1B48] truncate">
                         {spot.name}{spot.area && !spot.name.includes(spot.area) ? `, ${spot.area}` : ''}
@@ -364,7 +364,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                       <p className="text-[11px] text-slate-500 truncate">{spot.description || spot.address}</p>
                     </div>
                   </div>
-                  {isSelected && <Check className="w-4 h-4 text-[#0052FF] stroke-[3] shrink-0" />}
+                  {isSelected && <Check className="w-4 h-4 text-[#0047BA] stroke-[3] shrink-0" />}
                 </button>
               );
             })}
@@ -373,12 +373,12 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       </div>
 
       {/* 3. PRIMARY CTA BUTTON: YEH WALA PAKKA */}
-      <div className="w-full pt-2">
+      <div className="w-full pt-1 sm:pt-2">
         <button
           onClick={handleConfirm}
           disabled={!selectedRestaurant && !searchQuery.trim()}
           type="button"
-          className="w-full py-4 sm:py-4.5 px-6 rounded-xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base md:text-lg uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
         >
           YEH WALA PAKKA
         </button>

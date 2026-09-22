@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Volume2, VolumeX, ArrowLeft, Flame, Sparkles, Utensils } from 'lucide-react';
+import { Volume2, VolumeX, ArrowLeft } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 
 export interface DishVisualAssets {
@@ -12,8 +12,8 @@ export interface DishVisualAssets {
 export function getDishVisualAssets(dishName?: string, dishImage?: string): DishVisualAssets {
   const n = (dishName || '').toLowerCase().trim();
 
-  // If dishImage is a verified local asset, prioritize it
-  if (dishImage && dishImage.startsWith('/images/eating/')) {
+  // If dishImage is a verified local flying asset, prioritize it
+  if (dishImage && dishImage.includes('_flying.png')) {
     return {
       plateImage: dishImage,
       flyingImage: dishImage
@@ -22,16 +22,13 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
 
   // 1. Vada Pav / Batata Vada / Kothimbir Vadi / Sabudana Vada
   if (
-    n.includes('vada pav') ||
+    n.includes('vada') ||
     n.includes('vadapav') ||
-    n.includes('vada pao') ||
-    n.includes('batata vada') ||
-    n.includes('sabudana vada') ||
-    n.includes('kothimbir vadi')
+    n.includes('pao')
   ) {
     return {
       plateImage: '/images/eating/vada_pav_dish.jpg',
-      flyingImage: '/images/eating/vada_pav_dish.jpg'
+      flyingImage: '/images/eating/vada_pav_flying.png'
     };
   }
 
@@ -43,7 +40,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     n.includes('gol gappe') ||
     n.includes('puchka') ||
     n.includes('gupchup') ||
-    n.includes('pani patashi')
+    n.includes('patashi')
   ) {
     return {
       plateImage: '/images/eating/pani_puri_dish.jpg',
@@ -51,23 +48,23 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 3. Samosa / Dahi Samosa
-  if (n.includes('samosa')) {
+  // 3. Samosa / Dahi Samosa / Singara
+  if (n.includes('samosa') || n.includes('singara')) {
     return {
-      plateImage: '/images/eating/samosa_flying.png',
-      flyingImage: '/images/eating/samosa_flying.png'
+      plateImage: '/images/eating/samosa_hero_clean.png',
+      flyingImage: '/images/eating/samosa_hero_clean.png'
     };
   }
 
-  // 4. Pav Bhaji / Masala Pav
-  if (n.includes('pav bhaji') || n.includes('pavbhaji') || n.includes('bhaji pav') || n.includes('amul butter pav')) {
+  // 4. Pav Bhaji / Masala Pav / Bhaji Pav
+  if (n.includes('pav bhaji') || n.includes('pavbhaji') || n.includes('bhaji pav') || n.includes('bhaji')) {
     return {
       plateImage: '/images/eating/pav_bhaji_dish.jpg',
       flyingImage: '/images/eating/pav_bhaji_dish_flying.png'
     };
   }
 
-  // 5. Misal / Katakirr / Tarri / Usal Pav
+  // 5. Misal / Katakirr / Tarri / Usal Pav / Rassa
   if (n.includes('misal') || n.includes('tarri') || n.includes('katakirr') || n.includes('rassa') || n.includes('usal')) {
     return {
       plateImage: '/images/eating/misal_dish.jpg',
@@ -97,8 +94,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     n.includes('uttapam') ||
     n.includes('roast') ||
     n.includes('benne') ||
-    n.includes('idli') ||
-    n.includes('vada')
+    n.includes('idli')
   ) {
     return {
       plateImage: '/images/eating/dosa_dish.jpg',
@@ -106,31 +102,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 9. Thali / Maharaja Thali / Royal Feast
-  if (n.includes('thali') || n.includes('maharaja') || n.includes('bhojan') || n.includes('meals')) {
-    return {
-      plateImage: '/images/eating/thali_dish.jpg',
-      flyingImage: '/images/eating/thali_dish.jpg'
-    };
-  }
-
-  // 10. Kebab / Galouti / Seekh Kebab
-  if (n.includes('kebab') || n.includes('galouti') || n.includes('seekh') || n.includes('shami') || n.includes('kakori')) {
-    return {
-      plateImage: '/images/eating/kebab_dish.jpg',
-      flyingImage: '/images/eating/kebab_dish.jpg'
-    };
-  }
-
-  // 11. Keema Pav / Mutton Korma / Nihari
-  if (n.includes('keema') || n.includes('mutton') || n.includes('nihari') || n.includes('rogan josh')) {
-    return {
-      plateImage: '/images/eating/keema_pav.jpg',
-      flyingImage: '/images/eating/keema_pav_flying.png'
-    };
-  }
-
-  // 12. Biryani / Pulao / Dum Biryani
+  // 9. Biryani / Pulao / Dum Biryani / Fried Rice / Khichdi
   if (n.includes('biryani') || n.includes('pulao') || n.includes('rice') || n.includes('khichdi')) {
     return {
       plateImage: '/images/eating/biryani_dish.jpg',
@@ -138,15 +110,15 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 13. Butter Chicken / Chicken Curry / Chicken Tikka
-  if (n.includes('chicken') || n.includes('butter chicken') || n.includes('murgh') || n.includes('curry')) {
+  // 10. Butter Chicken / Chicken Curry / Chicken Tikka
+  if (n.includes('chicken') || n.includes('murgh') || n.includes('curry')) {
     return {
       plateImage: '/images/eating/butter_chicken_dish.jpg',
       flyingImage: '/images/eating/butter_chicken_dish_flying.png'
     };
   }
 
-  // 14. Paneer / Paneer Butter Masala / Paneer Tikka
+  // 11. Paneer / Paneer Tikka / Paneer Butter Masala
   if (n.includes('paneer')) {
     return {
       plateImage: '/images/eating/paneer_dish.jpg',
@@ -154,7 +126,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 15. Dal Makhani / Dal Tadka
+  // 12. Dal Makhani / Dal Tadka
   if (n.includes('dal') || n.includes('makhani') || n.includes('tadka')) {
     return {
       plateImage: '/images/eating/dal_makhani.jpg',
@@ -162,43 +134,48 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 16. Puran Poli / Roti / Paratha / Naan
-  if (n.includes('puran') || n.includes('poli') || n.includes('roti') || n.includes('paratha') || n.includes('naan') || n.includes('thepla') || n.includes('bhakri')) {
-    return {
-      plateImage: '/images/eating/puran_poli.jpg',
-      flyingImage: '/images/eating/puran_poli_flying.png'
-    };
-  }
-
-  // 17. SPDP / Chaat / Sev Puri / Bhel Puri / Dahi Puri
-  if (n.includes('spdp') || n.includes('chaat') || n.includes('sev') || n.includes('bhel') || n.includes('dahi') || n.includes('kachori')) {
+  // 13. SPDP / Chaat / Sev Puri / Bhel / Dahi Puri / Kachori
+  if (n.includes('spdp') || n.includes('chaat') || n.includes('sev') || n.includes('bhel') || n.includes('kachori') || n.includes('puri')) {
     return {
       plateImage: '/images/eating/spdp.jpg',
       flyingImage: '/images/eating/spdp_flying.png'
     };
   }
 
-  // If dish has a valid custom image URL, use it
-  if (
-    dishImage &&
-    !dishImage.includes('bakasur') &&
-    (dishImage.startsWith('/') || dishImage.startsWith('http'))
-  ) {
+  // 14. Keema Pav / Mutton / Nihari / Kebab
+  if (n.includes('keema') || n.includes('mutton') || n.includes('nihari') || n.includes('kebab')) {
+    return {
+      plateImage: '/images/eating/keema_pav.jpg',
+      flyingImage: '/images/eating/keema_pav_flying.png'
+    };
+  }
+
+  // 15. Puran Poli / Paratha / Naan / Roti
+  if (n.includes('puran') || n.includes('poli') || n.includes('paratha') || n.includes('naan') || n.includes('roti')) {
+    return {
+      plateImage: '/images/eating/puran_poli.jpg',
+      flyingImage: '/images/eating/puran_poli_flying.png'
+    };
+  }
+
+  // If dishImage is provided from selection
+  if (dishImage && !dishImage.includes('bakasur')) {
     return {
       plateImage: dishImage,
       flyingImage: dishImage
     };
   }
 
+  // Default fallback: Samosa Hero Clean
   return {
-    plateImage: '/images/eating/paneer_dish.jpg',
-    flyingImage: '/images/eating/paneer_dish_flying.png'
+    plateImage: '/images/eating/samosa_hero_clean.png',
+    flyingImage: '/images/eating/samosa_hero_clean.png'
   };
 }
 
 export function getFlyingDishAsset(dishName?: string, dishImage?: string): { image: string; isCircleCrop: boolean } {
   const visual = getDishVisualAssets(dishName, dishImage);
-  return { image: visual.flyingImage, isCircleCrop: !visual.flyingImage.includes('_flying.png') };
+  return { image: visual.flyingImage, isCircleCrop: false };
 }
 
 interface BakasurEatingStageProps {
@@ -215,164 +192,127 @@ interface BakasurEatingStageProps {
   onPlayBite?: () => void;
 }
 
-// Engaging comedic foodie thoughts
-const ENGAGING_MESSAGES = [
-  { line1: 'BAKASUR', line2: 'MODE:', highlight: 'ON', line4: '' },
-  { line1: 'Sharing ka', line2: 'plan tha.', highlight: 'Ab nahi hai.', line4: '' },
-  { line1: 'Chef ki shift', line2: 'khatam.', line3: 'Bakasur ki', highlight: 'bhookh', line4: 'nahi.' },
-  { line1: 'Arre bhai Bakasur,', line2: '', highlight: 'iska bill', line4: 'kaun bharega?' },
-  { line1: 'Khaali plates ka', line2: '', highlight: 'Eiffel Tower', line4: 'ban raha hai.' }
-];
-
-const CHEW_EXPRESSIONS = [
-  '“NOM NOM NOM! 🤤”',
-  '“ZABARDAST! 🔥”',
-  '“AUR LAO! ⚡”',
-  '“CRUNCH CRUNCH! 💥”',
-  '“PET MEIN JAGAH HI JAGAH HAI! 😋”'
-];
-
-const DEFAULT_MENU_ITEMS: Array<{ id: number; name: string; image: string }> = [
-  { id: 101, name: 'Crispy Dosa', image: '/images/eating/dosa_dish_flying.png' },
-  { id: 102, name: 'Dum Biryani', image: '/images/eating/biryani_dish_flying.png' },
-  { id: 103, name: 'Chole Bhature', image: '/images/eating/chole_bhature_dish_flying.png' },
-  { id: 104, name: 'Steamed Momos', image: '/images/eating/momos_dish_flying.png' },
-  { id: 105, name: 'Paneer Tikka', image: '/images/eating/paneer_dish_flying.png' },
-  { id: 106, name: 'Butter Chicken', image: '/images/eating/butter_chicken_dish_flying.png' },
-  { id: 107, name: 'Pav Bhaji', image: '/images/eating/pav_bhaji_dish_flying.png' },
-  { id: 108, name: 'Crispy Samosa', image: '/images/eating/samosa_flying.png' },
-  { id: 109, name: 'Spicy Misal Pav', image: '/images/eating/misal_dish_flying.png' }
-];
-
-export function getSafeDish(
-  items: Array<{ id: number; name: string; image: string }> | undefined,
-  rawIndex: number
-): { id: number; name: string; image: string } {
-  if (!items || items.length === 0) {
-    return DEFAULT_MENU_ITEMS[0];
-  }
-  const len = items.length;
-  const validIdx = isNaN(rawIndex) ? 0 : Math.floor(rawIndex);
-  const safeIdx = ((validIdx % len) + len) % len;
-  return items[safeIdx] || DEFAULT_MENU_ITEMS[0];
-}
-
-const TOTAL_FRAMES = 126;
-const CYCLE_MS = 3200; // Complete cycle per menu item (calibrated for smooth, relaxed eating)
+// Calibrated cycle for streaming food items into mouth
+const BITE_CYCLE_MS = 1350; // ms per food item consumed
+const SPACING_PX = 100; // distance between consecutive flying items in the flight path
 
 export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
-  dishName = 'Specialty Food',
+  dishName = 'Samosa',
   dishImage,
-  restaurantName,
-  restaurant,
-  feastingStage = 1,
   soundEnabled = true,
   onToggleSound,
   onBack,
-  onFeedMore,
   onComplete,
   onPlayBite
 }) => {
-  const [frameIndex, setFrameIndex] = useState(0);
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [biteFlash, setBiteFlash] = useState(false);
-  const [activeDishIndex, setActiveDishIndex] = useState(0);
-  const [dishesDevouredCount, setDishesDevouredCount] = useState(0);
-  const [cycleProgress, setCycleProgress] = useState(0); // 0 to 1 in cycle
-  const [chewTextIdx, setChewTextIdx] = useState(0);
-  const [isChewingState, setIsChewingState] = useState(false);
+  // Active slide index: 0 = "BAKASUR MODE: ON", 1 = "Chef ki shift khatam. Bakasur ki bhookh nahi."
+  const [activeSlide, setActiveSlide] = useState<0 | 1>(0);
+  const [isSlideTransitioning, setIsSlideTransitioning] = useState<boolean>(false);
+  const [frameIndex, setFrameIndex] = useState<number>(0);
+  const [biteFlash, setBiteFlash] = useState<boolean>(false);
+  const [cycleProgress, setCycleProgress] = useState<number>(0); // 0 to 1 in each bite cycle
+  const [dishesDevouredCount, setDishesDevouredCount] = useState<number>(0);
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(10);
 
   const cycleStartTimeRef = useRef<number>(performance.now());
   const hasBittenThisCycleRef = useRef<boolean>(false);
-  const lastActiveDishIdxRef = useRef<number>(0);
+  const lastCycleIndexRef = useRef<number>(0);
 
   // 1. Prepare user's selected dish visual asset
   const selectedDishItem = useMemo(() => {
-    const safeDishName = dishName || 'Specialty Food';
+    const safeDishName = dishName || 'Samosa';
     const primaryVisual = getDishVisualAssets(safeDishName, dishImage);
     return {
-      id: 1,
       name: safeDishName,
-      image: primaryVisual.flyingImage || '/images/eating/dosa_dish_flying.png'
+      image: primaryVisual.flyingImage || '/images/eating/samosa_hero_clean.png'
     };
   }, [dishName, dishImage]);
 
-  // 2. Preload chewing frames
+  // 2. Preload chewing frames for ultra-smooth mouth animation
   useEffect(() => {
     for (let i = 0; i < 25; i++) {
       const img = new Image();
       img.src = `/images/chewing/frame_${String(i).padStart(3, '0')}.webp`;
     }
-    const timer = setTimeout(() => {
-      for (let i = 25; i < TOTAL_FRAMES; i++) {
-        const img = new Image();
-        img.src = `/images/chewing/frame_${String(i).padStart(3, '0')}.webp`;
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
   }, []);
 
-  // 3. High precision animation loop:
+  // 3. Slide rotation timer: toggles between Slide 1 and Slide 2 every 4 seconds
+  useEffect(() => {
+    const slideTimer = setInterval(() => {
+      setIsSlideTransitioning(true);
+      setTimeout(() => {
+        setActiveSlide((prev) => (prev === 0 ? 1 : 0));
+        setIsSlideTransitioning(false);
+      }, 250);
+    }, 4000);
+
+    return () => clearInterval(slideTimer);
+  }, []);
+
+  // 4. Overall stage 10s countdown to auto-advance to Frame 6
+  useEffect(() => {
+    const countdownInterval = setInterval(() => {
+      setSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          if (onComplete) onComplete();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, [onComplete]);
+
+  // 5. Continuous high-fps animation loop for flying samosas & mouth synchronization
   useEffect(() => {
     let animId: number;
 
     const loop = (now: number) => {
       const elapsedTotal = Math.max(0, now - cycleStartTimeRef.current);
-      const currentCycleIndex = Math.max(0, Math.floor(elapsedTotal / CYCLE_MS));
-      const elapsed = elapsedTotal % CYCLE_MS;
-      setCycleProgress(elapsed / CYCLE_MS);
+      const currentCycleIndex = Math.floor(elapsedTotal / BITE_CYCLE_MS);
+      const elapsedInCycle = elapsedTotal % BITE_CYCLE_MS;
+      const progress = elapsedInCycle / BITE_CYCLE_MS;
+      setCycleProgress(progress);
 
-      if (currentCycleIndex !== lastActiveDishIdxRef.current) {
-        lastActiveDishIdxRef.current = currentCycleIndex;
-        setActiveDishIndex(currentCycleIndex);
+      if (currentCycleIndex !== lastCycleIndexRef.current) {
+        lastCycleIndexRef.current = currentCycleIndex;
         hasBittenThisCycleRef.current = false;
       }
 
-      // Phase 1: Dish approaching mouth -> Bakasur holds mouth WIDE OPEN (frame 0)
-      if (elapsed < 1400) {
+      // Mouth phases synchronized with food approach:
+      // Phase 1 (0 to 65% of cycle): Food approaching -> Mouth is wide open (Frame 000) anticipating!
+      if (progress < 0.65) {
         setFrameIndex(0);
-        setIsChewingState(false);
       }
-      // Phase 2: Dish enters mouth -> Bite impact & mouth snaps shut
-      else if (elapsed >= 1400 && elapsed < 1700) {
-        setIsChewingState(false);
-        if (elapsed >= 1520 && !hasBittenThisCycleRef.current) {
+      // Phase 2 (65% to 82% of cycle): Leading samosa enters mouth -> Jaw snaps shut & crunches!
+      else if (progress >= 0.65 && progress < 0.82) {
+        if (!hasBittenThisCycleRef.current) {
           hasBittenThisCycleRef.current = true;
           if (onPlayBite) onPlayBite();
           setBiteFlash(true);
-          setTimeout(() => setBiteFlash(false), 240);
+          setTimeout(() => setBiteFlash(false), 200);
           setDishesDevouredCount((prev) => prev + 1);
-          setChewTextIdx((prev) => (prev + 1) % CHEW_EXPRESSIONS.length);
         }
 
-        if (elapsed < 1520) {
-          setFrameIndex(0); // mouth still open as dish crosses lips
-        } else if (elapsed < 1610) {
-          setFrameIndex(3); // mouth begins closing on food
+        if (progress < 0.72) {
+          setFrameIndex(2);
+        } else if (progress < 0.78) {
+          setFrameIndex(4);
         } else {
-          setFrameIndex(6); // mouth shuts tight
+          setFrameIndex(6); // mouth fully closed on food
         }
       }
-      // Phase 3: CHEWING ACTION -> Jaw actively chews food
-      else if (elapsed >= 1700 && elapsed < 2850) {
-        setIsChewingState(true);
-        const chewProgress = (elapsed - 1700) / 1150;
-        const chewCycle = (chewProgress * 2.5) % 1;
-        const chewFrame = 8 + Math.floor(chewCycle * 14);
+      // Phase 3 (82% to 94% of cycle): Quick energetic chewing
+      else if (progress >= 0.82 && progress < 0.94) {
+        const chewProgress = (progress - 0.82) / 0.12;
+        const chewFrame = 8 + Math.floor(chewProgress * 10);
         setFrameIndex(chewFrame);
       }
-      // Phase 4: Swallowing & opening mouth for next dish
+      // Phase 4 (94% to 100% of cycle): Swallows and opens mouth wide again for next samosa
       else {
-        setIsChewingState(false);
-        if (elapsed < 2980) {
-          setFrameIndex(20);
-        } else if (elapsed < 3100) {
-          setFrameIndex(23);
-        } else {
-          setFrameIndex(0);
-        }
+        setFrameIndex(progress > 0.97 ? 0 : 22);
       }
 
       animId = requestAnimationFrame(loop);
@@ -382,74 +322,45 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     return () => cancelAnimationFrame(animId);
   }, [onPlayBite]);
 
-  // Cycle foodie billboard thoughts every 3300ms so multiple thoughts display across 10s
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentMessageIndex((prev) => (prev + 1) % ENGAGING_MESSAGES.length);
-        setIsTransitioning(false);
-      }, 300);
-    }, 3300);
+  // Calculate 3-samosa stream offsets:
+  // Each samosa i has offset x = - (i * SPACING_PX) + (cycleProgress * SPACING_PX)
+  // When i = 0 reaches 0px, it enters mouth. As progress -> 1, samosa 0 shrinks & disappears into mouth.
+  const samosasToRender = [0, 1, 2, 3].map((slotIndex) => {
+    // Current horizontal offset relative to mouth center (0px is mouth center)
+    const baseOffset = -slotIndex * SPACING_PX + cycleProgress * SPACING_PX;
+    
+    // Calculate scale and opacity for leading samosa (when baseOffset > -20px entering mouth)
+    let scale = 1.0;
+    let opacity = 1.0;
 
-    return () => clearInterval(interval);
-  }, []);
+    if (baseOffset > -25) {
+      const enterRatio = Math.min(1, Math.max(0, (baseOffset + 25) / 25));
+      scale = Math.max(0.02, 1.0 - enterRatio * 0.95);
+      opacity = Math.max(0, 1.0 - enterRatio * 1.1);
+    } else if (baseOffset < -320) {
+      // Fade in as it enters from far left
+      opacity = Math.max(0, 1 - (-320 - baseOffset) / 50);
+    }
 
-  const msg = ENGAGING_MESSAGES[currentMessageIndex];
-
-  // Auto-transition to next frame (Frame 6 - Food Trailer) after 10 seconds of eating animation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (onComplete) onComplete();
-    }, 10000);
-
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-
-  // Handle user tap on screen: advance immediately to next frame
-  const handleActionClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onComplete) onComplete();
-  };
-
-  // Calculate current animation parameters for the leading dish
-  const elapsedInCycle = cycleProgress * CYCLE_MS;
-
-  // Leading dish position & scale as it approaches and enters mouth:
-  // Coordinates are relative to Bakasur's mouth: (0, 0) is the mouth opening cavity
-  let leaderX = 0;
-  let leaderScale = 1.0;
-  let leaderOpacity = 1.0;
-
-  if (elapsedInCycle < 1400) {
-    // Approaching: glides smoothly from -280px into mouth (0px)
-    const t = elapsedInCycle / 1400;
-    // Cubic ease-out
-    const ease = 1 - Math.pow(1 - t, 2.2);
-    leaderX = -280 * (1 - ease);
-    leaderScale = 0.85 + ease * 0.15;
-    leaderOpacity = 1;
-  } else if (elapsedInCycle >= 1400 && elapsedInCycle < 1700) {
-    // Entering mouth: passes through lips into cavity, shrinking & fading out
-    const t = (elapsedInCycle - 1400) / 300;
-    leaderX = t * 20; // enters 20px deep into mouth cavity
-    leaderScale = Math.max(0.01, 1.0 - t * 0.95);
-    leaderOpacity = Math.max(0, 1.0 - t * 1.1);
-  } else {
-    // Chewing / swallow: completely consumed inside mouth
-    leaderX = 20;
-    leaderScale = 0.01;
-    leaderOpacity = 0;
-  }
+    return {
+      slotIndex,
+      x: baseOffset,
+      scale,
+      opacity
+    };
+  });
 
   return (
     <div
-      onClick={handleActionClick}
-      className="relative w-full h-full min-h-full overflow-hidden bg-[#04115b] flex flex-col justify-between select-none cursor-pointer"
+      onClick={() => {
+        if (onComplete) onComplete();
+      }}
+      className="relative w-full h-full min-h-full overflow-hidden bg-[#182858] flex flex-col justify-between select-none cursor-pointer"
     >
-      {/* 1. TOP BAR: Back Arrow, Brand Title & Sound Toggle */}
-      <div className="relative z-40 px-4 sm:px-7 py-3 sm:py-4 flex items-center justify-between text-white w-full">
-        <div className="flex items-center gap-2.5">
+      
+      {/* 1. TOP HEADER: Clean brand header matching mockup */}
+      <div className="relative z-40 px-6 sm:px-8 pt-7 sm:pt-9 flex items-center justify-between text-white w-full">
+        <div className="flex items-center gap-3">
           {onBack && (
             <button
               onClick={(e) => {
@@ -457,24 +368,18 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                 onBack();
               }}
               type="button"
-              className="p-1.5 -ml-1 rounded-full bg-white/10 hover:bg-white/20 transition-all cursor-pointer flex items-center justify-center"
-              aria-label="Wapas"
+              className="p-1 -ml-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all cursor-pointer flex items-center justify-center"
+              aria-label="Back"
             >
-              <ArrowLeft className="w-5 h-5 text-white stroke-[2.5]" />
+              <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
             </button>
           )}
-          <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-white drop-shadow-md">
+          <span className="font-extrabold text-[12px] sm:text-[14px] uppercase tracking-[0.16em] text-white drop-shadow-sm font-sans">
             BAKASUR KA FOOD TOUR
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Devoured dishes badge */}
-          <div className="hidden xs:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black shadow-md">
-            <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400 animate-pulse" />
-            <span>Devoured: {dishesDevouredCount}</span>
-          </div>
-
+        <div className="flex items-center gap-2">
           {onToggleSound && (
             <button
               onClick={(e) => {
@@ -483,7 +388,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
               }}
               type="button"
               aria-label={soundEnabled ? 'Mute Sound' : 'Enable Sound'}
-              className="p-1.5 sm:p-2 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/20 transition-all cursor-pointer"
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer border border-white/15"
             >
               {soundEnabled ? (
                 <Volume2 className="w-4 h-4 text-yellow-300" />
@@ -495,117 +400,114 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </div>
       </div>
 
-      {/* 2. MAIN ARENA */}
-      <div className="relative flex-1 w-full h-full overflow-hidden flex items-center justify-between">
-        {/* TOP-LEFT: BILLBOARD HEADLINE */}
-        <div className="absolute left-4 sm:left-7 top-2 sm:top-4 z-30 max-w-[85%] sm:max-w-[70%] pointer-events-none">
+      {/* 2. MAIN CANVAS ARENA */}
+      <div className="relative flex-1 w-full h-full overflow-hidden">
+        
+        {/* TOP-LEFT HEADLINE BILLBOARD (Strictly left column to guarantee ZERO overlap with Bakasur's horn) */}
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveSlide(activeSlide === 0 ? 1 : 0);
+          }}
+          className="absolute left-5 sm:left-8 top-3 sm:top-5 z-20 max-w-[48%] xs:max-w-[50%] sm:max-w-[52%] cursor-pointer select-none"
+        >
           <div
             className={`transition-all duration-300 transform ${
-              isTransitioning
-                ? 'opacity-0 -translate-y-2 scale-95'
+              isSlideTransitioning
+                ? 'opacity-0 -translate-y-2 scale-[0.98]'
                 : 'opacity-100 translate-y-0 scale-100'
             }`}
           >
-            <div className="text-[32px] xs:text-[38px] sm:text-[46px] md:text-[54px] font-black text-white leading-[1.02] tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
-              {msg.line1 && <div>{msg.line1}</div>}
-              {msg.line2 && <div>{msg.line2}</div>}
-              {msg.line3 && <div>{msg.line3}</div>}
-              {msg.highlight && (
-                <span className="text-[#FF4D00] inline-block drop-shadow-[0_4px_22px_rgba(255,77,0,0.8)]">
-                  {msg.highlight}
-                </span>
-              )}{' '}
-              {msg.line4 && <span className="text-white">{msg.line4}</span>}
-            </div>
+            {activeSlide === 0 ? (
+              /* SLIDE 1: BAKASUR MODE: ON */
+              <div className="font-black text-[28px] xs:text-[34px] sm:text-[44px] md:text-[54px] text-white leading-[0.93] tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+                <div>BAKASUR</div>
+                <div>MODE:</div>
+                <div className="text-[#E2370A] drop-shadow-[0_4px_24px_rgba(226,55,10,0.6)]">ON</div>
+              </div>
+            ) : (
+              /* SLIDE 2: Chef ki shift khatam. Bakasur ki bhookh nahi. */
+              <div className="font-black text-[20px] xs:text-[24px] sm:text-[32px] md:text-[40px] text-white leading-[1.08] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+                <div>Chef ki shift</div>
+                <div>khatam.</div>
+                <div>Bakasur ki</div>
+                <div>
+                  <span className="text-[#E2370A] drop-shadow-[0_4px_24px_rgba(226,55,10,0.6)]">bhookh</span> nahi.
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* RIGHT SIDE: BAKASUR WITH ONE-BY-ONE SEQUENTIAL FOOD CONVEYOR */}
-        <div className="absolute right-0 bottom-0 h-[58%] sm:h-[65%] md:h-[72%] max-h-[440px] sm:max-h-[500px] md:max-h-[580px] aspect-[1080/1350] flex items-end justify-end pointer-events-none select-none z-20 mr-1 sm:mr-4 md:mr-8">
-          <div className="relative w-full h-full flex items-end justify-end">
+        {/* RIGHT SIDE: BAKASUR HEAD-ONLY CHARACTER (Exact Reference Mockup Cutout, NO BODY/CHEST) */}
+        {/* Anchored to right edge, upper-middle vertical alignment leaving bottom ~22% empty dark blue space */}
+        <div className="absolute right-0 top-[14%] sm:top-[12%] md:top-[10%] h-[60%] sm:h-[64%] md:h-[68%] aspect-[295/530] pointer-events-none select-none z-10">
+          <div className="relative w-full h-full">
             
-            {/* CHEWING BUBBLE / DIALOGUE WHEN CHEWING */}
-            {isChewingState && (
-              <div className="absolute top-[32%] left-[12%] -translate-x-1/2 -translate-y-1/2 z-35 animate-bounce pointer-events-none">
-                <div className="px-3 py-1.5 rounded-2xl bg-amber-400 text-[#04115b] font-black text-xs sm:text-sm md:text-base uppercase tracking-wider shadow-xl border-2 border-white flex items-center gap-1.5 whitespace-nowrap">
-                  <span>{CHEW_EXPRESSIONS[chewTextIdx]}</span>
-                </div>
-              </div>
-            )}
-
-            {/* BITE CRUNCH IMPACT SPARK & CHOMP FLASH */}
-            {biteFlash && (
-              <div className="absolute top-[58%] left-[11%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-35">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-300/90 blur-xs animate-ping" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-black text-base sm:text-xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] whitespace-nowrap">
-                  CHOMP! 💥
-                </div>
-              </div>
-            )}
-
-            {/* SELECTED DISH FEEDING TRACK */}
-            {/* Origin (0,0) is calibrated directly at Bakasur's mouth opening (top: 58%, left: 11%) */}
+            {/* FLYING FOOD HORIZONTAL STREAM (Streams User-Selected Dish) */}
+            {/* Calibrated directly at Bakasur's mouth cavity: top: 58.3%, left: 25.3% of the 295x530 head */}
             <div
               className="absolute pointer-events-none z-25"
               style={{
-                top: '58%',
-                left: '11%'
+                top: '58.3%',
+                left: '25.3%'
               }}
             >
-              {/* THE USER'S SELECTED FOOD DISH (Moving towards and entering open mouth) */}
-              <div
-                key={`dish-${activeDishIndex}`}
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center justify-center"
-                style={{
-                  left: `${leaderX}px`,
-                  transform: `translate(-50%, -50%) scale(${leaderScale})`,
-                  opacity: leaderOpacity,
-                  transition: 'none'
-                }}
-              >
-                {/* Dish Cutout + Clean Air Trails */}
-                <div className="relative flex items-center shrink-0">
-                  {/* Subtle clean white air streaks (no yellow lines) */}
-                  <div className="flex flex-col gap-1 mr-2 opacity-80 shrink-0">
-                    <div className="w-5 sm:w-8 h-[2px] bg-white/70 rounded-full shadow-xs" />
-                    <div className="w-8 sm:w-12 h-[2.5px] bg-white/90 rounded-full shadow-xs" />
-                    <div className="w-4 sm:w-7 h-[2px] bg-white/60 rounded-full shadow-xs" />
+              {samosasToRender.map(({ slotIndex, x, scale, opacity }) => (
+                <div
+                  key={`food-stream-${slotIndex}`}
+                  className="absolute top-1/2 -translate-y-1/2 flex items-center shrink-0 pointer-events-none"
+                  style={{
+                    left: `${x}px`,
+                    transform: `translate(-50%, -50%) scale(${scale})`,
+                    opacity,
+                    transition: 'none'
+                  }}
+                >
+                  {/* Clean Horizontal White Speed Lines behind food item (Matching Mockup) */}
+                  <div className="flex flex-col gap-1 items-end justify-center mr-1.5 sm:mr-2 shrink-0">
+                    <div className="h-[2px] sm:h-[2.5px] w-4 sm:w-6 bg-white/70 rounded-full" />
+                    <div className="h-[2.5px] sm:h-[3px] w-7 sm:w-11 bg-white/90 rounded-full" />
+                    <div className="h-[2px] sm:h-[2.5px] w-5 sm:w-8 bg-white/60 rounded-full" />
                   </div>
 
-                  {/* Circular Dish Image - perfectly centered vertically at mouth opening */}
-                  <div className="relative w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full overflow-hidden bg-slate-900/60 p-1 border-2 border-amber-300/80 shadow-[0_4px_16px_rgba(0,0,0,0.8)] shrink-0 flex items-center justify-center">
-                    <img
-                      src={selectedDishItem.image}
-                      alt={selectedDishItem.name}
-                      className="w-full h-full object-cover rounded-full"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_flying.png';
-                      }}
-                    />
-                  </div>
-
-                  {/* Dish Name Tag - positioned underneath without shifting the plate vertical center */}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-black text-center whitespace-nowrap shadow-lg">
-                    {selectedDishItem.name}
-                  </div>
+                  {/* User-Selected Dish Cutout Flying into Mouth */}
+                  <img
+                    src={selectedDishItem.image}
+                    alt={selectedDishItem.name}
+                    className="w-11 h-10 sm:w-14 sm:h-13 md:w-16 md:h-15 object-contain select-none pointer-events-none drop-shadow-md shrink-0"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_hero_clean.png';
+                    }}
+                  />
                 </div>
-              </div>
+              ))}
+
+              {/* BITE CRUNCH IMPACT FLASH */}
+              {biteFlash && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-amber-300/80 blur-xs animate-ping" />
+                </div>
+              )}
             </div>
 
-            {/* BAKASUR CHARACTER (Synchronized mouth opening, closing & chewing) */}
+            {/* BAKASUR HEAD-ONLY IMAGE (Matching Mockup with Horn, Earring, Open Mouth & Clean Neck Cutoff) */}
             <img
-              src={`/images/chewing/frame_${String(frameIndex).padStart(3, '0')}.webp`}
-              alt="Bakasur Eating Action"
-              className={`w-full h-full object-contain object-bottom pointer-events-none transition-transform duration-75 ${
+              src="/images/eating/bakasur_head_only_transparent.png"
+              alt="Bakasur"
+              className={`w-full h-full object-contain pointer-events-none transition-transform duration-100 ${
                 biteFlash ? 'scale-[1.03] brightness-110' : 'scale-100'
               }`}
             />
           </div>
         </div>
+
       </div>
 
-      {/* Subtle bottom indicator spacer */}
-      <div className="relative z-40 p-2 sm:p-3 w-full" />
+      {/* Subtle bottom padding */}
+      <div className="relative z-40 p-3 sm:p-4 w-full pointer-events-none" />
+
     </div>
   );
 };
+

@@ -18,14 +18,14 @@ export interface FoodTourSpot {
 }
 
 export const FOOD_TOUR_SPOTS: FoodTourSpot[] = [
-  // 1. Giant Dosa (Exact user mockup)
+  // 1. Giant Dosa
   {
     id: 'dosa',
     dishName: 'Crispy Butter Masala Dosa',
     spotName: 'Sri Krishna Dosa Corner',
     city: 'Pune',
-    eatingMedia: '/images/food_tour/dosa_eating_photo.png',
-    emptyMedia: '/images/food_tour/dosa_empty_photo.png',
+    eatingMedia: '/images/all-frames/Dosa.mp4',
+    emptyMedia: '/images/all-frames/Showing Empty Plate.mp4',
     eatingCopy: {
       line1: 'Dosa table se bada tha.',
       line2Prefix: 'Bakasur ki ',
@@ -46,8 +46,8 @@ export const FOOD_TOUR_SPOTS: FoodTourSpot[] = [
     dishName: 'Extra Butter Pav Bhaji',
     spotName: 'Shivaji Chowk Famous Pav Bhaji',
     city: 'Pune',
-    eatingMedia: '/images/eating/pav_bhaji.jpg',
-    emptyMedia: '/images/eating/pav_bhaji_dish.jpg',
+    eatingMedia: '/images/all-frames/Pav Bhaji.mp4',
+    emptyMedia: '/images/all-frames/Showing Empty Plate.mp4',
     eatingCopy: {
       line1: 'Amul butter ka swimming pool tha.',
       line2Prefix: 'Bakasur ne ',
@@ -68,8 +68,8 @@ export const FOOD_TOUR_SPOTS: FoodTourSpot[] = [
     dishName: 'Shahi Chicken Dum Biryani',
     spotName: 'Nawabi Handi Darbar',
     city: 'Pune',
-    eatingMedia: '/images/eating/biryani.jpg',
-    emptyMedia: '/images/eating/biryani_dish.jpg',
+    eatingMedia: '/images/all-frames/Biryani.mp4',
+    emptyMedia: '/images/all-frames/Showing Empty Plate.mp4',
     eatingCopy: {
       line1: 'Puri handi ka dum nikal gaya.',
       line2Prefix: 'Bakasur ka ',
@@ -91,7 +91,7 @@ export const FOOD_TOUR_SPOTS: FoodTourSpot[] = [
     spotName: 'Nagpal Special Chole Bhature',
     city: 'Pune',
     eatingMedia: '/images/eating/chole_bhature.jpg',
-    emptyMedia: '/images/eating/chole_bhature_dish.jpg',
+    emptyMedia: '/images/all-frames/Showing Empty Plate.mp4',
     eatingCopy: {
       line1: 'Bhature phule the football jaise.',
       line2Prefix: 'Bakasur ne ',
@@ -113,7 +113,7 @@ export const FOOD_TOUR_SPOTS: FoodTourSpot[] = [
     spotName: 'Katakirr Tarri Misal Point',
     city: 'Pune',
     eatingMedia: '/images/eating/misal.jpg',
-    emptyMedia: '/images/eating/misal_dish.jpg',
+    emptyMedia: '/images/all-frames/Showing Empty Plate.mp4',
     eatingCopy: {
       line1: 'Teekhi tarri mein tha angaar.',
       line2Prefix: 'Bakasur ne ',

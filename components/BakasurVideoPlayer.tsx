@@ -313,33 +313,32 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
     }
   }, [soundEnabled]);
 
-  // Video resolution across 13 frames:
-  // - Frame 1 (Welcome): /uploads/videos/video-frame-1.mp4
-  // - Frame 2 (Restaurant Search): /uploads/videos/bakasur-frame-one.mp4
-  // - Frame 3 & 4 (Dish Selection / Manual Dish): /uploads/videos/video-frame-1.mp4
-  // - Frame 5 (Eating Begins): /uploads/videos/1.mp4
-  // - Frame 6 (Feeding Loop): 1.mp4 -> 2.mp4 -> 3.mp4
-  // - Frame 7 & 8 (Acidity Overload): /uploads/videos/3.mp4
-  // - Frame 9 (Gastrium Relief): /uploads/videos/video-frame-2.mp4
-  // - Frame 10 (Submitted): Relieved
-  // - Frame 11 & 12 (Map & Registration): /uploads/videos/video-frame-1.mp4
-  // - Frame 13 (Pass): Bakasur Pass
+  // Video resolution across 13 frames from design team:
+  // - Frame 1 (Welcome): Pointing Downwards.mp4 (Bakasur points down to start food tour)
+  // - Frame 2 (Restaurant Search): Ask for location.mp4 (Bakasur asks for where to go)
+  // - Frame 3 & 4 (Dish Selection / Manual Dish): Showing Empty Plate.mp4 (Holding empty plate ready for food)
+  // - Frame 5 (Eating Begins): Full-screen eating stage
+  // - Frame 6 (Trailer): Showing Love.mp4 / Food Tour spots (Dosa.mp4, Pav Bhaji.mp4, Biryani.mp4)
+  // - Frame 7 & 8 (Acidity Overload): Fire on stomach.mp4 (Heartburn flames)
+  // - Frame 9 (Gastrium Relief): Gastrium animation / relief video
+  // - Frame 10 (Shukriya / Submitted): Thumbs Up.mp4 (Bakasur thumbs up!)
+  // - Frame 11 (Live Map): Showing Love.mp4
+  // - Frame 12 (Registration): Pointing Downwards.mp4 (Bakasur points down to registration form)
+  // - Frame 13 (Pass Confirmed): Thumbs Up.mp4 (Bakasur thumbs up confirmation)
   const activeVideoSrc = useMemo(() => {
-    if (frameNumber === 1) return '/uploads/videos/video-frame-1.mp4';
-    if (frameNumber === 2) return '/uploads/videos/bakasur-frame-one.mp4';
-    if (frameNumber === 3 || frameNumber === 4) return '/uploads/videos/video-frame-1.mp4';
-    if (frameNumber === 5) return '/uploads/videos/1.mp4';
-    if (frameNumber === 6) {
-      if (feastingStage === 1) return '/uploads/videos/1.mp4';
-      if (feastingStage === 2) return '/uploads/videos/2.mp4';
-      return '/uploads/videos/3.mp4';
-    }
-    if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/uploads/videos/3.mp4';
-    if (frameNumber === 9) return '/uploads/videos/video-frame-2.mp4';
-    if (frameNumber === 11 || frameNumber === 12) return '/uploads/videos/video-frame-1.mp4';
+    if (frameNumber === 1) return '/images/all-frames/Pointing Downwards.mp4';
+    if (frameNumber === 2) return '/images/all-frames/Ask for location.mp4';
+    if (frameNumber === 3 || frameNumber === 4) return '/images/all-frames/Showing Empty Plate.mp4';
+    if (frameNumber === 6) return '/images/all-frames/Showing Love.mp4';
+    if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/all-frames/Fire on stomach.mp4';
+    if (frameNumber === 9) return videoUrl || '/uploads/videos/video-frame-2.mp4';
+    if (frameNumber === 10) return '/images/all-frames/Thumbs Up.mp4';
+    if (frameNumber === 11) return '/images/all-frames/Showing Love.mp4';
+    if (frameNumber === 12) return '/images/all-frames/Pointing Downwards.mp4';
+    if (frameNumber === 13) return '/images/all-frames/Thumbs Up.mp4';
 
-    return videoUrl || '/uploads/videos/video-frame-1.mp4';
-  }, [frameNumber, feastingStage, isHeartburn, videoUrl]);
+    return videoUrl || '/images/all-frames/Pointing Downwards.mp4';
+  }, [frameNumber, isHeartburn, videoUrl]);
 
   // Autoplay video smoothly on source change
   useEffect(() => {
@@ -389,23 +388,23 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full min-h-full overflow-hidden bg-[#04115b] flex items-center justify-center select-none">
+    <div className="relative w-full h-full min-h-full overflow-hidden bg-[#182858] flex items-center justify-center select-none">
       {/* Top Header Bar matching Reference UI */}
       {frameNumber === 2 || stepIndicator ? (
-        <div className="absolute top-0 inset-x-0 z-40 px-4 py-3.5 flex items-center justify-between text-white pointer-events-auto">
+        <div className="absolute top-0 inset-x-0 z-40 px-4 py-3 sm:py-3.5 flex items-center justify-between text-white pointer-events-auto bg-gradient-to-b from-black/70 via-black/30 to-transparent">
           <button
             onClick={onBack}
             type="button"
-            className="p-1 -ml-1 rounded-full hover:bg-white/20 transition-all cursor-pointer flex items-center justify-center"
+            className="p-1.5 -ml-1 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-xs transition-all cursor-pointer flex items-center justify-center"
             aria-label="Wapas"
           >
             <ArrowLeft className="w-5 h-5 text-white stroke-[2.5]" />
           </button>
-          <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-white drop-shadow-sm">
+          <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-white drop-shadow-md">
             BAKASUR KA FOOD TOUR
           </span>
           <div className="flex items-center gap-2">
-            <span className="font-black text-xs sm:text-sm text-white/95">
+            <span className="font-black text-xs sm:text-sm text-white drop-shadow-md bg-black/40 px-2.5 py-0.5 rounded-full border border-white/20">
               {stepIndicator || '1/3'}
             </span>
             {onToggleSound && (
@@ -413,12 +412,12 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
                 onClick={onToggleSound}
                 type="button"
                 aria-label={soundEnabled ? "Mute Sound" : "Enable Sound"}
-                className="p-1 rounded-full bg-black/40 hover:bg-black/60 text-white/90 border border-white/20 transition-all cursor-pointer"
+                className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white/90 border border-white/20 transition-all cursor-pointer backdrop-blur-xs"
               >
                 {soundEnabled ? (
-                  <Volume2 className="w-3 h-3 text-yellow-300" />
+                  <Volume2 className="w-3.5 h-3.5 text-yellow-300" />
                 ) : (
-                  <VolumeX className="w-3 h-3 text-white/70" />
+                  <VolumeX className="w-3.5 h-3.5 text-white/70" />
                 )}
               </button>
             )}
@@ -426,15 +425,6 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
         </div>
       ) : (
         <>
-          {/* Top Left: POWERED BY GASTRIUM (Hidden on Frame 1, displayed at bottom) */}
-          {frameNumber !== 1 && (
-            <div className="absolute top-3.5 left-4 z-40 pointer-events-none">
-              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/95 drop-shadow-md">
-                POWERED BY GASTRIUM
-              </span>
-            </div>
-          )}
-
           {/* Top Right: Audio Toggle Button (Hidden on Frame 1 Welcome Screen) */}
           {onToggleSound && frameNumber !== 1 && (
             <button
@@ -455,18 +445,74 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
       )}
 
       {/* Main Stage Media Render */}
-      {frameNumber === 10 ? (
-        /* Frame 10: Exact Shukriya Dost Map Par Dekho Character from User Mockup */
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#04115b]">
-          <img
-            src="/images/food_tour/shukriya_map_photo.png"
-            alt="Bakasur Map Recommendation Approved"
-            className="w-full h-full object-contain object-bottom p-1 sm:p-2 md:p-3 select-none pointer-events-none"
+      {frameNumber === 1 ? (
+        /* Frame 1: Pointing Downwards video from Design Team */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Pointing Downwards.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
+          />
+        </div>
+      ) : frameNumber === 2 ? (
+        /* Frame 2: Ask for location video from Design Team */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Ask for location.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
+          />
+        </div>
+      ) : frameNumber === 3 || frameNumber === 4 ? (
+        /* Frame 3 & 4: Showing Empty Plate video from Design Team */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Showing Empty Plate.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
+          />
+        </div>
+      ) : frameNumber === 6 ? (
+        /* Frame 6 (Trailer Stage): Showing Love video from Design Team */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Showing Love.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
+          />
+        </div>
+      ) : frameNumber === 7 || frameNumber === 8 ? (
+        /* Frame 7 & 8: Fire on stomach video from Design Team */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Fire on stomach.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
           />
         </div>
       ) : frameNumber === 9 ? (
         /* Frame 9: Exact Gastrium In Character / Bottle Frame (supports video when provided) */
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#04115b]">
+        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#182858]">
           {videoUrl && videoUrl.includes('gastrium') ? (
             <video
               ref={videoRef}
@@ -478,7 +524,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
                 setIsPlaying(false);
                 if (onVideoEnded) onVideoEnded();
               }}
-              className="w-full h-full max-w-full max-h-full object-contain object-bottom relative z-10"
+              className="w-full h-full object-cover object-[center_20%] relative z-10"
             />
           ) : (
             <img
@@ -488,67 +534,56 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             />
           )}
         </div>
-      ) : isReliefDone ? (
-        /* Relief Complete Visual */
-        <div className="w-full h-full relative bg-[#04115b] flex items-center justify-center">
-          <img
-            src="/images/bakasur_relieved.jpg"
-            alt="Bakasur Relieved"
-            className="w-full h-full object-contain object-bottom"
+      ) : frameNumber === 10 ? (
+        /* Frame 10: Thumbs Up video from Design Team (Shukriya Dost!) */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Thumbs Up.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
           />
         </div>
-      ) : isPass ? (
-        /* Tour Pass Visual */
-        <div className="w-full h-full relative bg-[#04115b] flex items-center justify-center">
-          <img
-            src="/images/bakasur_pass.jpg"
-            alt="Bakasur Official Pass"
-            className="w-full h-full object-contain object-top"
+      ) : frameNumber === 11 ? (
+        /* Frame 11: Showing Love video for Live Tour Map */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Showing Love.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
           />
         </div>
-      ) : frameNumber === 1 ? (
-        /* Frame 1: Exact Selfie Stick Bakasur from Reference Image */
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#04115b]">
-          <img
-            src="/images/bakasur_selfie.jpg"
-            alt="Bakasur Ka Food Tour"
-            className="w-full h-full object-cover object-bottom"
+      ) : frameNumber === 12 ? (
+        /* Frame 12: Pointing Downwards video for Registration */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Pointing Downwards.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
           />
         </div>
-      ) : frameNumber === 2 ? (
-        /* Frame 2: Exact Plate-holding Character from User Reference Image with Full Left & Right Clearance */
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#04115b]">
-          <img
-            src="/images/bakasur_plate_character.png"
-            alt="Bakasur Ready To Eat"
-            className="w-full h-full object-contain object-bottom p-1 sm:p-2 md:p-3 select-none pointer-events-none"
-          />
-        </div>
-      ) : frameNumber === 3 ? (
-        /* Frame 3: Exact Bakasur Pointing Character from User Reference Image */
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#04115b]">
-          <img
-            src="/images/bakasur_pointing.png"
-            alt="Bakasur Pointing to Dishes"
-            className="w-full h-full object-contain object-bottom p-1 sm:p-2 md:p-3 select-none pointer-events-none"
-          />
-        </div>
-      ) : frameNumber === 6 ? (
-        /* Frame 6: Exact Empty Plate Character from User Reference Image */
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#04115b]">
-          <img
-            src="/images/bakasur_empty_plate.png"
-            alt="Bakasur Empty Plate Food Trailer"
-            className="w-full h-full object-contain object-bottom p-1 sm:p-2 md:p-3 select-none pointer-events-none"
-          />
-        </div>
-      ) : frameNumber === 8 ? (
-        /* Frame 8: Exact Bakasur Hand Stop / Distressed Character from User Mockup */
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#04115b]">
-          <img
-            src="/images/food_tour/bakasur_help_photo.png"
-            alt="Bakasur Needs Help"
-            className="w-full h-full object-contain object-bottom p-1 sm:p-2 md:p-3 select-none pointer-events-none"
+      ) : frameNumber === 13 || isPass ? (
+        /* Frame 13: Thumbs Up video from Design Team (Official Pass Confirmed) */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Thumbs Up.mp4"
+            playsInline
+            autoPlay
+            loop
+            muted={!soundEnabled}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
           />
         </div>
       ) : isEating ? (
@@ -564,7 +599,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
         />
       ) : (
         /* Character Video Frames */
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#04115b]">
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
             src={activeVideoSrc}
@@ -576,7 +611,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
               setIsPlaying(false);
               if (onVideoEnded) onVideoEnded();
             }}
-            className="w-full h-full max-w-full max-h-full object-contain object-bottom relative z-10"
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
           />
 
           {/* Catchy Hungry Cue Overlay directly on Video Frame */}
