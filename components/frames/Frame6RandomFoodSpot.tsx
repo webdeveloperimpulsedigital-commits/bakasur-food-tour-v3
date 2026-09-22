@@ -142,15 +142,6 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
 
       {/* RIGHT (Desktop) / BOTTOM (Mobile): Clean Punchy Copy & "AUR KHILAO" Action */}
       <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col justify-center items-start text-left bg-white p-4 sm:p-6 md:p-8 lg:p-10 z-20 gap-4 sm:gap-6">
-        {/* Slanted Brand Badge */}
-        <div className="shrink-0">
-          <div className="inline-block transform -skew-x-12 bg-[#0E2055] px-3.5 py-1 rounded-sm shadow-sm">
-            <span className="inline-block transform skew-x-12 text-white font-black text-xs uppercase tracking-wider italic">
-              BAKASUR KA FOOD TOUR
-            </span>
-          </div>
-        </div>
-
         {/* Comedic Headline matching reference mockup */}
         <div className="space-y-1 sm:space-y-2 min-h-[70px] sm:min-h-[85px] flex flex-col justify-center">
           <h1 className="text-[26px] xs:text-[30px] sm:text-[34px] md:text-[38px] font-black text-[#0B1B48] tracking-tight leading-[1.15]">

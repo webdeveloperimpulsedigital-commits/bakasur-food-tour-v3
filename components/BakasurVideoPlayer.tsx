@@ -426,15 +426,17 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
         </div>
       ) : (
         <>
-          {/* Top Left: POWERED BY GASTRIUM - Matches Reference Image Exactly */}
-          <div className="absolute top-3.5 left-4 z-40 pointer-events-none">
-            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/95 drop-shadow-md">
-              POWERED BY GASTRIUM
-            </span>
-          </div>
+          {/* Top Left: POWERED BY GASTRIUM (Hidden on Frame 1, displayed at bottom) */}
+          {frameNumber !== 1 && (
+            <div className="absolute top-3.5 left-4 z-40 pointer-events-none">
+              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/95 drop-shadow-md">
+                POWERED BY GASTRIUM
+              </span>
+            </div>
+          )}
 
-          {/* Top Right: Audio Toggle Button */}
-          {onToggleSound && (
+          {/* Top Right: Audio Toggle Button (Hidden on Frame 1 Welcome Screen) */}
+          {onToggleSound && frameNumber !== 1 && (
             <button
               onClick={onToggleSound}
               type="button"
@@ -510,7 +512,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           <img
             src="/images/bakasur_selfie.jpg"
             alt="Bakasur Ka Food Tour"
-            className="w-full h-full object-contain md:object-cover object-bottom"
+            className="w-full h-full object-cover object-bottom"
           />
         </div>
       ) : frameNumber === 2 ? (

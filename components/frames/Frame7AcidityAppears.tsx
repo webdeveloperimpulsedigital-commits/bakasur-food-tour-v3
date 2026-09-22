@@ -31,13 +31,8 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({ onAu
 
   return (
     <div className="w-full h-full flex flex-col justify-between min-h-0 animate-in fade-in duration-300 gap-2 text-left">
-      {/* Top Section: Slanted Badge */}
-      <div className="shrink-0 flex items-center justify-between gap-2">
-        <div className="inline-block transform -skew-x-12 bg-[#0E2055] px-3.5 py-1 rounded-sm shadow-sm">
-          <span className="inline-block transform skew-x-12 text-white font-black text-xs uppercase tracking-wider italic">
-            BAKASUR KA FOOD TOUR
-          </span>
-        </div>
+      {/* Top Section: Plot Twist Tag */}
+      <div className="shrink-0 flex items-center justify-start gap-2">
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-100 text-[#D4380D] font-black text-[10px] uppercase border border-red-200 animate-pulse">
           <Flame className="w-3 h-3 fill-[#D4380D]" />
           <span>Plot Twist</span>

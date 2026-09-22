@@ -10,28 +10,19 @@ interface Frame1WelcomeProps {
 
 export const Frame1Welcome: React.FC<Frame1WelcomeProps> = ({ onStart }) => {
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-3 sm:py-6 md:py-8 px-3 sm:px-6 md:px-10 gap-4 sm:gap-6 md:gap-8">
-      {/* 1. Slanted Badge Left-Aligned (Matching Reference Image) */}
-      <div className="shrink-0">
-        <div className="inline-block transform -skew-x-12 bg-[#0E2055] px-4 py-1.5 rounded-sm shadow-sm">
-          <span className="inline-block transform skew-x-12 text-white font-black text-xs sm:text-sm md:text-base uppercase tracking-wider italic">
-            BAKASUR KA FOOD TOUR
-          </span>
-        </div>
-      </div>
-
-      {/* 2. Headline & Subtitle Left-Aligned */}
+    <div className="w-full h-full flex flex-col justify-between md:justify-center items-start text-left animate-in fade-in duration-300 py-6 sm:py-8 md:py-10 px-5 sm:px-7 md:px-10 lg:px-12 gap-5 sm:gap-6 md:gap-8 bg-[#f4f6fa]">
+      {/* Headline & Subtitle matching reference */}
       <div className="space-y-2 sm:space-y-3">
-        <h1 className="text-[30px] sm:text-[38px] md:text-[46px] lg:text-[50px] font-black text-[#0B1B48] tracking-tight leading-[1.08]">
+        <h1 className="text-[32px] xs:text-[36px] sm:text-[40px] md:text-[46px] lg:text-[50px] font-black text-[#0B1B48] tracking-tight leading-[1.08]">
           Aapke sheher mein<br />Bakasur ka agla stop?
         </h1>
-        <p className="text-sm sm:text-base md:text-lg text-slate-700 font-semibold leading-snug max-w-lg">
+        <p className="text-sm sm:text-base md:text-lg text-slate-700 font-medium leading-snug max-w-lg mt-2">
           Woh jagah batao jahan aapke andar ka Bakasur jaag uthe.
         </p>
       </div>
 
-      {/* 3. CTA Button */}
-      <div className="shrink-0 w-full pt-2">
+      {/* CTA Button & Powered by Footer */}
+      <div className="shrink-0 w-full pt-1 sm:pt-2 flex flex-col items-center gap-3">
         <button
           onClick={onStart}
           type="button"
@@ -40,6 +31,12 @@ export const Frame1Welcome: React.FC<Frame1WelcomeProps> = ({ onStart }) => {
           <span>BAKASUR KO KHILAO</span>
           <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3]" />
         </button>
+
+        <div className="text-center">
+          <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400 select-none">
+            POWERED BY GASTRIUM
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -11,15 +11,6 @@ interface Frame8HelpBakasurProps {
 export const Frame8HelpBakasur: React.FC<Frame8HelpBakasurProps> = ({ onHelpBakasur }) => {
   return (
     <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-4 sm:py-6 md:py-8 px-4 sm:px-6 md:px-8 gap-5 sm:gap-6 md:gap-8">
-      {/* 1. Slanted Brand Badge */}
-      <div className="shrink-0">
-        <div className="inline-block transform -skew-x-12 bg-[#0E2055] px-3.5 py-1 rounded-sm shadow-sm">
-          <span className="inline-block transform skew-x-12 text-white font-black text-xs uppercase tracking-wider italic">
-            BAKASUR KA FOOD TOUR
-          </span>
-        </div>
-      </div>
-
       {/* 2. Headline matching Image 2 mockup */}
       <div className="space-y-1 sm:space-y-2">
         <h1 className="text-[26px] xs:text-[30px] sm:text-[34px] md:text-[40px] font-black text-[#0B1B48] tracking-tight leading-[1.15]">

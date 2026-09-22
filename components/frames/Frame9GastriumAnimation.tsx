@@ -34,15 +34,6 @@ export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = (
       onClick={onAnimationComplete}
       className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-6 sm:py-8 md:py-10 px-4 sm:px-6 md:px-8 gap-6 sm:gap-8 cursor-pointer select-none"
     >
-      {/* 1. Slanted Brand Badge */}
-      <div className="shrink-0">
-        <div className="inline-block transform -skew-x-12 bg-[#0E2055] px-3.5 py-1 rounded-sm shadow-sm">
-          <span className="inline-block transform skew-x-12 text-white font-black text-xs uppercase tracking-wider italic">
-            BAKASUR KA FOOD TOUR
-          </span>
-        </div>
-      </div>
-
       {/* 2. Main Title: GASTRIUM IN - Exactly matching User Mockup 1 */}
       <div className="w-full flex flex-col items-start justify-center pt-2 sm:pt-4">
         <h1 className="text-[44px] xs:text-[52px] sm:text-[60px] md:text-[72px] font-black tracking-tight leading-none uppercase select-none">

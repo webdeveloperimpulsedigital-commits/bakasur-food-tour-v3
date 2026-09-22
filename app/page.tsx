@@ -559,10 +559,10 @@ export default function CampaignPage() {
         </div>
       ) : (
         /* Normal Canvas for Other Frames */
-        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-white md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden flex flex-col md:flex-row relative">
+        <div className={`w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] ${currentFrame === 1 ? 'bg-[#f4f6fa]' : 'bg-white'} md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden flex flex-col md:flex-row relative`}>
           
           {/* Left Side on Desktop / Top Half on Mobile: Royal Blue Character Stage */}
-          <div className={`w-full md:w-1/2 ${currentFrame === 1 || currentFrame === 6 ? 'h-[46%] sm:h-[48%]' : 'h-[36%] sm:h-[38%]'} md:h-full relative overflow-hidden bg-[#04115b] shrink-0`}>
+          <div className={`w-full md:w-1/2 ${currentFrame === 1 ? 'h-[58%]' : currentFrame === 6 ? 'h-[46%] sm:h-[48%]' : 'h-[36%] sm:h-[38%]'} md:h-full relative overflow-hidden bg-[#04115b] shrink-0`}>
             <BakasurVideoPlayer
               videoUrl="/uploads/videos/video-frame-1.mp4"
               stageName={
@@ -588,7 +588,7 @@ export default function CampaignPage() {
           </div>
 
           {/* Right Side on Desktop / Bottom Half on Mobile: Content Card */}
-          <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col overflow-y-auto bg-white text-slate-900 p-2 sm:p-4 md:p-6 lg:p-8 relative z-20 justify-start md:justify-center">
+          <div className={`w-full md:w-1/2 flex-1 md:h-full flex flex-col overflow-y-auto ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start md:justify-center`}>
             <main className="flex-1 w-full flex flex-col justify-start md:justify-center min-h-0 relative">
               {/* Frame 1: Welcome */}
               {currentFrame === 1 && (

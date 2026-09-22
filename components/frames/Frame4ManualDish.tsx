@@ -37,13 +37,8 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
 
   return (
     <div className="w-full h-full flex flex-col justify-between min-h-0 animate-in fade-in duration-300 gap-2 text-left">
-      {/* Top Section: Slanted Badge & Back Button */}
-      <div className="shrink-0 flex items-center justify-between gap-2">
-        <div className="inline-block transform -skew-x-12 bg-[#0E2055] px-3.5 py-1 rounded-sm shadow-sm">
-          <span className="inline-block transform skew-x-12 text-white font-black text-xs uppercase tracking-wider italic">
-            BAKASUR KA FOOD TOUR
-          </span>
-        </div>
+      {/* Top Section: Back Button */}
+      <div className="shrink-0 flex items-center justify-start gap-2">
         <button
           onClick={onBackToOptions}
           type="button"

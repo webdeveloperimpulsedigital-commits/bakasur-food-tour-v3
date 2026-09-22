@@ -212,15 +212,6 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
         {/* RIGHT SIDE: HEADLINE, STATS & BUTTONS */}
         <div className="w-1/2 h-full flex flex-col justify-center px-8 lg:px-12 py-8 gap-5 lg:gap-6 bg-white overflow-y-auto">
-          {/* Slanted Brand Pill */}
-          <div className="shrink-0">
-            <div className="inline-block transform -skew-x-12 bg-[#08173E] px-3.5 py-1 rounded-sm shadow-sm">
-              <span className="inline-block transform skew-x-12 text-white font-black text-xs uppercase tracking-wider italic">
-                BAKASUR KA FOOD TOUR
-              </span>
-            </div>
-          </div>
-
           {/* Headline & Subtitle */}
           <div className="space-y-1.5">
             <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-[1.15]">
@@ -308,13 +299,6 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             >
               <X className="w-5 h-5" />
             </button>
-
-            {/* Brand Pill */}
-            <div className="inline-block self-start transform -skew-x-12 bg-[#08173E] px-3 py-0.5 rounded-sm">
-              <span className="inline-block transform skew-x-12 text-white font-black text-[10px] uppercase tracking-wider italic">
-                BAKASUR KA FOOD TOUR
-              </span>
-            </div>
 
             {/* Modal Title */}
             <div>
