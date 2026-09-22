@@ -43,6 +43,7 @@ export interface DishMomentInfo {
 
 // Preset popular food quick-picks for testing/dynamic preview
 export const POPULAR_FOOD_PRESETS = [
+  { name: 'Steamed Veg Momos', icon: '🥟', image: '/images/eating/momos_dish.jpg' },
   { name: 'Crispy Butter Masala Dosa', icon: '🥞', image: '/images/eating/dosa.jpg' },
   { name: 'Shahi Chicken Dum Biryani', icon: '🍗', image: '/images/eating/biryani.jpg' },
   { name: 'Aslam Special Butter Chicken', icon: '🍗', image: '/images/eating/butter_chicken.jpg' },
@@ -58,6 +59,19 @@ export const POPULAR_FOOD_PRESETS = [
 export function getDishMomentDetails(dishName?: string, dishImage?: string): DishMomentInfo {
   const n = (dishName || '').toLowerCase().trim();
   const hasLocalImg = Boolean(dishImage && dishImage.startsWith('/images/eating/'));
+
+  // 0. Momos / Dimsum / Dumpling
+  if (n.includes('momo') || n.includes('dimsum') || n.includes('dumpling') || (dishImage && dishImage.includes('momo'))) {
+    return {
+      category: 'momos',
+      biteEmoji: '🥟',
+      biteLabel: 'Steamed Momos Feast',
+      munchSound: 'CHOMP-CHOMP! Spicy Garlic Chutney 🥟',
+      actionText: 'Bakasur is gulping juicy Momos...',
+      image: '/images/eating/momos_dish.jpg',
+      eatingScene: '/images/eating/momos_dish.jpg'
+    };
+  }
 
   // 1. Vada Pav / Batata Vada
   if (n.includes('vada pav') || n.includes('vadapav') || n.includes('batata vada') || n.includes('vada pao')) {

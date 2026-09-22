@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapPin, Check, Pencil } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
+import { getDishVisualAssets } from '@/lib/dishAssets';
 
 interface Frame3DishSelectionProps {
   restaurant: Restaurant;
@@ -243,10 +244,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   const handleCustomInputChange = (val: string) => {
     setCustomDishInput(val);
     if (val.trim()) {
+      const visual = getDishVisualAssets(val.trim());
       onSelectDish({
         name: val.trim(),
         id: 9999,
-        price: 150
+        price: 150,
+        image: visual.plateImage
       });
     } else if (threeDishes.length > 0) {
       onSelectDish(threeDishes[0]);
@@ -255,7 +258,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
   const handleSelectSuggestion = (dish: Dish) => {
     setCustomDishInput(dish.name);
-    onSelectDish(dish);
+    const visual = getDishVisualAssets(dish.name, dish.image);
+    onSelectDish({
+      ...dish,
+      image: visual.plateImage
+    });
     setShowDropdown(false);
   };
 
@@ -386,48 +393,46 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             </div>
 
             <div className="max-h-56 sm:max-h-64 overflow-y-auto divide-y divide-slate-100">
-              {suggestions.slice(0, 10).map((dish) => (
-                <button
-                  key={dish.id || dish.name}
-                  type="button"
-                  onClick={() => handleSelectSuggestion(dish)}
-                  className="w-full px-4 py-2.5 text-left hover:bg-blue-50/80 active:bg-blue-100/80 transition-colors flex items-center justify-between gap-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-base sm:text-lg shrink-0">
-                      {dish.name.toLowerCase().includes('momo')
-                        ? '🥟'
-                        : dish.name.toLowerCase().includes('pav') || dish.name.toLowerCase().includes('bhaji')
-                        ? '🍛'
-                        : dish.name.toLowerCase().includes('biryani')
-                        ? '🍲'
-                        : dish.name.toLowerCase().includes('pizza')
-                        ? '🍕'
-                        : dish.name.toLowerCase().includes('dosa')
-                        ? '🥞'
-                        : '🍽️'}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-xs sm:text-sm font-black text-[#0B1B48] group-hover:text-[#1E40AF] truncate">
-                        {dish.name}
-                      </div>
-                      {dish.description && (
-                        <div className="text-[10px] sm:text-[11px] text-slate-500 truncate">
-                          {dish.description}
+              {suggestions.slice(0, 10).map((dish) => {
+                const visual = getDishVisualAssets(dish.name, dish.image);
+                return (
+                  <button
+                    key={dish.id || dish.name}
+                    type="button"
+                    onClick={() => handleSelectSuggestion(dish)}
+                    className="w-full px-4 py-2.5 text-left hover:bg-blue-50/80 active:bg-blue-100/80 transition-colors flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={visual.plateImage}
+                        alt={dish.name}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border border-slate-200/90 shadow-2xs shrink-0"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = '/images/eating/momos_dish.jpg';
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <div className="text-xs sm:text-sm font-black text-[#0B1B48] group-hover:text-[#1E40AF] truncate">
+                          {dish.name}
                         </div>
-                      )}
+                        {dish.description && (
+                          <div className="text-[10px] sm:text-[11px] text-slate-500 truncate">
+                            {dish.description}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-xs border border-emerald-200">
-                      ₹{dish.price}
-                    </span>
-                    <span className="text-xs text-slate-400 group-hover:text-[#1E40AF] font-bold">
-                      →
-                    </span>
-                  </div>
-                </button>
-              ))}
+                    <div className="shrink-0 flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-xs border border-emerald-200">
+                        ₹{dish.price}
+                      </span>
+                      <span className="text-xs text-slate-400 group-hover:text-[#1E40AF] font-bold">
+                        →
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

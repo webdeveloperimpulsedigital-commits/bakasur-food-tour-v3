@@ -26,8 +26,41 @@ export async function POST(request: Request) {
     let dishName = (body.dish_name || '').trim();
     let restLat = body.latitude ? parseFloat(body.latitude) : 18.5204;
     let restLng = body.longitude ? parseFloat(body.longitude) : 73.8407;
+    let finalRestId = restaurant_id ? parseInt(restaurant_id, 10) : null;
+    let finalDishId = dish_id ? parseInt(dish_id, 10) : null;
 
-    // 2. If dish_name or restaurant_name is missing or generic, check user journey steps for this session
+    // 2. If restaurant_id or details missing, query latest visit from campaign_visits or session
+    if ((!finalRestId || !dishName || !restaurantName || restaurantName === 'Local Food Spot') && session_id) {
+      try {
+        const pool = getMySQLPool();
+        if (pool) {
+          const [visits] = await pool.query<RowDataPacket[]>(
+            `SELECT restaurant_id, restaurant_name, dish_id, dish_name, city, latitude, longitude FROM campaign_visits WHERE session_id = ? ORDER BY id DESC LIMIT 1`,
+            [session_id]
+          );
+          if (visits && visits.length > 0) {
+            if (!finalRestId && visits[0].restaurant_id) {
+              finalRestId = Number(visits[0].restaurant_id);
+            }
+            if (!finalDishId && visits[0].dish_id) {
+              finalDishId = Number(visits[0].dish_id);
+            }
+            if (!restaurantName || restaurantName === 'Local Food Spot') {
+              restaurantName = String(visits[0].restaurant_name || '').trim() || restaurantName;
+            }
+            if (!dishName || dishName === 'Signature Specialty') {
+              dishName = String(visits[0].dish_name || '').trim() || dishName;
+            }
+            if (visits[0].latitude) restLat = Number(visits[0].latitude);
+            if (visits[0].longitude) restLng = Number(visits[0].longitude);
+          }
+        }
+      } catch (visitErr) {
+        console.warn('Session visit lookup notice:', visitErr);
+      }
+    }
+
+    // 3. Fallback journey step lookup if still needed
     if ((!dishName || !restaurantName || restaurantName === 'Local Food Spot' || dishName === 'Signature Specialty') && session_id) {
       try {
         const pool = getMySQLPool();
@@ -46,6 +79,9 @@ export async function POST(request: Request) {
                 if ((!restaurantName || restaurantName === 'Local Food Spot') && meta?.restaurant_name) {
                   restaurantName = String(meta.restaurant_name).trim();
                 }
+                if (!finalRestId && meta?.restaurant_id) {
+                  finalRestId = Number(meta.restaurant_id);
+                }
               } catch {}
             }
           }
@@ -55,9 +91,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Fallback to DB lookup by ID if still missing
-    if (!restaurantName && restaurant_id) {
-      const rest = await db.getRestaurantById(parseInt(restaurant_id, 10));
+    // 4. Fallback to DB lookup by ID if still missing
+    if (!restaurantName && finalRestId) {
+      const rest = await db.getRestaurantById(finalRestId);
       if (rest) {
         restaurantName = rest.name;
         if (rest.latitude) restLat = rest.latitude;
@@ -65,14 +101,14 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!dishName && dish_id) {
-      const d = await db.getDishById(parseInt(dish_id, 10));
+    if (!dishName && finalDishId) {
+      const d = await db.getDishById(finalDishId);
       if (d) {
         dishName = d.name;
       }
     }
 
-    // 4. Default fallbacks
+    // 5. Default fallbacks
     if (!restaurantName) restaurantName = "Local Food Spot";
     if (!dishName) dishName = "Signature Specialty";
 
@@ -82,7 +118,9 @@ export async function POST(request: Request) {
       mobile: cleanMobile,
       email: finalEmail.toLowerCase(),
       city: finalCity,
+      restaurant_id: finalRestId,
       restaurant_name: restaurantName,
+      dish_id: finalDishId,
       dish_name: dishName,
       consent: isConsentGiven ? 1 : 0,
       terms_accepted: 1

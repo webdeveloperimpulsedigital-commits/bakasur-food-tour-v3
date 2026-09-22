@@ -92,7 +92,9 @@ export interface Participant {
   mobile: string;
   email: string;
   city: string;
+  restaurant_id?: number | null;
   restaurant_name?: string;
+  dish_id?: number | null;
   dish_name?: string;
   consent: number;
   terms_accepted: number;
@@ -1314,8 +1316,8 @@ export const db = {
       const pool = getMySQLPool();
       if (pool) {
         await pool.query(
-          `INSERT INTO campaign_sessions (session_id, user_location, latitude, longitude, restaurant_id, dish_id, current_stage, current_step, food_meter_percentage, aur_khilo_clicks)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO campaign_sessions (session_id, user_location, latitude, longitude, restaurant_id, dish_id, current_stage, current_step, food_meter_percentage, aur_khilo_clicks, map_visited, form_submitted)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON DUPLICATE KEY UPDATE
              user_location = COALESCE(VALUES(user_location), user_location),
              latitude = COALESCE(VALUES(latitude), latitude),
@@ -1326,6 +1328,8 @@ export const db = {
              current_step = VALUES(current_step),
              food_meter_percentage = COALESCE(VALUES(food_meter_percentage), food_meter_percentage),
              aur_khilo_clicks = COALESCE(VALUES(aur_khilo_clicks), aur_khilo_clicks),
+             map_visited = GREATEST(COALESCE(VALUES(map_visited), 0), map_visited),
+             form_submitted = GREATEST(COALESCE(VALUES(form_submitted), 0), form_submitted),
              updated_at = CURRENT_TIMESTAMP`,
           [
             session.session_id,
@@ -1337,7 +1341,9 @@ export const db = {
             session.current_stage,
             session.current_step || 'start',
             session.food_meter_percentage,
-            session.aur_khilo_clicks
+            session.aur_khilo_clicks,
+            session.map_visited || 0,
+            session.form_submitted || 0
           ]
         );
       }
@@ -1732,6 +1738,9 @@ export const db = {
     const combinedPoints: any[] = [];
     const addedNames = new Set<string>();
 
+    // Prioritize current user visited point first
+    visitedPoints.sort((a, b) => (b.isCurrentUserSpot ? 1 : 0) - (a.isCurrentUserSpot ? 1 : 0));
+
     // 1. First add visited points
     visitedPoints.forEach(p => {
       if (!addedNames.has(p.name.toLowerCase())) {
@@ -1767,7 +1776,19 @@ export const db = {
   },
 
   // PARTICIPANTS & USER REGISTRATION
-  async createParticipant(data: { session_id: string; name: string; mobile: string; email: string; city: string; restaurant_name?: string; dish_name?: string; consent: number; terms_accepted: number }) {
+  async createParticipant(data: {
+    session_id: string;
+    name: string;
+    mobile: string;
+    email: string;
+    city: string;
+    restaurant_id?: number | null;
+    restaurant_name?: string;
+    dish_id?: number | null;
+    dish_name?: string;
+    consent: number;
+    terms_accepted: number;
+  }) {
     const id = memoryStore.participants.length + 1;
     const randCode = Math.floor(100000 + Math.random() * 900000);
     const participation_id = `BKT-${randCode}`;
@@ -1780,7 +1801,9 @@ export const db = {
       mobile: data.mobile,
       email: data.email,
       city: data.city,
+      restaurant_id: data.restaurant_id || null,
       restaurant_name: data.restaurant_name,
+      dish_id: data.dish_id || null,
       dish_name: data.dish_name,
       consent: data.consent,
       terms_accepted: data.terms_accepted,
@@ -1802,8 +1825,8 @@ export const db = {
       if (pool) {
         // 1. Insert into MySQL participants table
         await pool.query(
-          `INSERT INTO participants (session_id, participation_id, name, mobile, email, city, restaurant_name, dish_name, consent, terms_accepted)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO participants (session_id, participation_id, name, mobile, email, city, restaurant_id, restaurant_name, dish_id, dish_name, consent, terms_accepted)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             data.session_id,
             participation_id,
@@ -1811,7 +1834,9 @@ export const db = {
             data.mobile,
             data.email,
             data.city,
+            data.restaurant_id || null,
             data.restaurant_name || null,
+            data.dish_id || null,
             data.dish_name || null,
             data.consent ? 1 : 0,
             data.terms_accepted ? 1 : 1

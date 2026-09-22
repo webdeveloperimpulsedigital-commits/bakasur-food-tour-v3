@@ -19,6 +19,7 @@ import { Frame11LiveMap } from '@/components/frames/Frame11LiveMap';
 import { Frame12Registration } from '@/components/frames/Frame12Registration';
 import { Frame13Confirmation } from '@/components/frames/Frame13Confirmation';
 import { Restaurant, Dish } from '@/lib/db';
+import { getDishVisualAssets } from '@/lib/dishAssets';
 import { getOrCreateSessionId, resetSessionId, trackUserStep } from '@/lib/tracker';
 
 export type FrameNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
@@ -97,6 +98,14 @@ export default function CampaignPage() {
     const sess = getOrCreateSessionId();
     setSessionId(sess);
 
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const f = parseInt(params.get('frame') || '', 10);
+      if (f >= 1 && f <= 13) {
+        setCurrentFrame(f as FrameNumber);
+      }
+    }
+
     trackUserStep({
       sessionId: sess,
       stepName: 'frame_1_welcome',
@@ -131,29 +140,85 @@ export default function CampaignPage() {
   }, []);
 
   // Frame 1 -> Frame 2 (Welcome -> Restaurant Search)
-  const handleStartTour = () => {
+  const handleStartTour = async () => {
     playSound('click');
     setCurrentFrame(2);
+
+    const activeSession = sessionId || getOrCreateSessionId();
+    if (!sessionId) setSessionId(activeSession);
+
+    // Save tour start session in DB immediately
+    try {
+      await fetch('/api/campaign/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          user_location: selectedCity,
+          latitude: userCoords?.lat || null,
+          longitude: userCoords?.lng || null,
+          current_stage: 'frame_2_restaurant_search',
+          current_step: 'restaurant_search',
+          food_meter_percentage: 20
+        })
+      });
+    } catch (err) {
+      console.warn('Session start save notice:', err);
+    }
+
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_2_restaurant_search',
       stepTitle: 'Frame 2: Restaurant Search Screen Opened',
       stepNumber: 2,
-      userLocation: selectedCity
+      userLocation: selectedCity,
+      latitude: userCoords?.lat,
+      longitude: userCoords?.lng
     });
   };
 
   // Frame 2 -> Frame 3 (Restaurant Chosen -> 3 Dish Options)
-  const handleRestaurantConfirmed = () => {
+  const handleRestaurantConfirmed = async () => {
     playSound('click');
     setCurrentFrame(3);
+
+    const activeSession = sessionId || getOrCreateSessionId();
+
+    // Persist restaurant selection to DB session
+    try {
+      await fetch('/api/campaign/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          user_location: selectedRestaurant?.city || selectedCity,
+          latitude: selectedRestaurant?.latitude || userCoords?.lat,
+          longitude: selectedRestaurant?.longitude || userCoords?.lng,
+          restaurant_id: selectedRestaurant?.id,
+          current_stage: 'frame_3_dish_selection',
+          current_step: 'dish_selection'
+        })
+      });
+    } catch (err) {
+      console.warn('Restaurant confirm save notice:', err);
+    }
+
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_3_dish_selection',
       stepTitle: `Frame 3: Dish Options Opened for ${selectedRestaurant?.name || 'Restaurant'}`,
       stepNumber: 3,
       restaurantId: selectedRestaurant?.id,
-      metadata: { restaurant_name: selectedRestaurant?.name }
+      userLocation: selectedRestaurant?.city || selectedCity,
+      latitude: selectedRestaurant?.latitude || userCoords?.lat,
+      longitude: selectedRestaurant?.longitude || userCoords?.lng,
+      metadata: {
+        restaurant_name: selectedRestaurant?.name,
+        restaurant_id: selectedRestaurant?.id,
+        city: selectedRestaurant?.city || selectedCity,
+        latitude: selectedRestaurant?.latitude,
+        longitude: selectedRestaurant?.longitude
+      }
     });
   };
 
@@ -161,8 +226,9 @@ export default function CampaignPage() {
   const handleGoToManualDish = () => {
     playSound('click');
     setCurrentFrame(4);
+    const activeSession = sessionId || getOrCreateSessionId();
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_4_manual_dish',
       stepTitle: `Frame 4: Manual Dish Entry Opened for ${selectedRestaurant?.name || 'Restaurant'}`,
       stepNumber: 4,
@@ -171,52 +237,91 @@ export default function CampaignPage() {
   };
 
   // Frame 3 / 4 -> Frame 5 (Dish Chosen -> Eating Begins)
-  const handleDishConfirmed = async (customDishName?: string) => {
+  const handleDishConfirmed = async (customDishName?: string, customDishImage?: string) => {
     playSound('bite');
-    const finalDish = customDishName
-      ? { name: customDishName, id: Math.floor(Math.random() * 80000) + 10000, price: 150 }
-      : selectedDish || { name: 'Signature Food', id: 1, price: 150 };
+    const dishName = customDishName || selectedDish?.name || 'Signature Food';
+    const visual = getDishVisualAssets(dishName, customDishImage || selectedDish?.image);
+    const finalDish = {
+      name: dishName,
+      id: customDishName ? Math.floor(Math.random() * 80000) + 10000 : ((selectedDish as { id?: number })?.id || 1),
+      price: selectedDish?.price || 150,
+      image: visual.plateImage || selectedDish?.image || '/images/eating/momos_dish.jpg'
+    };
 
     setSelectedDish(finalDish);
     setFeastingStage(1);
     setCurrentFrame(5);
 
-    trackUserStep({
-      sessionId,
-      stepName: 'frame_5_eating_begins',
-      stepTitle: `Frame 5: Bakasur Mode ON - Eating ${finalDish.name}`,
-      stepNumber: 5,
-      restaurantId: selectedRestaurant?.id,
-      dishId: (finalDish as { id?: number })?.id,
-      foodMeterPercentage: 20,
-      metadata: {
-        dish_name: finalDish.name,
-        restaurant_name: selectedRestaurant?.name
-      }
-    });
+    const activeSession = sessionId || getOrCreateSessionId();
 
-    // Register campaign session start
+    // Persist session and record visit in DB immediately
     try {
       await fetch('/api/campaign/session/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
-          user_location: selectedCity,
+          session_id: activeSession,
+          user_location: selectedRestaurant?.city || selectedCity,
+          latitude: selectedRestaurant?.latitude || userCoords?.lat,
+          longitude: selectedRestaurant?.longitude || userCoords?.lng,
           restaurant_id: selectedRestaurant?.id || 1,
-          dish_id: (finalDish as { id?: number })?.id || 1
+          dish_id: (finalDish as { id?: number })?.id || 1,
+          current_stage: 'frame_5_eating_begins',
+          current_step: 'eating_begins',
+          food_meter_percentage: 20
         })
       });
-    } catch {}
+
+      // Save visit to campaign_visits in DB
+      await fetch('/api/campaign/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          restaurant_id: selectedRestaurant?.id || 1,
+          restaurant_name: selectedRestaurant?.name || 'Local Food Spot',
+          dish_id: (finalDish as { id?: number })?.id || 1,
+          dish_name: finalDish.name,
+          city: selectedRestaurant?.city || selectedCity || 'Pune',
+          latitude: selectedRestaurant?.latitude || userCoords?.lat || 18.5204,
+          longitude: selectedRestaurant?.longitude || userCoords?.lng || 73.8407
+        })
+      });
+    } catch (err) {
+      console.warn('Dish & visit save notice:', err);
+    }
+
+    trackUserStep({
+      sessionId: activeSession,
+      stepName: 'frame_5_eating_begins',
+      stepTitle: `Frame 5: Bakasur Mode ON - Eating ${finalDish.name}`,
+      stepNumber: 5,
+      restaurantId: selectedRestaurant?.id,
+      dishId: (finalDish as { id?: number })?.id,
+      userLocation: selectedRestaurant?.city || selectedCity,
+      latitude: selectedRestaurant?.latitude || userCoords?.lat,
+      longitude: selectedRestaurant?.longitude || userCoords?.lng,
+      foodMeterPercentage: 20,
+      metadata: {
+        dish_name: finalDish.name,
+        restaurant_name: selectedRestaurant?.name,
+        city: selectedRestaurant?.city || selectedCity
+      }
+    });
   };
 
   // Frame 5 -> Frame 6 (Eating Begins -> Feeding Loop)
-  const handleFeedMore = () => {
+  const handleFeedMore = async () => {
     playSound('click');
+    const activeSession = sessionId || getOrCreateSessionId();
+
+    let nextStage: 1 | 2 | 3 = 2;
     if (feastingStage === 1) {
+      nextStage = 2;
       setFeastingStage(2);
       setCurrentFrame(6);
     } else if (feastingStage === 2) {
+      nextStage = 3;
       setFeastingStage(3);
       setCurrentFrame(6);
     } else {
@@ -224,18 +329,33 @@ export default function CampaignPage() {
       return;
     }
 
+    const newPct = nextStage === 2 ? 60 : 90;
+
+    try {
+      await fetch('/api/campaign/aur-khilo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          current_stage: `stage_${nextStage}`
+        })
+      });
+    } catch (err) {
+      console.warn('Aur khilo save notice:', err);
+    }
+
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_6_feeding_loop',
-      stepTitle: `Frame 6: Feeding Loop Progressed (Round ${feastingStage + 1})`,
+      stepTitle: `Frame 6: Feeding Loop Progressed (Round ${nextStage})`,
       stepNumber: 6,
       restaurantId: selectedRestaurant?.id,
-      foodMeterPercentage: feastingStage === 1 ? 60 : 90
+      foodMeterPercentage: newPct
     });
   };
 
   // Frame 6 (Trailer) -> Random Food Tour Spot 1
-  const handleStartFoodTour = () => {
+  const handleStartFoodTour = async () => {
     playSound('bite');
     const firstSpot = getRandomFoodSpot([]);
     setCurrentTourSpot(firstSpot);
@@ -243,8 +363,25 @@ export default function CampaignPage() {
     setTourSpotRound(1);
     setFeastingStage(2);
 
+    const activeSession = sessionId || getOrCreateSessionId();
+
+    try {
+      await fetch('/api/campaign/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          current_stage: 'frame_6_tour_spot_1',
+          current_step: 'tour_spot_1',
+          food_meter_percentage: 65
+        })
+      });
+    } catch (err) {
+      console.warn('Spot 1 save notice:', err);
+    }
+
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: `frame_6_tour_spot_1_${firstSpot.id}`,
       stepTitle: `Frame 6: Random Tour Spot 1 - ${firstSpot.dishName} at ${firstSpot.spotName}`,
       stepNumber: 6,
@@ -258,7 +395,9 @@ export default function CampaignPage() {
   };
 
   // Random Food Tour Spot (Eating twice - 2 dishes before acidity kicks in)
-  const handleNextTourSpot = () => {
+  const handleNextTourSpot = async () => {
+    const activeSession = sessionId || getOrCreateSessionId();
+
     if (tourSpotRound === 1) {
       playSound('bite');
       const secondSpot = getRandomFoodSpot(visitedSpotIds);
@@ -267,8 +406,23 @@ export default function CampaignPage() {
       setTourSpotRound(2);
       setFeastingStage(3);
 
+      try {
+        await fetch('/api/campaign/session/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: activeSession,
+            current_stage: 'frame_6_tour_spot_2',
+            current_step: 'tour_spot_2',
+            food_meter_percentage: 90
+          })
+        });
+      } catch (err) {
+        console.warn('Spot 2 save notice:', err);
+      }
+
       trackUserStep({
-        sessionId,
+        sessionId: activeSession,
         stepName: `frame_6_tour_spot_2_${secondSpot.id}`,
         stepTitle: `Frame 6: Random Tour Spot 2 - ${secondSpot.dishName} at ${secondSpot.spotName}`,
         stepNumber: 6,
@@ -289,8 +443,23 @@ export default function CampaignPage() {
     setFeastingStage(3);
     setCurrentFrame(7);
 
+    try {
+      await fetch('/api/campaign/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          current_stage: 'acidity',
+          current_step: 'acidity_appears',
+          food_meter_percentage: 100
+        })
+      });
+    } catch (err) {
+      console.warn('Acidity save notice:', err);
+    }
+
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_7_acidity_appears',
       stepTitle: 'Frame 7: Bakasur Overeats 2 Food Tour Spots - Acidity Appears',
       stepNumber: 7,
@@ -300,13 +469,28 @@ export default function CampaignPage() {
   };
 
   // Frame 6 -> Frame 7 (Feeding Loop Complete -> Acidity Appears)
-  const handleFeedingLoopComplete = () => {
+  const handleFeedingLoopComplete = async () => {
     playSound('bite');
     setFeastingStage(3);
     setCurrentFrame(7);
 
+    const activeSession = sessionId || getOrCreateSessionId();
+
+    try {
+      await fetch('/api/campaign/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          current_stage: 'acidity',
+          current_step: 'acidity_appears',
+          food_meter_percentage: 100
+        })
+      });
+    } catch {}
+
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_7_acidity_appears',
       stepTitle: 'Frame 7: Acidity Appears (Overeating After Round 3)',
       stepNumber: 7,
@@ -318,8 +502,9 @@ export default function CampaignPage() {
   // Frame 7 -> Frame 8 (Comic Reaction Complete -> Help Bakasur)
   const handleAcidityAutoAdvance = () => {
     setCurrentFrame(8);
+    const activeSession = sessionId || getOrCreateSessionId();
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_8_help_bakasur',
       stepTitle: 'Frame 8: Bakasur Needs Help Prompt',
       stepNumber: 8,
@@ -328,11 +513,25 @@ export default function CampaignPage() {
   };
 
   // Frame 8 -> Frame 9 (Help Bakasur Clicked -> Gastrium Dose Animation)
-  const handleHelpBakasur = () => {
+  const handleHelpBakasur = async () => {
     playSound('relief');
     setCurrentFrame(9);
+    const activeSession = sessionId || getOrCreateSessionId();
+
+    try {
+      await fetch('/api/campaign/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          current_stage: 'frame_9_gastrium_animation',
+          current_step: 'gastrium_dose'
+        })
+      });
+    } catch {}
+
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_9_gastrium_animation',
       stepTitle: 'Frame 9: Gastrium 4-Message Automatic Relief Sequence Started',
       stepNumber: 9,
@@ -341,11 +540,25 @@ export default function CampaignPage() {
   };
 
   // Frame 9 -> Frame 10 (Gastrium Animation Finished -> Recommendation Submitted)
-  const handleGastriumComplete = () => {
+  const handleGastriumComplete = async () => {
     playSound('fanfare');
     setCurrentFrame(10);
+    const activeSession = sessionId || getOrCreateSessionId();
+
+    try {
+      await fetch('/api/campaign/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          current_stage: 'relief_done',
+          current_step: 'recommendation_submitted'
+        })
+      });
+    } catch {}
+
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_10_recommendation_submitted',
       stepTitle: 'Frame 10: Recommendation Submitted (Mazaa Aa Gaya)',
       stepNumber: 10,
@@ -361,14 +574,15 @@ export default function CampaignPage() {
   // Frame 10 -> Frame 11 (Recommendation Submitted -> Live Food Tour Map)
   const handleViewMap = async () => {
     playSound('click');
+    const activeSession = sessionId || getOrCreateSessionId();
 
-    // Automatically persist visited spot to MySQL DB
+    // Automatically persist visited spot to MySQL DB and mark map_visited = 1
     try {
       await fetch('/api/campaign/visit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
+          session_id: activeSession,
           restaurant_id: selectedRestaurant?.id || 1,
           restaurant_name: selectedRestaurant?.name || 'Local Restaurant',
           dish_id: (selectedDish as { id?: number })?.id || null,
@@ -378,13 +592,24 @@ export default function CampaignPage() {
           longitude: selectedRestaurant?.longitude || userCoords?.lng || 73.8407
         })
       });
+
+      await fetch('/api/campaign/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSession,
+          current_stage: 'map',
+          current_step: 'live_map',
+          map_visited: 1
+        })
+      });
     } catch (err) {
       console.warn('Failed to record visit to DB:', err);
     }
 
     setCurrentFrame(11);
     trackUserStep({
-      sessionId,
+      sessionId: activeSession,
       stepName: 'frame_11_live_map',
       stepTitle: 'Frame 11: Live Food Tour Map Explored',
       stepNumber: 11,
@@ -434,10 +659,10 @@ export default function CampaignPage() {
           mobile,
           name: name || 'Foodie Follower',
           city: selectedRestaurant?.city || selectedCity,
-          restaurant_id: selectedRestaurant?.id || 1,
-          restaurant_name: selectedRestaurant?.name || 'Local Food Spot',
-          dish_id: (selectedDish as { id?: number })?.id || 1,
-          dish_name: selectedDish?.name || 'Signature Food',
+          restaurant_id: selectedRestaurant?.id || null,
+          restaurant_name: selectedRestaurant?.name || null,
+          dish_id: (selectedDish as { id?: number })?.id || null,
+          dish_name: selectedDish?.name || null,
           latitude: selectedRestaurant?.latitude || 18.5204,
           longitude: selectedRestaurant?.longitude || 73.8407,
           consent: true,
@@ -623,7 +848,7 @@ export default function CampaignPage() {
               {currentFrame === 4 && selectedRestaurant && (
                 <Frame4ManualDish
                   restaurant={selectedRestaurant}
-                  onCustomDishSubmit={(dishName) => handleDishConfirmed(dishName)}
+                  onCustomDishSubmit={(dishName, dishImage) => handleDishConfirmed(dishName, dishImage)}
                   onBackToOptions={() => setCurrentFrame(3)}
                 />
               )}

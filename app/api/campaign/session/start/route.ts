@@ -6,7 +6,20 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { session_id, user_location, latitude, longitude, restaurant_id, dish_id } = body;
+    const {
+      session_id,
+      user_location,
+      latitude,
+      longitude,
+      restaurant_id,
+      dish_id,
+      current_stage,
+      current_step,
+      food_meter_percentage,
+      aur_khilo_clicks,
+      map_visited,
+      form_submitted
+    } = body;
 
     if (!session_id) {
       return NextResponse.json({ success: false, error: 'session_id is required' }, { status: 400 });
@@ -19,9 +32,12 @@ export async function POST(request: Request) {
       longitude: longitude ? parseFloat(longitude) : null,
       restaurant_id: restaurant_id ? parseInt(restaurant_id, 10) : null,
       dish_id: dish_id ? parseInt(dish_id, 10) : null,
-      current_stage: 'stage_1',
-      food_meter_percentage: 20,
-      aur_khilo_clicks: 0
+      current_stage: current_stage || undefined,
+      current_step: current_step || undefined,
+      food_meter_percentage: food_meter_percentage !== undefined ? parseInt(food_meter_percentage, 10) : undefined,
+      aur_khilo_clicks: aur_khilo_clicks !== undefined ? parseInt(aur_khilo_clicks, 10) : undefined,
+      map_visited: map_visited !== undefined ? (map_visited ? 1 : 0) : undefined,
+      form_submitted: form_submitted !== undefined ? (form_submitted ? 1 : 0) : undefined
     });
 
     return NextResponse.json({
