@@ -278,11 +278,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   const isCustomActive = Boolean(customDishInput.trim());
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-3 sm:py-6 md:py-8 px-3 sm:px-6 md:px-10 gap-3 sm:gap-5 md:gap-6">
-      {/* 1. Location Pill at Top (Matching Image 2) */}
-      <div className="shrink-0 flex items-center justify-between w-full px-4 py-2.5 sm:py-3 rounded-xl bg-[#F1F5F9] border border-slate-200/80">
+    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-3 sm:py-6 md:py-8 px-5 sm:px-8 md:px-10 gap-3 sm:gap-5 md:gap-6 bg-white">
+      {/* 1. Location Pill at Top (Matching Image 3) */}
+      <div className="shrink-0 flex items-center justify-between w-full px-4 py-2.5 sm:py-3 rounded-xl bg-[#F0F4F8] border border-slate-200/80">
         <div className="flex items-center gap-2.5 min-w-0">
-          <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#0052FF] fill-[#0052FF] shrink-0" />
+          <MapPin className="w-5 h-5 text-[#0047BA] fill-[#0047BA] shrink-0" />
           <span className="text-xs sm:text-sm md:text-base font-black text-[#0B1B48] truncate">
             {restaurant.name}{restaurant.area && !restaurant.name.includes(restaurant.area) ? `, ${restaurant.area}` : ''}
           </span>
@@ -292,17 +292,17 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         </div>
       </div>
 
-      {/* 2. Headline & Subtitle (Matching Image 2) */}
-      <div className="space-y-1 sm:space-y-1.5">
-        <h2 className="text-[28px] sm:text-[34px] md:text-[42px] lg:text-[46px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
+      {/* 2. Headline & Subtitle (Matching Image 3) */}
+      <div className="space-y-1 sm:space-y-1.5 text-left">
+        <h2 className="text-[28px] sm:text-[34px] md:text-[42px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
           Restaurant mil gaya.<br />Ab plate decide karo.
         </h2>
-        <p className="text-xs sm:text-sm md:text-base font-semibold text-slate-700 leading-snug">
+        <p className="text-xs sm:text-sm md:text-base font-semibold text-[#0B1B48] leading-snug">
           Yeh jagah in dishes ke liye famous hai.
         </p>
       </div>
 
-      {/* 3. Exactly THREE Menu Pills (Matching Image 2) */}
+      {/* 3. Exactly THREE Menu Pills (Matching Image 3) */}
       <div className="shrink-0 flex flex-wrap items-center gap-2.5 sm:gap-3 w-full">
         {isLoading && rawDishes.length === 0 ? (
           <div className="flex gap-2 w-full animate-pulse">
@@ -321,12 +321,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                 className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm md:text-base transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
                   isSelected
                     ? 'bg-[#D4380D] text-white shadow-md shadow-[#D4380D]/30 border border-[#D4380D]'
-                    : 'bg-[#EEF2F6] hover:bg-slate-200 border border-slate-300/80 text-[#0B1B48]'
+                    : 'bg-[#F0F4F8] hover:bg-slate-200 border border-slate-300/80 text-[#0B1B48]'
                 }`}
               >
                 <span>{dish.name}</span>
                 {isSelected && (
-                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3] text-white shrink-0" />
+                  <Check className="w-4 h-4 stroke-[3] text-white shrink-0" />
                 )}
               </button>
             );
@@ -336,25 +336,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
       {/* 4. Custom Dish Input with Live Ajax Suggestions Dropdown */}
       <div ref={dropdownRef} className="relative w-full space-y-1.5 pt-1 sm:pt-2">
-        <div className="flex items-center justify-between">
-          <label className="text-xs sm:text-sm md:text-base font-bold text-[#0B1B48] block">
-            Aapki favourite kuch aur hai?
-          </label>
-          {isSearching && (
-            <span className="text-[11px] sm:text-xs text-blue-600 font-semibold flex items-center gap-1 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
-              Searching live menu...
-            </span>
-          )}
-        </div>
+        <label className="text-xs sm:text-sm md:text-base font-bold text-[#0B1B48] block text-left">
+          Aapki favourite kuch aur hai?
+        </label>
 
-        <div
-          className={`relative flex items-center w-full px-4 py-3 sm:py-3.5 rounded-xl bg-white border-2 transition-all shadow-xs ${
-            isCustomActive
-              ? 'border-[#1E40AF] ring-2 ring-[#1E40AF]/20'
-              : 'border-[#1E40AF]/70 hover:border-[#1E40AF]'
-          }`}
-        >
+        <div className="relative flex items-center w-full px-4 py-3 sm:py-3.5 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
           <input
             type="text"
             value={customDishInput}
@@ -362,12 +348,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
               if (suggestions.length > 0) setShowDropdown(true);
             }}
             onChange={(e) => handleCustomInputChange(e.target.value)}
-            placeholder="Search dish (e.g. Pav Bhaji, Momos, Biryani...)"
-            className="w-full bg-transparent text-xs sm:text-sm md:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none"
+            placeholder="Apni favourite dish likho"
+            className="w-full bg-transparent text-xs sm:text-sm md:text-base font-semibold text-slate-900 placeholder-[#94A3B8] focus:outline-none"
           />
 
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
-            {customDishInput && (
+            {customDishInput ? (
               <button
                 type="button"
                 onClick={handleClearCustomInput}
@@ -376,18 +362,18 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
               >
                 ✕
               </button>
-            )}
-            <Pencil className="w-4 h-4 sm:w-5 sm:h-5 text-[#1E40AF]" />
+            ) : null}
+            <Pencil className="w-5 h-5 text-[#0047BA] shrink-0 stroke-[2.5]" />
           </div>
         </div>
 
         {/* Live Ajax Dropdown Suggestions */}
         {showDropdown && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.22)] border-2 border-[#1E40AF]/30 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.22)] border-2 border-[#1D4ED8]/30 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
             <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-              <span className="flex items-center gap-1.5 text-[#1E40AF]">
+              <span className="flex items-center gap-1.5 text-[#0047BA]">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live Menu Suggestions ({suggestions.length})
+                Menu Suggestions ({suggestions.length})
               </span>
               <span className="text-[10px] text-slate-400 font-normal">Tap to select</span>
             </div>
@@ -438,13 +424,13 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         )}
       </div>
 
-      {/* 5. Primary CTA: YEH WALI KHILAO (Matching Image 2) */}
-      <div className="shrink-0 w-full pt-2">
+      {/* 5. Primary CTA: YEH WALI KHILAO (Matching Image 3) */}
+      <div className="shrink-0 w-full pt-1 sm:pt-2">
         <button
           onClick={onConfirmDish}
           disabled={!selectedDish && !customDishInput.trim()}
           type="button"
-          className="w-full py-4 sm:py-4.5 px-6 rounded-xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base md:text-lg uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
         >
           YEH WALI KHILAO
         </button>
