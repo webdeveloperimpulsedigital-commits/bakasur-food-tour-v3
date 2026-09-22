@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Volume2, VolumeX, ArrowLeft } from 'lucide-react';
+import { Volume2, VolumeX, ArrowLeft, Flame } from 'lucide-react';
 import { Restaurant } from '@/lib/db';
 
 import { DishVisualAssets, getDishVisualAssets, getDishExactPlateImage, getDishExactFlyingImage } from '@/lib/dishAssets';
@@ -27,8 +27,6 @@ interface BakasurEatingStageProps {
   onPlayBite?: () => void;
 }
 
-// Calibrated bite cycle for food conveyor into Bakasur's mouth
-const BITE_CYCLE_MS = 1200; // ms per food item consumed
 const TOTAL_STAGE_SECONDS = 10; // auto-advance duration
 // 3400ms per food consumption cycle (slower, smooth flight from left + bite + relaxed rhythmic chewing)
 const BITE_CYCLE_MS = 3400;
@@ -44,9 +42,12 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 }) => {
   // Active slide index: 0 = "BAKASUR MODE: ON", 1 = "Chef ki shift khatam. Bakasur ki bhookh nahi."
   const [activeSlide, setActiveSlide] = useState<0 | 1>(0);
+  const [isSlideTransitioning, setIsSlideTransitioning] = useState<boolean>(false);
   const [biteFlash, setBiteFlash] = useState<boolean>(false);
   const [cycleProgress, setCycleProgress] = useState<number>(0); // 0 to 1 in each bite cycle
   const [dishesDevouredCount, setDishesDevouredCount] = useState<number>(0);
+  const [frameIndex, setFrameIndex] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
 
   const cycleStartTimeRef = useRef<number>(performance.now());
   const hasBittenThisCycleRef = useRef<boolean>(false);
@@ -79,10 +80,14 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     }
   }, []);
 
-  // 3. Slide rotation timer: toggles between Slide 1 and Slide 2 every 3.5 seconds
+  // 3. Slide rotation timer: toggles between Slide 1 and Slide 2 every 4 seconds
   useEffect(() => {
     const slideTimer = setInterval(() => {
-      setActiveSlide((prev) => (prev === 0 ? 1 : 0));
+      setIsSlideTransitioning(true);
+      setTimeout(() => {
+        setActiveSlide((prev) => (prev === 0 ? 1 : 0));
+        setIsSlideTransitioning(false);
+      }, 250);
     }, 4000);
 
     return () => clearInterval(slideTimer);
@@ -168,7 +173,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
   // Dish position & scale as it flies in ONE BY ONE from the left side into mouth:
   // Coordinates are relative to Bakasur's mouth: (0, 0) is the mouth cavity opening
-  let dishX = -580;
+  let dishX = -320;
   let dishScale = 1.0;
   let dishOpacity = 1.0;
 
@@ -177,7 +182,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     const t = cycleProgress / 0.60;
     // Smooth ease-out curve
     const ease = 1 - Math.pow(1 - t, 2.2);
-    dishX = -560 * (1 - ease);
+    dishX = -320 * (1 - ease);
     dishScale = 0.75 + ease * 0.35;
     dishOpacity = Math.min(1, t * 3.5);
   } else if (cycleProgress >= 0.60 && cycleProgress < 0.72) {
@@ -198,11 +203,11 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       onClick={() => {
         if (onComplete) onComplete();
       }}
-      className="relative w-full h-full min-h-full overflow-hidden bg-[#031058] flex items-center justify-center select-none cursor-pointer"
+      className="relative w-full h-full min-h-full overflow-hidden bg-[#031058] flex flex-col justify-between select-none cursor-pointer"
     >
       {/* 1. TOP HEADER: Clean brand header matching mockup */}
-      <div className="relative z-40 px-6 sm:px-8 pt-7 sm:pt-9 flex items-center justify-between text-white w-full">
-        <div className="flex items-center gap-3">
+      <div className="relative z-40 px-4 xs:px-6 sm:px-8 pt-4 xs:pt-6 sm:pt-8 pb-2 flex items-center justify-between text-white w-full shrink-0">
+        <div className="flex items-center gap-2 xs:gap-3">
           {onBack && (
             <button
               onClick={(e) => {
@@ -221,9 +226,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 xs:gap-3">
           {/* Devoured dishes badge */}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black shadow-md">
+          <div className="flex items-center gap-1.5 px-2.5 xs:px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[11px] xs:text-xs font-black shadow-md">
             <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400 animate-pulse" />
             <span>Devoured: {dishesDevouredCount}</span>
           </div>
@@ -236,7 +241,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
               }}
               type="button"
               aria-label={soundEnabled ? 'Mute Sound' : 'Enable Sound'}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer border border-white/15"
+              className="p-1.5 xs:p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer border border-white/15"
             >
               {soundEnabled ? (
                 <Volume2 className="w-4 h-4 text-yellow-300" />
@@ -249,7 +254,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       </div>
 
       {/* 2. MAIN CANVAS ARENA */}
-      <div className="relative flex-1 w-full h-full overflow-hidden">
+      <div className="relative flex-1 w-full min-h-0 overflow-hidden">
 
         {/* TOP-LEFT HEADLINE BILLBOARD (Strictly left column to guarantee ZERO overlap with Bakasur) */}
         <div
@@ -257,7 +262,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             e.stopPropagation();
             setActiveSlide(activeSlide === 0 ? 1 : 0);
           }}
-          className="absolute left-5 sm:left-8 top-3 sm:top-5 z-20 max-w-[48%] xs:max-w-[50%] sm:max-w-[52%] cursor-pointer select-none"
+          className="absolute left-4 xs:left-6 sm:left-8 top-2 xs:top-3 sm:top-5 z-20 max-w-[55%] xs:max-w-[50%] sm:max-w-[52%] cursor-pointer select-none"
         >
           <div
             className={`transition-all duration-300 transform ${isSlideTransitioning
@@ -267,14 +272,14 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           >
             {activeSlide === 0 ? (
               /* SLIDE 1: BAKASUR MODE: ON */
-              <div className="font-black text-[28px] xs:text-[34px] sm:text-[44px] md:text-[54px] text-white leading-[0.93] tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+              <div className="font-black text-[26px] xs:text-[32px] sm:text-[44px] md:text-[54px] text-white leading-[0.93] tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
                 <div>BAKASUR</div>
                 <div>MODE:</div>
                 <div className="text-[#E2370A] drop-shadow-[0_4px_24px_rgba(226,55,10,0.6)]">ON</div>
               </div>
             ) : (
               /* SLIDE 2: Chef ki shift khatam. Bakasur ki bhookh nahi. */
-              <div className="font-black text-[20px] xs:text-[24px] sm:text-[32px] md:text-[40px] text-white leading-[1.08] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+              <div className="font-black text-[18px] xs:text-[22px] sm:text-[32px] md:text-[40px] text-white leading-[1.08] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
                 <div>Chef ki shift</div>
                 <div>khatam.</div>
                 <div>Bakasur ki</div>
@@ -287,7 +292,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </div>
 
         {/* RIGHT SIDE: BAKASUR WITH SYNCHRONIZED CHEWING & MOUTH ANIMATION */}
-        <div className="absolute right-0 bottom-0 h-[66%] sm:h-[73%] md:h-[80%] max-h-[480px] sm:max-h-[550px] md:max-h-[620px] aspect-[640/800] flex items-end justify-end pointer-events-none select-none z-10 mr-0 sm:mr-2 md:mr-6">
+        <div className="absolute right-0 bottom-0 w-[85%] xs:w-[80%] sm:w-[72%] md:w-[65%] h-[80%] sm:h-[86%] max-h-[600px] flex items-end justify-end pointer-events-none select-none z-10 mr-0 sm:mr-2 md:mr-6">
           <div className="relative w-full h-full flex items-end justify-end">
 
             {/* BITE CRUNCH IMPACT SPARK & CHOMP FLASH */}
@@ -349,8 +354,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             <img
               src={`/images/chewing/frame_${String(frameIndex).padStart(3, '0')}.webp`}
               alt="Bakasur Eating Action"
-              className={`w-full h-full object-contain object-bottom pointer-events-none transition-transform duration-75 ${biteFlash ? 'scale-[1.03] brightness-110' : 'scale-100'
-                }`}
+              className={`w-full h-full object-contain object-bottom pointer-events-none transition-transform duration-75 ${
+                biteFlash ? 'scale-[1.03] brightness-110' : 'scale-100'
+              }`}
             />
           </div>
         </div>
