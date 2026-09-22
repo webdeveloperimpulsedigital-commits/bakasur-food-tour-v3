@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, ArrowLeft, Utensils } from 'lucide-react';
+import { Volume2, VolumeX, ArrowLeft, Utensils, Sparkles } from 'lucide-react';
 import { FoodTourSpot } from '@/lib/foodTourSpots';
 
 interface Frame6RandomFoodSpotProps {
   spot: FoodTourSpot;
-  round: number; // 1 or 2
+  round: number; // 1 (Dosa) or 2 (Pav Bhaji)
   soundEnabled?: boolean;
   onToggleSound?: () => void;
   onBack?: () => void;
@@ -21,17 +21,29 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
   onBack,
   onFeedMore
 }) => {
-  // Step 1: Bakasur eating at spot -> Step 2: Finished / Empty plate + "AUR KHILAO"
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(3.5);
+  // Step 1: Bakasur eating at spot (full 10-12s video)
+  // Step 2: Finished / Empty plate (4.5s) -> then auto-advances to next spot / frame
+  const EATING_DURATION = 11.5; // seconds for eating video (full Dosa/Pav Bhaji clip)
+  const EMPTY_DURATION = 4.5;   // seconds for empty plate celebration before auto-advancing
 
-  // Auto-advance from Step 1 (Eating) to Step 2 (Empty Plate) after 3.5 seconds
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [eatingSecondsRemaining, setEatingSecondsRemaining] = useState<number>(EATING_DURATION);
+  const [emptySecondsRemaining, setEmptySecondsRemaining] = useState<number>(EMPTY_DURATION);
+
+  // When spot or round changes, ALWAYS reset to Step 1 (Eating video)
+  useEffect(() => {
+    setCurrentStep(1);
+    setEatingSecondsRemaining(EATING_DURATION);
+    setEmptySecondsRemaining(EMPTY_DURATION);
+  }, [spot.id, round]);
+
+  // Step 1: Timer to advance from Step 1 (Eating) to Step 2 (Empty Plate)
   useEffect(() => {
     if (currentStep === 1) {
-      setSecondsRemaining(3.5);
+      setEatingSecondsRemaining(EATING_DURATION);
 
       const interval = setInterval(() => {
-        setSecondsRemaining((prev) => {
+        setEatingSecondsRemaining((prev) => {
           const next = parseFloat((prev - 0.1).toFixed(1));
           return next > 0 ? next : 0;
         });
@@ -39,19 +51,44 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
 
       const timer = setTimeout(() => {
         setCurrentStep(2);
-      }, 3500);
+      }, EATING_DURATION * 1000);
 
       return () => {
         clearInterval(interval);
         clearTimeout(timer);
       };
     }
-  }, [currentStep, spot.id]);
+  }, [currentStep, spot.id, round]);
 
-  // If user clicks on screen during Step 1, advance immediately to Step 2
+  // Step 2: Auto-advance to next spot (or Frame 7) after EMPTY_DURATION
+  useEffect(() => {
+    if (currentStep === 2) {
+      setEmptySecondsRemaining(EMPTY_DURATION);
+
+      const interval = setInterval(() => {
+        setEmptySecondsRemaining((prev) => {
+          const next = parseFloat((prev - 0.1).toFixed(1));
+          return next > 0 ? next : 0;
+        });
+      }, 100);
+
+      const timer = setTimeout(() => {
+        onFeedMore();
+      }, EMPTY_DURATION * 1000);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timer);
+      };
+    }
+  }, [currentStep, onFeedMore]);
+
+  // Screen click handler: advances step immediately
   const handleStageClick = () => {
     if (currentStep === 1) {
       setCurrentStep(2);
+    } else {
+      onFeedMore();
     }
   };
 
@@ -62,11 +99,11 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
   return (
     <div
       onClick={handleStageClick}
-      className="w-full h-full flex flex-col md:flex-row bg-white overflow-hidden relative select-none"
+      className="w-full h-full flex flex-col md:flex-row bg-white overflow-hidden relative select-none cursor-pointer"
     >
       {/* LEFT (Desktop) / TOP (Mobile): Visual Media Showcase */}
-      <div className="w-full md:w-1/2 h-[46%] sm:h-[48%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
-        {/* Media (Static Video or High-Res Image - clean without top overlay buttons) */}
+      <div className="w-full md:w-1/2 h-[64%] xs:h-[66%] sm:h-[68%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
+        {/* Media (Eating video or Empty plate video - clean without top overlay buttons) */}
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
           {isVideo ? (
             <video
@@ -74,32 +111,36 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
               src={activeMedia}
               playsInline
               autoPlay
-              loop
+              loop={false}
               muted={!soundEnabled}
-              className="w-full h-full object-cover object-[center_18%]"
+              onEnded={() => {
+                // When video naturally reaches end, transition to next phase
+                if (currentStep === 1) {
+                  setCurrentStep(2);
+                } else {
+                  onFeedMore();
+                }
+              }}
+              className="w-full h-full object-cover object-[center_25%]"
             />
           ) : (
             <img
               key={`${spot.id}-${currentStep}`}
               src={activeMedia}
               alt={`${spot.dishName} at ${spot.spotName}`}
-              className="w-full h-full object-cover object-[center_18%] transition-opacity duration-300"
+              className="w-full h-full object-cover object-[center_25%] transition-opacity duration-300"
             />
           )}
 
-          {/* Subtle dish location tag in bottom left of image */}
-          <div className="absolute bottom-2 left-3 z-30 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-sm text-white text-[10px] sm:text-xs font-bold flex items-center gap-1.5 border border-white/15">
-            <Utensils className="w-3 h-3 text-orange-400" />
-            <span>{spot.spotName}</span>
-          </div>
+          {/* Clean media without any text overlays on top of video */}
         </div>
       </div>
 
-      {/* RIGHT (Desktop) / BOTTOM (Mobile): Clean Punchy Copy & "AUR KHILAO" Action */}
-      <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col justify-start md:justify-center items-start text-left bg-white p-3.5 sm:p-6 md:p-8 lg:p-10 z-20 gap-3 sm:gap-6 overflow-y-auto">
+      {/* RIGHT (Desktop) / BOTTOM (Mobile): Clean Punchy Copy & Action Section */}
+      <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col justify-center items-start text-left bg-white py-5 sm:py-7 md:py-9 px-5 sm:px-8 md:px-10 z-20 gap-3.5 sm:gap-5 overflow-y-auto scrollbar-thin">
         {/* Comedic Headline matching reference mockup */}
         <div className="space-y-1 sm:space-y-2 min-h-[70px] sm:min-h-[85px] flex flex-col justify-center">
-          <h1 className="text-[26px] xs:text-[30px] sm:text-[34px] md:text-[38px] font-black text-[#0B1B48] tracking-tight leading-[1.15]">
+          <h1 className="text-[30px] xs:text-[34px] sm:text-[40px] md:text-[46px] font-black text-[#0B1B48] tracking-tight leading-[1.12]">
             {activeCopy.line1}
             <br />
             {activeCopy.line2Prefix}
@@ -108,42 +149,18 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
           </h1>
         </div>
 
-        {/* Step 1: Subtle progress / tap indicator | Step 2: Bold "AUR KHILAO" Button */}
+        {/* Step 2: Clean "AUR KHILAO" Button */}
         <div className="w-full pt-1 sm:pt-2">
-          {currentStep === 1 ? (
-            <div className="w-full space-y-2">
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
-                <div
-                  className="h-full bg-gradient-to-r from-orange-400 to-[#D4380D] transition-all duration-100 ease-linear rounded-full"
-                  style={{ width: `${((3.5 - secondsRemaining) / 3.5) * 100}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-xs text-slate-500 font-semibold px-1">
-                <div className="inline-flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#D4380D] animate-ping" />
-                  <span>Devouring in progress...</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentStep(2);
-                  }}
-                  className="text-slate-400 hover:text-slate-700 underline text-[11px] cursor-pointer"
-                >
-                  Skip &rarr;
-                </button>
-              </div>
-            </div>
-          ) : (
+          {currentStep === 2 && (
             <div className="w-full space-y-2 animate-in fade-in duration-200">
+              {/* Action Button: Click to advance immediately */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onFeedMore();
                 }}
                 type="button"
-                className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base sm:text-lg md:text-xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
+                className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-lg sm:text-xl md:text-2xl uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
               >
                 AUR KHILAO
               </button>

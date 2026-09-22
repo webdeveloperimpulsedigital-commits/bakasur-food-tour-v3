@@ -331,7 +331,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
     if (frameNumber === 3 || frameNumber === 4) return '/images/all-frames/Showing Empty Plate.mp4';
     if (frameNumber === 6) return '/images/all-frames/Showing Love.mp4';
     if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/all-frames/Fire on stomach v2.mp4';
-    if (frameNumber === 9) return videoUrl || '/images/all-frames/first-frame.mp4';
+    if (frameNumber === 9) return '/images/all-frames/Drinking Gastrium.mp4';
     if (frameNumber === 10) return '/images/all-frames/Thumbs Up.mp4';
     if (frameNumber === 11) return '/images/all-frames/Showing Love.mp4';
     if (frameNumber === 12) return '/images/all-frames/Showing Love.mp4';
@@ -426,7 +426,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_28%] relative z-10"
+            className="w-full h-full object-cover object-[center_32%] relative z-10"
           />
         </div>
       ) : frameNumber === 6 ? (
@@ -456,28 +456,21 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           />
         </div>
       ) : frameNumber === 9 ? (
-        /* Frame 9: Exact Gastrium In Character / Bottle Frame (supports video when provided) */
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#182858]">
-          {videoUrl && videoUrl.includes('gastrium') ? (
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              playsInline
-              autoPlay
-              muted={isMuted}
-              onEnded={() => {
-                setIsPlaying(false);
-                if (onVideoEnded) onVideoEnded();
-              }}
-              className="w-full h-full object-cover object-[center_18%] relative z-10"
-            />
-          ) : (
-            <img
-              src="/images/food_tour/gastrium_in_photo.png"
-              alt="Gastrium In"
-              className="w-full h-full object-contain object-bottom p-1 sm:p-2 md:p-3 select-none pointer-events-none"
-            />
-          )}
+        /* Frame 9: Bakasur Drinking Gastrium Video from Design Team */
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
+          <video
+            ref={videoRef}
+            src="/images/all-frames/Drinking Gastrium.mp4"
+            playsInline
+            autoPlay
+            loop={false}
+            muted={!soundEnabled}
+            onEnded={() => {
+              setIsPlaying(false);
+              if (onVideoEnded) onVideoEnded();
+            }}
+            className="w-full h-full object-cover object-[center_20%] relative z-10"
+          />
         </div>
       ) : frameNumber === 10 ? (
         /* Frame 10: Thumbs Up video from Design Team (Shukriya Dost!) */
@@ -558,35 +551,6 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             }}
             className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
-
-          {/* Catchy Hungry Cue Overlay directly on Video Frame */}
-          {isEating && feastingStage < 3 && (
-            <div className="absolute bottom-6 sm:bottom-10 inset-x-3 sm:inset-x-6 flex justify-center items-center pointer-events-none z-30 animate-in fade-in zoom-in-95 duration-500">
-              <div className="relative bg-black/90 backdrop-blur-md border-2 border-yellow-400 text-white px-4 sm:px-5 py-3 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.85),0_0_25px_rgba(250,204,21,0.55)] flex items-center gap-3 sm:gap-4 max-w-sm sm:max-w-md w-full animate-bounce">
-                <div className="text-3xl sm:text-4xl shrink-0 select-none animate-pulse">
-                  {feastingStage === 1 ? '🤤' : '🤪'}
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="bg-yellow-400 text-slate-950 font-black text-[10px] sm:text-xs px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
-                      STILL HUNGRY!
-                    </span>
-                    <span className="text-yellow-300 text-[11px] sm:text-xs font-black">
-                      Needs More Food! 🍽️
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm font-black text-white mt-1 leading-snug">
-                    {feastingStage === 1
-                      ? '“Abhi toh pet khali hai! Aur lao jaldi!” 😋'
-                      : '“Monster bhookh abhi baki hai! Aur khilao!” 🍖'}
-                  </p>
-                  <p className="text-[10px] font-bold text-amber-300/90 mt-0.5">
-                    👉 Tap &ldquo;AUR KHILAO&rdquo; to feed Bakasur!
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Acidity Overload Burning Aura (Stage 3 Heartburn) */}
           {isHeartburn && (

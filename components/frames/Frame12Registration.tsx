@@ -40,7 +40,7 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-start sm:justify-between min-h-0 animate-in fade-in duration-300 gap-2 text-left overflow-y-auto scrollbar-thin py-1 sm:py-2">
+    <div className="w-full h-full flex flex-col justify-center min-h-0 animate-in fade-in duration-300 gap-2.5 sm:gap-3 text-left overflow-y-auto scrollbar-thin py-4 sm:py-6 px-4 sm:px-6">
       {/* Top Section: Back Button */}
       <div className="shrink-0 flex items-center justify-start gap-2">
         <button

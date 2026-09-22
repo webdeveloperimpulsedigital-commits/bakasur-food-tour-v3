@@ -271,7 +271,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   const isCustomActive = Boolean(customDishInput.trim());
 
   return (
-    <div className="w-full h-full flex flex-col justify-start sm:justify-between items-start text-left animate-in fade-in duration-300 pt-2 pb-2 sm:py-4 px-4 sm:px-6 md:px-8 gap-2 sm:gap-2.5 bg-white overflow-y-auto scrollbar-thin">
+    <div className="w-full h-full flex flex-col justify-between items-start text-left animate-in fade-in duration-300 py-3.5 sm:py-5 md:py-6 px-4 sm:px-6 md:px-8 gap-2 sm:gap-2.5 bg-white overflow-y-auto scrollbar-thin">
       {/* 1. Headline & Subtitle (Matching Design Mockup) */}
       <div className="space-y-0.5 text-left shrink-0">
         <h2 className="text-[20px] xs:text-[22px] sm:text-[26px] md:text-[30px] font-black text-[#0B1B48] leading-[1.1] tracking-tight">
