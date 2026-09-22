@@ -40,7 +40,7 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-between min-h-0 animate-in fade-in duration-300 gap-2 text-left">
+    <div className="w-full h-full flex flex-col justify-start sm:justify-between min-h-0 animate-in fade-in duration-300 gap-2 text-left overflow-y-auto scrollbar-thin py-1 sm:py-2">
       {/* Top Section: Back Button */}
       <div className="shrink-0 flex items-center justify-start gap-2">
         <button
@@ -64,7 +64,7 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
       </div>
 
       {/* Registration Form */}
-      <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col justify-center gap-2.5 my-auto">
+      <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col justify-start sm:justify-center gap-2 sm:gap-2.5">
         {/* Optional Name */}
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">

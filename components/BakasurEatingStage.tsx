@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Volume2, VolumeX, ArrowLeft } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 
 import { DishVisualAssets, getDishVisualAssets, getDishExactPlateImage, getDishExactFlyingImage } from '@/lib/dishAssets';

@@ -10,13 +10,13 @@ interface Frame1WelcomeProps {
 
 export const Frame1Welcome: React.FC<Frame1WelcomeProps> = ({ onStart }) => {
   return (
-    <div className="w-full h-full flex flex-col justify-center items-center text-center animate-in fade-in duration-300 py-5 sm:py-7 px-5 sm:px-8 md:px-10 gap-3.5 sm:gap-5 bg-white">
+    <div className="w-full h-full flex flex-col justify-center items-center text-center animate-in fade-in duration-300 py-3 sm:py-6 px-4 sm:px-8 md:px-10 gap-2.5 sm:gap-4 md:gap-5 bg-white">
       {/* 1. Skewed Top Badge: BAKASUR KA FOOD TOUR */}
-      <div className="inline-block transform -skew-x-6 bg-[#0B1B48] px-5 sm:px-6 py-1.5 sm:py-2 shadow-sm shrink-0">
+      {/* <div className="inline-block transform -skew-x-6 bg-[#0B1B48] px-5 sm:px-6 py-1.5 sm:py-2 shadow-sm shrink-0">
         <span className="inline-block font-black italic tracking-wider text-white text-xs sm:text-sm md:text-base uppercase">
           BAKASUR KA FOOD TOUR
         </span>
-      </div>
+      </div> */}
 
       {/* 2. Main Headline & Subtitle (Prominent and bold, matching Reference) */}
       <div className="space-y-1.5 sm:space-y-2 flex flex-col items-center text-center max-w-md">

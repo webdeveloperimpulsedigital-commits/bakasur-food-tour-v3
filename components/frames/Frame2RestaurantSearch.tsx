@@ -297,7 +297,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-4 sm:py-6 md:py-8 px-5 sm:px-8 md:px-10 gap-4 sm:gap-6 bg-white">
+    <div className="w-full h-full flex flex-col justify-start sm:justify-center items-start text-left animate-in fade-in duration-300 pt-3 pb-3 sm:py-5 md:py-8 px-4 sm:px-6 md:px-8 gap-2.5 sm:gap-4 md:gap-5 bg-white overflow-y-auto scrollbar-thin">
       {/* 1. Main Headline & Subtitle (Left-aligned matching Image 2) */}
       <div className="space-y-1 sm:space-y-1.5 text-left">
         <h2 className="text-[28px] sm:text-[34px] md:text-[42px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">

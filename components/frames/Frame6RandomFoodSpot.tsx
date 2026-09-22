@@ -65,53 +65,8 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
       className="w-full h-full flex flex-col md:flex-row bg-white overflow-hidden relative select-none"
     >
       {/* LEFT (Desktop) / TOP (Mobile): Visual Media Showcase */}
-      <div className="w-full md:w-1/2 h-[50%] sm:h-[52%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
-        {/* Top Header matching reference mockup */}
-        <div className="absolute top-0 inset-x-0 z-40 px-4 py-3 sm:py-3.5 flex items-center justify-between text-white pointer-events-auto bg-gradient-to-b from-black/60 to-transparent">
-          <div className="flex items-center gap-2">
-            {onBack && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onBack();
-                }}
-                type="button"
-                className="p-1 -ml-1 rounded-full hover:bg-white/20 transition-all cursor-pointer flex items-center justify-center"
-                aria-label="Wapas"
-              >
-                <ArrowLeft className="w-5 h-5 text-white stroke-[2.5]" />
-              </button>
-            )}
-            <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-white drop-shadow-sm">
-              BAKASUR KA FOOD TOUR
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] sm:text-xs font-black px-2.5 py-0.5 rounded-full bg-white/20 text-white">
-              Food Tour Spot
-            </span>
-            {onToggleSound && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleSound();
-                }}
-                type="button"
-                aria-label={soundEnabled ? 'Mute Sound' : 'Enable Sound'}
-                className="p-1 rounded-full bg-black/40 hover:bg-black/60 text-white/90 border border-white/20 transition-all cursor-pointer"
-              >
-                {soundEnabled ? (
-                  <Volume2 className="w-3.5 h-3.5 text-yellow-300" />
-                ) : (
-                  <VolumeX className="w-3.5 h-3.5 text-white/70" />
-                )}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Media (Static Video or High-Res Image) */}
+      <div className="w-full md:w-1/2 h-[46%] sm:h-[48%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
+        {/* Media (Static Video or High-Res Image - clean without top overlay buttons) */}
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
           {isVideo ? (
             <video
@@ -121,14 +76,14 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
               autoPlay
               loop
               muted={!soundEnabled}
-              className="w-full h-full object-cover object-[center_20%]"
+              className="w-full h-full object-cover object-[center_18%]"
             />
           ) : (
             <img
               key={`${spot.id}-${currentStep}`}
               src={activeMedia}
               alt={`${spot.dishName} at ${spot.spotName}`}
-              className="w-full h-full object-cover object-[center_20%] transition-opacity duration-300"
+              className="w-full h-full object-cover object-[center_18%] transition-opacity duration-300"
             />
           )}
 
@@ -141,7 +96,7 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
       </div>
 
       {/* RIGHT (Desktop) / BOTTOM (Mobile): Clean Punchy Copy & "AUR KHILAO" Action */}
-      <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col justify-center items-start text-left bg-white p-4 sm:p-6 md:p-8 lg:p-10 z-20 gap-4 sm:gap-6">
+      <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col justify-start md:justify-center items-start text-left bg-white p-3.5 sm:p-6 md:p-8 lg:p-10 z-20 gap-3 sm:gap-6 overflow-y-auto">
         {/* Comedic Headline matching reference mockup */}
         <div className="space-y-1 sm:space-y-2 min-h-[70px] sm:min-h-[85px] flex flex-col justify-center">
           <h1 className="text-[26px] xs:text-[30px] sm:text-[34px] md:text-[38px] font-black text-[#0B1B48] tracking-tight leading-[1.15]">

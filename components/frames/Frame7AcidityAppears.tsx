@@ -30,7 +30,7 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({ onAu
   }, [onAutoAdvance]);
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-4 sm:py-6 md:py-8 px-5 sm:px-8 md:px-10 gap-4 sm:gap-6 bg-white">
+    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-3 sm:py-5 md:py-8 px-4 sm:px-8 md:px-10 gap-3 sm:gap-5 md:gap-6 bg-white">
       {/* Frame Copy Header (Matching Screenshot 2) */}
       <div className="space-y-2">
         <h2 className="text-[26px] xs:text-[28px] sm:text-[34px] md:text-[38px] font-black tracking-tight text-[#0B1B48] leading-[1.12]">

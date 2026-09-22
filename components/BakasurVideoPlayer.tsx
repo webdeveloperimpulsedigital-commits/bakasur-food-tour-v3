@@ -340,18 +340,18 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
   // - Frame 12 (Registration): Pointing Downwards.mp4 (Bakasur points down to registration form)
   // - Frame 13 (Pass Confirmed): Thumbs Up.mp4 (Bakasur thumbs up confirmation)
   const activeVideoSrc = useMemo(() => {
-    if (frameNumber === 1) return '/images/all-frames/Pointing Downwards.mp4';
-    if (frameNumber === 2) return '/images/all-frames/Ask for location.mp4';
+    if (frameNumber === 1) return '/images/all-frames/first-frame.mp4';
+    if (frameNumber === 2) return '/images/all-frames/2-frame.mp4';
     if (frameNumber === 3 || frameNumber === 4) return '/images/all-frames/Showing Empty Plate.mp4';
     if (frameNumber === 6) return '/images/all-frames/Showing Love.mp4';
-    if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/all-frames/Fire on stomach.mp4';
-    if (frameNumber === 9) return videoUrl || '/uploads/videos/video-frame-2.mp4';
+    if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/all-frames/Fire on stomach v2.mp4';
+    if (frameNumber === 9) return videoUrl || '/images/all-frames/first-frame.mp4';
     if (frameNumber === 10) return '/images/all-frames/Thumbs Up.mp4';
     if (frameNumber === 11) return '/images/all-frames/Showing Love.mp4';
-    if (frameNumber === 12) return '/images/all-frames/Pointing Downwards.mp4';
+    if (frameNumber === 12) return '/images/all-frames/Showing Love.mp4';
     if (frameNumber === 13) return '/images/all-frames/Thumbs Up.mp4';
 
-    return videoUrl || '/images/all-frames/Pointing Downwards.mp4';
+    return videoUrl || '/images/all-frames/first-frame.mp4';
   }, [frameNumber, isHeartburn, videoUrl]);
 
   // Autoplay video smoothly on source change
@@ -403,86 +403,31 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
 
   return (
     <div className="relative w-full h-full min-h-full overflow-hidden bg-[#182858] flex items-center justify-center select-none">
-      {/* Top Header Bar matching Reference UI */}
-      {frameNumber === 2 || stepIndicator ? (
-        <div className="absolute top-0 inset-x-0 z-40 px-4 py-3 sm:py-3.5 flex items-center justify-between text-white pointer-events-auto bg-gradient-to-b from-black/70 via-black/30 to-transparent">
-          <button
-            onClick={onBack}
-            type="button"
-            className="p-1.5 -ml-1 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-xs transition-all cursor-pointer flex items-center justify-center"
-            aria-label="Wapas"
-          >
-            <ArrowLeft className="w-5 h-5 text-white stroke-[2.5]" />
-          </button>
-          <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-white drop-shadow-md">
-            BAKASUR KA FOOD TOUR
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="font-black text-xs sm:text-sm text-white drop-shadow-md bg-black/40 px-2.5 py-0.5 rounded-full border border-white/20">
-              {stepIndicator || '1/3'}
-            </span>
-            {onToggleSound && (
-              <button
-                onClick={onToggleSound}
-                type="button"
-                aria-label={soundEnabled ? "Mute Sound" : "Enable Sound"}
-                className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white/90 border border-white/20 transition-all cursor-pointer backdrop-blur-xs"
-              >
-                {soundEnabled ? (
-                  <Volume2 className="w-3.5 h-3.5 text-yellow-300" />
-                ) : (
-                  <VolumeX className="w-3.5 h-3.5 text-white/70" />
-                )}
-              </button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Top Right: Audio Toggle Button (Hidden on Frame 1 Welcome Screen) */}
-          {onToggleSound && frameNumber !== 1 && (
-            <button
-              onClick={onToggleSound}
-              type="button"
-              aria-label={soundEnabled ? "Mute Sound" : "Enable Sound"}
-              className="absolute top-3 right-3 sm:top-3.5 sm:right-4 z-40 p-1.5 sm:p-2 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 backdrop-blur-md shadow-lg transition-all cursor-pointer flex items-center justify-center group"
-              title={soundEnabled ? "Mute Sound" : "Enable Sound"}
-            >
-              {soundEnabled ? (
-                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-300 group-hover:scale-110 transition-transform" />
-              ) : (
-                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/70 group-hover:scale-110 transition-transform" />
-              )}
-            </button>
-          )}
-        </>
-      )}
-
-      {/* Main Stage Media Render */}
+      {/* Main Stage Media Render (Clean video only at the top with zero overlays) */}
       {frameNumber === 1 ? (
-        /* Frame 1: Pointing Downwards video from Design Team */
+        /* Frame 1: Newly provided video for Frame 1 */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/Pointing Downwards.mp4"
+            src="/images/all-frames/first-frame.mp4"
             playsInline
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
+            className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
         </div>
       ) : frameNumber === 2 ? (
-        /* Frame 2: Ask for location video from Design Team */
+        /* Frame 2: Ask for location video */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/Ask for location.mp4"
+            src="/images/all-frames/2-frame.mp4"
             playsInline
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
+            className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
         </div>
       ) : frameNumber === 3 || frameNumber === 4 ? (
@@ -495,7 +440,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
+            className="w-full h-full object-cover object-[center_28%] relative z-10"
           />
         </div>
       ) : frameNumber === 6 ? (
@@ -508,20 +453,20 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
+            className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
         </div>
       ) : frameNumber === 7 || frameNumber === 8 ? (
-        /* Frame 7 & 8: Fire on stomach video from Design Team */
+        /* Frame 7 & 8: Fire on stomach v2 video from Design Team */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/Fire on stomach.mp4"
+            src="/images/all-frames/Fire on stomach v2.mp4"
             playsInline
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
+            className="w-full h-full object-cover object-[center_25%] relative z-10"
           />
         </div>
       ) : frameNumber === 9 ? (
@@ -538,7 +483,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
                 setIsPlaying(false);
                 if (onVideoEnded) onVideoEnded();
               }}
-              className="w-full h-full object-cover object-[center_20%] relative z-10"
+              className="w-full h-full object-cover object-[center_18%] relative z-10"
             />
           ) : (
             <img
@@ -571,20 +516,20 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
+            className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
         </div>
       ) : frameNumber === 12 ? (
-        /* Frame 12: Pointing Downwards video for Registration */
+        /* Frame 12: Showing Love video for Registration */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/Pointing Downwards.mp4"
+            src="/images/all-frames/Showing Love.mp4"
             playsInline
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
+            className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
         </div>
       ) : frameNumber === 13 || isPass ? (
@@ -625,7 +570,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
               setIsPlaying(false);
               if (onVideoEnded) onVideoEnded();
             }}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
+            className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
 
           {/* Catchy Hungry Cue Overlay directly on Video Frame */}
