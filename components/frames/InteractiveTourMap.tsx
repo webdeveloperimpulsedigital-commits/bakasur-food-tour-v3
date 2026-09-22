@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { MapPin, Navigation, Compass, Layers } from 'lucide-react';
 
 export interface TourMapPoint {
   id: number;
@@ -29,75 +30,60 @@ interface InteractiveTourMapProps {
   onStatsLoaded?: (stats: { foodSpots: number; mustTryDishes: number; citiesCount: number }) => void;
 }
 
-const CITY_COORDINATES: Record<string, { x: number; y: number }> = {
-  pune: { x: 33, y: 64 },
-  mumbai: { x: 27, y: 58 },
-  thane: { x: 28, y: 57 },
-  delhi: { x: 36, y: 22 },
-  'new delhi': { x: 36, y: 22 },
-  bengaluru: { x: 37, y: 76 },
-  bangalore: { x: 37, y: 76 },
-  kolkata: { x: 62, y: 46 },
-  hyderabad: { x: 43, y: 62 },
-  ahmedabad: { x: 24, y: 47 },
-  jaipur: { x: 28, y: 35 },
-  indore: { x: 39, y: 46 },
-  goa: { x: 31, y: 72 },
-  chennai: { x: 43, y: 78 },
-  lucknow: { x: 48, y: 34 },
-  chandigarh: { x: 35, y: 19 },
-  guwahati: { x: 80, y: 36 }
-};
-
-function getMapCoordinates(point: TourMapPoint): { x: number; y: number } {
-  const cityKey = point.city?.toLowerCase().trim() || '';
-  for (const [key, coords] of Object.entries(CITY_COORDINATES)) {
-    if (cityKey.includes(key)) return coords;
-  }
-  if (point.latitude && point.longitude) {
-    const x = Math.max(18, Math.min(82, ((point.longitude - 68.5) / (97.5 - 68.5)) * 100));
-    const y = Math.max(16, Math.min(84, ((35.5 - point.latitude) / (35.5 - 8.0)) * 100));
-    return { x, y };
-  }
-  return { x: 33, y: 64 };
-}
-
 export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
   sessionId,
   currentUserSpot,
   onSelectPoint,
   onStatsLoaded
 }) => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
   const [points, setPoints] = useState<TourMapPoint[]>([]);
-  const [selectedPoint, setSelectedPoint] = useState<TourMapPoint | null>(null);
-  const [hoveredPoint, setHoveredPoint] = useState<TourMapPoint | null>(null);
+  const [activePoint, setActivePoint] = useState<TourMapPoint | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [userCenterCoords, setUserCenterCoords] = useState<[number, number]>([18.5204, 73.8407]);
 
-  // Fetch live points and stats from /api/campaign/map
+  // 1. Fetch live map points and stats
   useEffect(() => {
+    let isCancelled = false;
+
     async function loadData() {
       try {
-        const url = sessionId ? `/api/campaign/map?session_id=${encodeURIComponent(sessionId)}` : '/api/campaign/map';
+        setIsLoading(true);
+        const url = sessionId
+          ? `/api/campaign/map?session_id=${encodeURIComponent(sessionId)}`
+          : '/api/campaign/map';
         const res = await fetch(url);
         const json = await res.json();
 
-        if (json.success && json.data) {
-          let list: TourMapPoint[] = json.data.points || [];
+        if (!isCancelled && json.success && json.data) {
+          let list: TourMapPoint[] = (json.data.points || []).filter(
+            (p: any) => typeof p.latitude === 'number' && typeof p.longitude === 'number' && !isNaN(p.latitude) && !isNaN(p.longitude)
+          );
 
-          // If currentUserSpot is passed, ensure it is in the list and flagged
-          if (currentUserSpot) {
+          // If currentUserSpot is passed, ensure it is in the list and uniquely marked as current user
+          if (currentUserSpot && currentUserSpot.name) {
             const userLat = currentUserSpot.latitude || 18.5204;
             const userLng = currentUserSpot.longitude || 73.8407;
+            setUserCenterCoords([userLat, userLng]);
+
+            // Clear any stale isCurrentUserSpot flags on other points
+            list.forEach(p => {
+              if (p.name.toLowerCase() !== currentUserSpot.name.toLowerCase()) {
+                p.isCurrentUserSpot = false;
+              }
+            });
 
             const existingIdx = list.findIndex(
-              p => p.name.toLowerCase() === currentUserSpot.name.toLowerCase() || p.isCurrentUserSpot
+              p => p.name && p.name.toLowerCase() === currentUserSpot.name.toLowerCase()
             );
 
             if (existingIdx !== -1) {
               list[existingIdx] = {
                 ...list[existingIdx],
                 name: currentUserSpot.name,
-                city: currentUserSpot.city,
-                featured_dish: currentUserSpot.dishName,
+                city: currentUserSpot.city || list[existingIdx].city,
+                featured_dish: currentUserSpot.dishName || list[existingIdx].featured_dish,
                 latitude: userLat,
                 longitude: userLng,
                 isCurrentUserSpot: true
@@ -115,153 +101,316 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
                 isCurrentUserSpot: true
               });
             }
+          } else if (json.data?.currentUserPoint) {
+            const cur = json.data.currentUserPoint;
+            setUserCenterCoords([cur.latitude, cur.longitude]);
           }
 
-          // Sort so that isCurrentUserSpot is first
+          // Sort so currentUserSpot is first
           list.sort((a, b) => (b.isCurrentUserSpot ? 1 : 0) - (a.isCurrentUserSpot ? 1 : 0));
 
           setPoints(list);
-          const activeUserSpot = list.find(p => p.isCurrentUserSpot) || list[0] || null;
-          setSelectedPoint(activeUserSpot);
+          const current = list.find(p => p.isCurrentUserSpot) || list[0] || null;
+          setActivePoint(current);
 
           if (json.data.stats && onStatsLoaded) {
             onStatsLoaded(json.data.stats);
           }
         }
       } catch (err) {
-        console.warn('Map data load error:', err);
+        console.warn('Failed to load map data:', err);
+      } finally {
+        if (!isCancelled) setIsLoading(false);
       }
     }
+
     loadData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [sessionId, currentUserSpot]);
 
-  const currentUserPoint = points.find(p => p.isCurrentUserSpot) || (currentUserSpot ? {
-    id: 999999,
-    name: currentUserSpot.name,
-    city: currentUserSpot.city,
-    featured_dish: currentUserSpot.dishName,
-    latitude: currentUserSpot.latitude || 18.5204,
-    longitude: currentUserSpot.longitude || 73.8407,
-    total_visits: 1,
-    isCurrentUserSpot: true
-  } : null);
+  // 2. Initialize and render Leaflet Google Map
+  useEffect(() => {
+    let isCancelled = false;
 
-  // User position on map
-  const userCoords = currentUserPoint ? getMapCoordinates(currentUserPoint) : { x: 33, y: 64 };
+    async function initMap() {
+      if (typeof window === 'undefined' || !mapContainerRef.current) return;
 
-  // Other visited spots (Red) for overlay (up to 8 points across India)
-  const otherPoints = points.filter(p => !p.isCurrentUserSpot).slice(0, 8);
+      const L = (await import('leaflet')).default;
+      if (isCancelled || !mapContainerRef.current) return;
+
+      // Clean up previous instance if exists
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      if ((mapContainerRef.current as any)._leaflet_id) {
+        (mapContainerRef.current as any)._leaflet_id = null;
+      }
+
+      // Default center: Current user location if available, otherwise Pune or India center
+      const currentPoint = points.find(p => p.isCurrentUserSpot);
+      const initialLat = currentPoint?.latitude || currentUserSpot?.latitude || 18.5204;
+      const initialLng = currentPoint?.longitude || currentUserSpot?.longitude || 73.8407;
+      const initialZoom = currentPoint ? 12 : 5;
+
+      const map = L.map(mapContainerRef.current, {
+        center: [initialLat, initialLng],
+        zoom: initialZoom,
+        minZoom: 4,
+        maxZoom: 18,
+        zoomControl: false, // Custom placed zoom control
+        attributionControl: false
+      });
+
+      // Google Maps Standard Road Tile Layer
+      const googleTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+      });
+      googleTileLayer.addTo(map);
+
+      // Add neat top-left zoom control
+      L.control.zoom({ position: 'topleft' }).addTo(map);
+
+      // Helper function to create custom DivIcons
+      // BLUE PIN for Current User, RED PIN for Existing Visited Spots
+      const markersLayer = L.layerGroup().addTo(map);
+
+      let userMarkerInstance: any = null;
+
+      // Track coordinates to avoid overlapping pins for spots in the exact same location
+      const coordCounter = new Map<string, number>();
+
+      points.forEach((point) => {
+        const isCurrent = Boolean(point.isCurrentUserSpot);
+        let pointLat = point.latitude;
+        let pointLng = point.longitude;
+
+        if (!isCurrent) {
+          const coordKey = `${pointLat.toFixed(3)}_${pointLng.toFixed(3)}`;
+          const count = coordCounter.get(coordKey) || 0;
+          coordCounter.set(coordKey, count + 1);
+
+          if (count > 0) {
+            // Fan out in a spiral/circle offset so each pin is clearly visible & clickable
+            const angle = (count * 50 * Math.PI) / 180;
+            const radius = 0.0035 * Math.ceil(count / 7);
+            pointLat += Math.cos(angle) * radius;
+            pointLng += Math.sin(angle) * radius;
+          }
+        }
+
+        if (isCurrent) {
+          // BLUE PIN: Current User's Visited Spot
+          const blueIcon = L.divIcon({
+            className: 'custom-user-blue-pin',
+            html: `
+              <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
+                <!-- Attached Name Tag -->
+                <div style="background-color: #1D4ED8; color: white; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); border: 2px solid #ffffff; white-space: nowrap; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
+                  <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #93C5FD;"></span>
+                  <span>📍 ${point.name} (Aap)</span>
+                </div>
+                <!-- Teardrop Pin Marker -->
+                <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 28px; height: 28px; border-radius: 50%; background-color: #2563EB; border: 2.5px solid #FFFFFF; box-shadow: 0 6px 16px rgba(37,99,235,0.5); display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 9px; height: 9px; border-radius: 50%; background-color: #FFFFFF;"></div>
+                  </div>
+                  <div style="position: absolute; bottom: -4px; width: 8px; height: 8px; background-color: #2563EB; transform: rotate(45deg);"></div>
+                </div>
+              </div>
+            `,
+            iconSize: [32, 54],
+            iconAnchor: [16, 54]
+          });
+
+          const marker = L.marker([point.latitude, point.longitude], {
+            icon: blueIcon,
+            zIndexOffset: 1000
+          });
+
+          marker.bindPopup(`
+            <div style="font-family: inherit; padding: 4px 6px; min-width: 140px; text-align: left;">
+              <div style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1D4ED8; background: #DBEAFE; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">
+                Aapka Visited Spot
+              </div>
+              <div style="font-weight: 900; font-size: 13px; color: #0F172A; line-height: 1.2;">
+                ${point.name}
+              </div>
+              <div style="font-size: 11px; color: #1E293B; margin-top: 4px; font-weight: 600;">
+                🍽️ ${point.featured_dish || 'Specialty Dish'}
+              </div>
+              <div style="font-size: 10px; color: #64748B; margin-top: 2px;">
+                📍 ${point.city}
+              </div>
+            </div>
+          `);
+
+          marker.on('click', () => {
+            setActivePoint(point);
+            if (onSelectPoint) onSelectPoint(point);
+          });
+
+          marker.addTo(markersLayer);
+          userMarkerInstance = marker;
+        } else {
+          // RED PIN: Existing Visited Restaurants
+          const redIcon = L.divIcon({
+            className: 'custom-existing-red-pin',
+            html: `
+              <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
+                <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 20px; height: 20px; border-radius: 50%; background-color: #DC2626; border: 2px solid #FFFFFF; box-shadow: 0 4px 10px rgba(220,38,38,0.4); display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 6px; height: 6px; border-radius: 50%; background-color: #FFFFFF;"></div>
+                  </div>
+                  <div style="position: absolute; bottom: -3px; width: 6px; height: 6px; background-color: #DC2626; transform: rotate(45deg);"></div>
+                </div>
+              </div>
+            `,
+            iconSize: [20, 26],
+            iconAnchor: [10, 26]
+          });
+
+          const marker = L.marker([pointLat, pointLng], {
+            icon: redIcon,
+            zIndexOffset: 100
+          });
+
+          marker.bindPopup(`
+            <div style="font-family: inherit; padding: 4px 6px; min-width: 130px; text-align: left;">
+              <div style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #DC2626; background: #FEE2E2; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">
+                Bakasur Food Stop
+              </div>
+              <div style="font-weight: 800; font-size: 12px; color: #0F172A; line-height: 1.2;">
+                ${point.name}
+              </div>
+              <div style="font-size: 11px; color: #334155; margin-top: 3px;">
+                🍽️ ${point.featured_dish || 'Famous Food'}
+              </div>
+              <div style="font-size: 10px; color: #64748B; margin-top: 2px;">
+                📍 ${point.city}
+              </div>
+            </div>
+          `);
+
+          marker.on('click', () => {
+            setActivePoint(point);
+            if (onSelectPoint) onSelectPoint(point);
+          });
+
+          marker.addTo(markersLayer);
+        }
+      });
+
+      // Save map instance
+      mapInstanceRef.current = map;
+
+      // Invalidate size and auto open user popup after brief delay
+      setTimeout(() => {
+        if (!isCancelled && map) {
+          map.invalidateSize();
+          if (userMarkerInstance) {
+            userMarkerInstance.openPopup();
+          }
+        }
+      }, 250);
+    }
+
+    if (points.length > 0) {
+      initMap();
+    }
+
+    return () => {
+      isCancelled = true;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [points, currentUserSpot]);
+
+  // Center on Current User Pin
+  const handleZoomToUser = () => {
+    if (!mapInstanceRef.current) return;
+    const current = points.find(p => p.isCurrentUserSpot);
+    if (current) {
+      mapInstanceRef.current.flyTo([current.latitude, current.longitude], 13, { duration: 1.2 });
+    } else if (currentUserSpot?.latitude && currentUserSpot?.longitude) {
+      mapInstanceRef.current.flyTo([currentUserSpot.latitude, currentUserSpot.longitude], 13, { duration: 1.2 });
+    }
+  };
+
+  // View All India
+  const handleViewAllIndia = () => {
+    if (!mapInstanceRef.current) return;
+    mapInstanceRef.current.flyTo([21.5, 78.9], 5, { duration: 1.2 });
+  };
 
   return (
-    <div className="w-full relative flex items-center justify-center select-none overflow-visible py-0.5">
-      {/* Clean Map Graphic Container */}
-      <div className="relative w-full aspect-[436/270] max-h-[250px] md:max-h-[500px] flex items-center justify-center">
-        {/* Background Graphic: Clean India Tour Illustration with Bakasur */}
-        <img
-          src="/images/food_tour/india_tour_illustration.png"
-          alt="India Tour Map"
-          className="w-full h-full object-contain pointer-events-none"
-        />
+    <div className="w-full h-full relative rounded-2xl md:rounded-3xl overflow-hidden border border-slate-200/90 shadow-md select-none bg-[#e5e3df]">
+      {/* Actual Google Maps Container (Zero extra white space) */}
+      <div
+        ref={mapContainerRef}
+        id="tour-leaflet-map"
+        className="w-full h-full min-h-[260px] xs:min-h-[280px] sm:min-h-[320px] md:min-h-[440px] lg:min-h-[500px] z-10"
+      />
 
-        {/* Highlight Current User's Visited Spot in GREEN (#10B981) */}
-        {currentUserPoint && (
-          <div
-            style={{
-              position: 'absolute',
-              left: `${userCoords.x}%`,
-              top: `${userCoords.y}%`,
-              transform: 'translate(-50%, -100%)',
-              zIndex: 35
-            }}
-            className="cursor-pointer group flex flex-col items-center"
-            onClick={() => {
-              setSelectedPoint(currentUserPoint);
-              if (onSelectPoint) onSelectPoint(currentUserPoint);
-            }}
-            onMouseEnter={() => setHoveredPoint(currentUserPoint)}
-            onMouseLeave={() => setHoveredPoint(null)}
-          >
-            {/* Sleek Attached Name Badge (Green) */}
-            <div className="bg-[#059669] text-white text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-xl border border-white/90 whitespace-nowrap mb-1 flex items-center gap-1.5 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-              <span>📍 {currentUserPoint.name} (Aap)</span>
-            </div>
+      {/* Floating Map Action Controls (Top-Right) */}
+      <div className="absolute top-2.5 right-2.5 z-30 flex flex-col gap-1.5 pointer-events-auto">
+        <button
+          onClick={handleZoomToUser}
+          type="button"
+          title="Zoom to My Visited Spot"
+          className="bg-white/95 hover:bg-white text-blue-600 p-2 rounded-xl shadow-md border border-slate-200 hover:shadow-lg active:scale-95 transition-all flex items-center gap-1 text-[11px] font-black cursor-pointer backdrop-blur-xs"
+        >
+          <Navigation className="w-3.5 h-3.5 fill-blue-600" />
+          <span className="hidden xs:inline">Aapka Spot</span>
+        </button>
 
-            {/* Glowing Pulsing Outer Aura (Green) */}
-            <div className="relative flex items-center justify-center">
-              <span className="absolute -inset-2.5 rounded-full bg-emerald-500/50 animate-ping" />
-              <span className="absolute -inset-4 rounded-full bg-emerald-400/25 animate-pulse" />
-
-              {/* Green Pin Drop Marker */}
-              <div className="relative flex flex-col items-center">
-                <div className="w-6 h-6 rounded-full bg-[#10B981] border-2 border-white shadow-xl flex items-center justify-center text-white ring-2 ring-[#059669]/60 animate-bounce">
-                  <span className="w-2 h-2 rounded-full bg-white shadow-xs" />
-                </div>
-                <div className="w-1.5 h-1.5 bg-[#10B981] rotate-45 -mt-1 shadow-sm" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Highlight Existing User Spots in RED (#DC2626) */}
-        {otherPoints.map((pt, idx) => {
-          const coords = getMapCoordinates(pt);
-          // Apply slight offset so spots in same city/coordinates do not overlap
-          const isCloseToUser = Math.abs(coords.x - userCoords.x) < 5 && Math.abs(coords.y - userCoords.y) < 5;
-          const angle = (idx * 55 * Math.PI) / 180;
-          const radius = isCloseToUser ? 7 : (idx % 2 === 0 ? 3 : 0);
-          const displayX = Math.max(16, Math.min(84, coords.x + Math.cos(angle) * radius));
-          const displayY = Math.max(14, Math.min(84, coords.y + Math.sin(angle) * radius));
-
-          return (
-            <div
-              key={`tour-point-${pt.id}-${pt.name}-${idx}`}
-              style={{
-                position: 'absolute',
-                left: `${displayX}%`,
-                top: `${displayY}%`,
-                transform: 'translate(-50%, -100%)',
-                zIndex: 20
-              }}
-              className="cursor-pointer group flex flex-col items-center"
-              onClick={() => {
-                setSelectedPoint(pt);
-                if (onSelectPoint) onSelectPoint(pt);
-              }}
-              onMouseEnter={() => setHoveredPoint(pt)}
-              onMouseLeave={() => setHoveredPoint(null)}
-            >
-              <div className="relative flex flex-col items-center hover:scale-125 transition-transform">
-                <div className="w-5 h-5 rounded-full bg-[#DC2626] border-2 border-white shadow-md flex items-center justify-center text-white">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
-                </div>
-                <div className="w-1 h-1 bg-[#DC2626] rotate-45 -mt-0.5" />
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Tooltip on Hover / Tap for any spot */}
-        {hoveredPoint && (
-          <div
-            style={{
-              position: 'absolute',
-              left: `${getMapCoordinates(hoveredPoint).x}%`,
-              top: `${Math.max(8, getMapCoordinates(hoveredPoint).y - 14)}%`,
-              transform: 'translate(-50%, -100%)',
-              zIndex: 40
-            }}
-            className="bg-[#08173E] text-white rounded-xl px-2.5 py-1.5 shadow-2xl text-[10px] whitespace-nowrap pointer-events-none border border-white/20 animate-in fade-in zoom-in-95 duration-150"
-          >
-            <div className={`font-black ${hoveredPoint.isCurrentUserSpot ? 'text-emerald-400' : 'text-red-400'}`}>
-              {hoveredPoint.isCurrentUserSpot ? '🟢 Aapka Spot: ' : '🔴 '}{hoveredPoint.name}
-            </div>
-            <div className="text-[9px] text-slate-300">
-              🍽️ {hoveredPoint.featured_dish || 'Specialty'} • 📍 {hoveredPoint.city}
-            </div>
-          </div>
-        )}
+        <button
+          onClick={handleViewAllIndia}
+          type="button"
+          title="View All India Tour Spots"
+          className="bg-white/95 hover:bg-white text-slate-700 p-2 rounded-xl shadow-md border border-slate-200 hover:shadow-lg active:scale-95 transition-all flex items-center gap-1 text-[11px] font-bold cursor-pointer backdrop-blur-xs"
+        >
+          <Compass className="w-3.5 h-3.5 text-slate-700" />
+          <span className="hidden xs:inline">All India</span>
+        </button>
       </div>
+
+      {/* Pin Legend Overlay (Bottom-Left) */}
+      <div className="absolute bottom-2.5 left-2.5 z-30 bg-white/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200/90 shadow-md text-[10px] font-bold flex items-center gap-3 pointer-events-none">
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-blue-600 border border-white shadow-xs inline-block" />
+          <span className="text-[#0B1B48]">Aapka Spot</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-600 border border-white shadow-xs inline-block" />
+          <span className="text-slate-600">Existing Spots</span>
+        </div>
+      </div>
+
+      {/* Cute Bakasur Mascot Peek (Bottom-Right) */}
+      <div className="absolute bottom-1 right-2 z-30 pointer-events-none opacity-90 hidden xs:block">
+        <img
+          src="/images/food_tour/shukriya_map_photo.png"
+          alt="Bakasur Map"
+          className="w-12 h-12 sm:w-14 sm:h-14 object-contain filter drop-shadow-md"
+        />
+      </div>
+
+      {/* Loading Overlay */}
+      {isLoading && points.length === 0 && (
+        <div className="absolute inset-0 z-40 bg-white/70 backdrop-blur-xs flex items-center justify-center">
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg border border-slate-200">
+            <span className="w-3 h-3 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+            <span className="text-xs font-black text-[#0B1B48]">Google Map Load Ho Raha Hai...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

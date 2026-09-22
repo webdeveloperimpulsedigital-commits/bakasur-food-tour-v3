@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapPin, Check, Pencil } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
+import { getDishVisualAssets } from '@/lib/dishAssets';
 
 interface Frame3DishSelectionProps {
   restaurant: Restaurant;
@@ -243,10 +244,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   const handleCustomInputChange = (val: string) => {
     setCustomDishInput(val);
     if (val.trim()) {
+      const visual = getDishVisualAssets(val.trim());
       onSelectDish({
         name: val.trim(),
         id: 9999,
-        price: 150
+        price: 150,
+        image: visual.plateImage
       });
     } else if (threeDishes.length > 0) {
       onSelectDish(threeDishes[0]);
@@ -255,7 +258,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
   const handleSelectSuggestion = (dish: Dish) => {
     setCustomDishInput(dish.name);
-    onSelectDish(dish);
+    const visual = getDishVisualAssets(dish.name, dish.image);
+    onSelectDish({
+      ...dish,
+      image: visual.plateImage
+    });
     setShowDropdown(false);
   };
 
@@ -298,11 +305,10 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                 key={dish.id || dish.name}
                 type="button"
                 onClick={() => handleSelectPill(dish)}
-                className={`w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-between gap-2 cursor-pointer shadow-xs ${
-                  isSelected
+                className={`w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-between gap-2 cursor-pointer shadow-xs ${isSelected
                     ? 'bg-[#D4380D] text-white shadow-md shadow-[#D4380D]/30 border border-[#D4380D]'
                     : 'bg-[#F0F4F8] hover:bg-slate-200 border border-slate-200/80 text-[#0B1B48]'
-                }`}
+                  }`}
               >
                 <span className="truncate text-left">{dish.name}</span>
                 {isSelected && (
@@ -359,36 +365,46 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             </div>
 
             <div className="max-h-48 sm:max-h-56 overflow-y-auto divide-y divide-slate-100">
-              {suggestions.slice(0, 10).map((dish) => (
-                <button
-                  key={dish.id || dish.name}
-                  type="button"
-                  onClick={() => handleSelectSuggestion(dish)}
-                  className="w-full px-3 py-2 text-left hover:bg-blue-50/80 active:bg-blue-100/80 transition-colors flex items-center justify-between gap-2.5 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-sm sm:text-base shrink-0">🍽️</span>
-                    <div className="min-w-0">
-                      <div className="text-xs sm:text-sm font-black text-[#0B1B48] group-hover:text-[#0047BA] truncate">
-                        {dish.name}
-                      </div>
-                      {dish.description && (
-                        <div className="text-[10px] sm:text-[11px] text-slate-500 truncate">
-                          {dish.description}
+              {suggestions.slice(0, 10).map((dish) => {
+                const visual = getDishVisualAssets(dish.name, dish.image);
+                return (
+                  <button
+                    key={dish.id || dish.name}
+                    type="button"
+                    onClick={() => handleSelectSuggestion(dish)}
+                    className="w-full px-3 py-2 text-left hover:bg-blue-50/80 active:bg-blue-100/80 transition-colors flex items-center justify-between gap-2.5 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <img
+                        src={visual.plateImage}
+                        alt={dish.name}
+                        className="w-8 h-8 rounded-lg object-cover border border-slate-200/90 shadow-2xs shrink-0"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = '/images/eating/momos_dish.jpg';
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <div className="text-xs sm:text-sm font-black text-[#0B1B48] group-hover:text-[#0047BA] truncate">
+                          {dish.name}
                         </div>
-                      )}
+                        {dish.description && (
+                          <div className="text-[10px] sm:text-[11px] text-slate-500 truncate">
+                            {dish.description}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="shrink-0 flex items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[11px] border border-emerald-200">
-                      ₹{dish.price}
-                    </span>
-                    <span className="text-xs text-slate-400 group-hover:text-[#0047BA] font-bold">
-                      →
-                    </span>
-                  </div>
-                </button>
-              ))}
+                    <div className="shrink-0 flex items-center gap-1.5">
+                      <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[11px] border border-emerald-200">
+                        ₹{dish.price}
+                      </span>
+                      <span className="text-xs text-slate-400 group-hover:text-[#0047BA] font-bold">
+                        →
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

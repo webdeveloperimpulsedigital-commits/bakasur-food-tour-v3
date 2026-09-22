@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db, Dish } from '@/lib/db';
 import { generateLiveMenuForRestaurant } from '@/lib/liveMenu';
+import { getDishVisualAssets } from '@/lib/dishAssets';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,14 +155,20 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       return NextResponse.json({
         success: true,
         count: matchingDishes.length,
-        data: matchingDishes
+        data: matchingDishes.map(d => ({
+          ...d,
+          image: getDishVisualAssets(d.name, d.image).plateImage
+        }))
       });
     }
 
     return NextResponse.json({
       success: true,
       count: finalDishes.length,
-      data: finalDishes
+      data: finalDishes.map(d => ({
+        ...d,
+        image: getDishVisualAssets(d.name, d.image).plateImage
+      }))
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to fetch dishes';

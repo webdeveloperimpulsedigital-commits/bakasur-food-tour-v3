@@ -95,27 +95,12 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
   return (
     <div className="w-full h-full flex flex-col justify-between text-left animate-in fade-in duration-300 bg-white relative overflow-hidden">
-      {/* 1. Top Header Bar: BAKASUR KA FOOD TOUR with Hamburger Menu Icon */}
-      <div className="shrink-0 bg-[#08173E] py-3 px-4 flex items-center justify-between text-white shadow-sm z-10">
-        <div className="w-6" /> {/* spacer for centered title */}
-        <span className="font-black text-xs sm:text-sm tracking-widest uppercase text-center flex-1">
-          BAKASUR KA FOOD TOUR
-        </span>
-        <button
-          type="button"
-          aria-label="Menu"
-          className="p-1 rounded text-white hover:bg-white/10 transition-colors cursor-pointer"
-        >
-          <Menu className="w-5 h-5 stroke-[2.5]" />
-        </button>
-      </div>
-
       {/* ========================================================== */}
-      {/* 2. MOBILE VIEW (< md): EXACT SAME VERTICAL LAYOUT AS BEFORE */}
+      {/* 1. MOBILE VIEW (< md): EXACT VERTICAL LAYOUT */}
       {/* ========================================================== */}
-      <div className="flex md:hidden flex-1 flex-col justify-between px-3.5 sm:px-4 py-1.5 sm:py-2 gap-1.5 sm:gap-2 overflow-y-auto">
+      <div className="flex md:hidden flex-1 flex-col justify-between px-3.5 sm:px-4 py-2 sm:py-3 gap-2 overflow-y-auto">
         {/* Headline & Subtitle */}
-        <div className="shrink-0 pt-0.5">
+        <div className="shrink-0 pt-1">
           <h1 className="text-[20px] xs:text-[22px] sm:text-[25px] font-black tracking-tight leading-[1.15]">
             <span className="text-[#0B1B48]">Bakasur ka pet bharna mushkil hai.</span><br />
             <span className="text-[#D4380D]">Map bharna nahi.</span>
@@ -125,8 +110,8 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           </p>
         </div>
 
-        {/* Center Map Component */}
-        <div className="w-full shrink-0">
+        {/* Center Map Component (Actual Interactive Google Map) */}
+        <div className="w-full h-[250px] xs:h-[270px] sm:h-[300px] shrink-0">
           <InteractiveTourMap
             sessionId={sessionId}
             currentUserSpot={currentUserSpot}
@@ -200,8 +185,8 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
       {/* ========================================================== */}
       <div className="hidden md:flex flex-1 min-h-0 flex-row overflow-hidden">
         {/* LEFT SIDE: MAP */}
-        <div className="w-1/2 h-full flex items-center justify-center p-6 lg:p-8 bg-slate-50/70 border-r border-slate-200/80 relative overflow-hidden">
-          <div className="w-full max-w-[540px] flex items-center justify-center">
+        <div className="w-1/2 h-full flex items-center justify-center p-4 lg:p-6 bg-slate-50/70 border-r border-slate-200/80 relative overflow-hidden">
+          <div className="w-full h-full flex items-center justify-center">
             <InteractiveTourMap
               sessionId={sessionId}
               currentUserSpot={currentUserSpot}
