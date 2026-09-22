@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Volume2, VolumeX, ArrowLeft } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 
 export interface DishVisualAssets {
@@ -357,48 +356,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       }}
       className="relative w-full h-full min-h-full overflow-hidden bg-[#182858] flex flex-col justify-between select-none cursor-pointer"
     >
-      
-      {/* 1. TOP HEADER: Clean brand header matching mockup */}
-      <div className="relative z-40 px-6 sm:px-8 pt-7 sm:pt-9 flex items-center justify-between text-white w-full">
-        <div className="flex items-center gap-3">
-          {onBack && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onBack();
-              }}
-              type="button"
-              className="p-1 -ml-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all cursor-pointer flex items-center justify-center"
-              aria-label="Back"
-            >
-              <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-            </button>
-          )}
-          <span className="font-extrabold text-[12px] sm:text-[14px] uppercase tracking-[0.16em] text-white drop-shadow-sm font-sans">
-            BAKASUR KA FOOD TOUR
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {onToggleSound && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSound();
-              }}
-              type="button"
-              aria-label={soundEnabled ? 'Mute Sound' : 'Enable Sound'}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer border border-white/15"
-            >
-              {soundEnabled ? (
-                <Volume2 className="w-4 h-4 text-yellow-300" />
-              ) : (
-                <VolumeX className="w-4 h-4 text-white/70" />
-              )}
-            </button>
-          )}
-        </div>
-      </div>
+      {/* Clean stage without top back button or speaker icon */}
 
       {/* 2. MAIN CANVAS ARENA */}
       <div className="relative flex-1 w-full h-full overflow-hidden">

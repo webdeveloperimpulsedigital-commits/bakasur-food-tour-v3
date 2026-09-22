@@ -562,24 +562,24 @@ export default function CampaignPage() {
         <div className={`w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] ${currentFrame === 1 ? 'bg-[#f4f6fa]' : 'bg-white'} md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden flex flex-col md:flex-row relative`}>
           
           {/* Left Side on Desktop / Top Half on Mobile: Royal Blue Character Stage */}
-          <div className={`w-full md:w-1/2 ${currentFrame <= 4 || currentFrame === 7 || currentFrame === 8 ? 'h-[50%]' : currentFrame === 6 ? 'h-[46%] sm:h-[48%]' : 'h-[36%] sm:h-[38%]'} md:h-full relative overflow-hidden bg-[#182858] shrink-0`}>
+          <div className="w-full md:w-1/2 h-[46%] sm:h-[48%] md:h-full relative overflow-hidden bg-[#182858] shrink-0">
             <BakasurVideoPlayer
               videoUrl={
                 currentFrame === 1
-                  ? "/images/all-frames/Pointing Downwards.mp4"
+                  ? "/images/all-frames/first-frame.mp4"
                   : currentFrame === 2
-                  ? "/images/all-frames/Ask for location.mp4"
+                  ? "/images/all-frames/2-frame.mp4"
                   : currentFrame === 3 || currentFrame === 4
                   ? "/images/all-frames/Showing Empty Plate.mp4"
                   : currentFrame === 6
                   ? "/images/all-frames/Showing Love.mp4"
                   : currentFrame === 7 || currentFrame === 8
-                  ? "/images/all-frames/Fire on stomach.mp4"
+                  ? "/images/all-frames/Fire on stomach v2.mp4"
                   : currentFrame === 10
                   ? "/images/all-frames/Thumbs Up.mp4"
                   : currentFrame === 12
-                  ? "/images/all-frames/Pointing Downwards.mp4"
-                  : "/images/all-frames/Pointing Downwards.mp4"
+                  ? "/images/all-frames/Showing Love.mp4"
+                  : "/images/all-frames/first-frame.mp4"
               }
               stageName={
                 currentFrame === 1 ? 'welcome' :
