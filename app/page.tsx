@@ -26,7 +26,7 @@ export type FrameNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
 
 export default function CampaignPage() {
   // Campaign State
-  const [currentFrame, setCurrentFrame] = useState<FrameNumber>(1);
+  const [currentFrame, setCurrentFrame] = useState<FrameNumber>(5);
   const [sessionId, setSessionId] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('Pune');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
