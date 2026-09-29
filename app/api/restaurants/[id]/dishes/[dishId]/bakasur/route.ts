@@ -33,7 +33,7 @@ export async function GET(
         target_meter: 20,
         video_url: videos.find(v => v.stage === 'stage_1')?.video_url || "/uploads/videos/1.mp4",
         thumbnail: dish.image,
-        message: `Waah! ${dish.name} ka pehla niwala toh lajawab hai! Lekin Bakasur ka pet abhi khaali hai... Aur Khilo!`,
+        message: `Waah! ${dish.name} ka pehla niwala toh lajawab hai! Lekin Bhookasur ka pet abhi khaali hai... Aur Khilo!`,
         cta_text: '🍽️ AUR KHILO'
       },
       {
@@ -43,7 +43,7 @@ export async function GET(
         target_meter: 45,
         video_url: videos.find(v => v.stage === 'stage_2')?.video_url || "/uploads/videos/2%201.mp4",
         thumbnail: restaurant.image,
-        message: `Maza aa raha hai ${restaurant.name} mein! Plate par plate aane do... Bakasur ko koi roko mat!`,
+        message: `Maza aa raha hai ${restaurant.name} mein! Plate par plate aane do... Bhookasur ko koi roko mat!`,
         cta_text: '🍽️ AUR KHILO'
       },
       {
@@ -59,11 +59,11 @@ export async function GET(
       {
         stage: 'acidity',
         stage_number: 4,
-        title: `Acidity Strike! Bakasur Ko Gastrium Do`,
+        title: `Acidity Strike! Bhookasur Ko Gastrium Do`,
         target_meter: 100,
         video_url: videos.find(v => v.stage === 'acidity')?.video_url || "/uploads/videos/3%201.mp4",
         thumbnail: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80",
-        message: `Aah! Seene mein jalan aur gas ka tehelka! Bakasur ab hil bhi nahi paa raha... Bakasur Ko Gastrium Do!`,
+        message: `Aah! Seene mein jalan aur gas ka tehelka! Bhookasur ab hil bhi nahi paa raha... Bhookasur Ko Gastrium Do!`,
         cta_text: '💊 GASTRIUM RELIEF'
       }
     ];
@@ -90,7 +90,7 @@ export async function GET(
         stages,
         totalStages: 3,
         brandMoment: {
-          tagline: "Bakasur Ko Gastrium Do",
+          tagline: "Bhookasur Ko Gastrium Do",
           subtext: "Fast, effective relief from Acidity, Gas & Heartburn after heavy festive feasting!",
           product_name: "Gastrium Antacid Gel & Tablets"
         }

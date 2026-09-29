@@ -49,16 +49,8 @@ export default function CampaignPage() {
   const [loaderMessage, setLoaderMessage] = useState<string>('');
 
   const triggerFrameTransition = useCallback((targetFrame: FrameNumber, onTransitionComplete?: () => void, customMsg?: string) => {
-    setTargetLoaderFrame(targetFrame);
-    if (customMsg) setLoaderMessage(customMsg);
-    else setLoaderMessage('');
-    setIsLoaderOpen(true);
-
-    setTimeout(() => {
-      setCurrentFrame(targetFrame);
-      if (onTransitionComplete) onTransitionComplete();
-      setIsLoaderOpen(false);
-    }, 3500);
+    setCurrentFrame(targetFrame);
+    if (onTransitionComplete) onTransitionComplete();
   }, []);
 
   // Audio FX generator
@@ -943,12 +935,6 @@ export default function CampaignPage() {
       </div>
       )}
 
-      {/* Global Bakasur Transition Loader Popup */}
-      <BakasurTransitionLoader
-        isOpen={isLoaderOpen}
-        targetFrame={targetLoaderFrame}
-        customMessage={loaderMessage}
-      />
     </div>
   );
 }

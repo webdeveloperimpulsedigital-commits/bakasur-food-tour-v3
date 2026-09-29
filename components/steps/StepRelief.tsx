@@ -126,7 +126,7 @@ export const StepRelief: React.FC<StepReliefProps> = ({
           <span>100% RELIEVED IN 6 SECONDS</span>
         </span>
         <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white brand-font leading-tight">
-          Ahhhh! Bakasur Ko Aagaya Chain! 🥰
+          Ahhhh! Bhookasur Ko Aagaya Chain! 🥰
         </h2>
         <p className="text-[11px] sm:text-xs text-blue-100 mt-0.5 leading-snug">
           Gastrium neutralized the spice volcano in just 6 seconds!

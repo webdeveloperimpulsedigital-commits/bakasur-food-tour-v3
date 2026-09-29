@@ -189,7 +189,7 @@ export const StepCity: React.FC<StepCityProps> = ({
       <div className="shrink-0 flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base sm:text-lg md:text-xl font-black tracking-tight text-white brand-font leading-tight">
-            Kahan Khilaoge Bakasur Ko?
+            Kahan Khilaoge Bhookasur Ko?
           </h2>
         </div>
       </div>
@@ -233,14 +233,14 @@ export const StepCity: React.FC<StepCityProps> = ({
                   No spot found for &quot;{searchQuery}&quot;
                 </p>
                 <p className="text-[11px] text-blue-200">
-                  Bakasur can eat anywhere! Select this spot directly:
+                  Bhookasur can eat anywhere! Select this spot directly:
                 </p>
                 <button
                   onClick={handleAddCustomRestaurant}
                   type="button"
                   className="py-1.5 px-3 rounded-lg bg-[#D23002] hover:bg-[#eb420e] text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-1 cursor-pointer"
                 >
-                  <span>➕ Feed Bakasur at &quot;{searchQuery}&quot;</span>
+                  <span>➕ Feed Bhookasur at &quot;{searchQuery}&quot;</span>
                 </button>
               </div>
             ) : (

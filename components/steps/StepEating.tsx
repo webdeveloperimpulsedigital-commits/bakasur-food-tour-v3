@@ -60,13 +60,13 @@ function getDishDialogues(dishName: string) {
   if (n.includes('biryani') || n.includes('chicken') || n.includes('mutton') || n.includes('handi')) {
     return {
       stage1: 'Waah! Saffron Dum Biryani with juicy tender meat! 🍗 Palak jhapakte hi khatam! Aur lao jaldi! 😋',
-      stage2: 'Mazedaar! Bakasur ki monster bhookh jaag gayi... Ek aur handi feko! 🤪',
+      stage2: 'Mazedaar! Bhookasur ki monster bhookh jaag gayi... Ek aur handi feko! 🤪',
       stage3: 'ARRE BAAP RE! 🔥🔥 Spicy gravy aur biryani masala overload! Seene mein aag lag gayi!'
     };
   }
   return {
     stage1: 'Waah re waah! Itna tasty? Par yeh toh mere daant mein phas ke reh gaya... Aur lao jaldi! 😋',
-    stage2: 'Mazedaar! Bakasur ke monster pet ko full karne ke liye aur khana chahiye... Phenko idhar! 🤪',
+    stage2: 'Mazedaar! Bhookasur ke monster pet ko full karne ke liye aur khana chahiye... Phenko idhar! 🤪',
     stage3: 'ARRE BAAP RE! 🔥🔥 Seene mein volcano phat gaya! Pet mein aag lag gayi... Bachao re koi!'
   };
 }
@@ -113,7 +113,7 @@ export const StepEating: React.FC<StepEatingProps> = ({
       badgeBg: 'bg-amber-100/20 text-amber-300 border-amber-400/40',
       progressBg: 'from-amber-500 via-orange-400 to-yellow-300',
       ctaText: '🍽️ AUR KHILAO! (FEED MORE)',
-      ctaSubtext: '👆 20% capacity reached! Tap "AUR KHILAO" to feed Bakasur more!',
+      ctaSubtext: '👆 20% capacity reached! Tap "AUR KHILAO" to feed Bhookasur more!',
       mascotEmoji: '😋',
       mascotMood: 'Waiting for More Food'
     },
@@ -132,8 +132,8 @@ export const StepEating: React.FC<StepEatingProps> = ({
       dialogue: dishDialogues.stage3,
       badgeBg: 'bg-red-900/40 text-red-300 border-red-500 animate-pulse',
       progressBg: 'from-red-600 via-rose-500 to-orange-500',
-      ctaText: '⚡ HELP BAKASUR NOW! 🔥',
-      ctaSubtext: '🚨 Bakasur is in distress from overeating! Tap to neutralize burning discomfort!',
+      ctaText: '⚡ HELP BHOOKASUR NOW! 🔥',
+      ctaSubtext: '🚨 Bhookasur is in distress from overeating! Tap to neutralize burning discomfort!',
       mascotEmoji: '🔥',
       mascotMood: 'Discomfort from Indulgence'
     }
@@ -178,7 +178,7 @@ export const StepEating: React.FC<StepEatingProps> = ({
       <div className="text-left">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-yellow-300 bg-white/10 px-2.5 py-0.5 rounded-full">
-            {currentStage === 3 ? 'Stage 3: Acidity Overload' : `Stage ${currentStage}: Feeding Bakasur`}
+            {currentStage === 3 ? 'Stage 3: Acidity Overload' : `Stage ${currentStage}: Feeding Bhookasur`}
           </span>
           {currentStage < 3 && (
             <span className="text-xs font-semibold text-blue-200">
@@ -212,7 +212,7 @@ export const StepEating: React.FC<StepEatingProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-1 mb-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-yellow-300 flex items-center gap-1">
-                <span>BAKASUR SAYS:</span>
+                <span>BHOOKASUR SAYS:</span>
                 <span className="font-mono text-blue-200">({currentConfig.mascotMood})</span>
               </span>
               <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${currentConfig.badgeBg}`}>

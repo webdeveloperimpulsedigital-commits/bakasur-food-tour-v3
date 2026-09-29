@@ -145,7 +145,7 @@ export async function POST(request: Request) {
       data: {
         participation_id: participant.participation_id,
         participant,
-        message: "Congratulations! You have completed Bakasur Ka Food Tour and your contest participation is confirmed!"
+        message: "Congratulations! You have completed Bhookasur Ka Food Tour and your contest participation is confirmed!"
       }
     });
   } catch (error: unknown) {

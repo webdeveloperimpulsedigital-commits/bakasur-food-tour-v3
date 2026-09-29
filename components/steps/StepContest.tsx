@@ -34,12 +34,12 @@ export const StepContest: React.FC<StepContestProps> = ({
 
   // Handle WhatsApp Share / Native Share
   const handleSharePass = async () => {
-    const shareText = `🍽️ I just added my food recommendation (${dish.name} at ${restaurant.name}, ${restaurant.city}) to Bakasur's Food Tour! Check out the Gastrium Food Tour Map: ${typeof window !== 'undefined' ? window.location.origin : ''}`;
+    const shareText = `🍽️ I just added my food recommendation (${dish.name} at ${restaurant.name}, ${restaurant.city}) to Bhookasur's Food Tour! Check out the Gastrium Food Tour Map: ${typeof window !== 'undefined' ? window.location.origin : ''}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Bakasur Ka Food Tour Pass',
+          title: 'Bhookasur Ka Food Tour Pass',
           text: shareText,
           url: window.location.href
         });
@@ -116,10 +116,10 @@ export const StepContest: React.FC<StepContestProps> = ({
             <span>SUBMISSION CONFIRMED</span>
           </span>
           <h2 className="text-sm sm:text-base md:text-lg font-black tracking-tight text-white brand-font leading-tight">
-            Bakasur Certified Foodie Pass 🎫
+            Bhookasur Certified Foodie Pass 🎫
           </h2>
           <p className="text-[10px] sm:text-[11px] text-blue-200 font-medium leading-snug">
-            Spicy khana bhi khilaya aur Gastrium se Bakasur ko bachaya!
+            Spicy khana bhi khilaya aur Gastrium se Bhookasur ko bachaya!
           </p>
         </div>
         <span className="text-[10px] font-mono font-bold text-white bg-[#D23002]/60 px-2 py-0.5 rounded-full border border-[#D23002] shrink-0">

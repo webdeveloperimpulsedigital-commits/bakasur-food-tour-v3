@@ -19,7 +19,7 @@ export const StepStart: React.FC<StepStartProps> = ({
           are you ready?
         </h1>
         <p className="text-xs sm:text-sm md:text-base text-blue-100 font-medium max-w-xs sm:max-w-sm leading-relaxed">
-          Bakasur is starving for your city&apos;s best food! Treat him to your favorite street food, spicy delicacies &amp; legendary joints.
+          Bhookasur is starving for your city&apos;s best food! Treat him to your favorite street food, spicy delicacies &amp; legendary joints.
         </p>
       </div>
 

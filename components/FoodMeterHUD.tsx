@@ -26,7 +26,7 @@ export const FoodMeterHUD: React.FC<FoodMeterHUDProps> = ({
     if (pct <= 25) {
       return {
         title: "Pehli Bhookh (Appetite Started)",
-        subtitle: "Bakasur is still hungry! Needs more food.",
+        subtitle: "Bhookasur is still hungry! Needs more food.",
         color: "text-amber-600",
         bg: "from-amber-500 via-orange-400 to-yellow-300",
       };
@@ -41,7 +41,7 @@ export const FoodMeterHUD: React.FC<FoodMeterHUDProps> = ({
     }
     return {
       title: "Pet Phat Gaya! (Acidity Attack 🔥)",
-      subtitle: "Too much spice! Bakasur desperately needs Gastrium!",
+      subtitle: "Too much spice! Bhookasur desperately needs Gastrium!",
       color: "text-red-600",
       bg: "from-red-600 via-rose-500 to-orange-500",
     };
@@ -65,7 +65,7 @@ export const FoodMeterHUD: React.FC<FoodMeterHUDProps> = ({
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 uppercase tracking-wider brand-font">
-                BAKASUR FOOD METER
+                BHOOKASUR FOOD METER
               </h3>
               {percentage >= 100 && (
                 <span className="px-1.5 py-0.5 rounded bg-red-600 text-white text-[9px] font-black uppercase animate-pulse">
@@ -152,7 +152,7 @@ export const FoodMeterHUD: React.FC<FoodMeterHUDProps> = ({
           ) : percentage >= 100 ? (
             <>
               <ShieldAlert className="w-5 h-5 text-emerald-200 animate-bounce" />
-              <span>💊 GIVE GASTRIUM TO BAKASUR ⚡</span>
+              <span>💊 GIVE GASTRIUM TO BHOOKASUR ⚡</span>
             </>
           ) : (
             <>
@@ -165,11 +165,11 @@ export const FoodMeterHUD: React.FC<FoodMeterHUDProps> = ({
 
         {percentage < 100 ? (
           <p className="text-center text-[11px] font-semibold text-amber-700 mt-1.5">
-            👆 Click &apos;AUR KHILAO&apos; to feed Bakasur and fill his monster appetite!
+            👆 Click &apos;AUR KHILAO&apos; to feed Bhookasur and fill his monster appetite!
           </p>
         ) : (
           <p className="text-center text-[11px] font-bold text-red-600 mt-1.5 animate-pulse">
-            🚨 Acidity overload! Bakasur needs Gastrium fast antacid now!
+            🚨 Acidity overload! Bhookasur needs Gastrium fast antacid now!
           </p>
         )}
       </div>

@@ -15,8 +15,8 @@ interface Frame5EatingBeginsProps {
 
 const QUOTES = [
   '“Sharing ka plan tha. Ab nahi hai.”',
-  '“Chef ki shift khatam. Bakasur ki bhookh nahi.”',
-  '“Arre bhai Bakasur, iska bill kaun bharega?”',
+  '“Chef ki shift khatam. Bhookasur ki bhookh nahi.”',
+  '“Arre bhai Bhookasur, iska bill kaun bharega?”',
   '“Khaali plates ka Eiffel Tower ban raha hai.”',
   '“Sahi chuna hai. Ab count mat karna!”'
 ];
@@ -47,13 +47,13 @@ export const Frame5EatingBegins: React.FC<Frame5EatingBeginsProps> = ({
         </span>
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-100 text-[#D4380D] font-black text-[10px] uppercase border border-red-200">
           <Flame className="w-3 h-3 fill-[#D4380D]" />
-          <span>Bakasur Mode: ON</span>
+          <span>Bhookasur Mode: ON</span>
         </span>
       </div>
 
       <div className="shrink-0 space-y-1">
         <h2 className="text-[24px] sm:text-[28px] md:text-[32px] font-black tracking-tight text-[#0B1B48] leading-[1.12]">
-          Aapne suggest kiya.<br />Bakasur ne khaana shuru kar diya!
+          Aapne suggest kiya.<br />Bhookasur ne khaana shuru kar diya!
         </h2>
         <p className="text-xs sm:text-sm text-[#1a264a] font-semibold">
           Khaane ki speed: Superfast 🚀
@@ -89,7 +89,7 @@ export const Frame5EatingBegins: React.FC<Frame5EatingBeginsProps> = ({
             <span className="text-3xl shrink-0 select-none animate-bounce">🤤</span>
             <div className="min-w-0 flex-1">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#D4380D] block mb-1">
-                Bakasur Foodie Thought:
+                Bhookasur Foodie Thought:
               </span>
               <p className="text-sm sm:text-base font-black text-[#0B1B48] leading-snug transition-opacity duration-300">
                 {QUOTES[quoteIdx]}

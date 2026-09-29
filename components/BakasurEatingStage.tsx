@@ -292,10 +292,10 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             )}
 
             {activeSlide === 3 && (
-              /* MESSAGE 4: Arre bhai Bakasur, iska bill kaun bharega? */
+              /* MESSAGE 4: Arre bhai Bhookasur, iska bill kaun bharega? */
               <div className="font-black text-[34px] xs:text-[40px] sm:text-[48px] md:text-[58px] text-white leading-[1.32] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
                 <div>“Arre bhai</div>
-                <div>Bakasur, iska</div>
+                <div>Bhookasur, iska</div>
                 <div>
                   <span className="text-[#E2370A] drop-shadow-[0_4px_24px_rgba(226,55,10,0.6)]">bill kaun</span>
                 </div>

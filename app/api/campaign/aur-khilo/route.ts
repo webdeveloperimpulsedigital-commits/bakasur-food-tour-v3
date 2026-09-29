@@ -58,8 +58,8 @@ export async function POST(request: Request) {
         isTiredState,
         isAcidityState,
         celebrationMessage: isAcidityState 
-          ? "Pet Bhar Gaya! Bakasur Ko Gastrium Do!" 
-          : "Bakasur ne aur khana pel diya! Food Meter Badh Gaya!"
+          ? "Pet Bhar Gaya! Bhookasur Ko Gastrium Do!" 
+          : "Bhookasur ne aur khana pel diya! Food Meter Badh Gaya!"
       }
     });
   } catch (error: unknown) {

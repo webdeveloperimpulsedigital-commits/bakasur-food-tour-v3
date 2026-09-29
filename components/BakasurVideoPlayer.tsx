@@ -67,7 +67,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🥟',
       biteLabel: 'Steamed Momos Feast',
       munchSound: 'CHOMP-CHOMP! Spicy Garlic Chutney 🥟',
-      actionText: 'Bakasur is gulping juicy Momos...',
+      actionText: 'Bhookasur is gulping juicy Momos...',
       image: '/images/eating/momos_dish.jpg',
       eatingScene: '/images/eating/momos_dish.jpg'
     };
@@ -80,7 +80,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🍔',
       biteLabel: 'Mumbai Vada Pav Feast',
       munchSound: 'CHOMP-CHOMP! Lasun Chutney Blast 💥',
-      actionText: 'Bakasur is devouring Mumbai Vada Pav...',
+      actionText: 'Bhookasur is devouring Mumbai Vada Pav...',
       image: hasLocalImg ? dishImage! : '/images/eating/vada_pav_dish.jpg',
       eatingScene: '/images/eating/vada_pav_dish.jpg'
     };
@@ -93,7 +93,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🧈',
       biteLabel: 'Ghee Puran Poli Feast',
       munchSound: 'SLURRP! Ghee Blast 🧈',
-      actionText: 'Bakasur is devouring Ghee Puran Poli...',
+      actionText: 'Bhookasur is devouring Ghee Puran Poli...',
       image: hasLocalImg ? dishImage! : '/images/eating/puran_poli.jpg',
       eatingScene: '/images/eating/puran_poli.jpg'
     };
@@ -106,7 +106,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🥞',
       biteLabel: 'Crispy Butter Dosa Feast',
       munchSound: 'CRUNCH-CRUNCH! 🤤',
-      actionText: 'Bakasur is chomping Crispy Dosa...',
+      actionText: 'Bhookasur is chomping Crispy Dosa...',
       image: hasLocalImg ? dishImage! : '/images/eating/dosa.jpg',
       eatingScene: '/images/eating/dosa.jpg'
     };
@@ -119,7 +119,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🍛',
       biteLabel: 'Butter Pav Bhaji Feast',
       munchSound: 'CHOMP-CHOMP! Extra Butter 🧈',
-      actionText: 'Bakasur is devouring Pav Bhaji...',
+      actionText: 'Bhookasur is devouring Pav Bhaji...',
       image: hasLocalImg ? dishImage! : '/images/eating/pav_bhaji.jpg',
       eatingScene: '/images/eating/pav_bhaji.jpg'
     };
@@ -139,7 +139,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🥣',
       biteLabel: 'Teekha Pani Puri Feast',
       munchSound: 'TEEKHA PANI CRUNCH! 💥',
-      actionText: 'Bakasur is gulping Teekha Pani Puri...',
+      actionText: 'Bhookasur is gulping Teekha Pani Puri...',
       image: hasLocalImg ? dishImage! : '/images/eating/pani_puri_dish.jpg',
       eatingScene: '/images/eating/pani_puri_dish.jpg'
     };
@@ -152,7 +152,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🥣',
       biteLabel: 'SPDP Chaat Blast',
       munchSound: 'CHATPATAA CRUNCH! 🥣',
-      actionText: 'Bakasur is crunching Sev Potato Dahi Puri...',
+      actionText: 'Bhookasur is crunching Sev Potato Dahi Puri...',
       image: hasLocalImg ? dishImage! : '/images/eating/spdp.jpg',
       eatingScene: '/images/eating/spdp.jpg'
     };
@@ -165,7 +165,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🌶️',
       biteLabel: 'Fiery Tarri Misal Feast',
       munchSound: 'HOT TARRI SPICE! 🔥',
-      actionText: 'Bakasur is slurping spicy Tarri Misal...',
+      actionText: 'Bhookasur is slurping spicy Tarri Misal...',
       image: hasLocalImg ? dishImage! : '/images/eating/misal.jpg',
       eatingScene: '/images/eating/misal.jpg'
     };
@@ -178,7 +178,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🍗',
       biteLabel: 'Shahi Dum Biryani Feast',
       munchSound: 'MUNCH-MUNCH! Saffron Aroma 🍗',
-      actionText: 'Bakasur is devouring Dum Biryani...',
+      actionText: 'Bhookasur is devouring Dum Biryani...',
       image: hasLocalImg ? dishImage! : '/images/eating/biryani.jpg',
       eatingScene: '/images/eating/biryani.jpg'
     };
@@ -191,7 +191,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🍢',
       biteLabel: 'Melt-in-Mouth Galouti Kebab Feast',
       munchSound: 'SUCCULENT MELT! 🤤',
-      actionText: 'Bakasur is relishing Galouti Kebabs...',
+      actionText: 'Bhookasur is relishing Galouti Kebabs...',
       image: hasLocalImg ? dishImage! : '/images/eating/kebab_dish.jpg',
       eatingScene: '/images/eating/kebab_dish.jpg'
     };
@@ -204,7 +204,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '👑',
       biteLabel: 'Royal Maharaja Thali Feast',
       munchSound: 'SHAHI BHOJAN! 🤤',
-      actionText: 'Bakasur is devouring Royal Maharaja Thali...',
+      actionText: 'Bhookasur is devouring Royal Maharaja Thali...',
       image: hasLocalImg ? dishImage! : '/images/eating/thali_dish.jpg',
       eatingScene: '/images/eating/thali_dish.jpg'
     };
@@ -217,7 +217,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🍗',
       biteLabel: 'Butter Chicken & Gravy Feast',
       munchSound: 'LICKING FINGERS! 🤤',
-      actionText: 'Bakasur is enjoying rich creamy gravy...',
+      actionText: 'Bhookasur is enjoying rich creamy gravy...',
       image: hasLocalImg ? dishImage! : '/images/eating/butter_chicken.jpg',
       eatingScene: '/images/eating/butter_chicken.jpg'
     };
@@ -230,7 +230,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🫓',
       biteLabel: 'Fluffy Chole Bhature Feast',
       munchSound: 'CHOMP-CHOMP! Pure Punjabi Swag 🫓',
-      actionText: 'Bakasur is tearing hot fluffy Bhature...',
+      actionText: 'Bhookasur is tearing hot fluffy Bhature...',
       image: hasLocalImg ? dishImage! : '/images/eating/chole_bhature.jpg',
       eatingScene: '/images/eating/chole_bhature.jpg'
     };
@@ -243,7 +243,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🍲',
       biteLabel: 'Creamy Dal Makhani Feast',
       munchSound: 'SLURRP! Creamy Butter 🧈',
-      actionText: 'Bakasur is devouring creamy Dal Makhani...',
+      actionText: 'Bhookasur is devouring creamy Dal Makhani...',
       image: hasLocalImg ? dishImage! : '/images/eating/dal_makhani.jpg',
       eatingScene: '/images/eating/dal_makhani.jpg'
     };
@@ -256,7 +256,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🍳',
       biteLabel: 'Spicy Keema Pav Feast',
       munchSound: 'CHOMP-CHOMP! Bun Maska Kick 🍳',
-      actionText: 'Bakasur is gulping Keema Pav...',
+      actionText: 'Bhookasur is gulping Keema Pav...',
       image: hasLocalImg ? dishImage! : '/images/eating/keema_pav.jpg',
       eatingScene: '/images/eating/keema_pav.jpg'
     };
@@ -269,7 +269,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteEmoji: '🍽️',
       biteLabel: `${dishName || 'Specialty'} Feast`,
       munchSound: 'CHOMP-CHOMP! 🤤',
-      actionText: `Bakasur is devouring ${dishName || 'food'}...`,
+      actionText: `Bhookasur is devouring ${dishName || 'food'}...`,
       image: dishImage,
       eatingScene: dishImage
     };
@@ -279,9 +279,9 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
   return {
     category: 'generic',
     biteEmoji: '🍽️',
-    biteLabel: 'Bakasur Royal Feast',
+    biteLabel: 'Bhookasur Royal Feast',
     munchSound: 'CHOMP-CHOMP! 🤤',
-    actionText: `Bakasur is devouring ${dishName || 'food'}...`,
+    actionText: `Bhookasur is devouring ${dishName || 'food'}...`,
     image: '/images/eating/pav_bhaji.jpg',
     eatingScene: '/images/eating/pav_bhaji.jpg'
   };
@@ -317,7 +317,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
   const isPass = frameNumber === 13 || stageName === 'pass';
   const isReliefDone = frameNumber === 10 || stageName === 'relief_done';
 
-  const cleanDishTitle = dishName ? dishName.replace(/^Ready in |^Bakasur in |^Feeding /i, '') : 'Signature Food';
+  const cleanDishTitle = dishName ? dishName.replace(/^Ready in |^Bakasur in |^Bhookasur in |^Feeding /i, '') : 'Signature Food';
 
   // Sync mute state
   useEffect(() => {

@@ -73,7 +73,7 @@ export const StepMap: React.FC<StepMapProps> = ({
             <Sparkles className="w-3 h-3 text-yellow-400" />
             <span>Collective Outcome</span>
           </div>
-          <h2 className="text-lg sm:text-2xl font-black text-white brand-font leading-tight">Bakasur&apos;s All-India Spice Trail 🗺️</h2>
+          <h2 className="text-lg sm:text-2xl font-black text-white brand-font leading-tight">Bhookasur&apos;s All-India Spice Trail 🗺️</h2>
         </div>
 
         <div className="flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-600/20 border border-blue-400/40 text-[10px] sm:text-xs text-cyan-300 font-extrabold">
@@ -83,7 +83,7 @@ export const StepMap: React.FC<StepMapProps> = ({
       </div>
 
       <p className="text-[11px] sm:text-xs text-blue-200/80">
-        Dekho desh bhar ke foodies ne Bakasur ko kaunse dangerous spicy joints par bheja! Click any spot to explore.
+        Dekho desh bhar ke foodies ne Bhookasur ko kaunse dangerous spicy joints par bheja! Click any spot to explore.
       </p>
 
       {/* City Filter Pills */}

@@ -282,7 +282,7 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           marker.bindPopup(`
             <div style="font-family: inherit; padding: 4px 6px; min-width: 130px; text-align: left;">
               <div style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #DC2626; background: #FEE2E2; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">
-                Bakasur Food Stop
+                Bhookasur Food Stop
               </div>
               <div style="font-weight: 800; font-size: 12px; color: #0F172A; line-height: 1.2;">
                 ${point.name}

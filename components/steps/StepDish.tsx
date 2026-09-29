@@ -14,9 +14,9 @@ export interface SpiceOption {
 }
 
 export const SPICE_LEVELS: SpiceOption[] = [
-  { id: 'mild', name: 'Mild & Makkhan', level: '1/5', icon: '🧈', description: 'Bachha Level - Bakasur will laugh at you!' },
+  { id: 'mild', name: 'Mild & Makkhan', level: '1/5', icon: '🧈', description: 'Bachha Level - Bhookasur will laugh at you!' },
   { id: 'masaledaar', name: 'Masaledaar', level: '3/5', icon: '🌶️', description: 'Asli Street Spice - Thoda thoda pasina aayega' },
-  { id: 'fire', name: 'Bakasur Fire', level: '5/5', icon: '🔥', description: 'Direct Volcano - Seene mein aag guarantee!' }
+  { id: 'fire', name: 'Bhookasur Fire', level: '5/5', icon: '🔥', description: 'Direct Volcano - Seene mein aag guarantee!' }
 ];
 
 interface StepDishProps {
@@ -139,7 +139,7 @@ export const StepDish: React.FC<StepDishProps> = ({
             </span>
           </div>
           <p className="text-[10px] sm:text-[11px] text-blue-200 font-medium leading-snug">
-            Choose what Bakasur will feast on today!
+            Choose what Bhookasur will feast on today!
           </p>
         </div>
 
@@ -234,7 +234,7 @@ export const StepDish: React.FC<StepDishProps> = ({
         ) : displayedDishes.length === 0 && !isCustomMatch ? (
           <div className="p-3 text-center rounded-xl bg-white/10 border border-white/15">
             <p className="text-xs font-bold text-blue-100">No matching dishes for &quot;{searchQuery}&quot;</p>
-            <p className="text-[10px] text-blue-200 mt-0.5">Type above to feed Bakasur any custom dish!</p>
+            <p className="text-[10px] text-blue-200 mt-0.5">Type above to feed Bhookasur any custom dish!</p>
           </div>
         ) : (
           displayedDishes.map((dish, idx) => {
@@ -340,7 +340,7 @@ export const StepDish: React.FC<StepDishProps> = ({
           type="button"
           className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-[#D23002] hover:bg-[#eb420e] text-white font-black text-xs sm:text-sm shadow-xl shadow-[#D23002]/30 transition-all flex items-center justify-center gap-2 cursor-pointer brand-font disabled:opacity-50 tracking-wide border border-white/20 active:scale-[0.99]"
         >
-          <span>Feed Bakasur: {activeDishName ? `"${activeDishName.slice(0, 20)}${activeDishName.length > 20 ? '...' : ''}"` : 'Pick a Dish'} 🍛</span>
+          <span>Feed Bhookasur: {activeDishName ? `"${activeDishName.slice(0, 20)}${activeDishName.length > 20 ? '...' : ''}"` : 'Pick a Dish'} 🍛</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
