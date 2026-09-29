@@ -241,11 +241,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       {/* 2. MAIN CANVAS ARENA */}
       <div className="relative flex-1 w-full min-h-0 overflow-hidden">
 
-<<<<<<< HEAD
-        {/* TOP-LEFT HEADLINE BILLBOARD */}
-=======
         {/* TOP-LEFT HEADLINE BILLBOARD (Zomato-style engaging loading messages) */}
->>>>>>> b2572624056684c2f8f24716563c533180a58a9f
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -263,23 +259,10 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
               : 'opacity-100 translate-y-0 scale-100'
               }`}
           >
-<<<<<<< HEAD
-            {activeSlide === 0 ? (
-              /* SLIDE 1: BHOOKASUR MODE: ON */
-              <div className="font-black text-[26px] xs:text-[32px] sm:text-[44px] md:text-[54px] text-white leading-[0.93] tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
-                <div>BHOOKASUR</div>
-                <div>MODE:</div>
-                <div className="text-[#E2370A] drop-shadow-[0_4px_24px_rgba(226,55,10,0.6)]">ON</div>
-              </div>
-            ) : (
-              /* SLIDE 2: Chef ki shift khatam. Bhookasur ki bhookh nahi. */
-              <div className="font-black text-[18px] xs:text-[22px] sm:text-[32px] md:text-[40px] text-white leading-[1.08] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
-                <div>Chef ki shift</div>
-=======
             {activeSlide === 0 && (
-              /* MESSAGE 1: BAKASUR MODE: ON */
-              <div className="font-black text-[46px] xs:text-[54px] sm:text-[66px] md:text-[78px] text-white leading-[1.12] tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
-                <div>BAKASUR</div>
+              /* MESSAGE 1: BHOOKASUR MODE: ON */
+              <div className="font-black text-[32px] xs:text-[40px] sm:text-[52px] md:text-[64px] text-white leading-[1.12] tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+                <div>BHOOKASUR</div>
                 <div>MODE:</div>
                 <div className="text-[#E2370A] drop-shadow-[0_4px_24px_rgba(226,55,10,0.6)]">ON</div>
               </div>
@@ -287,7 +270,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
             {activeSlide === 1 && (
               /* MESSAGE 2: Sharing ka plan tha. Ab nahi hai. */
-              <div className="font-black text-[34px] xs:text-[40px] sm:text-[48px] md:text-[58px] text-white leading-[1.32] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+              <div className="font-black text-[24px] xs:text-[30px] sm:text-[38px] md:text-[46px] text-white leading-[1.2] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
                 <div>“Sharing ka</div>
                 <div>plan tha.</div>
                 <div>
@@ -297,10 +280,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             )}
 
             {activeSlide === 2 && (
-              /* MESSAGE 3: Chef ki shift khatam. Bakasur ki bhookh nahi. */
-              <div className="font-black text-[34px] xs:text-[40px] sm:text-[48px] md:text-[58px] text-white leading-[1.32] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+              /* MESSAGE 3: Chef ki shift khatam. Bhookasur ki bhookh nahi. */
+              <div className="font-black text-[24px] xs:text-[30px] sm:text-[38px] md:text-[46px] text-white leading-[1.2] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
                 <div>“Chef ki shift</div>
->>>>>>> b2572624056684c2f8f24716563c533180a58a9f
                 <div>khatam.</div>
                 <div>Bhookasur ki</div>
                 <div>
