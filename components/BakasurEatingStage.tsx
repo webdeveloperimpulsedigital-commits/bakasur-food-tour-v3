@@ -215,7 +215,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             </button>
           )}
           <span className="font-extrabold text-[12px] sm:text-[14px] uppercase tracking-[0.16em] text-white drop-shadow-sm font-sans">
-            BAKASUR KA FOOD TOUR
+            BHOOKASUR KA FOOD TOUR
           </span>
         </div>
 
@@ -249,7 +249,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       {/* 2. MAIN CANVAS ARENA */}
       <div className="relative flex-1 w-full min-h-0 overflow-hidden">
 
-        {/* TOP-LEFT HEADLINE BILLBOARD (Strictly left column to guarantee ZERO overlap with Bakasur) */}
+        {/* TOP-LEFT HEADLINE BILLBOARD */}
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -264,18 +264,18 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
               }`}
           >
             {activeSlide === 0 ? (
-              /* SLIDE 1: BAKASUR MODE: ON */
+              /* SLIDE 1: BHOOKASUR MODE: ON */
               <div className="font-black text-[26px] xs:text-[32px] sm:text-[44px] md:text-[54px] text-white leading-[0.93] tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
-                <div>BAKASUR</div>
+                <div>BHOOKASUR</div>
                 <div>MODE:</div>
                 <div className="text-[#E2370A] drop-shadow-[0_4px_24px_rgba(226,55,10,0.6)]">ON</div>
               </div>
             ) : (
-              /* SLIDE 2: Chef ki shift khatam. Bakasur ki bhookh nahi. */
+              /* SLIDE 2: Chef ki shift khatam. Bhookasur ki bhookh nahi. */
               <div className="font-black text-[18px] xs:text-[22px] sm:text-[32px] md:text-[40px] text-white leading-[1.08] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
                 <div>Chef ki shift</div>
                 <div>khatam.</div>
-                <div>Bakasur ki</div>
+                <div>Bhookasur ki</div>
                 <div>
                   <span className="text-[#E2370A] drop-shadow-[0_4px_24px_rgba(226,55,10,0.6)]">bhookh</span> nahi.
                 </div>

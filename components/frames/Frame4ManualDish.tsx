@@ -117,7 +117,7 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
           Favourite wali list mein nahi?
         </h2>
         <p className="text-xs sm:text-sm text-[#2A3B66] font-medium mt-0.5 leading-snug">
-          Khud likh do ya live search karo. Bakasur sun raha hai:
+          Khud likh do ya live search karo. Bhookasur sun raha hai:
         </p>
       </div>
 

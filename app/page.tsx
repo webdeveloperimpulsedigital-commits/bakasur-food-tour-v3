@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BakasurVideoPlayer } from '@/components/BakasurVideoPlayer';
 import { BakasurEatingStage } from '@/components/BakasurEatingStage';
+import { BakasurTransitionLoader } from '@/components/BakasurTransitionLoader';
 import { Frame1Welcome } from '@/components/frames/Frame1Welcome';
 import { Frame2RestaurantSearch } from '@/components/frames/Frame2RestaurantSearch';
 import { Frame3DishSelection } from '@/components/frames/Frame3DishSelection';
@@ -41,6 +42,24 @@ export default function CampaignPage() {
   const [tourSpotRound, setTourSpotRound] = useState<number>(0); // 0 = trailer, 1 = spot 1, 2 = spot 2
   const [currentTourSpot, setCurrentTourSpot] = useState<FoodTourSpot | null>(null);
   const [visitedSpotIds, setVisitedSpotIds] = useState<string[]>([]);
+
+  // Bakasur Transition Loader State
+  const [isLoaderOpen, setIsLoaderOpen] = useState<boolean>(false);
+  const [targetLoaderFrame, setTargetLoaderFrame] = useState<number>(2);
+  const [loaderMessage, setLoaderMessage] = useState<string>('');
+
+  const triggerFrameTransition = useCallback((targetFrame: FrameNumber, onTransitionComplete?: () => void, customMsg?: string) => {
+    setTargetLoaderFrame(targetFrame);
+    if (customMsg) setLoaderMessage(customMsg);
+    else setLoaderMessage('');
+    setIsLoaderOpen(true);
+
+    setTimeout(() => {
+      setCurrentFrame(targetFrame);
+      if (onTransitionComplete) onTransitionComplete();
+      setIsLoaderOpen(false);
+    }, 3500);
+  }, []);
 
   // Audio FX generator
   const playSound = useCallback((type: 'click' | 'bite' | 'fanfare' | 'relief') => {
@@ -142,7 +161,7 @@ export default function CampaignPage() {
   // Frame 1 -> Frame 2 (Welcome -> Restaurant Search)
   const handleStartTour = async () => {
     playSound('click');
-    setCurrentFrame(2);
+    triggerFrameTransition(2);
 
     const activeSession = sessionId || getOrCreateSessionId();
     if (!sessionId) setSessionId(activeSession);
@@ -180,7 +199,7 @@ export default function CampaignPage() {
   // Frame 2 -> Frame 3 (Restaurant Chosen -> 3 Dish Options)
   const handleRestaurantConfirmed = async () => {
     playSound('click');
-    setCurrentFrame(3);
+    triggerFrameTransition(3);
 
     const activeSession = sessionId || getOrCreateSessionId();
 
@@ -225,7 +244,7 @@ export default function CampaignPage() {
   // Frame 3 -> Frame 4 (Manual Dish Entry clicked)
   const handleGoToManualDish = () => {
     playSound('click');
-    setCurrentFrame(4);
+    triggerFrameTransition(4);
     const activeSession = sessionId || getOrCreateSessionId();
     trackUserStep({
       sessionId: activeSession,
@@ -250,7 +269,7 @@ export default function CampaignPage() {
 
     setSelectedDish(finalDish);
     setFeastingStage(1);
-    setCurrentFrame(5);
+    triggerFrameTransition(5);
 
     const activeSession = sessionId || getOrCreateSessionId();
 
@@ -625,7 +644,7 @@ export default function CampaignPage() {
     setFeastingStage(1);
     setTourSpotRound(0);
     setCurrentTourSpot(null);
-    setCurrentFrame(2);
+    triggerFrameTransition(2);
     trackUserStep({
       sessionId,
       stepName: 'frame_11_add_another_spot',
@@ -719,39 +738,9 @@ export default function CampaignPage() {
     });
   };
 
-  const getVideoContainerHeightClass = (frame: number) => {
-    switch (frame) {
-      case 1:
-        // Welcome Frame: Bakasur pointing down
-        return 'h-[62%] xs:h-[64%] sm:h-[66%]';
-      case 2:
-        // Restaurant search: Search bar and dropdown suggestions
-        return 'h-[48%] xs:h-[50%] sm:h-[52%]';
-      case 3:
-      case 4:
-        // Dish selection: Dish cards and confirm button
-        return 'h-[48%] xs:h-[50%] sm:h-[52%]';
-      case 6:
-        // Food Tour Eating Spot (Dosa / Pav Bhaji) / Trailer
-        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
-      case 7:
-        // Acidity: Plot twist - Pet ne emergency brake laga di
-        return 'h-[60%] xs:h-[62%] sm:h-[64%]';
-      case 8:
-        // Help Bakasur: Ab Bakasur ko khaana nahi...
-        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
-      case 9:
-        // Gastrium In: Large vertical video
-        return 'h-[72%] xs:h-[74%] sm:h-[76%]';
-      case 10:
-        // Shukriya Dost: Thumbs up video
-        return 'h-[56%] xs:h-[58%] sm:h-[60%]';
-      case 12:
-        // Registration form: Needs space for input fields
-        return 'h-[44%] xs:h-[46%] sm:h-[48%]';
-      default:
-        return 'h-[58%] xs:h-[60%] sm:h-[62%]';
-    }
+  const getVideoContainerHeightClass = (_frame: number) => {
+    // 70% screen height for video part on all frames, 30% for content part
+    return 'h-[70%]';
   };
 
   return (
@@ -953,6 +942,13 @@ export default function CampaignPage() {
         </div>
       </div>
       )}
+
+      {/* Global Bakasur Transition Loader Popup */}
+      <BakasurTransitionLoader
+        isOpen={isLoaderOpen}
+        targetFrame={targetLoaderFrame}
+        customMessage={loaderMessage}
+      />
     </div>
   );
 }

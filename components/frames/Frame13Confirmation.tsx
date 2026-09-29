@@ -25,7 +25,7 @@ export const Frame13Confirmation: React.FC<Frame13ConfirmationProps> = ({
       {/* ============================================================== */}
       {/* 1. TOP HALF (Mobile) / LEFT HALF (Desktop): Blue Character Art */}
       {/* ============================================================== */}
-      <div className="w-full md:w-1/2 h-[52%] sm:h-[54%] md:h-full bg-[#071952] flex items-center justify-center relative overflow-hidden shrink-0 p-2 sm:p-3 md:p-6">
+      <div className="w-full md:w-1/2 h-[70%] md:h-full bg-[#071952] flex items-center justify-center relative overflow-hidden shrink-0 p-2 sm:p-3 md:p-6">
         {/* Subtle radial glow background behind character */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(37,99,235,0.25)_0%,_transparent_70%)] pointer-events-none" />
 

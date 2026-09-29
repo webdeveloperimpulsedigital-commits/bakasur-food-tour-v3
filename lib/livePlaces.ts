@@ -362,27 +362,38 @@ export async function searchLivePlaces(options: {
     }
   }
 
-  // 3. If user searched for a custom/new establishment not in maps yet, generate a verified live spot
-  if (searchResults.length === 0 && q.length >= 2) {
-    const formattedBrand = primaryKeyword.charAt(0).toUpperCase() + primaryKeyword.slice(1);
-    const areaHint = tokens.length > 1 ? tokens.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : (city || 'Local');
-    const customSpot: Restaurant = {
-      id: searchId++,
-      name: `Hotel ${formattedBrand}`,
-      description: `Popular food joint in ${areaHint}, ${city || 'Pune'}`,
-      address: `${areaHint}, ${city || 'Pune'}`,
-      area: areaHint,
-      city: city || 'Pune',
-      latitude: lat,
-      longitude: lng,
-      rating: 4.8,
-      image: pickCuisineImage(primaryKeyword),
-      is_campaign_active: 1,
-      total_visits: 750,
-      status: 'active',
-      distanceKm: 1.2
-    } as Restaurant & { distanceKm: number };
-    searchResults.push(customSpot);
+  // 3. Always guarantee the exact searched restaurant name is immediately available to select
+  const rawTyped = query.trim();
+  if (rawTyped.length >= 2) {
+    const formattedExact = rawTyped
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    const hasExactMatch = searchResults.some(
+      r => r.name.toLowerCase() === rawTyped.toLowerCase()
+    );
+
+    if (!hasExactMatch) {
+      const userSpot: Restaurant = {
+        id: searchId++,
+        name: formattedExact,
+        description: `Popular dining spot in ${city || 'Pune'}`,
+        address: `${city || 'Pune'}, India`,
+        area: city || 'Local',
+        city: city || 'Pune',
+        latitude: lat,
+        longitude: lng,
+        rating: 4.8,
+        image: pickCuisineImage(rawTyped),
+        is_campaign_active: 1,
+        total_visits: 750,
+        status: 'active',
+        distanceKm: 0.8
+      } as Restaurant & { distanceKm: number };
+
+      searchResults.unshift(userSpot);
+    }
   }
 
   // Sort by search relevance:

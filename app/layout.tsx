@@ -18,12 +18,12 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Bakasur Ka Food Tour – Interactive Food Campaign & Contest",
-  description: "Travel across iconic Indian restaurants with Bakasur! Feed his legendary appetite, fill the food meter, experience the Gastrium moment, and participate in the grand campaign.",
-  keywords: ["Bakasur", "Food Tour", "Gastrium", "Indian Food", "Pune", "Mumbai", "Delhi", "Food Campaign"],
+  title: "Bhookasur Ka Food Tour – Interactive Food Campaign & Contest",
+  description: "Travel across iconic Indian restaurants with Bhookasur! Feed his legendary appetite, fill the food meter, experience the Gastrium moment, and participate in the grand campaign.",
+  keywords: ["Bhookasur", "Food Tour", "Gastrium", "Indian Food", "Pune", "Mumbai", "Delhi", "Food Campaign"],
   openGraph: {
-    title: "Bakasur Ka Food Tour – Interactive Food Campaign",
-    description: "Feed Bakasur legendary dishes, fill the food meter, and win grand contest rewards!",
+    title: "Bhookasur Ka Food Tour – Interactive Food Campaign",
+    description: "Feed Bhookasur legendary dishes, fill the food meter, and win grand contest rewards!",
     type: "website"
   }
 };

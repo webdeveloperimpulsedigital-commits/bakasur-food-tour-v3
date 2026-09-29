@@ -200,11 +200,11 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           {/* Headline & Subtitle */}
           <div className="space-y-1.5">
             <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-[1.15]">
-              <span className="text-[#0B1B48]">Bakasur ka pet bharna mushkil hai.</span><br />
+              <span className="text-[#0B1B48]">Bhookasur ka pet bharna mushkil hai.</span><br />
               <span className="text-[#D4380D]">Map bharna nahi.</span>
             </h1>
             <p className="text-sm lg:text-base font-semibold text-[#0B1B48]/80 mt-1 leading-snug">
-              India ki recommendations. Bakasur ka live Food Tour Map.
+              India ki recommendations. Bhookasur ka live Food Tour Map.
             </p>
           </div>
 

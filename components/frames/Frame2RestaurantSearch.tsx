@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Search, MapPin, X, Check } from 'lucide-react';
 import { Restaurant } from '@/lib/db';
 
@@ -122,102 +122,47 @@ function getCityFallbacks(cityName: string): Restaurant[] {
 export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   selectedCity,
   selectedRestaurant,
-  userCoords,
   onSelectRestaurant,
-  onNext,
-  onBack
+  onNext
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>(() => {
-    if (selectedRestaurant) {
-      return selectedRestaurant.name + (selectedRestaurant.area && !selectedRestaurant.name.includes(selectedRestaurant.area) ? `, ${selectedRestaurant.area}` : '');
-    }
-    return '';
+    return selectedRestaurant ? selectedRestaurant.name : '';
   });
   const [searchResults, setSearchResults] = useState<Restaurant[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const hasAutoSelectedRef = useRef(false);
 
-  // Auto-detect GPS or city initial restaurant
-  const detectInitialSpot = useCallback(async (lat?: number, lng?: number) => {
-    try {
-      let activeCity = selectedCity || 'Pune';
+  // Popular spots fallback list for the selected city
+  const popularSpots = useMemo(() => {
+    return getCityFallbacks(selectedCity || 'Pune');
+  }, [selectedCity]);
 
-      if (lat && lng) {
-        const locRes = await fetch(`/api/location?lat=${lat}&lng=${lng}`);
-        const locData = await locRes.json();
-        if (locData.success && locData.detectedCity?.name) {
-          activeCity = locData.detectedCity.name;
-        }
-      }
-
-      const queryParams = new URLSearchParams({
-        city: activeCity,
-        limit: '3'
-      });
-      if (lat && lng) {
-        queryParams.set('lat', lat.toString());
-        queryParams.set('lng', lng.toString());
-      }
-
-      const res = await fetch(`/api/restaurants/nearby?${queryParams.toString()}`);
-      const json = await res.json();
-
-      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-        const top = json.data[0];
-        if (!hasAutoSelectedRef.current && !selectedRestaurant) {
-          hasAutoSelectedRef.current = true;
-          onSelectRestaurant(top);
-          setSearchQuery(top.name + (top.area ? `, ${top.area}` : ''));
-        }
-      } else {
-        const fallbacks = getCityFallbacks(activeCity);
-        if (!hasAutoSelectedRef.current && !selectedRestaurant && fallbacks.length > 0) {
-          hasAutoSelectedRef.current = true;
-          onSelectRestaurant(fallbacks[0]);
-          setSearchQuery(fallbacks[0].name);
-        }
-      }
-    } catch {
-      const fallbacks = getCityFallbacks(selectedCity);
-      if (!hasAutoSelectedRef.current && !selectedRestaurant && fallbacks.length > 0) {
-        hasAutoSelectedRef.current = true;
-        onSelectRestaurant(fallbacks[0]);
-        setSearchQuery(fallbacks[0].name);
-      }
+  // Show dropdown with popular spots when user focuses on search box
+  const handleFocus = () => {
+    setShowDropdown(true);
+    if (!searchQuery.trim()) {
+      setSearchResults(popularSpots);
     }
-  }, [selectedCity, selectedRestaurant, onSelectRestaurant]);
+  };
 
+  // Sync searchQuery if selectedRestaurant is explicitly updated
   useEffect(() => {
-    if (userCoords?.lat && userCoords?.lng) {
-      detectInitialSpot(userCoords.lat, userCoords.lng);
-    } else if (typeof window !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => detectInitialSpot(pos.coords.latitude, pos.coords.longitude),
-        () => detectInitialSpot(),
-        { timeout: 4000, enableHighAccuracy: true }
-      );
-    } else {
-      detectInitialSpot();
-    }
-  }, []);
-
-  // Sync searchQuery when selectedRestaurant changes externally
-  useEffect(() => {
-    if (selectedRestaurant && !searchQuery) {
+    if (selectedRestaurant) {
       setSearchQuery(
         selectedRestaurant.name +
           (selectedRestaurant.area && !selectedRestaurant.name.includes(selectedRestaurant.area)
             ? `, ${selectedRestaurant.area}`
             : '')
       );
+    } else {
+      setSearchQuery('');
     }
   }, [selectedRestaurant]);
 
   // Search autocomplete query
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setSearchResults([]);
+      setSearchResults(popularSpots);
       return;
     }
 
@@ -231,24 +176,22 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
           setSearchResults(json.data.slice(0, 6));
         } else {
           const q = searchQuery.toLowerCase();
-          const fallbacks = getCityFallbacks(selectedCity);
-          const filtered = fallbacks.filter(
-            s => s.name.toLowerCase().includes(q) || (s.area && s.area.toLowerCase().includes(q))
+          const filtered = popularSpots.filter(
+            (s: Restaurant) => s.name.toLowerCase().includes(q) || (s.area && s.area.toLowerCase().includes(q))
           );
-          setSearchResults(filtered);
+          setSearchResults(filtered.length > 0 ? filtered : popularSpots);
         }
       } catch {
         const q = searchQuery.toLowerCase();
-        const fallbacks = getCityFallbacks(selectedCity);
-        const filtered = fallbacks.filter(
-          s => s.name.toLowerCase().includes(q) || (s.area && s.area.toLowerCase().includes(q))
+        const filtered = popularSpots.filter(
+          (s: Restaurant) => s.name.toLowerCase().includes(q) || (s.area && s.area.toLowerCase().includes(q))
         );
-        setSearchResults(filtered);
+        setSearchResults(filtered.length > 0 ? filtered : popularSpots);
       }
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCity]);
+  }, [searchQuery, selectedCity, popularSpots]);
 
   // Click outside listener for dropdown
   useEffect(() => {
@@ -297,21 +240,21 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-start text-left animate-in fade-in duration-300 py-5 sm:py-7 md:py-9 px-5 sm:px-8 md:px-10 gap-3.5 sm:gap-5 md:gap-6 bg-white overflow-y-auto scrollbar-thin">
-      {/* 1. Main Headline & Subtitle (Left-aligned matching Image 2) */}
-      <div className="space-y-1 sm:space-y-1.5 text-left">
-        <h2 className="text-[28px] sm:text-[34px] md:text-[42px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
+    <div className="w-full h-full flex flex-col justify-between items-start text-left animate-in fade-in duration-300 py-3 sm:py-6 px-4 sm:px-8 gap-2 sm:gap-4 bg-white overflow-y-auto scrollbar-none">
+      {/* 1. Main Headline & Subtitle */}
+      <div className="space-y-0.5 sm:space-y-1 text-left shrink-0">
+        <h2 className="text-[20px] xs:text-[24px] sm:text-[32px] md:text-[40px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
           Apna favourite<br />restaurant batao.
         </h2>
-        <p className="text-xs sm:text-sm md:text-base font-semibold text-[#0B1B48] leading-snug">
-          Jahan jaakar Bakasur kahe: isi ke liye toh prakat hua tha.
+        <p className="text-[11px] xs:text-xs sm:text-sm md:text-base font-semibold text-[#0B1B48] leading-tight">
+          Jahan jaakar Bhookasur kahe: isi ke liye toh prakat hua tha.
         </p>
       </div>
 
       {/* 2. SEARCH BAR (Google Maps Search) */}
-      <div className="w-full relative" ref={containerRef}>
-        <div className="flex items-center w-full px-4 py-3 sm:py-3.5 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
-          <MapPin className="w-5 h-5 text-[#0047BA] fill-[#0047BA] shrink-0 mr-3" />
+      <div className="w-full relative shrink-0" ref={containerRef}>
+        <div className="flex items-center w-full px-3.5 py-2.5 sm:py-3 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
+          <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#0047BA] fill-[#0047BA] shrink-0 mr-2" />
           <input
             type="text"
             value={searchQuery}
@@ -319,9 +262,9 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               setSearchQuery(e.target.value);
               setShowDropdown(true);
             }}
-            onFocus={() => setShowDropdown(true)}
+            onFocus={handleFocus}
             placeholder="Restaurant ka naam search karo"
-            className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 placeholder-[#64748B] focus:outline-none"
+            className="w-full bg-transparent text-xs sm:text-base font-semibold text-slate-900 placeholder-[#64748B] focus:outline-none"
           />
           {searchQuery ? (
             <button
@@ -335,15 +278,15 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               <X className="w-4 h-4" />
             </button>
           ) : null}
-          <Search className="w-5 h-5 text-[#0047BA] shrink-0 stroke-[2.5]" />
+          <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#0047BA] shrink-0 stroke-[2.5]" />
         </div>
-        <div className="text-xs text-[#64748B] font-medium mt-1.5 ml-1 text-left">
+        <div className="text-[10px] sm:text-xs text-[#64748B] font-medium mt-1 ml-1 text-left">
           Search powered by Google Maps
         </div>
 
         {/* Live Search Autocomplete Dropdown */}
         {showDropdown && searchResults.length > 0 && (
-          <div className="absolute top-[105%] inset-x-0 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-[220px] overflow-y-auto p-1.5 scrollbar-thin">
+          <div className="absolute top-[105%] inset-x-0 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-[180px] overflow-y-auto p-1 scrollbar-thin">
             {searchResults.map((spot) => {
               const isSelected = selectedRestaurant?.id === spot.id || (selectedRestaurant && selectedRestaurant.name === spot.name);
               return (
@@ -351,20 +294,20 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                   key={spot.id}
                   type="button"
                   onClick={() => handleSelectSpot(spot)}
-                  className={`w-full text-left p-2.5 rounded-lg transition-all flex items-center justify-between gap-2 border-b border-slate-100 last:border-b-0 cursor-pointer ${
+                  className={`w-full text-left p-2 rounded-lg transition-all flex items-center justify-between gap-2 border-b border-slate-100 last:border-b-0 cursor-pointer ${
                     isSelected ? 'bg-blue-50 text-[#0B1B48]' : 'hover:bg-slate-50'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <MapPin className="w-4 h-4 text-[#0047BA] shrink-0" />
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin className="w-3.5 h-3.5 text-[#0047BA] shrink-0" />
                     <div className="min-w-0">
-                      <p className="font-black text-xs sm:text-sm text-[#0B1B48] truncate">
+                      <p className="font-black text-xs text-[#0B1B48] truncate">
                         {spot.name}{spot.area && !spot.name.includes(spot.area) ? `, ${spot.area}` : ''}
                       </p>
-                      <p className="text-[11px] text-slate-500 truncate">{spot.description || spot.address}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{spot.description || spot.address}</p>
                     </div>
                   </div>
-                  {isSelected && <Check className="w-4 h-4 text-[#0047BA] stroke-[3] shrink-0" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-[#0047BA] stroke-[3] shrink-0" />}
                 </button>
               );
             })}
@@ -373,12 +316,12 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       </div>
 
       {/* 3. PRIMARY CTA BUTTON: YEH WALA PAKKA */}
-      <div className="w-full pt-1 sm:pt-2">
+      <div className="w-full shrink-0">
         <button
           onClick={handleConfirm}
           disabled={!selectedRestaurant && !searchQuery.trim()}
           type="button"
-          className="w-full py-4 sm:py-4.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
+          className="w-full py-3 sm:py-3.5 px-5 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
         >
           YEH WALA PAKKA
         </button>

@@ -102,7 +102,7 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
       className="w-full h-full flex flex-col md:flex-row bg-white overflow-hidden relative select-none cursor-pointer"
     >
       {/* LEFT (Desktop) / TOP (Mobile): Visual Media Showcase */}
-      <div className="w-full md:w-1/2 h-[66%] xs:h-[68%] sm:h-[70%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
+      <div className="w-full md:w-1/2 h-[70%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
         {/* Media (Eating video or Empty plate video - clean without top overlay buttons) */}
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
           {isVideo ? (
