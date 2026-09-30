@@ -19,6 +19,7 @@ import { Frame10Submitted } from '@/components/frames/Frame10Submitted';
 import { Frame11LiveMap } from '@/components/frames/Frame11LiveMap';
 import { Frame12Registration } from '@/components/frames/Frame12Registration';
 import { Frame13Confirmation } from '@/components/frames/Frame13Confirmation';
+import { VideoTransitionOverlay } from '@/components/VideoTransitionOverlay';
 import { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets } from '@/lib/dishAssets';
 import { getOrCreateSessionId, resetSessionId, trackUserStep } from '@/lib/tracker';
@@ -42,6 +43,14 @@ export default function CampaignPage() {
   const [tourSpotRound, setTourSpotRound] = useState<number>(0); // 0 = trailer, 1 = spot 1, 2 = spot 2
   const [currentTourSpot, setCurrentTourSpot] = useState<FoodTourSpot | null>(null);
   const [visitedSpotIds, setVisitedSpotIds] = useState<string[]>([]);
+
+  // Full-width Video Interstitial Transition State
+  const [activeTransitionVideo, setActiveTransitionVideo] = useState<{
+    videoUrl: string;
+    buttonText: string;
+    nextFrame: FrameNumber;
+    onVideoComplete?: () => void;
+  } | null>(null);
 
   // Bakasur Transition Loader State
   const [isLoaderOpen, setIsLoaderOpen] = useState<boolean>(false);
@@ -153,7 +162,11 @@ export default function CampaignPage() {
   // Frame 1 -> Frame 2 (Welcome -> Restaurant Search)
   const handleStartTour = async () => {
     playSound('click');
-    triggerFrameTransition(2);
+    setActiveTransitionVideo({
+      videoUrl: '/images/all-frames/street-walk-intro.mp4',
+      buttonText: 'SEARCH RESTAURANT 📍',
+      nextFrame: 2
+    });
 
     const activeSession = sessionId || getOrCreateSessionId();
     if (!sessionId) setSessionId(activeSession);
@@ -191,7 +204,11 @@ export default function CampaignPage() {
   // Frame 2 -> Frame 3 (Restaurant Chosen -> 3 Dish Options)
   const handleRestaurantConfirmed = async () => {
     playSound('click');
-    triggerFrameTransition(3);
+    setActiveTransitionVideo({
+      videoUrl: '/images/all-frames/arriving-at-restaurant.mp4',
+      buttonText: 'CHOOSE DISH 🍛',
+      nextFrame: 3
+    });
 
     const activeSession = sessionId || getOrCreateSessionId();
 
@@ -371,6 +388,13 @@ export default function CampaignPage() {
     const firstSpot = getRandomFoodSpot([]);
     setCurrentTourSpot(firstSpot);
     setVisitedSpotIds([firstSpot.id]);
+
+    setActiveTransitionVideo({
+      videoUrl: '/images/all-frames/still-hungry-more.mp4',
+      buttonText: 'AUR KHILAO 🍽️',
+      nextFrame: 6
+    });
+
     setTourSpotRound(1);
     setFeastingStage(2);
 
@@ -414,45 +438,29 @@ export default function CampaignPage() {
       const secondSpot = getRandomFoodSpot(visitedSpotIds);
       setCurrentTourSpot(secondSpot);
       setVisitedSpotIds((prev) => [...prev, secondSpot.id]);
-      setTourSpotRound(2);
-      setFeastingStage(3);
-
-      try {
-        await fetch('/api/campaign/session/start', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_id: activeSession,
-            current_stage: 'frame_6_tour_spot_2',
-            current_step: 'tour_spot_2',
-            food_meter_percentage: 90
-          })
-        });
-      } catch (err) {
-        console.warn('Spot 2 save notice:', err);
-      }
-
-      trackUserStep({
-        sessionId: activeSession,
-        stepName: `frame_6_tour_spot_2_${secondSpot.id}`,
-        stepTitle: `Frame 6: Random Tour Spot 2 - ${secondSpot.dishName} at ${secondSpot.spotName}`,
-        stepNumber: 6,
-        foodMeterPercentage: 90,
-        metadata: {
-          dish_name: secondSpot.dishName,
-          spot_name: secondSpot.spotName,
-          round: 2
-        }
+      
+      setActiveTransitionVideo({
+        videoUrl: '/images/all-frames/after-second-plate.mp4',
+        buttonText: 'AUR KHILAO 🍽️',
+        nextFrame: 6
       });
+
+      setTourSpotRound(2);
+      setFeastingStage(2);
       return;
     }
 
-    // After Round 2 finishes: Overeating Acidity kicks in!
+    // After Round 3 finishes: Overeating Acidity kicks in!
     playSound('relief');
     setTourSpotRound(0);
     setCurrentTourSpot(null);
     setFeastingStage(3);
-    setCurrentFrame(7);
+
+    setActiveTransitionVideo({
+      videoUrl: '/images/all-frames/stomach-acidity-walk.mp4',
+      buttonText: 'HELP BHOOKASUR 💊',
+      nextFrame: 7
+    });
 
     try {
       await fetch('/api/campaign/session/start', {
@@ -483,7 +491,11 @@ export default function CampaignPage() {
   const handleFeedingLoopComplete = async () => {
     playSound('bite');
     setFeastingStage(3);
-    setCurrentFrame(7);
+    setActiveTransitionVideo({
+      videoUrl: '/images/all-frames/stomach-acidity-walk.mp4',
+      buttonText: 'HELP BHOOKASUR 💊',
+      nextFrame: 7
+    });
 
     const activeSession = sessionId || getOrCreateSessionId();
 
@@ -550,10 +562,14 @@ export default function CampaignPage() {
     });
   };
 
-  // Frame 9 -> Frame 10 (Gastrium Animation Finished -> Recommendation Submitted)
+  // Frame 9 -> Frame 11 (Gastrium Animation Finished -> Live Food Tour Map)
   const handleGastriumComplete = async () => {
     playSound('fanfare');
-    setCurrentFrame(10);
+    setActiveTransitionVideo({
+      videoUrl: '/images/all-frames/happy-relief-walk.mp4',
+      buttonText: 'EXPLORE LIVE MAP 🗺️',
+      nextFrame: 11
+    });
     const activeSession = sessionId || getOrCreateSessionId();
 
     try {
@@ -618,7 +634,11 @@ export default function CampaignPage() {
       console.warn('Failed to record visit to DB:', err);
     }
 
-    setCurrentFrame(11);
+    setActiveTransitionVideo({
+      videoUrl: '/images/all-frames/happy-relief-walk.mp4',
+      buttonText: 'EXPLORE LIVE MAP 🗺️',
+      nextFrame: 11
+    });
     trackUserStep({
       sessionId: activeSession,
       stepName: 'frame_11_live_map',
@@ -742,15 +762,75 @@ export default function CampaignPage() {
       {currentFrame === 5 ? (
         <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#031058] md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative">
           <BakasurEatingStage
-            dishName={selectedDish?.name || 'Signature Food'}
-            dishImage={selectedDish?.image}
+            dishName={
+              feastingStage === 1
+                ? selectedDish?.name || 'Signature Dish'
+                : feastingStage === 2
+                ? 'Crispy Masala Dosa'
+                : 'Amul Butter Pav Bhaji'
+            }
+            dishImage={
+              feastingStage === 1
+                ? selectedDish?.image
+                : feastingStage === 2
+                ? '/images/eating/dosa_dish.jpg'
+                : '/images/eating/pav_bhaji_dish.jpg'
+            }
             restaurantName={selectedRestaurant?.name}
             restaurant={selectedRestaurant}
             feastingStage={feastingStage}
             soundEnabled={soundEnabled}
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
             onBack={() => setCurrentFrame(3)}
-            onComplete={() => setCurrentFrame(6)}
+            onComplete={() => {
+              playSound('click');
+              // 1. Video: still-hungry-more.mp4 ("1st plate done, AUR KHILAO")
+              setActiveTransitionVideo({
+                videoUrl: '/images/all-frames/still-hungry-more.mp4',
+                buttonText: 'AUR KHILAO 🍽️',
+                nextFrame: 5,
+                onVideoComplete: () => {
+                  // 2. Video: Dosa.mp4 (Dosa Eat Video)
+                  setActiveTransitionVideo({
+                    videoUrl: '/images/all-frames/Dosa.mp4',
+                    buttonText: 'NEXT PLATE 🍽️',
+                    nextFrame: 5,
+                    onVideoComplete: () => {
+                      // 3. Video: after-second-plate.mp4 ("2nd plate done, 3rd plate bhi khilao")
+                      setActiveTransitionVideo({
+                        videoUrl: '/images/all-frames/after-second-plate.mp4',
+                        buttonText: 'AUR KHILAO 🍽️',
+                        nextFrame: 5,
+                        onVideoComplete: () => {
+                          // 4. Video: Pav Bhaji.mp4 (Pav Bhaji Eat Video)
+                          setActiveTransitionVideo({
+                            videoUrl: '/images/all-frames/Pav Bhaji.mp4',
+                            buttonText: 'FINISH FEAST 🍽️',
+                            nextFrame: 5,
+                            onVideoComplete: () => {
+                              // 5. Video: stomach-acidity-walk.mp4 ("Bhookasur not feeling well!")
+                              setActiveTransitionVideo({
+                                videoUrl: '/images/all-frames/stomach-acidity-walk.mp4',
+                                buttonText: 'HELP BHOOKASUR 💊',
+                                nextFrame: 11,
+                                onVideoComplete: () => {
+                                  // 6. Video: happy-relief-walk.mp4 ("Gastrium Relief")
+                                  setActiveTransitionVideo({
+                                    videoUrl: '/images/all-frames/happy-relief-walk.mp4',
+                                    buttonText: 'EXPLORE LIVE MAP 🗺️',
+                                    nextFrame: 11
+                                  });
+                                }
+                              });
+                            }
+                          });
+                        }
+                      });
+                    }
+                  });
+                }
+              });
+            }}
             onPlayBite={() => playSound('bite')}
           />
         </div>
@@ -935,6 +1015,25 @@ export default function CampaignPage() {
       </div>
       )}
 
+      {/* Full-width Story Video Transition Overlay between frames */}
+      {activeTransitionVideo && (
+        <VideoTransitionOverlay
+          videoUrl={activeTransitionVideo.videoUrl}
+          buttonText={activeTransitionVideo.buttonText}
+          soundEnabled={soundEnabled}
+          onToggleSound={() => setSoundEnabled(!soundEnabled)}
+          onComplete={() => {
+            const callback = activeTransitionVideo.onVideoComplete;
+            const next = activeTransitionVideo.nextFrame;
+            setActiveTransitionVideo(null);
+            if (callback) {
+              callback();
+            } else {
+              setCurrentFrame(next);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

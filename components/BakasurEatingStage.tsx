@@ -27,7 +27,7 @@ interface BakasurEatingStageProps {
   onPlayBite?: () => void;
 }
 
-const TOTAL_STAGE_SECONDS = 45; // auto-advance duration (generous wait time, tap anytime to proceed)
+const TOTAL_STAGE_SECONDS = 30; // generous duration, user taps to advance when ready
 // 3600ms per food consumption cycle (generous, leisurely eating pace & clear visual presentation)
 const BITE_CYCLE_MS = 3600;
 
@@ -109,15 +109,15 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     return () => clearInterval(slideTimer);
   }, []);
 
-  // 4. Stage countdown to auto-advance to Frame 6 (Generous wait time, tap anytime to skip):
+  // 4. Stage countdown to auto-advance:
   useEffect(() => {
-    const durationSeconds = isMobile ? 45 : TOTAL_STAGE_SECONDS;
+    const durationSeconds = TOTAL_STAGE_SECONDS;
     const timer = setTimeout(() => {
       onCompleteRef.current?.();
     }, durationSeconds * 1000);
 
     return () => clearTimeout(timer);
-  }, [isMobile]);
+  }, []);
 
   // 5. Continuous high-fps animation loop for single-dish flight & mouth chewing synchronization
   useEffect(() => {

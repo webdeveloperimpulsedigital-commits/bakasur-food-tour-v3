@@ -405,7 +405,6 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
     <div className="relative w-full h-full min-h-full overflow-hidden bg-[#182858] flex items-center justify-center select-none">
       {/* Main Stage Media Render (Clean video only at the top with zero overlays) */}
       {frameNumber === 1 ? (
-        /* Frame 1: Newly provided video for Frame 1 */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
@@ -418,7 +417,6 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           />
         </div>
       ) : frameNumber === 2 ? (
-        /* Frame 2: Ask for location video */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
@@ -431,7 +429,6 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           />
         </div>
       ) : frameNumber === 3 || frameNumber === 4 ? (
-        /* Frame 3 & 4: Showing Empty Plate video from Design Team */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
@@ -444,7 +441,6 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           />
         </div>
       ) : frameNumber === 6 ? (
-        /* Frame 6 (Trailer Stage): Showing Love video from Design Team */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
@@ -457,7 +453,6 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           />
         </div>
       ) : frameNumber === 7 || frameNumber === 8 ? (
-        /* Frame 7 & 8: Fire on stomach v2 video from Design Team */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
@@ -466,11 +461,11 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_25%] relative z-10"
+            className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
         </div>
       ) : frameNumber === 9 ? (
-        /* Frame 9: Bakasur Drinking Gastrium Video from Design Team */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
@@ -483,93 +478,20 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
               setIsPlaying(false);
               if (onVideoEnded) onVideoEnded();
             }}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
-          />
-        </div>
-      ) : frameNumber === 10 ? (
-        /* Frame 10: Thumbs Up video from Design Team (Shukriya Dost!) */
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/all-frames/Thumbs Up.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
-          />
-        </div>
-      ) : frameNumber === 11 ? (
-        /* Frame 11: Showing Love video for Live Tour Map */
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/all-frames/Showing Love.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted={!soundEnabled}
             className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
         </div>
-      ) : frameNumber === 12 ? (
-        /* Frame 12: Showing Love video for Registration */
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/all-frames/Showing Love.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_18%] relative z-10"
-          />
-        </div>
-      ) : frameNumber === 13 || isPass ? (
-        /* Frame 13: Thumbs Up video from Design Team (Official Pass Confirmed) */
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/all-frames/Thumbs Up.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_20%] relative z-10"
-          />
-        </div>
-      ) : isEating ? (
-        /* Frames 5 & 6: Dynamic Bakasur Eating Stage with Chomping mouth, Looping Flying Food & Zomato Loading Screen Messages */
-        <BakasurEatingStage
-          dishName={cleanDishTitle}
-          dishImage={dishImage}
-          restaurantName={restaurantName}
-          feastingStage={feastingStage}
-          soundEnabled={soundEnabled}
-          onToggleSound={onToggleSound}
-          onBack={onBack}
-        />
       ) : (
-        /* Character Video Frames */
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
             src={activeVideoSrc}
             playsInline
             autoPlay
-            loop={isEating ? false : loop}
-            muted={isMuted}
-            onEnded={() => {
-              setIsPlaying(false);
-              if (onVideoEnded) onVideoEnded();
-            }}
+            loop
+            muted={!soundEnabled}
             className="w-full h-full object-cover object-[center_18%] relative z-10"
           />
-
-          {/* Acidity Overload Burning Aura (Stage 3 Heartburn) */}
-          {isHeartburn && (
-            <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
-          )}
         </div>
       )}
     </div>
