@@ -19,12 +19,16 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
   onToggleSound
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [showButton, setShowButton] = useState(true);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
+    setIsVideoLoaded(false);
+    setIsNavigating(false);
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.muted = !soundEnabled;
+      videoRef.current.load();
       videoRef.current.play().catch(() => {
         if (videoRef.current) {
           videoRef.current.muted = true;
@@ -34,17 +38,27 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
     }
   }, [videoUrl, soundEnabled]);
 
+  const handleAction = () => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+    onComplete();
+  };
+
   return (
     <div className="fixed inset-0 z-[200] flex flex-col items-center justify-between bg-black select-none animate-in fade-in duration-300">
       {/* Full-width / Full-screen Video Player */}
-      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+      <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black">
         <video
           ref={videoRef}
           src={videoUrl}
           playsInline
           autoPlay
           muted={!soundEnabled}
-          className="w-full h-full object-cover relative z-10"
+          onLoadedData={() => setIsVideoLoaded(true)}
+          onCanPlay={() => setIsVideoLoaded(true)}
+          className={`w-full h-full object-cover relative z-10 transition-opacity duration-300 ${
+            isVideoLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
         />
 
         {/* Gradient overlays top & bottom */}
@@ -66,7 +80,7 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
           </button>
 
           <button
-            onClick={onComplete}
+            onClick={handleAction}
             type="button"
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-bold backdrop-blur-md border border-white/20 transition-all cursor-pointer"
           >
@@ -78,11 +92,9 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
         {/* Bottom CTA Action Button */}
         <div className="absolute bottom-6 sm:bottom-10 inset-x-4 sm:inset-x-8 z-30 max-w-md mx-auto">
           <button
-            onClick={onComplete}
+            onClick={handleAction}
             type="button"
-            className={`w-full py-4 px-6 rounded-2xl bg-[#D23002] hover:bg-[#eb420e] text-white font-black text-base sm:text-lg tracking-wide uppercase shadow-2xl shadow-[#D23002]/60 flex items-center justify-center gap-3 transition-all transform cursor-pointer border border-white/30 ${
-              showButton ? 'opacity-100 translate-y-0 scale-100 animate-bounce' : 'opacity-90 translate-y-1 scale-98'
-            }`}
+            className="w-full py-4 px-6 rounded-2xl bg-[#D23002] hover:bg-[#eb420e] text-white font-black text-base sm:text-lg tracking-wide uppercase shadow-2xl shadow-[#D23002]/60 flex items-center justify-center gap-3 transition-all transform cursor-pointer border border-white/30 opacity-100 translate-y-0 scale-100 animate-bounce active:scale-95"
           >
             <span>{buttonText}</span>
             <ArrowRight className="w-5 h-5 stroke-[3]" />

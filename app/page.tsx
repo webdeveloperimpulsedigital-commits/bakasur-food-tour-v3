@@ -1018,6 +1018,7 @@ export default function CampaignPage() {
       {/* Full-width Story Video Transition Overlay between frames */}
       {activeTransitionVideo && (
         <VideoTransitionOverlay
+          key={activeTransitionVideo.videoUrl}
           videoUrl={activeTransitionVideo.videoUrl}
           buttonText={activeTransitionVideo.buttonText}
           soundEnabled={soundEnabled}
@@ -1027,7 +1028,9 @@ export default function CampaignPage() {
             const next = activeTransitionVideo.nextFrame;
             setActiveTransitionVideo(null);
             if (callback) {
-              callback();
+              setTimeout(() => {
+                callback();
+              }, 50);
             } else {
               setCurrentFrame(next);
             }
