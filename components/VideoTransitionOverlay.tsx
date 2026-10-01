@@ -21,6 +21,8 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [tapCount, setTapCount] = useState(0);
+  const [tapPopups, setTapPopups] = useState<Array<{ id: number; x: number; y: number; text: string; color: string }>>([]);
 
   useEffect(() => {
     setIsVideoLoaded(false);
@@ -38,14 +40,53 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
     }
   }, [videoUrl, soundEnabled]);
 
-  const handleAction = () => {
+  const handleAction = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (isNavigating) return;
     setIsNavigating(true);
     onComplete();
   };
 
+  const handleOverlayTap = (e: React.MouseEvent<HTMLDivElement>) => {
+    const x = e.clientX;
+    const y = e.clientY;
+
+    const newTap = tapCount + 1;
+    setTapCount(newTap);
+
+    const labels = [`CHOMP! 💥`, `FEAST MODE! 🔥`, `COMBO! 😋`, `BHOOKASUR! 🎉`, `AUR KHILAO! 🍽️`];
+    const colors = ['#f59e0b', '#ef4444', '#10b981', '#ec4899', '#3b82f6'];
+    const text = labels[newTap % labels.length];
+    const color = colors[newTap % colors.length];
+
+    const popupId = Date.now() + Math.random();
+    setTapPopups((prev) => [...prev.slice(-8), { id: popupId, x, y, text, color }]);
+
+    setTimeout(() => {
+      setTapPopups((prev) => prev.filter((p) => p.id !== popupId));
+    }, 900);
+  };
+
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-between bg-black select-none animate-in fade-in duration-300">
+    <div
+      onClick={handleOverlayTap}
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-between bg-black select-none animate-in fade-in duration-300 cursor-pointer"
+    >
+      {/* FLOATING TAP POPUPS ON VIDEO */}
+      {tapPopups.map((p) => (
+        <div
+          key={p.id}
+          className="fixed pointer-events-none z-[300] font-black text-base sm:text-2xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] animate-out fade-out zoom-out duration-700 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            left: `${p.x}px`,
+            top: `${p.y - 30}px`,
+            color: p.color
+          }}
+        >
+          {p.text}
+        </div>
+      ))}
+
       {/* Full-width / Full-screen Video Player */}
       <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black">
         <video
@@ -68,7 +109,10 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
         {/* Top Controls Bar */}
         <div className="absolute top-4 inset-x-4 z-30 flex items-center justify-between">
           <button
-            onClick={onToggleSound}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSound();
+            }}
             type="button"
             className="p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
           >
@@ -79,8 +123,14 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
             )}
           </button>
 
+          {tapCount > 0 && (
+            <div className="px-3 py-1 rounded-full bg-amber-500/80 backdrop-blur-md text-white font-black text-xs animate-bounce">
+              🔥 {tapCount} FEAST TAPS!
+            </div>
+          )}
+
           <button
-            onClick={handleAction}
+            onClick={(e) => handleAction(e)}
             type="button"
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-bold backdrop-blur-md border border-white/20 transition-all cursor-pointer"
           >
@@ -92,7 +142,7 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
         {/* Bottom CTA Action Button */}
         <div className="absolute bottom-6 sm:bottom-10 inset-x-4 sm:inset-x-8 z-30 max-w-md mx-auto">
           <button
-            onClick={handleAction}
+            onClick={(e) => handleAction(e)}
             type="button"
             className="w-full py-4 px-6 rounded-2xl bg-[#D23002] hover:bg-[#eb420e] text-white font-black text-base sm:text-lg tracking-wide uppercase shadow-2xl shadow-[#D23002]/60 flex items-center justify-center gap-3 transition-all transform cursor-pointer border border-white/30 opacity-100 translate-y-0 scale-100 animate-bounce active:scale-95"
           >
