@@ -47,12 +47,6 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [cycleProgress, setCycleProgress] = useState<number>(0); // 0 to 1 in each bite cycle
   const [frameIndex, setFrameIndex] = useState<number>(0);
 
-  // Gamified Tap-to-Feed State
-  const [tapCount, setTapCount] = useState<number>(0);
-  const [combo, setCombo] = useState<number>(1);
-  const [score, setScore] = useState<number>(0);
-  const [tapPopups, setTapPopups] = useState<Array<{ id: number; x: number; y: number; text: string; color: string }>>([]);
-
   const [isMobile, setIsMobile] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth < 768;
@@ -126,54 +120,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // 5. Interactive Tap-to-Feed Handler
-  const handleTapToFeed = (e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
-    // Determine tap coordinates
-    let x = window.innerWidth / 2;
-    let y = window.innerHeight / 2;
-    if ('clientX' in e) {
-      x = e.clientX;
-      y = e.clientY;
-    } else if (e.touches && e.touches[0]) {
-      x = e.touches[0].clientX;
-      y = e.touches[0].clientY;
-    }
-
-    onPlayBiteRef.current?.();
-    setBiteFlash(true);
-    setTimeout(() => setBiteFlash(false), 200);
-
-    // Calculate Combo & Score
-    const newTap = tapCount + 1;
-    const newCombo = Math.min(10, Math.floor(newTap / 3) + 1);
-    const pts = 100 * newCombo;
-
-    setTapCount(newTap);
-    setCombo(newCombo);
-    setScore((prev) => prev + pts);
-
-    // Floating text labels
-    const labels = [
-      `CHOMP! +${pts}`,
-      `FEAST MODE! 🔥`,
-      `${newCombo}X COMBO! 💥`,
-      `NOM NOM! 😋`,
-      `BHOOKASUR HAPPY! 🎉`
-    ];
-    const colors = ['#f59e0b', '#ef4444', '#10b981', '#ec4899', '#8b5cf6'];
-    const text = labels[newTap % labels.length];
-    const color = colors[newTap % colors.length];
-
-    const popupId = Date.now() + Math.random();
-    setTapPopups((prev) => [...prev.slice(-8), { id: popupId, x, y, text, color }]);
-
-    // Remove popup after 900ms
-    setTimeout(() => {
-      setTapPopups((prev) => prev.filter((p) => p.id !== popupId));
-    }, 900);
-  };
-
-  // 6. High-fps animation loop
+  // 5. High-fps animation loop
   useEffect(() => {
     let animId: number;
 
@@ -250,10 +197,12 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
   return (
     <div
-      onClick={handleTapToFeed}
+      onClick={() => {
+        if (onComplete) onComplete();
+      }}
       className="relative w-full h-full min-h-full overflow-hidden bg-[#031058] flex flex-col justify-between select-none cursor-pointer"
     >
-      {/* 1. TOP HEADER: Clean brand header + Live Combo HUD */}
+      {/* 1. TOP HEADER: Clean brand header matching mockup */}
       <div className="relative z-40 px-4 xs:px-6 sm:px-8 pt-4 xs:pt-6 sm:pt-8 pb-2 flex items-center justify-between text-white w-full shrink-0">
         <div className="flex items-center gap-2 xs:gap-3">
           {onBack && (
@@ -273,35 +222,10 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             BHOOKASUR KA FOOD TOUR
           </span>
         </div>
-
-        {/* Dynamic Combo Multiplier Badge */}
-        <div className="flex items-center gap-2">
-          <div className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-red-600 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg flex items-center gap-1.5 animate-pulse">
-            <span>🔥 {combo}X COMBO</span>
-            <span className="bg-black/30 px-1.5 py-0.5 rounded text-[10px] sm:text-xs text-amber-200">
-              {score} PTS
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* 2. MAIN CANVAS ARENA */}
       <div className="relative flex-1 w-full min-h-0 overflow-hidden">
-        {/* FLOATING TAP POPUPS */}
-        {tapPopups.map((p) => (
-          <div
-            key={p.id}
-            className="fixed pointer-events-none z-[100] font-black text-sm sm:text-xl drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] animate-out fade-out zoom-out duration-700 -translate-x-1/2 -translate-y-1/2"
-            style={{
-              left: `${p.x}px`,
-              top: `${p.y - 30}px`,
-              color: p.color
-            }}
-          >
-            {p.text}
-          </div>
-        ))}
-
         {/* TOP-LEFT HEADLINE BILLBOARD */}
         <div
           onClick={(e) => {
@@ -438,34 +362,6 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             />
           </div>
         </div>
-      </div>
-
-      {/* 3. BOTTOM GAMIFIED ACTION BAR */}
-      <div className="relative z-40 p-4 sm:p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-center justify-between gap-3 w-full shrink-0">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleTapToFeed(e);
-          }}
-          type="button"
-          className="flex-1 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white font-black text-sm sm:text-base tracking-wide uppercase shadow-xl shadow-red-600/40 border border-amber-300/40 flex items-center justify-center gap-2 transform active:scale-95 transition-all cursor-pointer"
-        >
-          <span>TAP TO SPEED FEED 🍽️</span>
-          <span className="text-xs bg-black/40 px-2 py-0.5 rounded-full text-amber-200 font-bold">
-            {tapCount} TAPS
-          </span>
-        </button>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onComplete) onComplete();
-          }}
-          type="button"
-          className="py-3.5 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs sm:text-sm tracking-wide uppercase backdrop-blur-md border border-white/20 transition-all cursor-pointer shrink-0"
-        >
-          NEXT ➔
-        </button>
       </div>
     </div>
   );

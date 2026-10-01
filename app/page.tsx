@@ -750,74 +750,13 @@ export default function CampaignPage() {
     });
   };
 
-  // Global Gamified Tap State across all frames
-  const [globalTaps, setGlobalTaps] = useState<number>(0);
-  const [globalScore, setGlobalScore] = useState<number>(0);
-  const [globalPopups, setGlobalPopups] = useState<Array<{ id: number; x: number; y: number; text: string; color: string }>>([]);
-
-  const handleGlobalTap = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('select')) {
-      return;
-    }
-
-    const x = e.clientX;
-    const y = e.clientY;
-    const newTaps = globalTaps + 1;
-    const combo = Math.min(10, Math.floor(newTaps / 3) + 1);
-    const pts = 100 * combo;
-
-    setGlobalTaps(newTaps);
-    setGlobalScore((prev) => prev + pts);
-    playSound('bite');
-
-    const labels = [`CHOMP! +${pts}`, `FEAST MODE! 🔥`, `${combo}X COMBO! 💥`, `NOM NOM! 😋`, `BHOOKASUR HAPPY! 🎉`];
-    const colors = ['#f59e0b', '#ef4444', '#10b981', '#ec4899', '#8b5cf6'];
-    const text = labels[newTaps % labels.length];
-    const color = colors[newTaps % colors.length];
-
-    const popupId = Date.now() + Math.random();
-    setGlobalPopups((prev) => [...prev.slice(-8), { id: popupId, x, y, text, color }]);
-
-    setTimeout(() => {
-      setGlobalPopups((prev) => prev.filter((p) => p.id !== popupId));
-    }, 900);
-  };
-
   const getVideoContainerHeightClass = (_frame: number) => {
     // 70% screen height for video part on all frames, 30% for content part
     return 'h-[70%]';
   };
 
   return (
-    <div
-      onClick={handleGlobalTap}
-      className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#050b1e] overflow-hidden select-none p-0 md:p-6 lg:p-8 relative"
-    >
-      {/* GLOBAL FLOATING GAMIFIED COMBO HUD (Active on all screens) */}
-      <div className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[150] flex items-center gap-2 pointer-events-none">
-        <div className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 text-white font-black text-xs sm:text-sm tracking-wide shadow-2xl flex items-center gap-2 border border-amber-300/40 animate-pulse">
-          <span>🔥 {Math.min(10, Math.floor(globalTaps / 3) + 1)}X COMBO</span>
-          <span className="bg-black/40 px-2 py-0.5 rounded text-amber-200 font-bold">
-            {globalScore} PTS
-          </span>
-        </div>
-      </div>
-
-      {/* GLOBAL FLOATING TAP POPUPS */}
-      {globalPopups.map((p) => (
-        <div
-          key={p.id}
-          className="fixed pointer-events-none z-[160] font-black text-base sm:text-2xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] animate-out fade-out zoom-out duration-700 -translate-x-1/2 -translate-y-1/2"
-          style={{
-            left: `${p.x}px`,
-            top: `${p.y - 30}px`,
-            color: p.color
-          }}
-        >
-          {p.text}
-        </div>
-      ))}
+    <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#050b1e] overflow-hidden select-none p-0 md:p-6 lg:p-8">
       {/* Responsive Canvas: Mobile portrait stack (< md), Desktop split screen (md:flex-row, Left: Video, Right: Content) */}
       {/* If Frame 5: FULL SCREEN EATING STAGE (auto-transitions after 10s) */}
       {currentFrame === 5 ? (
