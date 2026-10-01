@@ -413,7 +413,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_18%] relative z-10"
+            className="w-full h-full object-contain object-center relative z-10"
           />
         </div>
       ) : frameNumber === 2 ? (
@@ -425,7 +425,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_18%] relative z-10"
+            className="w-full h-full object-contain object-center relative z-10"
           />
         </div>
       ) : frameNumber === 3 || frameNumber === 4 ? (
@@ -437,7 +437,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_32%] relative z-10"
+            className="w-full h-full object-contain object-center relative z-10"
           />
         </div>
       ) : frameNumber === 6 ? (
@@ -449,7 +449,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_18%] relative z-10"
+            className="w-full h-full object-contain object-center relative z-10"
           />
         </div>
       ) : frameNumber === 7 || frameNumber === 8 ? (
@@ -461,7 +461,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_18%] relative z-10"
+            className="w-full h-full object-contain object-center relative z-10"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
         </div>
@@ -478,7 +478,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
               setIsPlaying(false);
               if (onVideoEnded) onVideoEnded();
             }}
-            className="w-full h-full object-cover object-[center_18%] relative z-10"
+            className="w-full h-full object-contain object-center relative z-10"
           />
         </div>
       ) : (
@@ -490,7 +490,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted={!soundEnabled}
-            className="w-full h-full object-cover object-[center_18%] relative z-10"
+            className="w-full h-full object-contain object-center relative z-10"
           />
         </div>
       )}

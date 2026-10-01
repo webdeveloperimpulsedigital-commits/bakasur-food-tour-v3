@@ -56,7 +56,7 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
           muted={!soundEnabled}
           onLoadedData={() => setIsVideoLoaded(true)}
           onCanPlay={() => setIsVideoLoaded(true)}
-          className={`w-full h-full object-cover relative z-10 transition-opacity duration-300 ${
+          className={`w-full h-full object-contain object-center relative z-10 transition-opacity duration-300 ${
             isVideoLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         />
