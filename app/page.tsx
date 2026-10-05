@@ -21,7 +21,7 @@ import { Frame12Registration } from '@/components/frames/Frame12Registration';
 import { Frame13Confirmation } from '@/components/frames/Frame13Confirmation';
 import { VideoTransitionOverlay } from '@/components/VideoTransitionOverlay';
 import { Restaurant, Dish } from '@/lib/db';
-import { getDishVisualAssets } from '@/lib/dishAssets';
+import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
 import { getOrCreateSessionId, resetSessionId, trackUserStep } from '@/lib/tracker';
 
 export type FrameNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
@@ -259,7 +259,8 @@ export default function CampaignPage() {
   // Frame 3 / 4 -> Frame 5 (Dish Chosen -> Eating Begins)
   const handleDishConfirmed = async (customDishName?: string, customDishImage?: string) => {
     playSound('bite');
-    const dishName = customDishName || selectedDish?.name || 'Signature Food';
+    const rawDishName = customDishName || selectedDish?.name || 'Signature Food';
+    const dishName = formatCleanDishName(rawDishName, selectedRestaurant?.name);
     const visual = getDishVisualAssets(dishName, customDishImage || selectedDish?.image);
     const finalDish = {
       name: dishName,

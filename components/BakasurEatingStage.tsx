@@ -79,39 +79,34 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   // Selected dish visual asset (plate or flying cutout or user-uploaded image)
   const selectedDishAsset = useMemo(() => {
     const visual = getDishVisualAssets(dishName, dishImage);
-    return visual.plateImage || visual.flyingImage || dishImage || '/images/eating/samosa_flying.png';
+    return visual.plateImage || visual.flyingImage || dishImage || '/images/eating/samosa_dish.jpg';
   }, [dishName, dishImage]);
 
   // 4 Food Options based on feastingStage:
   // Stage 1: 4 Servings of the USER'S ACTUAL SELECTED DISH
-  // Stage 2: 4 DIFFERENT Iconic Street Foods (Samosa, Pav Bhaji, Biryani, Pani Puri, Dosa, Misal, etc.)
+  // Stage 2: 4 DIFFERENT Iconic Street Foods (Randomized dynamically every time!)
   const foodOptions: FoodOption[] = useMemo(() => {
     if (feastingStage === 2) {
-      const defaultVariety = [
-        { id: 'street_samosa', name: 'Crispy Samosa', image: '/images/eating/samosa_flying.png' },
-        { id: 'street_pav_bhaji', name: 'Butter Pav Bhaji', image: '/images/eating/pav_bhaji_dish.jpg' },
-        { id: 'street_biryani', name: 'Special Biryani', image: '/images/eating/biryani_dish.jpg' },
-        { id: 'street_pani_puri', name: 'Teekhi Pani Puri', image: '/images/eating/pani_puri_dish.jpg' }
-      ];
-
-      const userDishLower = (dishName || '').toLowerCase();
-      const backupOptions = [
+      const fullPool = [
+        { id: 'street_samosa', name: 'Crispy Samosa', image: '/images/eating/samosa_dish.jpg' },
         { id: 'street_dosa', name: 'Masala Dosa', image: '/images/eating/dosa_dish.jpg' },
-        { id: 'street_misal', name: 'Katakirr Misal', image: '/images/eating/misal_dish.jpg' },
+        { id: 'street_fried_rice', name: 'Triple Schezwan Rice', image: '/images/eating/fried_rice_dish.jpg' },
+        { id: 'street_biryani', name: 'Special Biryani', image: '/images/eating/biryani_dish.jpg' },
+        { id: 'street_pav_bhaji', name: 'Butter Pav Bhaji', image: '/images/eating/pav_bhaji_dish.jpg' },
+        { id: 'street_pani_puri', name: 'Teekhi Pani Puri', image: '/images/eating/pani_puri_dish.jpg' },
         { id: 'street_momos', name: 'Steamed Momos', image: '/images/eating/momos_dish.jpg' },
-        { id: 'street_chole', name: 'Chole Bhature', image: '/images/eating/chole_bhature_dish.jpg' }
+        { id: 'street_misal', name: 'Katakirr Misal', image: '/images/eating/misal_dish.jpg' },
+        { id: 'street_chole', name: 'Chole Bhature', image: '/images/eating/chole_bhature_dish.jpg' },
+        { id: 'street_vada_pav', name: 'Special Vada Pav', image: '/images/eating/vada_pav_dish.jpg' },
+        { id: 'street_paneer', name: 'Paneer Butter Masala', image: '/images/eating/paneer_dish.jpg' },
+        { id: 'street_thali', name: 'Maharaja Thali', image: '/images/eating/gavran_mutton_thali.jpg' }
       ];
 
-      let backupIdx = 0;
-      return defaultVariety.map((item) => {
-        const key = item.name.toLowerCase().split(' ')[1] || item.name.toLowerCase();
-        if (userDishLower.includes(key)) {
-          const replacement = backupOptions[backupIdx % backupOptions.length];
-          backupIdx++;
-          return replacement;
-        }
-        return item;
-      });
+      // Shuffle pool and pick 4 distinct items
+      const userKey = (dishName || '').toLowerCase();
+      const filtered = fullPool.filter(item => !userKey.includes(item.name.toLowerCase().split(' ')[1] || 'xyz'));
+      const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 4);
     }
 
     return [
@@ -302,15 +297,15 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           </div>
         )}
 
-        {/* 4 Food Item Plates Row (Big, Borderless, Clean Floating Plates) */}
-        <div className="flex items-center justify-center gap-2 xs:gap-3 sm:gap-5 w-full max-w-xl mx-auto pt-1 pb-1">
+        {/* 4 Food Item Plates Row (Much Bigger Photorealistic Floating Ceramic Plates) */}
+        <div className="flex items-center justify-center gap-2.5 xs:gap-3 sm:gap-6 w-full max-w-2xl mx-auto pt-1 pb-1">
           {foodOptions.map((food) => {
             const isBeingDragged = draggingId === food.id;
             const isEaten = eatenDishIds.includes(food.id);
 
             const style = isBeingDragged
               ? {
-                  transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) scale(1.15)`,
+                  transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) scale(1.18)`,
                   zIndex: 50
                 }
               : {};
@@ -326,22 +321,22 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                 onTouchEnd={() => handleEndDrag(food)}
                 onClick={() => handleFeedFood(food)}
                 style={style}
-                className="group relative w-20 h-20 xs:w-22 xs:h-22 sm:w-26 sm:h-26 cursor-grab active:cursor-grabbing transition-transform duration-100 flex items-center justify-center shrink-0"
+                className="group relative w-22 h-22 xs:w-26 xs:h-26 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-[0_14px_35px_rgba(0,0,0,0.9)] border-[2.5px] border-white/50 bg-slate-900/60 cursor-grab active:cursor-grabbing transition-transform duration-100 flex items-center justify-center shrink-0 p-0.5"
               >
                 <img
                   src={food.image}
                   alt={food.name}
-                  className={`w-full h-full object-contain pointer-events-none drop-shadow-[0_10px_20px_rgba(0,0,0,0.9)] transition-transform duration-150 group-hover:scale-110 ${
+                  className={`w-full h-full object-cover rounded-full pointer-events-none transition-transform duration-150 group-hover:scale-110 ${
                     isEaten ? 'opacity-40 grayscale-[30%]' : 'opacity-100'
                   }`}
                   onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_flying.png';
+                    (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_dish.jpg';
                   }}
                 />
 
                 {isEaten && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <CheckCircle2 className="w-8 h-8 text-green-400 fill-slate-900 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]" />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-[1px]">
+                    <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-400 fill-slate-950 drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]" />
                   </div>
                 )}
               </div>

@@ -41,8 +41,8 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
   // 3. Samosa / Dahi Samosa / Samosa Chaat
   if (n.includes('samosa') || img.includes('samosa')) {
     return {
-      plateImage: '/images/eating/samosa_flying.png',
-      flyingImage: '/images/eating/samosa_flying.png'
+      plateImage: '/images/eating/samosa_dish.jpg',
+      flyingImage: '/images/eating/samosa_dish.jpg'
     };
   }
 
@@ -114,7 +114,29 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 9. Biryani / Dum Biryani
+  // 9. Triple Schezwan Rice / Fried Rice / Noodles / Manchurian / Chinese (handles "chicken tripple rise", "triple rice", etc.)
+  if (
+    n.includes('tripple') ||
+    n.includes('triple') ||
+    n.includes('schezwan') ||
+    n.includes('fried rice') ||
+    n.includes('friedrice') ||
+    n.includes('rise') ||
+    n.includes('rice') ||
+    n.includes('noodle') ||
+    n.includes('chowmein') ||
+    n.includes('manchurian') ||
+    n.includes('chinese') ||
+    img.includes('rice') ||
+    img.includes('noodle')
+  ) {
+    return {
+      plateImage: '/images/eating/fried_rice_dish.jpg',
+      flyingImage: '/images/eating/fried_rice_dish.jpg'
+    };
+  }
+
+  // 10. Biryani / Dum Biryani
   if (n.includes('biryani') || (n.includes('pulao') && !n.includes('dosa')) || img.includes('biryani')) {
     return {
       plateImage: '/images/eating/biryani_dish.jpg',
@@ -250,7 +272,41 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 19. Verified flying image passed directly
+  // 19. Fast Food (Burger, Pizza, Pasta, Sandwich, Fries, Taco, Wrap, Frankie)
+  if (
+    n.includes('burger') ||
+    n.includes('pizza') ||
+    n.includes('pasta') ||
+    n.includes('sandwich') ||
+    n.includes('fries') ||
+    n.includes('taco') ||
+    n.includes('wrap') ||
+    n.includes('frankie')
+  ) {
+    return {
+      plateImage: '/images/eating/pav_bhaji_dish.jpg',
+      flyingImage: '/images/eating/pav_bhaji_dish_flying.png'
+    };
+  }
+
+  // 20. General Gravy / Curry / Paneer / Masala / Sabzi / Kofta / Korma
+  if (
+    n.includes('curry') ||
+    n.includes('gravy') ||
+    n.includes('masala') ||
+    n.includes('kofta') ||
+    n.includes('korma') ||
+    n.includes('sabzi') ||
+    n.includes('kadai') ||
+    n.includes('handi')
+  ) {
+    return {
+      plateImage: '/images/eating/paneer_dish.jpg',
+      flyingImage: '/images/eating/paneer_dish_flying.png'
+    };
+  }
+
+  // 21. Verified flying image passed directly
   if (dishImage && dishImage.includes('_flying.png')) {
     return {
       plateImage: dishImage.replace('_flying.png', '.jpg'),
@@ -258,7 +314,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 20. Custom valid local or remote image passed from menu
+  // 22. Custom valid local or remote image passed from menu
   if (dishImage && !dishImage.includes('bakasur') && (dishImage.startsWith('/') || dishImage.startsWith('http'))) {
     return {
       plateImage: dishImage,
@@ -266,10 +322,31 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // Fallback signature delight
+  // 23. SMART DETERMINISTIC HASH FALLBACK FOR ANY TYPED DISH!
+  // Ensures ANY string typed by the user maps to one of our 10 photorealistic ceramic plate food assets.
+  const fallbackPlates = [
+    '/images/eating/samosa_dish.jpg',
+    '/images/eating/momos_dish.jpg',
+    '/images/eating/fried_rice_dish.jpg',
+    '/images/eating/dosa_dish.jpg',
+    '/images/eating/paneer_dish.jpg',
+    '/images/eating/chole_bhature_dish.jpg',
+    '/images/eating/pav_bhaji_dish.jpg',
+    '/images/eating/biryani_dish.jpg',
+    '/images/eating/misal_dish.jpg',
+    '/images/eating/vada_pav_dish.jpg'
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < (n || 'food').length; i++) {
+    hash = (hash << 5) - hash + (n || 'food').charCodeAt(i);
+    hash |= 0;
+  }
+  const pickedPlate = fallbackPlates[Math.abs(hash) % fallbackPlates.length];
+
   return {
-    plateImage: '/images/eating/bhakri_bhaji_dish.jpg',
-    flyingImage: '/images/eating/bhakri_bhaji_dish_flying.png'
+    plateImage: pickedPlate,
+    flyingImage: pickedPlate
   };
 }
 
@@ -279,4 +356,36 @@ export function getDishExactPlateImage(dishName?: string, dishImage?: string): s
 
 export function getDishExactFlyingImage(dishName?: string, dishImage?: string): string {
   return getDishVisualAssets(dishName, dishImage).flyingImage;
+}
+
+export function formatCleanDishName(dishName?: string, restaurantName?: string): string {
+  if (!dishName) return 'Signature Dish';
+  let name = dishName.trim();
+
+  if (restaurantName) {
+    const restClean = restaurantName.split(',')[0].trim();
+    if (restClean) {
+      const escaped = restClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Remove prepended "RestaurantName ," or "RestaurantName -"
+      const prefixRegex = new RegExp(`^${escaped}\\s*[,\\-:]\\s*`, 'i');
+      name = name.replace(prefixRegex, '');
+
+      // Remove repeated "Special RestaurantName Special"
+      const specRestSpec = new RegExp(`Special\\s+${escaped}\\s+Special`, 'gi');
+      name = name.replace(specRestSpec, 'Special');
+
+      // Remove repeated "RestaurantName Special" in middle
+      const restSpec = new RegExp(`\\b${escaped}\\s+Special`, 'gi');
+      name = name.replace(restSpec, '');
+    }
+  }
+
+  // Remove duplicate consecutive "Special Special"
+  name = name.replace(/\bSpecial\s+Special\b/gi, 'Special');
+
+  // Clean double spaces or comma artifacts
+  name = name.replace(/\s+/g, ' ').replace(/^[\s,]+|[\s,]+$/g, '').trim();
+
+  return name || 'Signature Dish';
 }

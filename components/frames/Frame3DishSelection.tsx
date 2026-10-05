@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapPin, Check, Pencil } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
-import { getDishVisualAssets } from '@/lib/dishAssets';
+import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
 
 interface Frame3DishSelectionProps {
   restaurant: Restaurant;
@@ -299,20 +299,21 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           </div>
         ) : (
           threeDishes.map((dish) => {
-            const isSelected = !isCustomActive && selectedDish?.name === dish.name;
+            const cleanDishName = formatCleanDishName(dish.name, restaurant.name);
+            const isSelected = !isCustomActive && (selectedDish?.name === dish.name || selectedDish?.name === cleanDishName);
             return (
               <button
                 key={dish.id || dish.name}
                 type="button"
-                onClick={() => handleSelectPill(dish)}
-                className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-between gap-2 cursor-pointer shadow-xs ${isSelected
+                onClick={() => handleSelectPill({ ...dish, name: cleanDishName })}
+                className={`w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-between gap-2 cursor-pointer shadow-xs ${isSelected
                     ? 'bg-[#D4380D] text-white shadow-md shadow-[#D4380D]/30 border border-[#D4380D]'
                     : 'bg-[#F0F4F8] hover:bg-slate-200 border border-slate-200/80 text-[#0B1B48]'
                   }`}
               >
-                <span className="truncate text-left">{dish.name}</span>
+                <span className="truncate text-left leading-tight">{cleanDishName}</span>
                 {isSelected && (
-                  <Check className="w-3.5 h-3.5 stroke-[3] text-white shrink-0" />
+                  <Check className="w-4 h-4 stroke-[3] text-white shrink-0" />
                 )}
               </button>
             );
@@ -326,7 +327,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           Aapki favourite kuch aur hai?
         </label>
 
-        <div className="relative flex items-center w-full px-3 py-2 sm:py-2.5 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
+        <div className="relative flex items-center w-full px-3.5 py-2 sm:py-2.5 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
           <input
             type="text"
             value={customDishInput}
@@ -335,7 +336,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             }}
             onChange={(e) => handleCustomInputChange(e.target.value)}
             placeholder="Apni favourite dish likho"
-            className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 placeholder-[#94A3B8] focus:outline-none"
+            className="w-full bg-transparent pl-1 text-xs sm:text-sm font-semibold text-slate-900 placeholder-[#94A3B8] focus:outline-none"
           />
 
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
@@ -385,7 +386,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                       />
                       <div className="min-w-0">
                         <div className="text-xs sm:text-sm font-black text-[#0B1B48] group-hover:text-[#0047BA] truncate">
-                          {dish.name}
+                          {formatCleanDishName(dish.name, restaurant.name)}
                         </div>
                         {dish.description && (
                           <div className="text-[10px] sm:text-[11px] text-slate-500 truncate">

@@ -13,6 +13,7 @@ interface Frame4ManualDishProps {
 }
 
 const POPULAR_SUGGESTIONS = [
+  'Chicken Triple Schezwan Rice',
   'Steamed Veg Momos',
   'Crispy Fried Cheese Momos',
   'Mutton Dum Biryani',
