@@ -403,7 +403,49 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
 
   return (
     <div className="relative w-full h-full min-h-full overflow-hidden bg-[#182858] flex items-center justify-center select-none">
-      {/* Main Stage Media Render (Clean video only at the top with zero overlays) */}
+      {/* Top Header Overlay: Top-Left Back Button & Controls */}
+      <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-auto">
+        {onBack ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onBack();
+            }}
+            type="button"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white font-black text-xs backdrop-blur-md border border-white/20 shadow-lg transition-all transform active:scale-95 cursor-pointer"
+            aria-label="Previous Frame"
+          >
+            <ArrowLeft className="w-4 h-4 stroke-[3]" />
+            <span>Back</span>
+          </button>
+        ) : (
+          <div />
+        )}
+
+        <div className="flex items-center gap-2">
+          {stepIndicator && (
+            <span className="px-2.5 py-1 rounded-full bg-black/50 text-amber-300 font-extrabold text-[11px] backdrop-blur-md border border-white/10">
+              {stepIndicator}
+            </span>
+          )}
+          {onToggleSound && (
+            <button
+              onClick={onToggleSound}
+              type="button"
+              className="p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
+              aria-label="Toggle Sound"
+            >
+              {soundEnabled ? (
+                <Volume2 className="w-4 h-4 text-amber-400" />
+              ) : (
+                <VolumeX className="w-4 h-4 text-slate-400" />
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Stage Media Render */}
       {frameNumber === 1 ? (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video

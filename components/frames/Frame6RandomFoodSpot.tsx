@@ -103,7 +103,24 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
     >
       {/* LEFT (Desktop) / TOP (Mobile): Visual Media Showcase */}
       <div className="w-full md:w-1/2 h-[70%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
-        {/* Media (Eating video or Empty plate video - clean without top overlay buttons) */}
+        {/* Top Header Overlay with Back Button */}
+        {onBack && (
+          <div className="absolute top-3 left-3 z-30 pointer-events-auto">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onBack();
+              }}
+              type="button"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white font-black text-xs backdrop-blur-md border border-white/20 shadow-lg transition-all cursor-pointer active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4 stroke-[3]" />
+              <span>Back</span>
+            </button>
+          </div>
+        )}
+
+        {/* Media (Eating video or Empty plate video) */}
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
           {isVideo ? (
             <video

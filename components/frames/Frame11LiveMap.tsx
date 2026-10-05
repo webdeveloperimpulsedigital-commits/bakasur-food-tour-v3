@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu, ArrowRight, X, Phone, User, CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
+import { Menu, ArrowRight, ArrowLeft, X, Phone, User, CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
 import { InteractiveTourMap } from './InteractiveTourMap';
 
 interface Frame11LiveMapProps {
@@ -18,6 +18,7 @@ interface Frame11LiveMapProps {
   onRegisterSubmit?: (mobile: string, name?: string, concern?: string) => Promise<boolean | void>;
   isRegistering?: boolean;
   regError?: string;
+  onBack?: () => void;
 }
 
 export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
@@ -27,7 +28,8 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
   onSuggestAnotherSpot,
   onRegisterSubmit,
   isRegistering = false,
-  regError = ''
+  regError = '',
+  onBack
 }) => {
   const [stats, setStats] = useState<{ foodSpots: number | null; mustTryDishes: number | null; citiesCount: number | null }>({
     foodSpots: null,
@@ -99,8 +101,22 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
       {/* 1. MOBILE VIEW (< md): EXACT VERTICAL LAYOUT */}
       {/* ========================================================== */}
       <div className="flex md:hidden flex-1 flex-col justify-between px-3.5 sm:px-4 py-2 sm:py-3 gap-2 overflow-y-auto">
+        {/* Top Header Controls with Back Button */}
+        <div className="shrink-0 pt-1 flex items-center justify-between">
+          {onBack ? (
+            <button
+              onClick={onBack}
+              type="button"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 text-white font-black text-xs shadow-md border border-slate-700 active:scale-95 transition-all cursor-pointer mb-1"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 stroke-[3]" />
+              <span>Back</span>
+            </button>
+          ) : <div />}
+        </div>
+
         {/* Headline & Subtitle */}
-        <div className="shrink-0 pt-1">
+        <div className="shrink-0">
           <h1 className="text-[20px] xs:text-[22px] sm:text-[25px] font-black tracking-tight leading-[1.15]">
             <span className="text-[#0B1B48]">Bhookasur ka pet bharna mushkil hai.</span><br />
             <span className="text-[#D4380D]">Map bharna nahi.</span>

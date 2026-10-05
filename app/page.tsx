@@ -162,11 +162,7 @@ export default function CampaignPage() {
   // Frame 1 -> Frame 2 (Welcome -> Restaurant Search)
   const handleStartTour = async () => {
     playSound('click');
-    setActiveTransitionVideo({
-      videoUrl: '/images/all-frames/street-walk-intro.mp4',
-      buttonText: 'SEARCH RESTAURANT 📍',
-      nextFrame: 2
-    });
+    setCurrentFrame(2);
 
     const activeSession = sessionId || getOrCreateSessionId();
     if (!sessionId) setSessionId(activeSession);
@@ -204,11 +200,7 @@ export default function CampaignPage() {
   // Frame 2 -> Frame 3 (Restaurant Chosen -> 3 Dish Options)
   const handleRestaurantConfirmed = async () => {
     playSound('click');
-    setActiveTransitionVideo({
-      videoUrl: '/images/all-frames/arriving-at-restaurant.mp4',
-      buttonText: 'CHOOSE DISH 🍛',
-      nextFrame: 3
-    });
+    setCurrentFrame(3);
 
     const activeSession = sessionId || getOrCreateSessionId();
 
@@ -388,12 +380,7 @@ export default function CampaignPage() {
     const firstSpot = getRandomFoodSpot([]);
     setCurrentTourSpot(firstSpot);
     setVisitedSpotIds([firstSpot.id]);
-
-    setActiveTransitionVideo({
-      videoUrl: '/images/all-frames/still-hungry-more.mp4',
-      buttonText: 'AUR KHILAO 🍽️',
-      nextFrame: 6
-    });
+    setCurrentFrame(6);
 
     setTourSpotRound(1);
     setFeastingStage(2);
@@ -438,13 +425,6 @@ export default function CampaignPage() {
       const secondSpot = getRandomFoodSpot(visitedSpotIds);
       setCurrentTourSpot(secondSpot);
       setVisitedSpotIds((prev) => [...prev, secondSpot.id]);
-      
-      setActiveTransitionVideo({
-        videoUrl: '/images/all-frames/after-second-plate.mp4',
-        buttonText: 'AUR KHILAO 🍽️',
-        nextFrame: 6
-      });
-
       setTourSpotRound(2);
       setFeastingStage(2);
       return;
@@ -455,12 +435,7 @@ export default function CampaignPage() {
     setTourSpotRound(0);
     setCurrentTourSpot(null);
     setFeastingStage(3);
-
-    setActiveTransitionVideo({
-      videoUrl: '/images/all-frames/stomach-acidity-walk.mp4',
-      buttonText: 'HELP BHOOKASUR 💊',
-      nextFrame: 7
-    });
+    setCurrentFrame(7);
 
     try {
       await fetch('/api/campaign/session/start', {
@@ -491,11 +466,7 @@ export default function CampaignPage() {
   const handleFeedingLoopComplete = async () => {
     playSound('bite');
     setFeastingStage(3);
-    setActiveTransitionVideo({
-      videoUrl: '/images/all-frames/stomach-acidity-walk.mp4',
-      buttonText: 'HELP BHOOKASUR 💊',
-      nextFrame: 7
-    });
+    setCurrentFrame(7);
 
     const activeSession = sessionId || getOrCreateSessionId();
 
@@ -565,11 +536,7 @@ export default function CampaignPage() {
   // Frame 9 -> Frame 11 (Gastrium Animation Finished -> Live Food Tour Map)
   const handleGastriumComplete = async () => {
     playSound('fanfare');
-    setActiveTransitionVideo({
-      videoUrl: '/images/all-frames/happy-relief-walk.mp4',
-      buttonText: 'EXPLORE LIVE MAP 🗺️',
-      nextFrame: 11
-    });
+    setCurrentFrame(11);
     const activeSession = sessionId || getOrCreateSessionId();
 
     try {
@@ -634,11 +601,7 @@ export default function CampaignPage() {
       console.warn('Failed to record visit to DB:', err);
     }
 
-    setActiveTransitionVideo({
-      videoUrl: '/images/all-frames/happy-relief-walk.mp4',
-      buttonText: 'EXPLORE LIVE MAP 🗺️',
-      nextFrame: 11
-    });
+    setCurrentFrame(11);
     trackUserStep({
       sessionId: activeSession,
       stepName: 'frame_11_live_map',
@@ -664,6 +627,26 @@ export default function CampaignPage() {
       stepNumber: 11
     });
   };
+
+  // Universal Previous Frame Handler for Top-Left Navigation
+  const handleGoPreviousFrame = useCallback(() => {
+    playSound('click');
+    if (currentFrame === 2) setCurrentFrame(1);
+    else if (currentFrame === 3) setCurrentFrame(2);
+    else if (currentFrame === 4) setCurrentFrame(3);
+    else if (currentFrame === 5) setCurrentFrame(3);
+    else if (currentFrame === 6) {
+      if (tourSpotRound > 0) setTourSpotRound(0);
+      else setCurrentFrame(3);
+    }
+    else if (currentFrame === 7) setCurrentFrame(6);
+    else if (currentFrame === 8) setCurrentFrame(7);
+    else if (currentFrame === 9) setCurrentFrame(8);
+    else if (currentFrame === 10) setCurrentFrame(9);
+    else if (currentFrame === 11) setCurrentFrame(10);
+    else if (currentFrame === 12) setCurrentFrame(11);
+    else if (currentFrame === 13) setCurrentFrame(12);
+  }, [currentFrame, tourSpotRound, playSound]);
 
   // Frame 11 -> Frame 12 (Live Map -> Registration Form)
   const handleRegisterLiveTour = () => {
@@ -762,74 +745,27 @@ export default function CampaignPage() {
       {currentFrame === 5 ? (
         <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#031058] md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative">
           <BakasurEatingStage
-            dishName={
-              feastingStage === 1
-                ? selectedDish?.name || 'Signature Dish'
-                : feastingStage === 2
-                ? 'Crispy Masala Dosa'
-                : 'Amul Butter Pav Bhaji'
-            }
-            dishImage={
-              feastingStage === 1
-                ? selectedDish?.image
-                : feastingStage === 2
-                ? '/images/eating/dosa_dish.jpg'
-                : '/images/eating/pav_bhaji_dish.jpg'
-            }
+            dishName={selectedDish?.name || 'Signature Dish'}
+            dishImage={selectedDish?.image}
             restaurantName={selectedRestaurant?.name}
             restaurant={selectedRestaurant}
             feastingStage={feastingStage}
             soundEnabled={soundEnabled}
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
-            onBack={() => setCurrentFrame(3)}
+            onBack={() => {
+              if (feastingStage === 2) {
+                setFeastingStage(1);
+              } else {
+                setCurrentFrame(3);
+              }
+            }}
             onComplete={() => {
               playSound('click');
-              // 1. Video: still-hungry-more.mp4 ("1st plate done, AUR KHILAO")
-              setActiveTransitionVideo({
-                videoUrl: '/images/all-frames/still-hungry-more.mp4',
-                buttonText: 'AUR KHILAO 🍽️',
-                nextFrame: 5,
-                onVideoComplete: () => {
-                  // 2. Video: Dosa.mp4 (Dosa Eat Video)
-                  setActiveTransitionVideo({
-                    videoUrl: '/images/all-frames/Dosa.mp4',
-                    buttonText: 'NEXT PLATE 🍽️',
-                    nextFrame: 5,
-                    onVideoComplete: () => {
-                      // 3. Video: after-second-plate.mp4 ("2nd plate done, 3rd plate bhi khilao")
-                      setActiveTransitionVideo({
-                        videoUrl: '/images/all-frames/after-second-plate.mp4',
-                        buttonText: 'AUR KHILAO 🍽️',
-                        nextFrame: 5,
-                        onVideoComplete: () => {
-                          // 4. Video: Pav Bhaji.mp4 (Pav Bhaji Eat Video)
-                          setActiveTransitionVideo({
-                            videoUrl: '/images/all-frames/Pav Bhaji.mp4',
-                            buttonText: 'FINISH FEAST 🍽️',
-                            nextFrame: 5,
-                            onVideoComplete: () => {
-                              // 5. Video: stomach-acidity-walk.mp4 ("Bhookasur not feeling well!")
-                              setActiveTransitionVideo({
-                                videoUrl: '/images/all-frames/stomach-acidity-walk.mp4',
-                                buttonText: 'HELP BHOOKASUR 💊',
-                                nextFrame: 11,
-                                onVideoComplete: () => {
-                                  // 6. Video: happy-relief-walk.mp4 ("Gastrium Relief")
-                                  setActiveTransitionVideo({
-                                    videoUrl: '/images/all-frames/happy-relief-walk.mp4',
-                                    buttonText: 'EXPLORE LIVE MAP 🗺️',
-                                    nextFrame: 11
-                                  });
-                                }
-                              });
-                            }
-                          });
-                        }
-                      });
-                    }
-                  });
-                }
-              });
+              if (feastingStage === 1) {
+                setFeastingStage(2);
+              } else {
+                handleFeedingLoopComplete();
+              }
             }}
             onPlayBite={() => playSound('bite')}
           />
@@ -921,7 +857,7 @@ export default function CampaignPage() {
               restaurantName={selectedRestaurant?.name}
               soundEnabled={soundEnabled}
               onToggleSound={() => setSoundEnabled(!soundEnabled)}
-              onBack={currentFrame === 2 ? () => setCurrentFrame(1) : currentFrame === 3 ? () => setCurrentFrame(2) : undefined}
+              onBack={currentFrame > 1 ? handleGoPreviousFrame : undefined}
               stepIndicator={currentFrame === 2 ? '1/3' : currentFrame === 3 ? '2/3' : undefined}
             />
           </div>
