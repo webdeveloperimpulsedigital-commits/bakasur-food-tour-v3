@@ -1,13 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Camera, MapPin } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
+import { BakasurShareCardModal } from '../BakasurShareCardModal';
 
 interface Frame13ConfirmationProps {
   participationId?: string;
   mobile?: string;
   restaurant?: Restaurant | null;
-  dish?: Dish | { name: string; id?: number; price?: number } | null;
+  dish?: Dish | { name: string; id?: number; price?: number; image?: string } | null;
   onBackToMap: () => void;
   onRestart?: () => void;
 }
@@ -17,15 +19,16 @@ export const Frame13Confirmation: React.FC<Frame13ConfirmationProps> = ({
   mobile,
   restaurant,
   dish,
-  onBackToMap,
-  onRestart
+  onBackToMap
 }) => {
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+
   return (
     <div className="w-full h-full flex flex-col md:flex-row overflow-hidden bg-white animate-in fade-in duration-300 select-none">
       {/* ============================================================== */}
       {/* 1. TOP HALF (Mobile) / LEFT HALF (Desktop): Blue Character Art */}
       {/* ============================================================== */}
-      <div className="w-full md:w-1/2 h-[70%] md:h-full bg-[#071952] flex items-center justify-center relative overflow-hidden shrink-0 p-2 sm:p-3 md:p-6">
+      <div className="w-full md:w-1/2 h-[65%] md:h-full bg-[#071952] flex items-center justify-center relative overflow-hidden shrink-0 p-2 sm:p-3 md:p-6">
         {/* Subtle radial glow background behind character */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(37,99,235,0.25)_0%,_transparent_70%)] pointer-events-none" />
 
@@ -70,22 +73,44 @@ export const Frame13Confirmation: React.FC<Frame13ConfirmationProps> = ({
         </div>
 
         {/* Action Button & Footer Container */}
-        <div className="w-full flex flex-col items-center gap-2 sm:gap-3 shrink-0 pt-1">
+        <div className="w-full flex flex-col items-center gap-2 sm:gap-2.5 shrink-0 pt-1 max-w-sm sm:max-w-md">
           {/* Primary CTA: BACK TO FOOD TOUR MAP */}
           <button
             onClick={onBackToMap}
             type="button"
-            className="w-full max-w-sm sm:max-w-md py-3 sm:py-3.5 md:py-4 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-xl shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
+            className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-xl shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
           >
+            <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>BACK TO FOOD TOUR MAP</span>
           </button>
 
+          {/* Secondary Share Button */}
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            type="button"
+            className="w-full py-2.5 sm:py-3 px-6 rounded-2xl bg-[#071952] hover:bg-[#0a2370] text-amber-300 font-black text-xs sm:text-sm uppercase tracking-wider shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border border-amber-400/40"
+          >
+            <Camera className="w-4 h-4 text-amber-400" />
+            <span>SHARE INSTAGRAM / WHATSAPP CARD 📸</span>
+          </button>
+
           {/* Footer Subtext: POWERED BY GASTRIUM */}
-          <div className="text-[10px] sm:text-[11px] font-black text-slate-400 tracking-widest uppercase">
+          <div className="text-[10px] sm:text-[11px] font-black text-slate-400 tracking-widest uppercase pt-1">
             POWERED BY GASTRIUM
           </div>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <BakasurShareCardModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        restaurantName={restaurant?.name || 'Local Food Spot'}
+        cityName={restaurant?.city || 'Pune'}
+        dishName={dish?.name || 'Signature Dish'}
+        dishImage={(dish as { image?: string })?.image}
+        participationId={participationId}
+      />
     </div>
   );
 };

@@ -117,22 +117,22 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     return [
       {
         id: 'dish_serving_1',
-        name: `${dishName || 'Selected Dish'} (Serving 1)`,
+        name: dishName || 'Selected Dish',
         image: selectedDishAsset
       },
       {
         id: 'dish_serving_2',
-        name: `${dishName || 'Selected Dish'} (Serving 2)`,
+        name: dishName || 'Selected Dish',
         image: selectedDishAsset
       },
       {
         id: 'dish_serving_3',
-        name: `${dishName || 'Selected Dish'} (Serving 3)`,
+        name: dishName || 'Selected Dish',
         image: selectedDishAsset
       },
       {
         id: 'dish_serving_4',
-        name: `${dishName || 'Selected Dish'} (Serving 4)`,
+        name: dishName || 'Selected Dish',
         image: selectedDishAsset
       }
     ];
@@ -253,12 +253,6 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Progress Pill: 0/4 to 4/4 */}
-          <div className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 font-extrabold text-xs flex items-center gap-1.5 backdrop-blur-md shadow-md">
-            <Utensils className="w-3.5 h-3.5" />
-            <span>{fedCount} / {TOTAL_FEEDS} Fed</span>
-          </div>
-
           {onToggleSound && (
             <button
               onClick={onToggleSound}
@@ -275,28 +269,16 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </div>
       </div>
 
-      {/* 3. CENTER IMPACT / CHOMP FLASH OVERLAY */}
+      {/* 3. CENTER IMPACT / FLYING ANIMATION OVERLAY */}
       <div className="relative flex-1 w-full min-h-0 pointer-events-none z-30 flex items-center justify-center">
-        {chompEffect && (
-          <div className="flex flex-col items-center justify-center animate-in zoom-in-50 duration-200">
-            <div className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white font-black text-lg sm:text-2xl uppercase tracking-wider shadow-[0_10px_35px_rgba(226,55,10,0.8)] border-2 border-amber-300 animate-bounce flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-amber-200 fill-amber-300" />
-              <span>CHOMP! ({fedCount}/{TOTAL_FEEDS}) 💥</span>
-            </div>
-            <span className="text-xs sm:text-sm font-extrabold text-amber-300 mt-1 drop-shadow-md uppercase tracking-wide">
-              Bhookasur ate {lastFedName}! 😋
-            </span>
-          </div>
-        )}
-
-        {/* Flying food animation towards open mouth */}
+        {/* Flying food animation towards open mouth (Clean, Borderless, Smooth Glide into Mouth) */}
         {activeFlyingItem && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-slate-900/80 border-2 border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.8)] animate-fly-to-mouth flex items-center justify-center p-1">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 animate-fly-to-mouth flex items-center justify-center">
               <img
                 src={activeFlyingItem.image}
                 alt="Flying Dish"
-                className="w-full h-full object-cover rounded-full"
+                className="w-full h-full object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.85)]"
               />
             </div>
           </div>
@@ -382,24 +364,25 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         )}
       </div>
 
-      {/* Inline Keyframes for Flying Animation */}
+      {/* Inline Keyframes for Smooth Flying Animation */}
       <style jsx global>{`
         @keyframes flyToMouth {
           0% {
-            transform: translateY(180px) scale(1);
+            transform: translateY(200px) scale(1) rotate(0deg);
             opacity: 1;
           }
-          50% {
-            transform: translateY(40px) scale(1.15);
+          45% {
+            transform: translateY(45px) scale(1.1) rotate(-4deg);
             opacity: 1;
           }
           100% {
-            transform: translateY(-80px) scale(0.2);
+            transform: translateY(-5px) scale(0.12) rotate(0deg);
             opacity: 0;
           }
         }
         .animate-fly-to-mouth {
-          animation: flyToMouth 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+          animation: flyToMouth 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          will-change: transform, opacity;
         }
       `}</style>
     </div>
