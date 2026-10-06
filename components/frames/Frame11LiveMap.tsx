@@ -19,6 +19,7 @@ interface Frame11LiveMapProps {
   isRegistering?: boolean;
   regError?: string;
   onBack?: () => void;
+  onViewExistingPass?: (data: { mobile: string; participation_id: string; restaurant_name?: string; dish_name?: string }) => void;
 }
 
 export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
@@ -29,7 +30,8 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
   onRegisterSubmit,
   isRegistering = false,
   regError = '',
-  onBack
+  onBack,
+  onViewExistingPass
 }) => {
   const [stats, setStats] = useState<{ foodSpots: number | null; mustTryDishes: number | null; citiesCount: number | null }>({
     foodSpots: null,
@@ -43,6 +45,60 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
   const [consent, setConsent] = useState<boolean>(false);
   const [localError, setLocalError] = useState<string>('');
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState<boolean>(false);
+
+  // Real-time mobile duplicate check state
+  const [isCheckingMobile, setIsCheckingMobile] = useState<boolean>(false);
+  const [registeredInfo, setRegisteredInfo] = useState<{
+    isRegistered: boolean;
+    participation_id?: string;
+    name?: string;
+    city?: string;
+    restaurant_name?: string;
+    dish_name?: string;
+  } | null>(null);
+
+  // Debounced check whenever 10 digits are typed
+  React.useEffect(() => {
+    const clean = mobile.replace(/\D/g, '');
+    if (clean.length !== 10) {
+      setRegisteredInfo(null);
+      return;
+    }
+
+    let isMounted = true;
+    setIsCheckingMobile(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/campaign/participate?check_mobile=${clean}`);
+        const json = await res.json();
+        if (isMounted && json.success) {
+          if (json.isRegistered && json.data) {
+            setRegisteredInfo({
+              isRegistered: true,
+              participation_id: json.data.participation_id,
+              name: json.data.name,
+              city: json.data.city,
+              restaurant_name: json.data.restaurant_name,
+              dish_name: json.data.dish_name
+            });
+            setLocalError('Yeh mobile number pehle se registered hai! Duplicate entry allow nahi hai.');
+          } else {
+            setRegisteredInfo({ isRegistered: false });
+            setLocalError('');
+          }
+        }
+      } catch (err) {
+        console.warn('Registration duplicate check notice:', err);
+      } finally {
+        if (isMounted) setIsCheckingMobile(false);
+      }
+    }, 250);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [mobile]);
 
   // Fetch dynamic stats from /api/campaign/map immediately
   React.useEffect(() => {
@@ -73,6 +129,11 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
     const cleanMobile = mobile.replace(/\D/g, '');
     if (!cleanMobile || cleanMobile.length !== 10) {
       setLocalError('Kripya apna sahi 10-digit mobile number daalein.');
+      return;
+    }
+
+    if (registeredInfo?.isRegistered) {
+      setLocalError(`Yeh mobile number pehle se registered hai (Pass: ${registeredInfo.participation_id || ''}). Duplicate registration nahi ho sakti.`);
       return;
     }
 
@@ -333,10 +394,73 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                       maxLength={10}
                       required
                       autoFocus
-                      className="w-full pl-16 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 text-sm font-black tracking-wider placeholder-slate-400 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#D4380D] focus:bg-white"
+                      className={`w-full pl-16 pr-3 py-2.5 rounded-xl text-sm font-black tracking-wider placeholder-slate-400 border transition-all focus:outline-none focus:ring-2 ${
+                        registeredInfo?.isRegistered
+                          ? 'bg-amber-50/70 border-amber-400 text-amber-950 focus:ring-amber-500'
+                          : registeredInfo && !registeredInfo.isRegistered
+                          ? 'bg-emerald-50/50 border-emerald-400 text-emerald-950 focus:ring-emerald-500'
+                          : 'bg-slate-50 border-slate-300 text-slate-900 focus:ring-[#D4380D] focus:bg-white'
+                      }`}
                     />
                   </div>
+
+                  {/* Real-time Status Indicators */}
+                  {isCheckingMobile && (
+                    <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-500 pt-0.5 animate-pulse">
+                      <span className="inline-block w-2 h-2 rounded-full bg-slate-400 animate-ping" />
+                      <span>Number registration status check ho raha hai...</span>
+                    </div>
+                  )}
+
+                  {!isCheckingMobile && registeredInfo && !registeredInfo.isRegistered && mobile.length === 10 && (
+                    <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-emerald-600 pt-0.5 animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>✓ Nayi registration ke liye number uplabdh hai</span>
+                    </div>
+                  )}
                 </div>
+
+                {/* Duplicate Registration Detected Notice Card */}
+                {registeredInfo?.isRegistered && (
+                  <div className="p-3 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 flex flex-col gap-2 animate-in zoom-in-95 duration-200">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-xs font-black text-[#0B1B48] leading-tight">
+                          Yeh mobile number pehle se registered hai!
+                        </p>
+                        <p className="text-[11px] font-semibold text-slate-700 mt-0.5 leading-snug">
+                          Aapka Tour Pass pehle hi generate ho chuka hai. Duplicate entries allow nahi hain.
+                        </p>
+                        {registeredInfo.participation_id && (
+                          <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-xs font-mono font-black text-[#D4380D] shadow-2xs">
+                            <span className="text-[10px] text-slate-500">PASS ID:</span>
+                            <span>{registeredInfo.participation_id}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {onViewExistingPass && registeredInfo.participation_id && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          onViewExistingPass({
+                            mobile: mobile.replace(/\D/g, '').slice(-10),
+                            participation_id: registeredInfo.participation_id!,
+                            restaurant_name: registeredInfo.restaurant_name,
+                            dish_name: registeredInfo.dish_name
+                          });
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-[#0B1B48] hover:bg-[#152a68] text-amber-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 transition-all"
+                      >
+                        <span>AAPKA TOUR PASS DEKHEIN 🎫</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Field 2: User Consent Checkbox (Required) */}
                 <div className="flex flex-col gap-1 pt-0.5">
@@ -355,7 +479,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                 </div>
 
                 {/* Error Message */}
-                {(localError || regError) && (
+                {(localError || regError) && !registeredInfo?.isRegistered && (
                   <div className="flex items-center gap-1.5 p-2 rounded-lg bg-red-50 text-red-600 text-[11px] font-bold border border-red-200">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{localError || regError}</span>
@@ -366,11 +490,17 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                 <div className="pt-1">
                   <button
                     type="submit"
-                    disabled={isRegistering || mobile.length !== 10 || !consent}
-                    className="w-full py-3 px-4 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isRegistering || isCheckingMobile || mobile.length !== 10 || !consent || registeredInfo?.isRegistered}
+                    className={`w-full py-3 px-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                      registeredInfo?.isRegistered
+                        ? 'bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300'
+                        : 'bg-[#D4380D] hover:bg-[#ba300a] text-white shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                    }`}
                   >
                     {isRegistering ? (
                       <span className="animate-pulse">Registering...</span>
+                    ) : registeredInfo?.isRegistered ? (
+                      <span>NUMBER PEHLE SE REGISTERED HAI ⚠️</span>
                     ) : (
                       <>
                         <span>TOUR PASS CLAIM KARO</span>

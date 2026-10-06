@@ -46,6 +46,24 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
+  // 3.5 Bun Maska & Special Irani Chai / Cafe Goodluck / Irani Cafe
+  if (
+    n.includes('bun maska') ||
+    n.includes('irani chai') ||
+    n.includes('goodluck bun') ||
+    (n.includes('bun') && n.includes('maska')) ||
+    (n.includes('maska') && !n.includes('keema') && !n.includes('pav bhaji')) ||
+    (n.includes('chai') && !n.includes('samosa') && !n.includes('chole')) ||
+    (n.includes('tea') && !n.includes('steak')) ||
+    (n.includes('goodluck') && (n.includes('bun') || n.includes('chai'))) ||
+    img.includes('bun_maska')
+  ) {
+    return {
+      plateImage: '/images/eating/bun_maska_dish.jpg',
+      flyingImage: '/images/eating/bun_maska_flying.png'
+    };
+  }
+
   // 4. Pav Bhaji / Masala Pav
   if (
     n.includes('pav bhaji') ||

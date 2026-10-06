@@ -291,7 +291,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Goodluck Bun Maska & Special Irani Chai",
       description: "Deccan's 1935 classic: crusty bun slathered with salted whipped butter and steaming hot cardamom Irani tea.",
       price: 75,
-      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80",
+      image: "/images/eating/bun_maska_dish.jpg",
       popularity: 100,
       rating: 5.0
     },
@@ -785,7 +785,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
         name: "Special Kulhad Masala Chai & Bun Maska",
         description: "Strong aromatic tea brewed with ginger, cardamom, and lemongrass, served with warm buttery bun.",
         price: 70,
-        image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80",
+        image: "/images/eating/bun_maska_dish.jpg",
         popularity: 100,
         rating: 5.0
       },

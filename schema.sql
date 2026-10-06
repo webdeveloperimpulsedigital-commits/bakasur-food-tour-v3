@@ -8,6 +8,21 @@ COLLATE utf8mb4_unicode_ci;
 
 USE `bakasur_food_tour`;
 
+-- 0. Locations (Cities) Table
+CREATE TABLE IF NOT EXISTS `locations` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(100) NOT NULL UNIQUE,
+    `slug` VARCHAR(100) NOT NULL UNIQUE,
+    `region` VARCHAR(100) NOT NULL,
+    `icon` VARCHAR(20) DEFAULT '📍',
+    `is_active` TINYINT(1) DEFAULT 1,
+    `display_order` INT DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_loc_name` (`name`),
+    INDEX `idx_loc_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 1. Restaurants Table
 CREATE TABLE IF NOT EXISTS `restaurants` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -112,11 +127,14 @@ CREATE TABLE IF NOT EXISTS `participants` (
     `mobile` VARCHAR(20) NOT NULL,
     `email` VARCHAR(255) NOT NULL,
     `city` VARCHAR(100) NOT NULL,
+    `restaurant_id` INT NULL,
     `restaurant_name` VARCHAR(255),
+    `dish_id` INT NULL,
     `dish_name` VARCHAR(255),
     `consent` TINYINT(1) DEFAULT 1,
     `terms_accepted` TINYINT(1) DEFAULT 1,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_participants_mobile` (`mobile`),
     INDEX `idx_participation_id` (`participation_id`),
     INDEX `idx_city` (`city`),
     INDEX `idx_mobile` (`mobile`)

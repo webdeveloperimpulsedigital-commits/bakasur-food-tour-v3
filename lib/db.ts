@@ -295,7 +295,7 @@ export const INITIAL_DISHES: Omit<Dish, 'id'>[] = [
   { restaurant_id: 8, name: "Upma Sheera Twin Combo", description: "Savory roasted semolina upma served alongside velvety golden pineapple sheera dripping with ghee.", price: 110.00, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", rating: 4.6, popularity: 89, is_recommended: 1, status: 'active' },
 
   // 9. Cafe Goodluck - Deccan (rest_id: 9)
-  { restaurant_id: 9, name: "Bun Maska & Irani Chai", description: "Soft fresh bun slathered with dollops of salted butter served with piping hot cardamom Irani tea.", price: 70.00, image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 98, is_recommended: 1, status: 'active' },
+  { restaurant_id: 9, name: "Bun Maska & Irani Chai", description: "Soft fresh bun slathered with dollops of salted butter served with piping hot cardamom Irani tea.", price: 70.00, image: "/images/eating/bun_maska_dish.jpg", rating: 4.9, popularity: 98, is_recommended: 1, status: 'active' },
   { restaurant_id: 9, name: "Spicy Mutton Keema Pav", description: "Slow-cooked minced mutton cooked in whole aromatic spices topped with fresh mint & buttered ladi pav.", price: 260.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 99, is_recommended: 1, status: 'active' },
   { restaurant_id: 9, name: "Chicken Baida Roti", description: "Crispy shallow-fried stuffed flatbread layered with spiced chicken minced and scrambled egg.", price: 220.00, image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80", rating: 4.7, popularity: 93, is_recommended: 1, status: 'active' },
   { restaurant_id: 9, name: "Special Irani Mawa Cake", description: "Traditional rich cardamom and nutmeg scented sponge cake baked to golden perfection.", price: 50.00, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=80", rating: 4.8, popularity: 94, is_recommended: 1, status: 'active' },
@@ -337,7 +337,7 @@ export const INITIAL_DISHES: Omit<Dish, 'id'>[] = [
   { restaurant_id: 14, name: "Cheesy Mushroom & Spinach Quiche", description: "Savory shortcrust pastry tart filled with sautéed mushrooms, garlic spinach, and melted cheese.", price: 190.00, image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80", rating: 4.6, popularity: 89, is_recommended: 1, status: 'active' },
 
   // 15. Irani Cafe - Viman Nagar (rest_id: 15)
-  { restaurant_id: 15, name: "Bun Maska & Irani Chai", description: "Crusty bun stuffed with whipped salted butter paired with sweet spiced cardamom tea.", price: 75.00, image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 98, is_recommended: 1, status: 'active' },
+  { restaurant_id: 15, name: "Bun Maska & Irani Chai", description: "Crusty bun stuffed with whipped salted butter paired with sweet spiced cardamom tea.", price: 75.00, image: "/images/eating/bun_maska_dish.jpg", rating: 4.9, popularity: 98, is_recommended: 1, status: 'active' },
   { restaurant_id: 15, name: "Mutton Keema Ghotala", description: "Spiced minced mutton scrambled together with two sunny eggs, green chillies & pav.", price: 290.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 99, is_recommended: 1, status: 'active' },
   { restaurant_id: 15, name: "Chicken Cheese Roll", description: "Flaky tawa paratha rolled with tandoori chicken chunks and melted cheese.", price: 180.00, image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80", rating: 4.7, popularity: 93, is_recommended: 1, status: 'active' },
   { restaurant_id: 15, name: "Classic Irani Bun Omelette", description: "Fluffy 2-egg spiced omelette folded inside a fresh buttery soft bun.", price: 120.00, image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&auto=format&fit=crop&q=80", rating: 4.6, popularity: 90, is_recommended: 1, status: 'active' },
@@ -387,7 +387,7 @@ export const INITIAL_DISHES: Omit<Dish, 'id'>[] = [
 
   // 22. Kyani & Co. - Mumbai (rest_id: 22)
   { restaurant_id: 22, name: "Mutton Keema Ghotala", description: "Iconic Irani keema scrambled together with two sunny eggs, green chillies & buttered pav.", price: 270.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 98, is_recommended: 1, status: 'active' },
-  { restaurant_id: 22, name: "Bun Maska & Special Irani Chai", description: "Fresh crusty bun loaded with Amul butter, paired with spiced sweet cardamom tea.", price: 80.00, image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80", rating: 4.8, popularity: 96, is_recommended: 1, status: 'active' },
+  { restaurant_id: 22, name: "Bun Maska & Special Irani Chai", description: "Fresh crusty bun loaded with Amul butter, paired with spiced sweet cardamom tea.", price: 80.00, image: "/images/eating/bun_maska_dish.jpg", rating: 4.8, popularity: 96, is_recommended: 1, status: 'active' },
   { restaurant_id: 22, name: "Irani Cheese Mushroom Omelette", description: "Fluffy 3-egg omelette folded over sauteed garlic mushrooms and melted cheddar.", price: 160.00, image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&auto=format&fit=crop&q=80", rating: 4.7, popularity: 92, is_recommended: 1, status: 'active' },
   { restaurant_id: 22, name: "Heritage Caramel Custard", description: "Legendary silky smooth egg custard baked with dark caramelized sugar glaze.", price: 110.00, image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 95, is_recommended: 1, status: 'active' },
   { restaurant_id: 22, name: "Sailor's Cinnamon Apple Pie", description: "Flaky baked pastry crust filled with spiced stewed apples and raisins.", price: 130.00, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=80", rating: 4.6, popularity: 89, is_recommended: 1, status: 'active' },
@@ -1598,31 +1598,126 @@ export const db = {
       longitude: data.longitude,
       visited_at: new Date().toISOString()
     };
-    memoryStore.visits.push(visit);
-
-    // increment restaurant total visits
-    if (matchedRest) {
-      matchedRest.total_visits = (matchedRest.total_visits || 0) + 1;
+    // Check if memoryStore already has a visit for this session and restaurant
+    const existingIndex = memoryStore.visits.findIndex(
+      v => v.session_id === data.session_id && v.restaurant_id === data.restaurant_id
+    );
+    if (existingIndex >= 0) {
+      memoryStore.visits[existingIndex].dish_name = finalDishName;
+      memoryStore.visits[existingIndex].dish_id = data.dish_id ?? null;
+      memoryStore.visits[existingIndex].restaurant_name = finalRestName;
+    } else {
+      memoryStore.visits.push(visit);
+      if (matchedRest) {
+        matchedRest.total_visits = (matchedRest.total_visits || 0) + 1;
+      }
     }
 
-    // Persist to MySQL
+    // Persist to MySQL (Prevent duplicate entries for same session and restaurant, and auto-register new spots/dishes/cities)
     try {
       const pool = getMySQLPool();
       if (pool) {
-        await pool.query(
-          `INSERT INTO campaign_visits (session_id, restaurant_id, dish_id, city, latitude, longitude, restaurant_name, dish_name)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            data.session_id,
-            data.restaurant_id,
-            data.dish_id ?? null,
-            data.city,
-            data.latitude,
-            data.longitude,
-            finalRestName,
-            finalDishName
-          ]
+        // 1. Ensure city is recorded in locations table
+        let locationId = 1;
+        if (data.city && data.city.trim()) {
+          const cleanCity = data.city.trim();
+          await pool.query(
+            `INSERT INTO locations (name, slug, region, is_active, display_order)
+             VALUES (?, LOWER(REPLACE(?, ' ', '-')), ?, 1, 99)
+             ON DUPLICATE KEY UPDATE is_active = 1`,
+            [cleanCity, cleanCity, cleanCity]
+          ).catch(() => {});
+
+          const [locRows] = await pool.query<mysql.RowDataPacket[]>(
+            'SELECT id FROM locations WHERE LOWER(name) = LOWER(?) LIMIT 1',
+            [cleanCity]
+          );
+          if (locRows && locRows.length > 0) {
+            locationId = Number(locRows[0].id);
+          }
+        }
+
+        // 2. Ensure restaurant exists in restaurants table
+        let targetRestaurantId = data.restaurant_id;
+        if (finalRestName) {
+          const [existingRest] = await pool.query<mysql.RowDataPacket[]>(
+            'SELECT id FROM restaurants WHERE LOWER(name) = LOWER(?) LIMIT 1',
+            [finalRestName]
+          );
+          if (existingRest && existingRest.length > 0) {
+            targetRestaurantId = Number(existingRest[0].id);
+            await pool.query(
+              'UPDATE restaurants SET total_visits = total_visits + 1, status = "active" WHERE id = ?',
+              [targetRestaurantId]
+            ).catch(() => {});
+          } else {
+            // New user-recommended restaurant! Insert into restaurants table in MySQL!
+            const [insertRes] = await pool.query<mysql.ResultSetHeader>(
+              `INSERT INTO restaurants (location_id, name, slug, address, area, city, latitude, longitude, rating, is_campaign_active, total_visits, status)
+               VALUES (?, ?, LOWER(REPLACE(?, ' ', '-')), ?, ?, ?, ?, ?, 4.8, 1, 1, 'active')`,
+              [
+                locationId,
+                finalRestName,
+                finalRestName,
+                `${data.city || 'Pune'}, India`,
+                data.city || 'Local',
+                data.city || 'Pune',
+                data.latitude || 18.5204,
+                data.longitude || 73.8407
+              ]
+            ).catch((err) => {
+              console.warn('Restaurant insert notice:', err);
+              return [{ insertId: targetRestaurantId }];
+            });
+            if (insertRes && insertRes.insertId) {
+              targetRestaurantId = insertRes.insertId;
+            }
+          }
+        }
+
+        // 3. Ensure dish exists in dishes table
+        if (finalDishName && targetRestaurantId) {
+          const [existingDish] = await pool.query<mysql.RowDataPacket[]>(
+            'SELECT id FROM dishes WHERE restaurant_id = ? AND LOWER(name) = LOWER(?) LIMIT 1',
+            [targetRestaurantId, finalDishName]
+          );
+          if (!existingDish || existingDish.length === 0) {
+            await pool.query(
+              `INSERT INTO dishes (restaurant_id, name, slug, price, rating, popularity, is_recommended, status)
+               VALUES (?, ?, LOWER(REPLACE(?, ' ', '-')), 180.00, 4.8, 90, 1, 'active')`,
+              [targetRestaurantId, finalDishName, finalDishName]
+            ).catch(() => {});
+          }
+        }
+
+        // 4. Save/Update visit in campaign_visits
+        const [existing] = await pool.query<mysql.RowDataPacket[]>(
+          'SELECT id FROM campaign_visits WHERE session_id = ? AND (restaurant_id = ? OR restaurant_name = ?) LIMIT 1',
+          [data.session_id, targetRestaurantId, finalRestName]
         );
+        if (existing && existing.length > 0) {
+          await pool.query(
+            `UPDATE campaign_visits 
+             SET restaurant_id = ?, dish_id = ?, dish_name = ?, restaurant_name = ?, city = ?, latitude = ?, longitude = ?, visited_at = CURRENT_TIMESTAMP
+             WHERE id = ?`,
+            [targetRestaurantId, data.dish_id ?? null, finalDishName, finalRestName, data.city, data.latitude, data.longitude, existing[0].id]
+          );
+        } else {
+          await pool.query(
+            `INSERT INTO campaign_visits (session_id, restaurant_id, dish_id, city, latitude, longitude, restaurant_name, dish_name)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.session_id,
+              targetRestaurantId,
+              data.dish_id ?? null,
+              data.city,
+              data.latitude,
+              data.longitude,
+              finalRestName,
+              finalDishName
+            ]
+          );
+        }
       }
     } catch (err) {
       console.warn('MySQL recordVisit warning:', err instanceof Error ? err.message : String(err));
@@ -1636,11 +1731,12 @@ export const db = {
     let dbFoodSpots = 0;
     let dbDishes = 0;
     let dbCities = 0;
+    let existingTourStops: any[] = [];
 
     try {
       const pool = getMySQLPool();
       if (pool) {
-        // 1. Get visited restaurants from MySQL (safe query avoiding non-existent columns)
+        // 1. Get visited restaurants from MySQL
         const [visitRows] = await pool.query<mysql.RowDataPacket[]>(
           `SELECT cv.id, cv.session_id, cv.restaurant_id, cv.dish_id, cv.city, 
                   CAST(cv.latitude AS DECIMAL(10,6)) as latitude, 
@@ -1677,71 +1773,105 @@ export const db = {
           });
         }
 
-        // Live stats counts from DB
-        const [[rCount]] = await pool.query<mysql.RowDataPacket[]>('SELECT COUNT(*) as c FROM restaurants');
-        const [[dCount]] = await pool.query<mysql.RowDataPacket[]>('SELECT COUNT(*) as c FROM dishes');
-        const [[vCount]] = await pool.query<mysql.RowDataPacket[]>('SELECT COUNT(DISTINCT restaurant_id) as c FROM campaign_visits');
-        const [[cCount]] = await pool.query<mysql.RowDataPacket[]>('SELECT COUNT(DISTINCT city) as c FROM campaign_visits WHERE city IS NOT NULL AND city != ""');
+        // 2. Query ALL active campaign restaurants directly from MySQL
+        const [restRows] = await pool.query<mysql.RowDataPacket[]>(
+          `SELECT r.id, r.name, r.address, r.area, r.city, 
+                  CAST(r.latitude AS DECIMAL(10,6)) as latitude, 
+                  CAST(r.longitude AS DECIMAL(10,6)) as longitude, 
+                  r.rating, r.image, r.total_visits,
+                  COALESCE(d.name, 'Specialty Dish') as featured_dish,
+                  COALESCE(d.image, r.image) as featured_dish_image
+           FROM restaurants r
+           LEFT JOIN dishes d ON d.restaurant_id = r.id AND d.is_recommended = 1
+           WHERE r.status = 'active'
+           GROUP BY r.id
+           ORDER BY r.total_visits DESC`
+        );
 
-        dbFoodSpots = Math.max(Number(rCount?.c || 0), Number(vCount?.c || 0), memoryStore.restaurants.length);
-        dbDishes = Math.max(Number(dCount?.c || 0), memoryStore.dishes.length);
-        dbCities = Math.max(Number(cCount?.c || 0), 12);
+        if (restRows && restRows.length > 0) {
+          existingTourStops = restRows.map(r => ({
+            id: Number(r.id),
+            session_id: '',
+            name: String(r.name),
+            address: String(r.address || ''),
+            area: String(r.area || ''),
+            city: String(r.city || 'Pune'),
+            latitude: Number(r.latitude) || 18.5204,
+            longitude: Number(r.longitude) || 73.8407,
+            rating: Number(r.rating || 4.8),
+            image: String(r.image || ''),
+            total_visits: Number(r.total_visits || 100),
+            featured_dish: String(r.featured_dish || 'Famous Specialty'),
+            featured_dish_image: String(r.featured_dish_image || r.image || ''),
+            isCurrentUserSpot: visitedPoints.some(p => p.isCurrentUserSpot && (p.restaurant_id === Number(r.id) || p.name.toLowerCase() === String(r.name).toLowerCase()))
+          }));
+        }
+
+        // 3. Dynamic 100% REAL stats queried directly from MySQL
+        const [[rCount]] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT COUNT(DISTINCT name) as c FROM (
+            SELECT name FROM restaurants WHERE status = 'active'
+            UNION
+            SELECT restaurant_name as name FROM campaign_visits WHERE restaurant_name IS NOT NULL AND restaurant_name != ''
+          ) as all_spots
+        `);
+
+        const [[dCount]] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT COUNT(DISTINCT name) as c FROM (
+            SELECT name FROM dishes WHERE status = 'active'
+            UNION
+            SELECT dish_name as name FROM campaign_visits WHERE dish_name IS NOT NULL AND dish_name != ''
+          ) as all_dishes
+        `);
+
+        const [[cCount]] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT COUNT(DISTINCT city) as c FROM (
+            SELECT name as city FROM locations WHERE is_active = 1
+            UNION
+            SELECT city FROM restaurants WHERE city IS NOT NULL AND city != ''
+            UNION
+            SELECT city FROM campaign_visits WHERE city IS NOT NULL AND city != ''
+          ) as all_cities
+        `);
+
+        dbFoodSpots = Number(rCount?.c || 0);
+        dbDishes = Number(dCount?.c || 0);
+        dbCities = Number(cCount?.c || 0);
       }
     } catch (err) {
       console.warn('MySQL getMapData query warning:', err);
     }
 
-    // Combine with memoryStore visits
-    memoryStore.visits.forEach(v => {
-      const already = visitedPoints.some(p => p.session_id === v.session_id);
-      if (!already) {
-        const matchedRest = memoryStore.restaurants.find(r => r.id === v.restaurant_id);
-        visitedPoints.push({
-          id: v.id,
-          session_id: v.session_id,
-          restaurant_id: v.restaurant_id,
-          name: v.restaurant_name || matchedRest?.name || 'Local Food Spot',
-          city: v.city || matchedRest?.city || 'Pune',
-          latitude: v.latitude || matchedRest?.latitude || 18.5204,
-          longitude: v.longitude || matchedRest?.longitude || 73.8407,
-          rating: matchedRest?.rating || 4.8,
-          total_visits: (matchedRest?.total_visits || 50) + 1,
-          featured_dish: v.dish_name || 'Recommended Dish',
-          isCurrentUserSpot: Boolean(sessionId && v.session_id === sessionId)
-        });
-      }
-    });
+    // Fallback merge with memoryStore if database had 0 restaurants
+    if (existingTourStops.length === 0) {
+      existingTourStops = memoryStore.restaurants.map(rest => {
+        const isVisitedByCurrentUser = visitedPoints.some(p => p.isCurrentUserSpot && (p.restaurant_id === rest.id || p.name.toLowerCase() === rest.name.toLowerCase()));
+        const topDish = memoryStore.dishes.find(d => d.restaurant_id === rest.id);
+        return {
+          id: rest.id,
+          session_id: '',
+          name: rest.name,
+          address: rest.address,
+          area: rest.area,
+          city: rest.city,
+          latitude: rest.latitude,
+          longitude: rest.longitude,
+          rating: rest.rating,
+          image: rest.image,
+          total_visits: rest.total_visits || 120,
+          featured_dish: topDish ? topDish.name : 'Specialty Dish',
+          featured_dish_image: topDish ? topDish.image : rest.image,
+          isCurrentUserSpot: isVisitedByCurrentUser
+        };
+      });
+    }
 
-    // Also include existing campaign restaurants so the tour map is full across India
-    const existingTourStops = memoryStore.restaurants.map(rest => {
-      const isVisitedByCurrentUser = visitedPoints.some(p => p.isCurrentUserSpot && (p.restaurant_id === rest.id || p.name.toLowerCase() === rest.name.toLowerCase()));
-      const topDish = memoryStore.dishes.find(d => d.restaurant_id === rest.id);
-      return {
-        id: rest.id,
-        session_id: '',
-        name: rest.name,
-        address: rest.address,
-        area: rest.area,
-        city: rest.city,
-        latitude: rest.latitude,
-        longitude: rest.longitude,
-        rating: rest.rating,
-        image: rest.image,
-        total_visits: rest.total_visits || 120,
-        featured_dish: topDish ? topDish.name : 'Specialty Dish',
-        featured_dish_image: topDish ? topDish.image : rest.image,
-        isCurrentUserSpot: isVisitedByCurrentUser
-      };
-    });
-
-    // Merge: Put current user spot at the top if present
+    // Combine points: visited points first (currentUserSpot prioritized)
     const combinedPoints: any[] = [];
     const addedNames = new Set<string>();
 
-    // Prioritize current user visited point first
     visitedPoints.sort((a, b) => (b.isCurrentUserSpot ? 1 : 0) - (a.isCurrentUserSpot ? 1 : 0));
 
-    // 1. First add visited points
     visitedPoints.forEach(p => {
       if (!addedNames.has(p.name.toLowerCase())) {
         addedNames.add(p.name.toLowerCase());
@@ -1749,7 +1879,6 @@ export const db = {
       }
     });
 
-    // 2. Then add existing campaign restaurants
     existingTourStops.forEach(p => {
       if (!addedNames.has(p.name.toLowerCase())) {
         addedNames.add(p.name.toLowerCase());
@@ -1757,12 +1886,11 @@ export const db = {
       }
     });
 
-    // Sort so that isCurrentUserSpot is at index 0
     combinedPoints.sort((a, b) => (b.isCurrentUserSpot ? 1 : 0) - (a.isCurrentUserSpot ? 1 : 0));
 
-    const totalFoodSpots = dbFoodSpots || combinedPoints.length || 58;
+    const totalFoodSpots = dbFoodSpots || combinedPoints.length;
     const totalDishes = dbDishes || 174;
-    const totalCities = dbCities || 12;
+    const totalCities = dbCities || 18;
 
     return {
       points: combinedPoints,
@@ -1776,6 +1904,51 @@ export const db = {
   },
 
   // PARTICIPANTS & USER REGISTRATION
+  async getParticipantByMobile(mobile: string): Promise<(Participant & { already_registered?: boolean }) | null> {
+    const clean = (mobile || '').replace(/\D/g, '');
+    if (!clean) return null;
+    const tenDigit = clean.length >= 10 ? clean.slice(-10) : clean;
+
+    try {
+      const pool = getMySQLPool();
+      if (pool) {
+        const [rows] = await pool.query<mysql.RowDataPacket[]>(
+          `SELECT * FROM participants 
+           WHERE mobile = ? OR mobile = ? OR mobile = ? OR mobile LIKE ?
+           ORDER BY id DESC LIMIT 1`,
+          [tenDigit, `+91${tenDigit}`, `91${tenDigit}`, `%${tenDigit}`]
+        );
+        if (rows && rows.length > 0) {
+          const r = rows[0];
+          return {
+            id: Number(r.id),
+            session_id: String(r.session_id),
+            participation_id: String(r.participation_id),
+            name: String(r.name),
+            mobile: String(r.mobile),
+            email: String(r.email),
+            city: String(r.city),
+            restaurant_id: r.restaurant_id ? Number(r.restaurant_id) : null,
+            restaurant_name: r.restaurant_name ? String(r.restaurant_name) : undefined,
+            dish_id: r.dish_id ? Number(r.dish_id) : null,
+            dish_name: r.dish_name ? String(r.dish_name) : undefined,
+            consent: Number(r.consent),
+            terms_accepted: Number(r.terms_accepted),
+            created_at: String(r.created_at)
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('MySQL getParticipantByMobile error:', err instanceof Error ? err.message : String(err));
+    }
+
+    const found = memoryStore.participants.find(p => {
+      const pClean = (p.mobile || '').replace(/\D/g, '');
+      return pClean === tenDigit || pClean.endsWith(tenDigit);
+    });
+    return found || null;
+  },
+
   async createParticipant(data: {
     session_id: string;
     name: string;
@@ -1788,7 +1961,16 @@ export const db = {
     dish_name?: string;
     consent: number;
     terms_accepted: number;
-  }) {
+  }): Promise<Participant & { already_registered?: boolean }> {
+    const cleanMobile = (data.mobile || '').replace(/\D/g, '');
+    const tenDigit = cleanMobile.length >= 10 ? cleanMobile.slice(-10) : cleanMobile;
+
+    // 1. STRICT CHECK: Check if mobile number is ALREADY REGISTERED (No duplicate entries allowed)
+    const existing = await this.getParticipantByMobile(tenDigit);
+    if (existing) {
+      return { ...existing, already_registered: true };
+    }
+
     const id = memoryStore.participants.length + 1;
     const randCode = Math.floor(100000 + Math.random() * 900000);
     const participation_id = `BKT-${randCode}`;
@@ -1798,7 +1980,7 @@ export const db = {
       session_id: data.session_id,
       participation_id,
       name: data.name,
-      mobile: data.mobile,
+      mobile: tenDigit,
       email: data.email,
       city: data.city,
       restaurant_id: data.restaurant_id || null,
@@ -1819,7 +2001,7 @@ export const db = {
       session.updated_at = new Date().toISOString();
     }
 
-    // Persist directly to MySQL database
+    // Persist directly to MySQL database tables
     try {
       const pool = getMySQLPool();
       if (pool) {
@@ -1831,7 +2013,7 @@ export const db = {
             data.session_id,
             participation_id,
             data.name,
-            data.mobile,
+            tenDigit,
             data.email,
             data.city,
             data.restaurant_id || null,
@@ -1846,25 +2028,47 @@ export const db = {
         // 2. Also insert into tour_submissions if available
         try {
           await pool.query(
-            `INSERT INTO tour_submissions (session_id, location_name, restaurant_name, dish_name, spice_level, is_relieved)
-             VALUES (?, ?, ?, ?, 3, 1)`,
+            `INSERT INTO tour_submissions (session_id, location_name, restaurant_id, restaurant_name, dish_id, dish_name, spice_level, is_relieved)
+             VALUES (?, ?, ?, ?, ?, ?, 3, 1)`,
             [
               data.session_id,
               data.city,
+              data.restaurant_id || null,
               data.restaurant_name || 'Food Spot',
+              data.dish_id || null,
               data.dish_name || 'Specialty'
             ]
           );
-        } catch {}
+        } catch (subErr) {
+          console.warn('MySQL tour_submissions notice:', subErr instanceof Error ? subErr.message : String(subErr));
+        }
 
         // 3. Update campaign_sessions table
-        await pool.query(
-          `UPDATE campaign_sessions SET form_submitted = 1, current_stage = 'pass', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
-          [data.session_id]
-        );
+        try {
+          const [upResult] = await pool.query<mysql.ResultSetHeader>(
+            `UPDATE campaign_sessions SET form_submitted = 1, current_stage = 'pass', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`,
+            [data.session_id]
+          );
+          if (upResult.affectedRows === 0) {
+            await pool.query(
+              `INSERT INTO campaign_sessions (session_id, user_location, form_submitted, current_stage, restaurant_id, dish_id)
+               VALUES (?, ?, 1, 'pass', ?, ?)`,
+              [data.session_id, data.city, data.restaurant_id || null, data.dish_id || null]
+            );
+          }
+        } catch (sessErr) {
+          console.warn('MySQL campaign_sessions notice:', sessErr instanceof Error ? sessErr.message : String(sessErr));
+        }
       }
-    } catch (err) {
-      console.warn('MySQL participant insert warning:', err instanceof Error ? err.message : String(err));
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.includes('ER_DUP_ENTRY') || errMsg.includes('Duplicate entry')) {
+        const found = await this.getParticipantByMobile(tenDigit);
+        if (found) {
+          return { ...found, already_registered: true };
+        }
+      }
+      console.warn('MySQL participant insert warning:', errMsg);
     }
 
     return participant;

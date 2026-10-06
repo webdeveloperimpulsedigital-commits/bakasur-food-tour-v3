@@ -9,18 +9,65 @@ interface Frame12RegistrationProps {
   onBack: () => void;
   isLoading?: boolean;
   error?: string;
+  onViewExistingPass?: (data: { mobile: string; participation_id: string }) => void;
 }
 
 export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
   onSubmitNumber,
   onBack,
   isLoading = false,
-  error = ''
+  error = '',
+  onViewExistingPass
 }) => {
   const [mobile, setMobile] = useState('');
   const [name, setName] = useState('');
   const [consent, setConsent] = useState(true);
   const [localError, setLocalError] = useState('');
+
+  // Real-time mobile check
+  const [isChecking, setIsChecking] = useState(false);
+  const [registeredInfo, setRegisteredInfo] = useState<{
+    isRegistered: boolean;
+    participation_id?: string;
+  } | null>(null);
+
+  React.useEffect(() => {
+    const clean = mobile.replace(/\D/g, '');
+    if (clean.length !== 10) {
+      setRegisteredInfo(null);
+      return;
+    }
+
+    let isMounted = true;
+    setIsChecking(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/campaign/participate?check_mobile=${clean}`);
+        const json = await res.json();
+        if (isMounted && json.success) {
+          if (json.isRegistered && json.data) {
+            setRegisteredInfo({
+              isRegistered: true,
+              participation_id: json.data.participation_id
+            });
+            setLocalError('Yeh mobile number pehle se registered hai! Duplicate entry allow nahi hai.');
+          } else {
+            setRegisteredInfo({ isRegistered: false });
+            setLocalError('');
+          }
+        }
+      } catch (err) {
+        console.warn('Check error:', err);
+      } finally {
+        if (isMounted) setIsChecking(false);
+      }
+    }, 250);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [mobile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +78,12 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
       setLocalError('Kripya apna sahi 10-digit mobile number daalein.');
       return;
     }
+
+    if (registeredInfo?.isRegistered) {
+      setLocalError(`Yeh mobile number pehle se registered hai (Pass: ${registeredInfo.participation_id || ''}). Duplicate registration nahi ho sakti.`);
+      return;
+    }
+
     if (!consent) {
       setLocalError('Kripya communication consent check karein.');
       return;
@@ -97,12 +150,53 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
               value={mobile}
               onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
               placeholder="10-digit mobile number"
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm font-black tracking-wider placeholder-slate-400 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#D4380D] shadow-sm"
+              className={`w-full pl-12 pr-4 py-3 rounded-xl text-sm font-black tracking-wider placeholder-slate-400 border transition-all focus:outline-none focus:ring-2 shadow-sm ${
+                registeredInfo?.isRegistered
+                  ? 'bg-amber-50 border-amber-400 text-amber-950 focus:ring-amber-500'
+                  : registeredInfo && !registeredInfo.isRegistered
+                  ? 'bg-emerald-50 border-emerald-400 text-emerald-950 focus:ring-emerald-500'
+                  : 'bg-white border-slate-300 text-slate-900 focus:ring-[#D4380D]'
+              }`}
             />
           </div>
+
+          {isChecking && (
+            <p className="text-[11px] font-bold text-slate-500 animate-pulse">Checking number...</p>
+          )}
+
+          {!isChecking && registeredInfo && !registeredInfo.isRegistered && mobile.length === 10 && (
+            <p className="text-[11px] font-bold text-emerald-600">✓ Sahi number - Nayi Registration</p>
+          )}
         </div>
 
-        {/* Consent Checkbox: "I agree to receive campaign-related communication." */}
+        {/* Duplicate Notice Card */}
+        {registeredInfo?.isRegistered && (
+          <div className="p-3 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">⚠️</span>
+              <div>
+                <p className="text-xs font-black text-[#0B1B48]">
+                  Yeh mobile number pehle se registered hai!
+                </p>
+                <p className="text-[11px] font-semibold text-slate-700">
+                  Duplicate entry allow nahi hai. Pass ID: <span className="font-mono font-bold text-[#D4380D]">{registeredInfo.participation_id}</span>
+                </p>
+              </div>
+            </div>
+            {onViewExistingPass && registeredInfo.participation_id && (
+              <button
+                type="button"
+                onClick={() => onViewExistingPass({ mobile: mobile.slice(-10), participation_id: registeredInfo.participation_id! })}
+                className="w-full py-2 px-3 rounded-xl bg-[#0B1B48] text-amber-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+              >
+                <span>AAPKA PASS DEKHEIN 🎫</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Consent Checkbox */}
         <label className="flex items-start gap-2.5 cursor-pointer pt-0.5 select-none">
           <input
             type="checkbox"
@@ -115,7 +209,7 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
           </span>
         </label>
 
-        {(localError || error) && (
+        {(localError || error) && !registeredInfo?.isRegistered && (
           <p className="text-xs text-red-600 font-bold bg-red-50 p-2 rounded-lg border border-red-200">
             ⚠️ {localError || error}
           </p>
@@ -126,11 +220,21 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
       <div className="shrink-0 pt-1">
         <button
           onClick={handleSubmit}
-          disabled={isLoading}
+          disabled={isLoading || isChecking || mobile.length !== 10 || registeredInfo?.isRegistered}
           type="button"
-          className="w-full py-4 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-xl shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer brand-font disabled:opacity-50"
+          className={`w-full py-4 px-6 rounded-2xl font-black text-sm sm:text-base uppercase tracking-wider transition-all flex items-center justify-center gap-2 brand-font ${
+            registeredInfo?.isRegistered
+              ? 'bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300'
+              : 'bg-[#D4380D] hover:bg-[#ba300a] text-white shadow-xl shadow-[#D4380D]/30 active:scale-[0.98] cursor-pointer disabled:opacity-50'
+          }`}
         >
-          <span>{isLoading ? 'JOD RAHE HAIN...' : 'MERA NAAM JODO'}</span>
+          <span>
+            {isLoading
+              ? 'JOD RAHE HAIN...'
+              : registeredInfo?.isRegistered
+              ? 'NUMBER REGISTERED HAI (BLOCKED)'
+              : 'MERA NAAM JODO'}
+          </span>
           <ArrowRight className="w-5 h-5 stroke-[2.5]" />
         </button>
       </div>

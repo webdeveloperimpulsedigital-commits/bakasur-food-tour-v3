@@ -249,7 +249,20 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
     };
   }
 
-  // 14. Keema Pav / Bun Maska / Burgers
+  // 13.5 Bun Maska & Irani Chai
+  if (n.includes('bun maska') || (n.includes('maska') && !n.includes('keema')) || n.includes('irani chai') || (n.includes('chai') && !n.includes('samosa'))) {
+    return {
+      category: 'bun_maska',
+      biteEmoji: '☕',
+      biteLabel: 'Buttery Bun Maska & Hot Irani Chai',
+      munchSound: 'CRUNCH-SLURP! Irani Chai Butter Bun ☕',
+      actionText: 'Bhookasur is dipping crispy Bun Maska into hot Irani Chai...',
+      image: '/images/eating/bun_maska_dish.jpg',
+      eatingScene: '/images/eating/bun_maska_dish.jpg'
+    };
+  }
+
+  // 14. Keema Pav / Burgers
   if (n.includes('keema') || n.includes('bun') || n.includes('burger') || n.includes('sandwich') || n.includes('maska') || n.includes('cutlet') || n.includes('roll')) {
     return {
       category: 'keema_pav',

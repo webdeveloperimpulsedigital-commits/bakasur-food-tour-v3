@@ -709,6 +709,10 @@ export default function CampaignPage() {
         });
         return true;
       } else {
+        if (json.alreadyRegistered && json.data?.participation_id) {
+          setParticipationId(json.data.participation_id);
+          setRegisteredMobile(mobile);
+        }
         setRegError(json.error || 'Registration failed. Please try again.');
         return false;
       }
@@ -829,6 +833,19 @@ export default function CampaignPage() {
             onRegisterSubmit={handleRegistrationSubmit}
             isRegistering={isRegistering}
             regError={regError}
+            onViewExistingPass={(data) => {
+              playSound('fanfare');
+              setRegisteredMobile(data.mobile);
+              setParticipationId(data.participation_id);
+              setCurrentFrame(13);
+              trackUserStep({
+                sessionId,
+                stepName: 'frame_13_confirmation',
+                stepTitle: `Frame 13: Existing Tour Pass Claimed (${data.participation_id})`,
+                stepNumber: 13,
+                metadata: { mobile: data.mobile, participation_id: data.participation_id, is_existing: true }
+              });
+            }}
           />
         </div>
       ) : currentFrame === 13 ? (
@@ -959,6 +976,19 @@ export default function CampaignPage() {
                 onBack={() => setCurrentFrame(11)}
                 isLoading={isRegistering}
                 error={regError}
+                onViewExistingPass={(data) => {
+                  playSound('fanfare');
+                  setRegisteredMobile(data.mobile);
+                  setParticipationId(data.participation_id);
+                  setCurrentFrame(13);
+                  trackUserStep({
+                    sessionId,
+                    stepName: 'frame_13_confirmation',
+                    stepTitle: `Frame 13: Existing Tour Pass Claimed (${data.participation_id})`,
+                    stepNumber: 13,
+                    metadata: { mobile: data.mobile, participation_id: data.participation_id, is_existing: true }
+                  });
+                }}
               />
             )}
 
