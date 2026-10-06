@@ -47,7 +47,6 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [eatenDishIds, setEatenDishIds] = useState<string[]>([]);
   const [activeFlyingItem, setActiveFlyingItem] = useState<{ id: string; image: string; name: string } | null>(null);
   const [chompEffect, setChompEffect] = useState<boolean>(false);
-<<<<<<< HEAD
   const [bitePopupText, setBitePopupText] = useState<string>('');
   
   const POPUP_MESSAGES = [
@@ -57,11 +56,6 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     'Ek Aur Bite, Fast! 🚀',
     'Aha! Gazab Taste Hai! 💥'
   ];
-  
-=======
-  const [lastFedName, setLastFedName] = useState<string>('');
-
->>>>>>> 857ff31d941fbfb762500f56534042ed2e37c759
   const MAIN_VIDEO = '/images/all-frames/Baksur Eating Food.mp4';
   const [isEatingVideoPlaying, setIsEatingVideoPlaying] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -365,16 +359,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           {foodOptions.map((food) => {
             const isEaten = eatenDishIds.includes(food.id);
 
-<<<<<<< HEAD
-=======
-            const style = isBeingDragged
-              ? {
-                transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) scale(1.15)`,
-                zIndex: 50
-              }
-              : {};
 
->>>>>>> 857ff31d941fbfb762500f56534042ed2e37c759
             return (
               <div
                 key={food.id}
