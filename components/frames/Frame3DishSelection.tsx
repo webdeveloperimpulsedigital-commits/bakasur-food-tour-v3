@@ -278,19 +278,19 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   const isCustomActive = Boolean(customDishInput.trim());
 
   return (
-    <div className="w-full h-full flex flex-col justify-between items-start text-left animate-in fade-in duration-300 py-3 sm:py-5 px-4 sm:px-6 gap-2 sm:gap-2.5 bg-white overflow-y-auto scrollbar-none">
+    <div className="w-full h-full flex flex-col justify-start items-start text-left animate-in fade-in duration-300 p-4 xs:p-5 sm:p-6 gap-2.5 xs:gap-3 sm:gap-3.5 bg-white overflow-y-auto scrollbar-none select-none">
       {/* 1. Headline & Subtitle */}
       <div className="space-y-0.5 text-left shrink-0">
-        <h2 className="text-[18px] xs:text-[21px] sm:text-[26px] md:text-[30px] font-black text-[#0B1B48] leading-[1.1] tracking-tight">
+        <h2 className="text-[18px] xs:text-[21px] sm:text-[25px] md:text-[28px] font-black text-[#0B1B48] leading-[1.15] tracking-tight">
           Restaurant mil gaya.<br />Ab plate decide karo.
         </h2>
-        <p className="text-[10px] xs:text-[11px] sm:text-xs font-semibold text-[#0B1B48] leading-tight">
+        <p className="text-[11px] xs:text-[12px] sm:text-xs font-semibold text-[#0B1B48]/80 leading-tight">
           Yeh jagah in dishes ke liye famous hai.
         </p>
       </div>
 
       {/* 2. Exactly THREE Stacked Menu Options */}
-      <div className="shrink-0 flex flex-col gap-1 sm:gap-2 w-full">
+      <div className="shrink-0 flex flex-col gap-1.5 xs:gap-2 sm:gap-2.5 w-full">
         {isLoading && rawDishes.length === 0 ? (
           <div className="flex flex-col gap-1.5 w-full animate-pulse">
             <div className="h-8 w-full bg-slate-200 rounded-xl" />
@@ -306,7 +306,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                 key={dish.id || dish.name}
                 type="button"
                 onClick={() => handleSelectPill({ ...dish, name: cleanDishName })}
-                className={`w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-between gap-2 cursor-pointer shadow-xs ${isSelected
+                className={`w-full px-3.5 sm:px-4 py-2 xs:py-2.5 sm:py-3 rounded-xl font-bold text-xs xs:text-sm sm:text-base transition-all flex items-center justify-between gap-2 cursor-pointer shadow-xs ${isSelected
                     ? 'bg-[#D4380D] text-white shadow-md shadow-[#D4380D]/30 border border-[#D4380D]'
                     : 'bg-[#F0F4F8] hover:bg-slate-200 border border-slate-200/80 text-[#0B1B48]'
                   }`}
@@ -323,11 +323,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
       {/* 4. Custom Dish Input with Live Ajax Suggestions Dropdown */}
       <div ref={dropdownRef} className="relative w-full space-y-1 shrink-0">
-        <label className="text-[11px] sm:text-xs md:text-sm font-bold text-[#0B1B48] block text-left">
+        <label className="text-[11px] xs:text-[12px] sm:text-xs font-bold text-[#0B1B48] block text-left">
           Aapki favourite kuch aur hai?
         </label>
 
-        <div className="relative flex items-center w-full px-3.5 py-2 sm:py-2.5 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
+        <div className="relative flex items-center w-full px-3.5 py-2 xs:py-2.5 sm:py-3 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
           <input
             type="text"
             value={customDishInput}
@@ -336,7 +336,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             }}
             onChange={(e) => handleCustomInputChange(e.target.value)}
             placeholder="Apni favourite dish likho"
-            className="w-full bg-transparent pl-1 text-xs sm:text-sm font-semibold text-slate-900 placeholder-[#94A3B8] focus:outline-none"
+            className="w-full bg-transparent pl-1 text-xs xs:text-sm font-semibold text-slate-900 placeholder-[#94A3B8] focus:outline-none"
           />
 
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
@@ -411,13 +411,13 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         )}
       </div>
 
-      {/* 5. Primary CTA: YEH WALI KHILAO (Matching Image 3) */}
-      <div className="shrink-0 w-full pt-1">
+      {/* 5. Primary CTA: YEH WALI KHILAO */}
+      <div className="shrink-0 w-full pt-2 xs:pt-3 mt-auto">
         <button
           onClick={onConfirmDish}
           disabled={!selectedDish && !customDishInput.trim()}
           type="button"
-          className="w-full py-3.5 sm:py-4 px-5 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
+          className="w-full py-3 xs:py-3.5 sm:py-4 px-5 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
         >
           YEH WALI KHILAO
         </button>

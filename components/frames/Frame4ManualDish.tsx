@@ -96,7 +96,7 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-between min-h-0 animate-in fade-in duration-300 gap-2 text-left">
+    <div className="w-full h-full flex flex-col justify-start min-h-0 animate-in fade-in duration-300 gap-2.5 text-left">
       {/* Top Section: Back Button */}
       <div className="shrink-0 flex items-center justify-start gap-2">
         <button
@@ -223,7 +223,7 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
       </div>
 
       {/* Primary CTA: Isse khilao */}
-      <div className="shrink-0 pt-1">
+      <div className="shrink-0 mt-auto pt-2">
         <button
           onClick={() => handleSubmit()}
           disabled={!customDish.trim()}

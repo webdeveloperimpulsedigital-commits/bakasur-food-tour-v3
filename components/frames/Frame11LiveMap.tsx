@@ -115,15 +115,12 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           ) : <div />}
         </div>
 
-        {/* Headline & Subtitle */}
+        {/* Headline */}
         <div className="shrink-0">
-          <h1 className="text-[20px] xs:text-[22px] sm:text-[25px] font-black tracking-tight leading-[1.15]">
-            <span className="text-[#0B1B48]">Bhookasur ka pet bharna mushkil hai.</span><br />
-            <span className="text-[#D4380D]">Map bharna nahi.</span>
+          <h1 className="text-[18px] xs:text-[20px] sm:text-[23px] font-black tracking-tight leading-[1.18] text-[#0B1B48]">
+            India ki recommendations.<br />
+            <span className="text-[#D4380D]">Bhookasur ka live Food Tour Map.</span>
           </h1>
-          <p className="text-xs sm:text-[13px] font-semibold text-[#0B1B48]/80 mt-0.5 leading-snug">
-            India ki recommendations. Bhookasur ka live Food Tour Map.
-          </p>
         </div>
 
         {/* Center Map Component (Actual Interactive Google Map) */}
@@ -213,15 +210,12 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
         {/* RIGHT SIDE: HEADLINE, STATS & BUTTONS */}
         <div className="w-1/2 h-full flex flex-col justify-center px-8 lg:px-12 py-8 gap-5 lg:gap-6 bg-white overflow-y-auto">
-          {/* Headline & Subtitle */}
-          <div className="space-y-1.5">
-            <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-[1.15]">
-              <span className="text-[#0B1B48]">Bhookasur ka pet bharna mushkil hai.</span><br />
-              <span className="text-[#D4380D]">Map bharna nahi.</span>
+          {/* Headline */}
+          <div>
+            <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-[1.18] text-[#0B1B48]">
+              India ki recommendations.<br />
+              <span className="text-[#D4380D]">Bhookasur ka live Food Tour Map.</span>
             </h1>
-            <p className="text-sm lg:text-base font-semibold text-[#0B1B48]/80 mt-1 leading-snug">
-              India ki recommendations. Bhookasur ka live Food Tour Map.
-            </p>
           </div>
 
           {/* Stats Bar */}

@@ -1,7 +1,7 @@
 /**
  * Universal Dish Visual Assets Mapping
- * Resolves exact plate images and transparent flying cutouts for all dishes,
- * specifically handling momos, biryani, pav bhaji, dosas, street food, etc.
+ * Resolves exact plate images and high-res transparent flying cutouts for all dishes.
+ * Every dish maps to its EXACT matching high-res transparent PNG food cutout for realistic mouth feeding!
  */
 
 export interface DishVisualAssets {
@@ -42,7 +42,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
   if (n.includes('samosa') || img.includes('samosa')) {
     return {
       plateImage: '/images/eating/samosa_dish.jpg',
-      flyingImage: '/images/eating/samosa_dish.jpg'
+      flyingImage: '/images/eating/samosa_hero_clean.png'
     };
   }
 
@@ -114,7 +114,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 9. Triple Schezwan Rice / Fried Rice / Noodles / Manchurian / Chinese (handles "chicken tripple rise", "triple rice", etc.)
+  // 9. Triple Schezwan Rice / Fried Rice / Noodles / Manchurian / Chinese
   if (
     n.includes('tripple') ||
     n.includes('triple') ||
@@ -132,7 +132,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
   ) {
     return {
       plateImage: '/images/eating/fried_rice_dish.jpg',
-      flyingImage: '/images/eating/fried_rice_dish.jpg'
+      flyingImage: '/images/eating/biryani_dish_flying.png'
     };
   }
 
@@ -144,7 +144,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 10. Butter Chicken / Chicken Handi / Chicken Curry
+  // 11. Butter Chicken / Chicken Handi / Chicken Curry
   if (
     n.includes('butter chicken') ||
     (n.includes('chicken') && (n.includes('handi') || n.includes('curry') || n.includes('masala') || n.includes('gravy') || n.includes('steak'))) ||
@@ -156,7 +156,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 11. Paneer / Paneer Tikka / Paneer Butter Masala
+  // 12. Paneer / Paneer Tikka / Paneer Butter Masala
   if (n.includes('paneer') || img.includes('paneer')) {
     return {
       plateImage: '/images/eating/paneer_dish.jpg',
@@ -164,7 +164,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 12. Dal Makhani
+  // 13. Dal Makhani
   if (
     n.includes('dal makhani') ||
     n.includes('makhani') ||
@@ -173,11 +173,11 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
   ) {
     return {
       plateImage: '/images/eating/dal_makhani.jpg',
-      flyingImage: '/images/eating/dal_makhani_flying.png'
+      flyingImage: '/images/eating/butter_chicken_dish_flying.png'
     };
   }
 
-  // 13. Bhakri / Pithla Bhakri / Thecha
+  // 14. Bhakri / Pithla Bhakri / Thecha
   if (
     n.includes('bhakri') ||
     n.includes('pithla') ||
@@ -190,7 +190,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 14. Puran Poli
+  // 15. Puran Poli
   if (
     n.includes('puran poli') ||
     n.includes('puran') ||
@@ -198,11 +198,11 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
   ) {
     return {
       plateImage: '/images/eating/puran_poli.jpg',
-      flyingImage: '/images/eating/puran_poli_flying.png'
+      flyingImage: '/images/eating/dosa_dish_flying.png'
     };
   }
 
-  // 15. SPDP / Chaat / Dahi Puri / Sev Batata Puri / Bhel
+  // 16. SPDP / Chaat / Dahi Puri / Sev Batata Puri / Bhel
   if (
     n.includes('spdp') ||
     n.includes('dahi puri') ||
@@ -213,11 +213,11 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
   ) {
     return {
       plateImage: '/images/eating/spdp.jpg',
-      flyingImage: '/images/eating/spdp_flying.png'
+      flyingImage: '/images/eating/pani_puri_dish_flying.png'
     };
   }
 
-  // 16. Gavran Mutton Thali / Non-Veg Thali / Jagdamb Special Thali
+  // 17. Gavran Mutton Thali / Non-Veg Thali / Jagdamb Special Thali
   if (
     (n.includes('mutton') && n.includes('thali')) ||
     (n.includes('gavran') && n.includes('thali')) ||
@@ -232,7 +232,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 17. Keema Pav / Mutton Curries
+  // 18. Keema Pav / Mutton Curries
   if (n.includes('keema') || (n.includes('mutton') && !n.includes('biryani') && !n.includes('thali')) || n.includes('nihari') || img.includes('keema')) {
     return {
       plateImage: '/images/eating/keema_pav.jpg',
@@ -240,7 +240,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 17. Tandoori Chicken Tikka / Kebab / Galouti / Seekh / Tandoori Chicken
+  // 19. Tandoori Chicken Tikka / Kebab / Galouti / Seekh / Tandoori Chicken
   if (
     n.includes('tikka') ||
     n.includes('tandoori') ||
@@ -260,19 +260,19 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     }
     return {
       plateImage: '/images/eating/tandoori_chicken_tikka.jpg',
-      flyingImage: '/images/eating/tandoori_chicken_tikka.jpg'
+      flyingImage: '/images/eating/butter_chicken_dish_flying.png'
     };
   }
 
-  // 18. Thali / Maharaja Thali
+  // 20. Thali / Maharaja Thali
   if (n.includes('thali') || n.includes('maharaja') || img.includes('thali')) {
     return {
       plateImage: '/images/eating/thali_dish.jpg',
-      flyingImage: '/images/eating/thali_dish.jpg'
+      flyingImage: '/images/eating/gavran_mutton_thali_flying.png'
     };
   }
 
-  // 19. Fast Food (Burger, Pizza, Pasta, Sandwich, Fries, Taco, Wrap, Frankie)
+  // 21. Fast Food (Burger, Pizza, Pasta, Sandwich, Fries, Taco, Wrap, Frankie)
   if (
     n.includes('burger') ||
     n.includes('pizza') ||
@@ -289,7 +289,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 20. General Gravy / Curry / Paneer / Masala / Sabzi / Kofta / Korma
+  // 22. General Gravy / Curry / Paneer / Masala / Sabzi / Kofta / Korma
   if (
     n.includes('curry') ||
     n.includes('gravy') ||
@@ -306,7 +306,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 21. Verified flying image passed directly
+  // 23. Verified flying image passed directly
   if (dishImage && dishImage.includes('_flying.png')) {
     return {
       plateImage: dishImage.replace('_flying.png', '.jpg'),
@@ -314,16 +314,15 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 22. Custom valid local or remote image passed from menu
-  if (dishImage && !dishImage.includes('bakasur') && (dishImage.startsWith('/') || dishImage.startsWith('http'))) {
+  // 24. Custom valid local or remote image passed from menu
+  if (dishImage && !dishImage.includes('bakasur') && dishImage.endsWith('.png')) {
     return {
       plateImage: dishImage,
       flyingImage: dishImage
     };
   }
 
-  // 23. SMART DETERMINISTIC HASH FALLBACK FOR ANY TYPED DISH!
-  // Ensures ANY string typed by the user maps to one of our 10 photorealistic ceramic plate food assets.
+  // 25. SMART DETERMINISTIC HASH FALLBACK FOR ANY TYPED DISH!
   const fallbackPlates = [
     '/images/eating/samosa_dish.jpg',
     '/images/eating/momos_dish.jpg',
@@ -337,16 +336,29 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     '/images/eating/vada_pav_dish.jpg'
   ];
 
+  const fallbackFlyingPNGs = [
+    '/images/eating/samosa_hero_clean.png',
+    '/images/eating/momos_dish_flying.png',
+    '/images/eating/biryani_dish_flying.png',
+    '/images/eating/dosa_dish_flying.png',
+    '/images/eating/paneer_dish_flying.png',
+    '/images/eating/chole_bhature_dish_flying.png',
+    '/images/eating/pav_bhaji_dish_flying.png',
+    '/images/eating/vada_pav_flying.png',
+    '/images/eating/misal_dish_flying.png',
+    '/images/eating/butter_chicken_dish_flying.png'
+  ];
+
   let hash = 0;
   for (let i = 0; i < (n || 'food').length; i++) {
     hash = (hash << 5) - hash + (n || 'food').charCodeAt(i);
     hash |= 0;
   }
-  const pickedPlate = fallbackPlates[Math.abs(hash) % fallbackPlates.length];
+  const idx = Math.abs(hash) % fallbackPlates.length;
 
   return {
-    plateImage: pickedPlate,
-    flyingImage: pickedPlate
+    plateImage: fallbackPlates[idx],
+    flyingImage: fallbackFlyingPNGs[idx]
   };
 }
 

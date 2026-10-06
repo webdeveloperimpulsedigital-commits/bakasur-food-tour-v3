@@ -150,11 +150,10 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         (mapContainerRef.current as any)._leaflet_id = null;
       }
 
-      // Default center: Current user location if available, otherwise Pune or India center
-      const currentPoint = points.find(p => p.isCurrentUserSpot);
-      const initialLat = currentPoint?.latitude || currentUserSpot?.latitude || 18.5204;
-      const initialLng = currentPoint?.longitude || currentUserSpot?.longitude || 73.8407;
-      const initialZoom = currentPoint ? 12 : 5;
+      // Default center: All-India zoomed out view showing all food spots across India
+      const initialLat = 21.8;
+      const initialLng = 78.9;
+      const initialZoom = 4.8;
 
       const map = L.map(mapContainerRef.current, {
         center: [initialLat, initialLng],
@@ -304,6 +303,14 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           marker.addTo(markersLayer);
         }
       });
+
+      // Fit bounds to show all pins across India (maxZoom 6) so full India map with all food spots is shown
+      if (points.length > 0) {
+        const bounds = L.latLngBounds(points.map(p => [p.latitude, p.longitude]));
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [35, 35], maxZoom: 6 });
+        }
+      }
 
       // Save map instance
       mapInstanceRef.current = map;

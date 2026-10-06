@@ -375,6 +375,13 @@ export default function CampaignPage() {
     });
   };
 
+  // Frame 6 (Interstitial) -> Second Eating Stage (2 Random Street Food Dishes)
+  const handleStartSecondEatingStage = () => {
+    playSound('click');
+    setFeastingStage(2);
+    setCurrentFrame(5);
+  };
+
   // Frame 6 (Trailer) -> Random Food Tour Spot 1
   const handleStartFoodTour = async () => {
     playSound('bite');
@@ -734,15 +741,17 @@ export default function CampaignPage() {
     });
   };
 
-  const getVideoContainerHeightClass = (_frame: number) => {
-    // 70% screen height for video part on all frames, 30% for content part
-    return 'h-[70%]';
+  const getVideoContainerHeightClass = (frame: number) => {
+    if (frame === 2 || frame === 3 || frame === 4) {
+      return 'h-[52%] xs:h-[54%] md:h-full';
+    }
+    return 'h-[62%] xs:h-[65%] md:h-full';
   };
 
   return (
     <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#050b1e] overflow-hidden select-none p-0 md:p-6 lg:p-8">
       {/* Responsive Canvas: Mobile portrait stack (< md), Desktop split screen (md:flex-row, Left: Video, Right: Content) */}
-      {/* If Frame 5: FULL SCREEN EATING STAGE (auto-transitions after 10s) */}
+      {/* If Frame 5: FULL SCREEN EATING STAGE */}
       {currentFrame === 5 ? (
         <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#031058] md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative">
           <BakasurEatingStage
@@ -763,12 +772,32 @@ export default function CampaignPage() {
             onComplete={() => {
               playSound('click');
               if (feastingStage === 1) {
-                setFeastingStage(2);
+                setCurrentFrame(6);
               } else {
                 handleFeedingLoopComplete();
               }
             }}
             onPlayBite={() => playSound('bite')}
+          />
+        </div>
+      ) : currentFrame === 6 && tourSpotRound === 0 ? (
+        /* Frame 6 Interstitial with bakasur_empty_plate video & smooth zoom-out reveal animation */
+        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#07153B] md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative flex flex-col">
+          <Frame6FeedingLoop
+            restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: 'Pune' }}
+            dish={selectedDish || { name: 'Signature Food', id: 1 }}
+            onCompleteLoop={handleStartSecondEatingStage}
+            onBack={() => setCurrentFrame(5)}
+          />
+        </div>
+      ) : currentFrame === 7 ? (
+        /* Frame 7 Acidity Appears with Fire on stomach video & smooth zoom-out reveal animation */
+        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#07153B] md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative flex flex-col">
+          <Frame7AcidityAppears
+            onAutoAdvance={handleAcidityAutoAdvance}
+            onBack={() => setCurrentFrame(6)}
+            soundEnabled={soundEnabled}
+            onToggleSound={() => setSoundEnabled(!soundEnabled)}
           />
         </div>
       ) : currentFrame === 6 && tourSpotRound > 0 && currentTourSpot ? (
@@ -831,7 +860,7 @@ export default function CampaignPage() {
                   ? "/images/all-frames/Showing Empty Plate.mp4"
                   : currentFrame === 6
                   ? "/images/all-frames/Showing Love.mp4"
-                  : currentFrame === 7 || currentFrame === 8
+                  : currentFrame === 8
                   ? "/images/all-frames/Fire on stomach v2.mp4"
                   : currentFrame === 9
                   ? "/images/all-frames/Drinking Gastrium.mp4"
@@ -846,7 +875,6 @@ export default function CampaignPage() {
                 currentFrame === 2 ? 'restaurant' :
                 currentFrame === 3 || currentFrame === 4 ? 'dish' :
                 currentFrame === 6 ? 'trailer' :
-                currentFrame === 7 ? 'heartburn' :
                 currentFrame === 8 ? 'heartburn' :
                 currentFrame === 9 ? 'relief' :
                 currentFrame === 10 ? 'relief_done' : 'map'
@@ -859,12 +887,11 @@ export default function CampaignPage() {
               soundEnabled={soundEnabled}
               onToggleSound={() => setSoundEnabled(!soundEnabled)}
               onBack={currentFrame > 1 ? handleGoPreviousFrame : undefined}
-              stepIndicator={currentFrame === 2 ? '1/3' : currentFrame === 3 ? '2/3' : undefined}
             />
           </div>
 
           {/* Right Side on Desktop / Bottom Half on Mobile: Content Card */}
-          <div className={`w-full md:w-1/2 flex-1 md:h-full flex flex-col overflow-y-auto ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : currentFrame <= 3 || currentFrame === 9 ? 'bg-white p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start md:justify-center`}>
+          <div className={`w-full md:w-1/2 flex-1 md:h-full flex flex-col ${currentFrame <= 3 ? 'overflow-hidden' : 'overflow-y-auto'} ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : currentFrame <= 3 || currentFrame === 9 ? 'bg-white p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start md:justify-center`}>
             <main className="flex-1 w-full flex flex-col justify-start md:justify-center min-h-0 relative">
               {/* Frame 1: Welcome */}
               {currentFrame === 1 && (
@@ -904,19 +931,7 @@ export default function CampaignPage() {
                 />
               )}
 
-              {/* Frame 6: Food Trailer Frame (Mockup after food eating) */}
-              {currentFrame === 6 && (
-                <Frame6FeedingLoop
-                  restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: 'Pune' }}
-                  dish={selectedDish || { name: 'Signature Food', id: 1 }}
-                  onCompleteLoop={handleStartFoodTour}
-                />
-              )}
 
-            {/* Frame 7: Acidity Appears (Comic reaction playing) */}
-            {currentFrame === 7 && (
-              <Frame7AcidityAppears onAutoAdvance={handleAcidityAutoAdvance} />
-            )}
 
             {/* Frame 8: Help Bakasur */}
             {currentFrame === 8 && (
