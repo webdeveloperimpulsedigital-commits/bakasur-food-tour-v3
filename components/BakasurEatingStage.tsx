@@ -48,7 +48,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [activeFlyingItem, setActiveFlyingItem] = useState<{ id: string; image: string; name: string } | null>(null);
   const [chompEffect, setChompEffect] = useState<boolean>(false);
   const [lastFedName, setLastFedName] = useState<string>('');
-  
+
   const MAIN_VIDEO = '/images/all-frames/Baksur Eating Food.mp4';
   const [isEatingVideoPlaying, setIsEatingVideoPlaying] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -163,7 +163,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       // Play eating animation in same video
       if (videoRef.current) {
         videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
+        videoRef.current.play().catch(() => { });
       }
 
       // Hide chomp banner after 1.2s
@@ -305,9 +305,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
             const style = isBeingDragged
               ? {
-                  transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) scale(1.18)`,
-                  zIndex: 50
-                }
+                transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) scale(1.15)`,
+                zIndex: 50
+              }
               : {};
 
             return (
@@ -326,9 +326,8 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                 <img
                   src={food.image}
                   alt={food.name}
-                  className={`w-full h-full object-cover rounded-full pointer-events-none transition-transform duration-150 group-hover:scale-110 ${
-                    isEaten ? 'opacity-40 grayscale-[30%]' : 'opacity-100'
-                  }`}
+                  className={`w-full h-full object-contain pointer-events-none drop-shadow-[0_10px_20px_rgba(0,0,0,0.9)] transition-transform duration-150 group-hover:scale-110 ${isEaten ? 'opacity-40 grayscale-[30%]' : 'opacity-100'
+                    }`}
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_dish.jpg';
                   }}
