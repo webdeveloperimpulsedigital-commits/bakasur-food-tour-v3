@@ -52,24 +52,6 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
             <span>Back</span>
           </button>
         ) : <div />}
-
-        {onToggleSound && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSound();
-            }}
-            type="button"
-            className="p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
-            aria-label="Toggle Sound"
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-amber-400" />
-            ) : (
-              <VolumeX className="w-4 h-4 text-slate-400" />
-            )}
-          </button>
-        )}
       </div>
 
       {/* Top Section: Fire Video Container (Starts full-height & zoomed-in, then shrinks to h-[58%] and zooms out) */}
@@ -84,7 +66,7 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
           src="/images/all-frames/Fire on stomach v2.mp4"
           autoPlay
           loop
-          muted={!soundEnabled}
+          muted
           playsInline
           className={`w-full h-full object-cover object-center transition-transform duration-1200 ease-in-out ${
             isRevealed ? 'scale-100' : 'scale-115'

@@ -34,7 +34,7 @@ export default function CampaignPage() {
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [selectedDish, setSelectedDish] = useState<Dish | { name: string; id?: number; price?: number; image?: string; description?: string } | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [feastingStage, setFeastingStage] = useState<1 | 2 | 3>(1);
   const [registeredMobile, setRegisteredMobile] = useState<string>('');
   const [participationId, setParticipationId] = useState<string>('');
@@ -62,56 +62,8 @@ export default function CampaignPage() {
     if (onTransitionComplete) onTransitionComplete();
   }, []);
 
-  // Audio FX generator
-  const playSound = useCallback((type: 'click' | 'bite' | 'fanfare' | 'relief') => {
-    if (!soundEnabled || typeof window === 'undefined') return;
-    try {
-      const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-
-      if (type === 'click' || type === 'bite') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(type === 'click' ? 440 : 220, ctx.currentTime);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.15);
-      } else if (type === 'relief') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.4);
-        gain.gain.setValueAtTime(0.25, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.5);
-      } else if (type === 'fanfare') {
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
-          gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.08 + 0.3);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + idx * 0.08);
-          osc.stop(ctx.currentTime + idx * 0.08 + 0.3);
-        });
-      }
-    } catch {
-      // Ignore
-    }
-  }, [soundEnabled]);
+  // Audio FX generator (Disabled - All frames muted)
+  const playSound = useCallback((_type?: string) => {}, []);
 
   // Initialize Session on Mount
   useEffect(() => {
@@ -764,8 +716,7 @@ export default function CampaignPage() {
             restaurantName={selectedRestaurant?.name}
             restaurant={selectedRestaurant}
             feastingStage={feastingStage}
-            soundEnabled={soundEnabled}
-            onToggleSound={() => setSoundEnabled(!soundEnabled)}
+            soundEnabled={false}
             onBack={() => {
               if (feastingStage === 2) {
                 setFeastingStage(1);
@@ -800,8 +751,7 @@ export default function CampaignPage() {
           <Frame7AcidityAppears
             onAutoAdvance={handleAcidityAutoAdvance}
             onBack={() => setCurrentFrame(6)}
-            soundEnabled={soundEnabled}
-            onToggleSound={() => setSoundEnabled(!soundEnabled)}
+            soundEnabled={false}
           />
         </div>
       ) : currentFrame === 6 && tourSpotRound > 0 && currentTourSpot ? (
@@ -809,8 +759,7 @@ export default function CampaignPage() {
           <Frame6RandomFoodSpot
             spot={currentTourSpot}
             round={tourSpotRound}
-            soundEnabled={soundEnabled}
-            onToggleSound={() => setSoundEnabled(!soundEnabled)}
+            soundEnabled={false}
             onBack={() => setTourSpotRound(0)}
             onFeedMore={handleNextTourSpot}
           />
@@ -901,8 +850,7 @@ export default function CampaignPage() {
               dishName={selectedDish?.name || 'Signature Food'}
               dishImage={selectedDish?.image}
               restaurantName={selectedRestaurant?.name}
-              soundEnabled={soundEnabled}
-              onToggleSound={() => setSoundEnabled(!soundEnabled)}
+              soundEnabled={false}
               onBack={currentFrame > 1 ? handleGoPreviousFrame : undefined}
             />
           </div>

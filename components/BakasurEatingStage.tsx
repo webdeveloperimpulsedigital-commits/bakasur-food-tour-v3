@@ -268,7 +268,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           playsInline
           autoPlay={false}
           loop={false}
-          muted={!soundEnabled}
+          muted
           className="w-full h-full object-cover object-center relative z-0 transition-opacity duration-300"
         />
 
@@ -298,21 +298,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onToggleSound && (
-            <button
-              onClick={onToggleSound}
-              type="button"
-              className="p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
-            >
-              {soundEnabled ? (
-                <Volume2 className="w-4 h-4 text-amber-400" />
-              ) : (
-                <VolumeX className="w-4 h-4 text-slate-400" />
-              )}
-            </button>
-          )}
-        </div>
+        <div className="flex items-center gap-2" />
       </div>
 
 

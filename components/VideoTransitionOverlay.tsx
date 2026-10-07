@@ -53,7 +53,7 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
           src={videoUrl}
           playsInline
           autoPlay
-          muted={!soundEnabled}
+          muted
           onLoadedData={() => setIsVideoLoaded(true)}
           onCanPlay={() => setIsVideoLoaded(true)}
           className={`w-full h-full object-contain object-center relative z-10 transition-opacity duration-300 ${
@@ -66,19 +66,7 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
         <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-20 pointer-events-none" />
 
         {/* Top Controls Bar */}
-        <div className="absolute top-4 inset-x-4 z-30 flex items-center justify-between">
-          <button
-            onClick={onToggleSound}
-            type="button"
-            className="p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-5 h-5 text-amber-400" />
-            ) : (
-              <VolumeX className="w-5 h-5 text-slate-400" />
-            )}
-          </button>
-
+        <div className="absolute top-4 inset-x-4 z-30 flex items-center justify-end">
           <button
             onClick={handleAction}
             type="button"

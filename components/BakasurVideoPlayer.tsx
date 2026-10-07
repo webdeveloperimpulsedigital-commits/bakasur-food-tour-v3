@@ -435,22 +435,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           <div />
         )}
 
-        <div className="flex items-center gap-2">
-          {onToggleSound && (
-            <button
-              onClick={onToggleSound}
-              type="button"
-              className="p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
-              aria-label="Toggle Sound"
-            >
-              {soundEnabled ? (
-                <Volume2 className="w-4 h-4 text-amber-400" />
-              ) : (
-                <VolumeX className="w-4 h-4 text-slate-400" />
-              )}
-            </button>
-          )}
-        </div>
+        <div className="flex items-center gap-2" />
       </div>
 
       {/* Main Stage Media Render */}
@@ -462,7 +447,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             playsInline
             autoPlay
             loop
-            muted={!soundEnabled}
+            muted
             className="w-full h-full object-cover object-center relative z-10"
           />
         </div>
@@ -474,7 +459,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             playsInline
             autoPlay
             loop
-            muted={!soundEnabled}
+            muted
             className="w-full h-full object-cover object-center relative z-10"
           />
         </div>
@@ -486,7 +471,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             playsInline
             autoPlay
             loop
-            muted={!soundEnabled}
+            muted
             className="w-full h-full object-cover object-center relative z-10"
           />
         </div>
@@ -498,7 +483,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             playsInline
             autoPlay
             loop
-            muted={!soundEnabled}
+            muted
             className="w-full h-full object-cover object-center relative z-10"
           />
         </div>
@@ -510,7 +495,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             playsInline
             autoPlay
             loop
-            muted={!soundEnabled}
+            muted
             className="w-full h-full object-cover object-center relative z-10"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
@@ -523,7 +508,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             playsInline
             autoPlay
             loop={false}
-            muted={!soundEnabled}
+            muted
             onEnded={() => {
               setIsPlaying(false);
               if (onVideoEnded) onVideoEnded();
@@ -539,7 +524,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             playsInline
             autoPlay
             loop
-            muted={!soundEnabled}
+            muted
             className="w-full h-full object-cover object-center relative z-10"
           />
         </div>
