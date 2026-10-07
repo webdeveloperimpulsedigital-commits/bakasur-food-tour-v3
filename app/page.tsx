@@ -162,7 +162,7 @@ export default function CampaignPage() {
   // Frame 1 -> Frame 2 (Welcome -> Restaurant Search)
   const handleStartTour = async () => {
     playSound('click');
-    setCurrentFrame(2);
+    triggerFrameTransition(2);
 
     const activeSession = sessionId || getOrCreateSessionId();
     if (!sessionId) setSessionId(activeSession);
@@ -200,7 +200,7 @@ export default function CampaignPage() {
   // Frame 2 -> Frame 3 (Restaurant Chosen -> 3 Dish Options)
   const handleRestaurantConfirmed = async () => {
     playSound('click');
-    setCurrentFrame(3);
+    triggerFrameTransition(3);
 
     const activeSession = sessionId || getOrCreateSessionId();
 
@@ -474,7 +474,7 @@ export default function CampaignPage() {
   const handleFeedingLoopComplete = async () => {
     playSound('bite');
     setFeastingStage(3);
-    setCurrentFrame(7);
+    triggerFrameTransition(7);
 
     const activeSession = sessionId || getOrCreateSessionId();
 
@@ -503,7 +503,7 @@ export default function CampaignPage() {
 
   // Frame 7 -> Frame 8 (Comic Reaction Complete -> Help Bakasur)
   const handleAcidityAutoAdvance = () => {
-    setCurrentFrame(8);
+    triggerFrameTransition(8);
     const activeSession = sessionId || getOrCreateSessionId();
     trackUserStep({
       sessionId: activeSession,
@@ -517,7 +517,7 @@ export default function CampaignPage() {
   // Frame 8 -> Frame 9 (Help Bakasur Clicked -> Gastrium Dose Animation)
   const handleHelpBakasur = async () => {
     playSound('relief');
-    setCurrentFrame(9);
+    triggerFrameTransition(9);
     const activeSession = sessionId || getOrCreateSessionId();
 
     try {
@@ -544,7 +544,7 @@ export default function CampaignPage() {
   // Frame 9 -> Frame 11 (Gastrium Animation Finished -> Live Food Tour Map)
   const handleGastriumComplete = async () => {
     playSound('fanfare');
-    setCurrentFrame(11);
+    triggerFrameTransition(11);
     const activeSession = sessionId || getOrCreateSessionId();
 
     try {
@@ -609,7 +609,7 @@ export default function CampaignPage() {
       console.warn('Failed to record visit to DB:', err);
     }
 
-    setCurrentFrame(11);
+    triggerFrameTransition(11);
     trackUserStep({
       sessionId: activeSession,
       stepName: 'frame_11_live_map',
@@ -639,27 +639,27 @@ export default function CampaignPage() {
   // Universal Previous Frame Handler for Top-Left Navigation
   const handleGoPreviousFrame = useCallback(() => {
     playSound('click');
-    if (currentFrame === 2) setCurrentFrame(1);
-    else if (currentFrame === 3) setCurrentFrame(2);
-    else if (currentFrame === 4) setCurrentFrame(3);
-    else if (currentFrame === 5) setCurrentFrame(3);
+    if (currentFrame === 2) triggerFrameTransition(1);
+    else if (currentFrame === 3) triggerFrameTransition(2);
+    else if (currentFrame === 4) triggerFrameTransition(3);
+    else if (currentFrame === 5) triggerFrameTransition(3);
     else if (currentFrame === 6) {
       if (tourSpotRound > 0) setTourSpotRound(0);
-      else setCurrentFrame(3);
+      else triggerFrameTransition(3);
     }
-    else if (currentFrame === 7) setCurrentFrame(6);
-    else if (currentFrame === 8) setCurrentFrame(7);
-    else if (currentFrame === 9) setCurrentFrame(8);
-    else if (currentFrame === 10) setCurrentFrame(9);
-    else if (currentFrame === 11) setCurrentFrame(10);
-    else if (currentFrame === 12) setCurrentFrame(11);
-    else if (currentFrame === 13) setCurrentFrame(12);
-  }, [currentFrame, tourSpotRound, playSound]);
+    else if (currentFrame === 7) triggerFrameTransition(6);
+    else if (currentFrame === 8) triggerFrameTransition(7);
+    else if (currentFrame === 9) triggerFrameTransition(8);
+    else if (currentFrame === 10) triggerFrameTransition(9);
+    else if (currentFrame === 11) triggerFrameTransition(10);
+    else if (currentFrame === 12) triggerFrameTransition(11);
+    else if (currentFrame === 13) triggerFrameTransition(12);
+  }, [currentFrame, tourSpotRound, playSound, triggerFrameTransition]);
 
   // Frame 11 -> Frame 12 (Live Map -> Registration Form)
   const handleRegisterLiveTour = () => {
     playSound('click');
-    setCurrentFrame(12);
+    triggerFrameTransition(12);
     trackUserStep({
       sessionId,
       stepName: 'frame_12_registration',
@@ -1019,6 +1019,16 @@ export default function CampaignPage() {
           }}
         />
       )}
+
+      {/* Bakasur Universal Walking Preloader Overlay */}
+      <BakasurTransitionLoader
+        isOpen={isLoaderOpen}
+        targetFrame={targetLoaderFrame}
+        customMessage={loaderMessage}
+        onFinish={() => {
+          setIsLoaderOpen(false);
+        }}
+      />
     </div>
   );
 }

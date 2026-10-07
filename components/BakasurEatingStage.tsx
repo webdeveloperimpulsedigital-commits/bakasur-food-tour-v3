@@ -45,7 +45,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const TOTAL_FEEDS = feastingStage === 2 ? 2 : 3;
   const [fedCount, setFedCount] = useState<number>(0);
   const [eatenDishIds, setEatenDishIds] = useState<string[]>([]);
-  const [activeFlyingItem, setActiveFlyingItem] = useState<{ id: string; image: string; name: string } | null>(null);
+  const [activeFlyingItems, setActiveFlyingItems] = useState<
+    { id: string; image: string; name: string; offsetX: number; rotation: number }[]
+  >([]);
   const [chompEffect, setChompEffect] = useState<boolean>(false);
   const [bitePopupText, setBitePopupText] = useState<string>('');
   
@@ -79,7 +81,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   useEffect(() => {
     setFedCount(0);
     setEatenDishIds([]);
-    setActiveFlyingItem(null);
+    setActiveFlyingItems([]);
     setDraggingFood(null);
     setChompEffect(false);
   }, [feastingStage]);
@@ -147,59 +149,85 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     }
   }, [soundEnabled, isEatingVideoPlaying]);
 
-  // Trigger feeding action when food is swiped up or clicked
-  const handleFeedFood = (food: FoodOption) => {
-    if (activeFlyingItem || isEatingVideoPlaying || fedCount >= TOTAL_FEEDS || eatenDishIds.includes(food.id)) return;
+  // Smooth Arcade-Style Feeding (Morsels glide directly from clicked plate into mouth)
+  const handleFeedFood = (food: FoodOption, clientX?: number, plateIndex?: number) => {
+    if (eatenDishIds.includes(food.id) || fedCount >= TOTAL_FEEDS) return;
+
+    // Calculate exact starting X position relative to screen center
+    let baseOffsetX = 0;
+    if (typeof clientX === 'number' && clientX > 0 && typeof window !== 'undefined' && window.innerWidth > 0) {
+      baseOffsetX = clientX - window.innerWidth / 2;
+    } else if (typeof plateIndex === 'number') {
+      const count = foodOptions.length;
+      baseOffsetX = (plateIndex - (count - 1) / 2) * 110;
+    }
+
+    // Mark food as eaten instantly
+    setEatenDishIds((prev) => [...prev, food.id]);
+    const newFedCount = fedCount + 1;
+    setFedCount(newFedCount);
 
     // Get 100% transparent PNG food morsel/cutout for smooth realistic mouth feeding
     const flyingPNG = getDishExactFlyingImage(food.name, food.image);
 
-    setIsEatingVideoPlaying(true);
-    setActiveFlyingItem({ id: food.id, image: flyingPNG, name: food.name });
+    // Play bite sound effect instantly
+    onPlayBiteRef.current?.();
 
-    // Pick fun reaction message
+    // Spawn 2 clean morsels gliding smoothly in arc trajectory from plate into mouth!
+    const BURST_COUNT = 2;
+    for (let i = 0; i < BURST_COUNT; i++) {
+      setTimeout(() => {
+        const itemId = `${food.id}_burst_${Date.now()}_${i}_${Math.random()}`;
+        const offsetX = baseOffsetX + (i === 0 ? 0 : (Math.random() > 0.5 ? 12 : -12));
+        const rotation = (baseOffsetX < 0 ? -1 : 1) * (i * 8 + 6);
+
+        setActiveFlyingItems((prev) => [
+          ...prev,
+          { id: itemId, image: flyingPNG, name: food.name, offsetX, rotation }
+        ]);
+
+        // Cleanup individual flying morsel after 520ms smooth flight
+        setTimeout(() => {
+          setActiveFlyingItems((prev) => prev.filter((item) => item.id !== itemId));
+        }, 530);
+      }, i * 120); // 120ms smooth spacing
+    }
+
+    // Pick fun reaction message & trigger chomp effect
     const msg = POPUP_MESSAGES[fedCount % POPUP_MESSAGES.length];
     setBitePopupText(msg);
+    setChompEffect(true);
 
-    // 1. Food arrives at mouth after 400ms -> play eating video & show popup reaction!
-    setTimeout(() => {
-      onPlayBiteRef.current?.();
-      setChompEffect(true);
-      setEatenDishIds((prev) => [...prev, food.id]);
-      const newFedCount = fedCount + 1;
-      setFedCount(newFedCount);
-      setActiveFlyingItem(null);
+    // Play eating animation video
+    setIsEatingVideoPlaying(true);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => { });
+    }
 
-      // Play eating animation in same video
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => { });
-      }
+    // Hide reaction popup banner after 1.4s
+    setTimeout(() => setChompEffect(false), 1400);
 
-      // Hide reaction popup banner after 1.5s
-      setTimeout(() => setChompEffect(false), 1500);
-
-      // Trigger onComplete to transition when all feeds are completed!
-      if (newFedCount >= TOTAL_FEEDS) {
-        setTimeout(() => {
-          onCompleteRef.current?.();
-        }, 1200);
-      }
-
-      // Reset to mouth open & pause video after 2.6s
+    // If all required feeds completed, complete stage cleanly after smooth animation
+    if (newFedCount >= TOTAL_FEEDS) {
+      setTimeout(() => {
+        onCompleteRef.current?.();
+      }, 950);
+    } else {
+      // Reset video to open mouth state after short eating clip
       setTimeout(() => {
         setIsEatingVideoPlaying(false);
         if (videoRef.current) {
           videoRef.current.currentTime = 0;
           videoRef.current.pause();
         }
-      }, 2600);
-    }, 400);
+      }, 1800);
+    }
   };
 
   // Drag / Swipe handlers for mobile & desktop
   const handleStartDrag = (food: FoodOption, clientX: number, clientY: number) => {
-    if (isEatingVideoPlaying || fedCount >= TOTAL_FEEDS || eatenDishIds.includes(food.id)) return;
+    if (fedCount >= TOTAL_FEEDS || eatenDishIds.includes(food.id)) return;
 
     const flyingPNG = getDishExactFlyingImage(food.name, food.image);
     setDraggingFood({ id: food.id, food, flyingPNG });
@@ -218,7 +246,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     const deltaY = dragCurrentPos.y - touchStartPosRef.current.y;
     // If dragged UP by more than 30px or dragged into upper 65% of screen
     if (deltaY < -30 || dragCurrentPos.y < (typeof window !== 'undefined' ? window.innerHeight * 0.65 : 400)) {
-      handleFeedFood(draggingFood.food);
+      handleFeedFood(draggingFood.food, touchStartPosRef.current.x);
     }
 
     setDraggingFood(null);
@@ -289,21 +317,27 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
 
 
-      {/* Center flex container for flying food animation */}
+      {/* Center flex container for rapid game-style flying food items */}
       <div className="relative flex-1 w-full min-h-0 pointer-events-none z-30 flex flex-col items-center justify-center">
-
-        {/* Flying food animation towards open mouth (Clean Transparent PNG Glide into Mouth) */}
-        {activeFlyingItem && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-            <div className="w-28 h-28 sm:w-36 sm:h-36 animate-fly-to-mouth flex items-center justify-center">
+        {activeFlyingItems.map((item) => (
+          <div key={item.id} className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+            <div
+              style={
+                {
+                  '--start-x': `${item.offsetX}px`,
+                  '--start-rot': `${item.rotation}deg`
+                } as React.CSSProperties
+              }
+              className="w-24 h-24 sm:w-32 sm:h-32 animate-smooth-fly flex items-center justify-center"
+            >
               <img
-                src={activeFlyingItem.image}
-                alt="Flying PNG Food Morsel"
-                className="w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.7)]"
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)]"
               />
             </div>
           </div>
-        )}
+        ))}
       </div>
 
       {/* Active Touch/Mouse Dragged Transparent PNG Food Piece Following Finger */}
@@ -329,8 +363,8 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
       {/* 4. BOTTOM INTERACTIVE SWIPE AREA & FOOD PLATES ROW */}
       <div className="relative z-30 px-4 pb-6 sm:pb-8 flex flex-col items-center justify-end w-full shrink-0 gap-3">
-        {/* Animated Swipe Up Prompt */}
-        {!isEatingVideoPlaying && fedCount < TOTAL_FEEDS && !chompEffect && (
+        {/* Animated Swipe / Click Prompt */}
+        {fedCount < TOTAL_FEEDS && (
           <div className="flex flex-col items-center gap-1 cursor-pointer select-none">
             <div className="flex flex-col items-center text-amber-400 animate-bounce">
               <ChevronUp className="w-6 h-6 -mb-2 stroke-[3]" />
@@ -339,7 +373,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
             <div className="flex items-center gap-2 text-white font-black text-base sm:text-lg tracking-wide uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
               <span className="text-xl">👆</span>
-              <span>Swipe karke khilao ({fedCount}/{TOTAL_FEEDS})</span>
+              <span>Swipe ya Click karke khilao ({fedCount}/{TOTAL_FEEDS})</span>
             </div>
           </div>
         )}
@@ -356,16 +390,15 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
         {/* 3 Food Item Ceramic Plates Row (Fixed in Bottom Row - Never Drags as a Box) */}
         <div className="flex items-center justify-center gap-2.5 xs:gap-3 sm:gap-6 w-full max-w-2xl mx-auto pt-1 pb-1">
-          {foodOptions.map((food) => {
+          {foodOptions.map((food, index) => {
             const isEaten = eatenDishIds.includes(food.id);
-
 
             return (
               <div
                 key={food.id}
                 onMouseDown={(e) => handleStartDrag(food, e.clientX, e.clientY)}
                 onTouchStart={(e) => handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY)}
-                onClick={() => handleFeedFood(food)}
+                onClick={(e) => handleFeedFood(food, e.clientX, index)}
                 className="group relative w-22 h-22 xs:w-26 xs:h-26 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-[0_14px_35px_rgba(0,0,0,0.9)] border-[2.5px] border-white/50 bg-slate-900/60 cursor-grab active:cursor-grabbing transition-all duration-150 flex items-center justify-center shrink-0 p-0.5 active:scale-95"
               >
                 <img
@@ -389,28 +422,28 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </div>
       </div>
 
-      {/* Inline Keyframes for Smooth Transparent PNG Flying Animation into Mouth */}
+      {/* Inline Keyframes for Smooth Realistic Food Flight into Mouth */}
       <style jsx global>{`
-        @keyframes flyToMouth {
+        @keyframes smoothFlyToMouth {
           0% {
-            transform: translateY(260px) scale(0.9) rotate(0deg);
+            transform: translate(var(--start-x, 0px), 240px) scale(0.9) rotate(var(--start-rot, 0deg));
             opacity: 1;
           }
           45% {
-            transform: translateY(135px) scale(1.25) rotate(-5deg);
+            transform: translate(calc(var(--start-x, 0px) * 0.5), 110px) scale(1.2) rotate(calc(var(--start-rot, 0deg) * 0.5));
             opacity: 1;
           }
-          85% {
-            transform: translateY(85px) scale(0.35) rotate(2deg);
-            opacity: 0.9;
+          80% {
+            transform: translate(0px, 60px) scale(0.3) rotate(0deg);
+            opacity: 0.85;
           }
           100% {
-            transform: translateY(70px) scale(0.05) rotate(0deg);
+            transform: translate(0px, 45px) scale(0.02) rotate(0deg);
             opacity: 0;
           }
         }
-        .animate-fly-to-mouth {
-          animation: flyToMouth 0.48s cubic-bezier(0.18, 0.89, 0.32, 1.15) forwards;
+        .animate-smooth-fly {
+          animation: smoothFlyToMouth 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
           will-change: transform, opacity;
         }
       `}</style>
