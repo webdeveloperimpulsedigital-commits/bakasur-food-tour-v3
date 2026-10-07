@@ -28,13 +28,15 @@ interface InteractiveTourMapProps {
   } | null;
   onSelectPoint?: (point: TourMapPoint) => void;
   onStatsLoaded?: (stats: { foodSpots: number; mustTryDishes: number; citiesCount: number }) => void;
+  onShareUserSpot?: () => void;
 }
 
 export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
   sessionId,
   currentUserSpot,
   onSelectPoint,
-  onStatsLoaded
+  onStatsLoaded,
+  onShareUserSpot
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -180,27 +182,10 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
 
       let userMarkerInstance: any = null;
 
-      // Track coordinates to avoid overlapping pins for spots in the exact same location
-      const coordCounter = new Map<string, number>();
-
       points.forEach((point) => {
         const isCurrent = Boolean(point.isCurrentUserSpot);
-        let pointLat = point.latitude;
-        let pointLng = point.longitude;
-
-        if (!isCurrent) {
-          const coordKey = `${pointLat.toFixed(3)}_${pointLng.toFixed(3)}`;
-          const count = coordCounter.get(coordKey) || 0;
-          coordCounter.set(coordKey, count + 1);
-
-          if (count > 0) {
-            // Fan out in a spiral/circle offset so each pin is clearly visible & clickable
-            const angle = (count * 50 * Math.PI) / 180;
-            const radius = 0.0035 * Math.ceil(count / 7);
-            pointLat += Math.cos(angle) * radius;
-            pointLng += Math.sin(angle) * radius;
-          }
-        }
+        const pointLat = point.latitude;
+        const pointLng = point.longitude;
 
         if (isCurrent) {
           // BLUE PIN: Current User's Visited Spot
@@ -208,15 +193,16 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
             className: 'custom-user-blue-pin',
             html: `
               <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
-                <!-- Attached Name Tag -->
+                <!-- Attached Name + Count Tag -->
                 <div style="background-color: #1D4ED8; color: white; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); border: 2px solid #ffffff; white-space: nowrap; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
                   <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #93C5FD;"></span>
                   <span>📍 ${point.name} (Aap)</span>
+                  <span style="background-color: #3B82F6; color: white; font-size: 9px; font-weight: 900; padding: 0 5px; border-radius: 9999px;">${point.total_visits}</span>
                 </div>
-                <!-- Teardrop Pin Marker -->
+                <!-- Teardrop Pin Marker with Visit Count -->
                 <div style="position: relative; display: flex; align-items: center; justify-content: center;">
                   <div style="width: 28px; height: 28px; border-radius: 50%; background-color: #2563EB; border: 2.5px solid #FFFFFF; box-shadow: 0 6px 16px rgba(37,99,235,0.5); display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 9px; height: 9px; border-radius: 50%; background-color: #FFFFFF;"></div>
+                    <span style="font-size: 11px; font-weight: 900; color: #FFFFFF; line-height: 1;">${point.total_visits}</span>
                   </div>
                   <div style="position: absolute; bottom: -4px; width: 8px; height: 8px; background-color: #2563EB; transform: rotate(45deg);"></div>
                 </div>
@@ -232,9 +218,14 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           });
 
           marker.bindPopup(`
-            <div style="font-family: inherit; padding: 4px 6px; min-width: 140px; text-align: left;">
-              <div style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1D4ED8; background: #DBEAFE; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">
-                Aapka Visited Spot
+            <div style="font-family: inherit; padding: 4px 6px; min-width: 150px; text-align: left;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 6px;">
+                <span style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1D4ED8; background: #DBEAFE; padding: 1px 6px; border-radius: 4px;">
+                  Aapka Visited Spot
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 900; color: #1D4ED8; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 1px 6px; border-radius: 9999px;">
+                  👥 ${point.total_visits} ${point.total_visits === 1 ? 'Visit' : 'Visits'}
+                </span>
               </div>
               <div style="font-weight: 900; font-size: 13px; color: #0F172A; line-height: 1.2;">
                 ${point.name}
@@ -243,10 +234,23 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
                 🍽️ ${point.featured_dish || 'Specialty Dish'}
               </div>
               <div style="font-size: 10px; color: #64748B; margin-top: 2px;">
-                📍 ${point.city}
+                📍 ${point.city} • <strong style="color: #1D4ED8;">${point.total_visits} ${point.total_visits === 1 ? 'foodie visited' : 'foodies visited'}</strong>
               </div>
+              <button id="btn-popup-share-spot" style="margin-top: 8px; width: 100%; padding: 5px 8px; border-radius: 8px; background: linear-gradient(to right, #2563EB, #1D4ED8); color: #ffffff; font-size: 10px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 6px rgba(37,99,235,0.4);">
+                <span>📤 Share Spot On Social Media</span>
+              </button>
             </div>
           `);
+
+          marker.on('popupopen', () => {
+            const btn = document.getElementById('btn-popup-share-spot');
+            if (btn) {
+              btn.onclick = (e) => {
+                e.stopPropagation();
+                if (onShareUserSpot) onShareUserSpot();
+              };
+            }
+          });
 
           marker.on('click', () => {
             setActivePoint(point);
@@ -256,21 +260,27 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           marker.addTo(markersLayer);
           userMarkerInstance = marker;
         } else {
-          // RED PIN: Existing Visited Restaurants
+          // RED PIN: Existing Visited Restaurants with verified DB visit count
           const redIcon = L.divIcon({
             className: 'custom-existing-red-pin',
             html: `
               <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
+                <!-- Attached Name + Count Pill Tag -->
+                <div style="background-color: #0F172A; color: white; font-size: 9.5px; font-weight: 800; padding: 1.5px 6px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 1.5px solid #ffffff; white-space: nowrap; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
+                  <span>${point.name}</span>
+                  <span style="background-color: #DC2626; color: white; padding: 0 4px; border-radius: 9999px; font-size: 8.5px; font-weight: 900;">${point.total_visits}</span>
+                </div>
+                <!-- Teardrop Pin Marker with Visit Count Inside -->
                 <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-                  <div style="width: 20px; height: 20px; border-radius: 50%; background-color: #DC2626; border: 2px solid #FFFFFF; box-shadow: 0 4px 10px rgba(220,38,38,0.4); display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 6px; height: 6px; border-radius: 50%; background-color: #FFFFFF;"></div>
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background-color: #DC2626; border: 2px solid #FFFFFF; box-shadow: 0 4px 10px rgba(220,38,38,0.4); display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 10px; font-weight: 900; color: #FFFFFF; line-height: 1;">${point.total_visits}</span>
                   </div>
-                  <div style="position: absolute; bottom: -3px; width: 6px; height: 6px; background-color: #DC2626; transform: rotate(45deg);"></div>
+                  <div style="position: absolute; bottom: -4px; width: 6px; height: 6px; background-color: #DC2626; transform: rotate(45deg);"></div>
                 </div>
               </div>
             `,
-            iconSize: [20, 26],
-            iconAnchor: [10, 26]
+            iconSize: [28, 38],
+            iconAnchor: [14, 38]
           });
 
           const marker = L.marker([pointLat, pointLng], {
@@ -279,18 +289,23 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           });
 
           marker.bindPopup(`
-            <div style="font-family: inherit; padding: 4px 6px; min-width: 130px; text-align: left;">
-              <div style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #DC2626; background: #FEE2E2; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">
-                Bhookasur Food Stop
+            <div style="font-family: inherit; padding: 4px 6px; min-width: 150px; text-align: left;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 6px;">
+                <span style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #DC2626; background: #FEE2E2; padding: 1px 6px; border-radius: 4px;">
+                  Bhookasur Food Stop
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 900; color: #DC2626; background: #FEF2F2; border: 1px solid #FECACA; padding: 1px 6px; border-radius: 9999px;">
+                  👥 ${point.total_visits} ${point.total_visits === 1 ? 'Visit' : 'Visits'}
+                </span>
               </div>
-              <div style="font-weight: 800; font-size: 12px; color: #0F172A; line-height: 1.2;">
+              <div style="font-weight: 900; font-size: 13px; color: #0F172A; line-height: 1.2;">
                 ${point.name}
               </div>
-              <div style="font-size: 11px; color: #334155; margin-top: 3px;">
+              <div style="font-size: 11px; color: #334155; margin-top: 4px; font-weight: 600;">
                 🍽️ ${point.featured_dish || 'Famous Food'}
               </div>
               <div style="font-size: 10px; color: #64748B; margin-top: 2px;">
-                📍 ${point.city}
+                📍 ${point.city} • <strong style="color: #DC2626;">${point.total_visits} ${point.total_visits === 1 ? 'foodie ne visit kiya' : 'foodies ne visit kiya'}</strong>
               </div>
             </div>
           `);
@@ -304,11 +319,11 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         }
       });
 
-      // Fit bounds to show all pins across India (maxZoom 6) so full India map with all food spots is shown
+      // Fit bounds to show all user-searched pins cleanly
       if (points.length > 0) {
         const bounds = L.latLngBounds(points.map(p => [p.latitude, p.longitude]));
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [35, 35], maxZoom: 6 });
+          map.fitBounds(bounds, { padding: [35, 35], maxZoom: 12 });
         }
       }
 
@@ -395,8 +410,10 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           <span className="text-[#0B1B48]">Aapka Spot</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-600 border border-white shadow-xs inline-block" />
-          <span className="text-slate-600">Existing Spots</span>
+          <span className="w-4 h-4 rounded-full bg-red-600 text-[9px] text-white flex items-center justify-center font-black border border-white shadow-xs inline-flex">
+            #
+          </span>
+          <span className="text-slate-700">Visited Count (DB)</span>
         </div>
       </div>
 

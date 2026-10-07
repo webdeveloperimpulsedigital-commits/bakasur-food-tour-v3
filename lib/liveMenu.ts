@@ -117,6 +117,74 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
     }
   ],
 
+  // Bedekar Tea Stall (Narayan Peth, Pune) - World Famous Misal Landmark
+  'bedekar': [
+    {
+      name: "Historic Bedekar Puneri Misal with Bread Slices",
+      description: "Narayan Peth's legendary 1948 spicy misal prepared with authentic Maharashtrian spices, served with soft bread slices, farsan & lemon.",
+      price: 120,
+      image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80",
+      popularity: 100,
+      rating: 5.0
+    },
+    {
+      name: "Special Bedekar Kolhapuri Tarri Misal Pav",
+      description: "Fiery red cut rassa misal topped with extra crispy farsan, diced onions, and soft pav.",
+      price: 130,
+      image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80",
+      popularity: 99,
+      rating: 4.9
+    },
+    {
+      name: "Crispy Kothimbir Vadi Plate",
+      description: "Steamed fresh coriander cakes shallow-fried crisp with spicy green chutney.",
+      price: 80,
+      image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80",
+      popularity: 97,
+      rating: 4.9
+    },
+    {
+      name: "Traditional Bedekar Poha Laddoo (2 Pcs)",
+      description: "Heritage sweet flattened rice laddoos rolled with pure desi ghee and roasted nuts.",
+      price: 60,
+      image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=600&auto=format&fit=crop&q=80",
+      popularity: 96,
+      rating: 4.8
+    },
+    {
+      name: "Authentic Puneri Kande Pohe with Coconut",
+      description: "Fluffy seasoned flattened rice tempered with mustard seeds, peanuts, and freshly grated coconut.",
+      price: 50,
+      image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80",
+      popularity: 95,
+      rating: 4.8
+    },
+    {
+      name: "Crispy Sabudana Vada with Peanut Dahi",
+      description: "Golden fried tapioca pearl fritters served with sweet and spicy roasted peanut curd chutney.",
+      price: 90,
+      image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80",
+      popularity: 94,
+      rating: 4.8
+    },
+    {
+      name: "Special Digestive Kokum Sharbat",
+      description: "Refreshing sweet and sour traditional Konkan digestive cooler with roasted cumin and rock salt.",
+      price: 40,
+      image: "https://images.unsplash.com/photo-1553787499-6f9133860278?w=600&auto=format&fit=crop&q=80",
+      popularity: 90,
+      rating: 4.7
+    },
+    {
+      name: "Bedekar Special Masala Cutting Chai",
+      description: "Aromatic boiled milk tea brewed with ginger, green cardamom, and lemongrass.",
+      price: 30,
+      image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80",
+      popularity: 93,
+      rating: 4.8
+    }
+  ],
+
   // Prashant Corner (Thane)
   'prashant corner': [
     {
@@ -1059,7 +1127,25 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
   const restName = restaurant.name || 'Special Food Joint';
   const brandName = getCleanSpotBrandName(restName);
 
-  // 1. Find best matching cuisine category
+  // 1. Check for iconic specialties FIRST (e.g. Bedekar, Vaishali, Roopali, Mamledar, Panchali)
+  for (const [key, iconicDishes] of Object.entries(ICONIC_RESTAURANT_DISHES)) {
+    if (text.includes(key.toLowerCase())) {
+      return iconicDishes.map((item, idx) => ({
+        id: restaurant.id * 100 + idx + 1,
+        restaurant_id: restaurant.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        image: item.image,
+        rating: item.rating,
+        popularity: item.popularity,
+        is_recommended: idx < 3 ? 1 : 0,
+        status: 'active' as const
+      }));
+    }
+  }
+
+  // 2. Find best matching cuisine category
   let matchedProfile = CUISINE_MENUS[CUISINE_MENUS.length - 1]; // default pure veg / dhaba
   for (const profile of CUISINE_MENUS) {
     if (profile.keywords.some(kw => text.includes(kw.toLowerCase()))) {
@@ -1068,26 +1154,7 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     }
   }
 
-  // 2. Check for iconic specialties
-  let iconicItems: DishTemplate[] = [];
-  for (const [key, iconicDishes] of Object.entries(ICONIC_RESTAURANT_DISHES)) {
-    if (text.includes(key.toLowerCase())) {
-      iconicItems = iconicDishes;
-      break;
-    }
-  }
-
-  // 3. Merge iconic specialties with full cuisine menu (prevent duplicates)
-  const combinedList: DishTemplate[] = [...iconicItems];
-  const seenDishNames = new Set<string>(iconicItems.map(d => d.name.toLowerCase().trim()));
-
-  for (const item of matchedProfile.dishes) {
-    const lowerName = item.name.toLowerCase().trim();
-    if (!seenDishNames.has(lowerName)) {
-      seenDishNames.add(lowerName);
-      combinedList.push(item);
-    }
-  }
+  const combinedList: DishTemplate[] = [...matchedProfile.dishes];
 
   // 4. Generate dynamic branded signature dishes specifically named after THIS selected restaurant
   return combinedList.map((item, idx) => {

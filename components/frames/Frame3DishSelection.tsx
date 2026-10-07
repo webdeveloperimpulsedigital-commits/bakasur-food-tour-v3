@@ -198,30 +198,33 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Extract strictly top 3 best reviewed & seller dishes
+  // Extract top best reviewed & recommended dishes (up to 4)
   const threeDishes: Dish[] = useMemo(() => {
     if (rawDishes.length === 0) {
       return getFallbackThreeDishes(restaurant);
     }
 
-    // Sort by rating and popularity descending
+    // Sort by is_recommended first, then rating and popularity descending
     const sorted = [...rawDishes].sort((a, b) => {
+      if ((b.is_recommended || 0) !== (a.is_recommended || 0)) {
+        return (b.is_recommended || 0) - (a.is_recommended || 0);
+      }
       const ratingDiff = (b.rating || 0) - (a.rating || 0);
       if (Math.abs(ratingDiff) > 0.05) return ratingDiff;
       return (b.popularity || 0) - (a.popularity || 0);
     });
 
-    const topThree = sorted.slice(0, 3);
-    if (topThree.length < 3) {
+    const topDishes = sorted.slice(0, 4);
+    if (topDishes.length < 3) {
       const fallback = getFallbackThreeDishes(restaurant);
       for (const item of fallback) {
-        if (topThree.length >= 3) break;
-        if (!topThree.some(t => t.name.toLowerCase() === item.name.toLowerCase())) {
-          topThree.push(item);
+        if (topDishes.length >= 3) break;
+        if (!topDishes.some(t => t.name.toLowerCase() === item.name.toLowerCase())) {
+          topDishes.push(item);
         }
       }
     }
-    return topThree.slice(0, 3);
+    return topDishes;
   }, [rawDishes, restaurant]);
 
   // Auto-select first dish by default

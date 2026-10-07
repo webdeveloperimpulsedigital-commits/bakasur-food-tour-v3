@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Search, MapPin, X, Check } from 'lucide-react';
+import { Search, MapPin, X, Check, Sparkles, Share2 } from 'lucide-react';
 import { Restaurant } from '@/lib/db';
+import { RestaurantShareModal } from '../RestaurantShareModal';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -130,6 +131,14 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   });
   const [searchResults, setSearchResults] = useState<Restaurant[]>([]);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const [firstVisitorInfo, setFirstVisitorInfo] = useState<{
+    checked: boolean;
+    isFirstVisitor: boolean;
+    visitCount: number;
+    restaurantName: string;
+  } | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Popular spots fallback list for the selected city
@@ -158,6 +167,35 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       setSearchQuery('');
     }
   }, [selectedRestaurant]);
+
+  // Check in DB if user is the first visitor for the searched/selected restaurant
+  useEffect(() => {
+    const candidateName = selectedRestaurant?.name || searchQuery.trim();
+    if (!candidateName || candidateName.length < 3) {
+      setFirstVisitorInfo(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const idParam = selectedRestaurant?.id ? `&id=${selectedRestaurant.id}` : '';
+        const res = await fetch(`/api/restaurants/check-visits?name=${encodeURIComponent(candidateName)}${idParam}`);
+        const data = await res.json();
+        if (data.success) {
+          setFirstVisitorInfo({
+            checked: true,
+            isFirstVisitor: Boolean(data.isFirstVisitor),
+            visitCount: Number(data.visitCount || 0),
+            restaurantName: candidateName
+          });
+        }
+      } catch (err) {
+        console.warn('Error checking restaurant visits:', err);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [selectedRestaurant, searchQuery]);
 
   // Search autocomplete query
   useEffect(() => {
@@ -212,10 +250,11 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     setShowDropdown(false);
   };
 
-  const handleConfirm = () => {
+  const ensureRestaurantSelected = () => {
     const query = searchQuery.trim();
-    if (!selectedRestaurant && query) {
-      onSelectRestaurant({
+    let confirmed = selectedRestaurant;
+    if (!confirmed && query) {
+      confirmed = {
         id: Math.floor(Math.random() * 80000) + 10000,
         name: query,
         description: 'Selected restaurant',
@@ -229,18 +268,30 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         is_campaign_active: 1,
         total_visits: 100,
         status: 'active'
-      });
-    } else if (selectedRestaurant && query && selectedRestaurant.name !== query && !query.startsWith(selectedRestaurant.name)) {
-      onSelectRestaurant({
-        ...selectedRestaurant,
+      };
+      onSelectRestaurant(confirmed);
+    } else if (confirmed && query && confirmed.name !== query && !query.startsWith(confirmed.name)) {
+      confirmed = {
+        ...confirmed,
         name: query
-      });
+      };
+      onSelectRestaurant(confirmed);
     }
+    return confirmed;
+  };
+
+  const handleConfirm = () => {
+    ensureRestaurantSelected();
     onNext();
   };
 
+  const handleOpenShare = () => {
+    ensureRestaurantSelected();
+    setIsShareModalOpen(true);
+  };
+
   return (
-    <div className="w-full h-full flex flex-col justify-start items-start text-left animate-in fade-in duration-300 py-3.5 sm:py-6 px-4 sm:px-8 gap-2.5 sm:gap-3.5 bg-white overflow-y-auto scrollbar-none">
+    <div className="w-full h-full flex flex-col justify-start items-start text-left animate-in fade-in duration-300 py-3.5 sm:py-6 px-4 sm:px-8 gap-2.5 sm:gap-3.5 bg-white overflow-y-auto scrollbar-none relative">
       {/* 1. Main Headline & Subtitle */}
       <div className="space-y-0.5 sm:space-y-1 text-left shrink-0">
         <h2 className="text-[20px] xs:text-[24px] sm:text-[32px] md:text-[40px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
@@ -272,6 +323,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               onClick={() => {
                 setSearchQuery('');
                 setShowDropdown(true);
+                setFirstVisitorInfo(null);
               }}
               className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer mr-1"
             >
@@ -315,8 +367,22 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         )}
       </div>
 
-      {/* 3. PRIMARY CTA BUTTON: YEH WALA PAKKA */}
-      <div className="w-full shrink-0 mt-auto pt-2">
+      {/* 2.5 DB FIRST VISITOR POPUP (Checked from DB: Only shown if 0 prior visits exist) */}
+      {firstVisitorInfo?.isFirstVisitor && (
+        <div className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200 shrink-0">
+          <div className="w-7 h-7 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 text-sm shadow-xs">
+            🎉
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-black text-amber-900 leading-tight">
+              Aap is place ke pehle visitor hain!
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 3. PRIMARY CTA BUTTONS: YEH WALA PAKKA & SHARE RESTAURANT */}
+      <div className="w-full shrink-0 mt-auto pt-2 flex flex-col gap-2">
         <button
           onClick={handleConfirm}
           disabled={!selectedRestaurant && !searchQuery.trim()}
@@ -325,7 +391,29 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         >
           YEH WALA PAKKA
         </button>
+
+        <button
+          onClick={handleOpenShare}
+          disabled={!selectedRestaurant && !searchQuery.trim()}
+          type="button"
+          className="w-full py-2.5 sm:py-3 px-5 rounded-xl sm:rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
+        >
+          <Share2 className="w-4 h-4 stroke-[2.5]" />
+          <span>RESTAURANT SHARE KARO (WHATSAPP / INSTA)</span>
+        </button>
       </div>
+
+      {/* 4. Social Media Share Modal (Option to share restaurant on WhatsApp, Instagram, Facebook as chat) */}
+      <RestaurantShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        onContinue={() => {
+          setIsShareModalOpen(false);
+          onNext();
+        }}
+        restaurantName={selectedRestaurant?.name || searchQuery.trim() || 'Selected Restaurant'}
+        cityName={selectedRestaurant?.city || selectedCity || 'Pune'}
+      />
     </div>
   );
 };

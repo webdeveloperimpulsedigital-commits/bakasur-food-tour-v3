@@ -19,28 +19,36 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       return NextResponse.json({ success: false, error: 'Invalid restaurant id' }, { status: 400 });
     }
 
-    // 1. Fetch restaurant profile (from DB or query params)
+    // 1. Fetch restaurant profile (from DB by ID or fuzzy name match)
     let restInfo = await db.getRestaurantById(restId);
     const requestedName = (restName || '').trim();
-    const isExactDbMatch = Boolean(
-      restInfo && requestedName && restInfo.name.toLowerCase().trim() === requestedName.toLowerCase()
-    );
 
-    let dbDishes: Dish[] = [];
-    if (isExactDbMatch) {
+    // If restInfo not found by ID, look up by name in DB
+    if (!restInfo && requestedName) {
       try {
-        dbDishes = await db.getDishesByRestaurant(restId);
+        const candidates = await db.getRestaurants({ search: requestedName });
+        if (candidates && candidates.length > 0) {
+          restInfo = candidates[0];
+        }
+      } catch {}
+    }
+
+    // 2. Fetch real database dishes from MySQL
+    let dbDishes: Dish[] = [];
+    if (restInfo && restInfo.id) {
+      try {
+        dbDishes = await db.getDishesByRestaurant(restInfo.id);
       } catch {
         dbDishes = [];
       }
     }
 
-    if (!restInfo || !isExactDbMatch) {
+    if (!restInfo) {
       restInfo = {
         id: restId,
-        name: requestedName || restInfo?.name || 'Iconic Food Joint',
-        area: restArea || restInfo?.area || 'Local Area',
-        city: restCity || restInfo?.city || 'Pune',
+        name: requestedName || 'Iconic Food Joint',
+        area: restArea || 'Local Area',
+        city: restCity || 'Pune',
         description: 'Authentic culinary specialty & live menu',
         address: `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
         latitude: 18.5204,
@@ -53,10 +61,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       };
     }
 
-    // 2. Generate accurate live menu specifically tailored to this restaurant's identity & cuisine
+    // 3. Generate live menu tailored to restaurant identity & cuisine
     const liveDishes = generateLiveMenuForRestaurant(restInfo);
 
-    // 3. Merge dishes seamlessly (deduped by dish name, keeping all live items)
+    // 4. Merge dishes: REAL DB DISHES FIRST, then live generated items
     const seenNames = new Set<string>();
     const finalDishes: Dish[] = [];
 
@@ -69,7 +77,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       }
     }
 
-    // 4. If searchQuery is provided, filter or search across universal cuisine specialties
+    // 5. If searchQuery is provided, search current restaurant menu AND database dishes
     if (searchQuery) {
       const qTokens = searchQuery.split(/\s+/).filter(Boolean);
       
@@ -79,11 +87,23 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         return qTokens.every(token => text.includes(token)) || text.includes(searchQuery);
       });
 
-      // If fewer than 5 matches, also search across all CUISINE_MENUS and ICONIC_RESTAURANT_DISHES
+      // Also search dishes directly from MySQL database if query provided
+      try {
+        const dbMatches = await db.getAllDishes({ search: searchQuery });
+        for (const item of dbMatches) {
+          const lowerName = item.name.toLowerCase().trim();
+          if (!seenNames.has(lowerName)) {
+            seenNames.add(lowerName);
+            matchingDishes.push(item);
+          }
+        }
+      } catch {}
+
+      // If fewer than 8 matches, also search across all CUISINE_MENUS and ICONIC_RESTAURANT_DISHES
       if (matchingDishes.length < 8) {
         const { CUISINE_MENUS, ICONIC_RESTAURANT_DISHES } = await import('@/lib/liveMenu');
         
-        // 4a. Check Iconic restaurant dishes
+        // 5a. Check Iconic restaurant dishes
         for (const dishesList of Object.values(ICONIC_RESTAURANT_DISHES)) {
           for (const item of dishesList) {
             const text = `${item.name} ${item.description}`.toLowerCase();
@@ -105,7 +125,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
           }
         }
 
-        // 4b. Check all cuisine menus
+        // 5b. Check all cuisine menus
         for (const profile of CUISINE_MENUS) {
           for (const item of profile.dishes) {
             const text = `${item.name} ${item.description}`.toLowerCase();
@@ -124,9 +144,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
                 status: 'active'
               });
             }
-          }
         }
       }
+    }
 
       // Sort by relevance:
       // 1. Dish name contains a word starting with the query (e.g. "Momos" for "mo", "Pav" for "pav")

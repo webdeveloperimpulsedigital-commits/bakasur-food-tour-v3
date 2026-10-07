@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu, ArrowRight, ArrowLeft, X, Phone, User, CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
+import { Menu, ArrowRight, ArrowLeft, X, Phone, User, CheckCircle2, AlertCircle, HelpCircle, Share2 } from 'lucide-react';
 import { InteractiveTourMap } from './InteractiveTourMap';
+import { BakasurSpotShareModal } from '../BakasurSpotShareModal';
 
 interface Frame11LiveMapProps {
   sessionId?: string;
@@ -41,6 +42,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
   // Registration Popup State (Only Mobile Number & User Consent Checkbox)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [mobile, setMobile] = useState<string>('');
   const [consent, setConsent] = useState<boolean>(false);
   const [localError, setLocalError] = useState<string>('');
@@ -190,6 +192,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             sessionId={sessionId}
             currentUserSpot={currentUserSpot}
             onStatsLoaded={(s) => setStats(s)}
+            onShareUserSpot={() => setIsShareModalOpen(true)}
           />
         </div>
 
@@ -234,6 +237,18 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           </button>
         </div>
 
+        {/* Social Share CTA: SHARE TO WHATSAPP / INSTAGRAM / FACEBOOK */}
+        <div className="w-full shrink-0">
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            type="button"
+            className="w-full py-2.5 sm:py-3 px-5 rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
+          >
+            <Share2 className="w-4 h-4 stroke-[2.5]" />
+            <span>APNA FOOD SPOT SHARE KARO (WHATSAPP / INSTA)</span>
+          </button>
+        </div>
+
         {/* Influencer Subtext */}
         <div className="w-full text-center -my-0.5 shrink-0">
           <p className="text-[10.5px] sm:text-[11.5px] font-bold text-[#0B1B48]/90 leading-tight">
@@ -265,6 +280,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
               sessionId={sessionId}
               currentUserSpot={currentUserSpot}
               onStatsLoaded={(s) => setStats(s)}
+              onShareUserSpot={() => setIsShareModalOpen(true)}
             />
           </div>
         </div>
@@ -317,6 +333,18 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
               className="w-full py-4 px-6 rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-base lg:text-lg uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
             >
               <span>EK AUR FOOD STOP JODO</span>
+            </button>
+          </div>
+
+          {/* Social Share CTA: SHARE TO WHATSAPP / INSTAGRAM / FACEBOOK */}
+          <div className="w-full">
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              type="button"
+              className="w-full py-3.5 px-6 rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-sm lg:text-base uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
+            >
+              <Share2 className="w-5 h-5 stroke-[2.5]" />
+              <span>APNA FOOD SPOT SHARE KARO (WHATSAPP / INSTA)</span>
             </button>
           </div>
 
@@ -514,6 +542,17 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           </div>
         </div>
       )}
+
+      {/* ========================================================== */}
+      {/* 9. SOCIAL SHARE SPOT MODAL (WhatsApp, Instagram, Facebook) */}
+      {/* ========================================================== */}
+      <BakasurSpotShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        restaurantName={currentUserSpot?.name || 'Local Food Spot'}
+        cityName={currentUserSpot?.city || 'Pune'}
+        dishName={currentUserSpot?.dishName || 'Specialty Dish'}
+      />
     </div>
   );
 };
