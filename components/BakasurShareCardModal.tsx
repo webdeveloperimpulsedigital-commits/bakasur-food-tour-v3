@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { X, Download, Share2, MessageCircle, Sparkles, Camera } from 'lucide-react';
-import { getDishVisualAssets } from '@/lib/dishAssets';
+import { X, Download, Share2, MessageCircle, Ticket } from 'lucide-react';
 
 interface BakasurShareCardModalProps {
   isOpen: boolean;
@@ -21,15 +20,13 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   restaurantName = 'Local Food Spot',
   cityName = 'Pune',
   dishName = 'Signature Food',
-  dishImage,
   participationId = 'BKT-' + Math.floor(100000 + Math.random() * 900000)
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgElementRef = useRef<HTMLImageElement>(null);
   const [downloadUrl, setDownloadUrl] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState<boolean>(true);
 
-  const visualAsset = getDishVisualAssets(dishName, dishImage);
-  const plateImg = visualAsset.plateImage || dishImage || '/images/eating/samosa_flying.png';
+  const heroImageSrc = '/images/final-frames/food-tour-img.png';
 
   const generateCard = useCallback(() => {
     const canvas = canvasRef.current;
@@ -37,192 +34,210 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    setIsGenerating(true);
-
-    // Instagram Story standard 9:16 aspect ratio: 1080 x 1920
+    // Standard 9:16 mobile canvas: 1080 x 1920
     canvas.width = 1080;
     canvas.height = 1920;
 
-    // 1. Background Gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, 1920);
-    bgGrad.addColorStop(0, '#030a24');
-    bgGrad.addColorStop(0.4, '#071746');
-    bgGrad.addColorStop(0.75, '#120422');
-    bgGrad.addColorStop(1, '#020512');
-    ctx.fillStyle = bgGrad;
+    // 1. Crisp Clean White Background (Simple & Sweet)
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, 1080, 1920);
 
-    // Radial Gold Glow in Center
-    const radGlow = ctx.createRadialGradient(540, 850, 50, 540, 850, 600);
-    radGlow.addColorStop(0, 'rgba(212, 56, 13, 0.35)');
-    radGlow.addColorStop(0.6, 'rgba(251, 191, 36, 0.12)');
-    radGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = radGlow;
-    ctx.fillRect(0, 0, 1080, 1920);
-
-    // Decorative Gold Border Frame
-    ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
-    ctx.lineWidth = 12;
-    ctx.strokeRect(40, 40, 1000, 1840);
+    // Outer Border
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(30, 30, 1020, 1860);
 
     ctx.strokeStyle = '#D4380D';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(55, 55, 970, 1810);
+    ctx.lineWidth = 3;
+    ctx.strokeRect(42, 42, 996, 1836);
 
-    // Corner Accents
-    const drawCorner = (x: number, y: number, rot: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(rot);
-      ctx.fillStyle = '#FBBF24';
-      ctx.fillRect(0, 0, 30, 8);
-      ctx.fillRect(0, 0, 8, 30);
-      ctx.restore();
-    };
-    drawCorner(55, 55, 0);
-    drawCorner(1025, 55, Math.PI / 2);
-    drawCorner(1025, 1865, Math.PI);
-    drawCorner(55, 1865, -Math.PI / 2);
-
-    // 2. HEADER BRANDING
-    ctx.fillStyle = '#FBBF24';
-    ctx.font = '900 38px sans-serif';
+    // 2. Header Branding
+    ctx.fillStyle = '#D4380D';
+    ctx.font = '900 32px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🔥 BHOOKASUR KA FOOD TOUR 🔥', 540, 130);
+    ctx.fillText('BHOOKASUR KA FOOD TOUR 🍽️', 540, 115);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 68px sans-serif';
-    ctx.fillText('OFFICIAL FOODIE PASS', 540, 215);
+    ctx.fillStyle = '#0B1B48';
+    ctx.font = '900 66px sans-serif';
+    ctx.fillText('OFFICIAL FOODIE PASS', 540, 195);
 
     // Pass ID Badge Pill
-    ctx.fillStyle = 'rgba(212, 56, 13, 0.9)';
+    ctx.fillStyle = '#FFF1EC';
     if (typeof ctx.roundRect === 'function') {
-      ctx.roundRect(320, 245, 440, 65, 30);
+      ctx.roundRect(340, 225, 400, 56, 28);
     } else {
-      ctx.fillRect(320, 245, 440, 65);
+      ctx.fillRect(340, 225, 400, 56);
     }
     ctx.fill();
-    ctx.strokeStyle = '#FBBF24';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#D4380D';
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 36px monospace';
-    ctx.fillText(`PASS ID: ${participationId}`, 540, 290);
+    ctx.fillStyle = '#D4380D';
+    ctx.font = '800 28px monospace';
+    ctx.fillText(`PASS ID: ${participationId}`, 540, 263);
 
-    // 3. MAIN DISH IMAGE / HERO SPOTLIGHT
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = plateImg;
+    const drawRestOfCard = (imgSource: HTMLImageElement | null) => {
+      // 3. Hero Photo Box (920 x 920 square)
+      const imgX = 80;
+      const imgY = 310;
+      const imgSize = 920;
+      const imgRadius = 28;
 
-    const drawRestOfCard = () => {
-      // Dish spotlight circle glow
       ctx.save();
       ctx.beginPath();
-      ctx.arc(540, 720, 310, 0, Math.PI * 2);
-      ctx.fillStyle = '#061138';
-      ctx.fill();
-      ctx.strokeStyle = '#FBBF24';
-      ctx.lineWidth = 14;
-      ctx.stroke();
-
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(imgX, imgY, imgSize, imgSize, imgRadius);
+      } else {
+        ctx.rect(imgX, imgY, imgSize, imgSize);
+      }
       ctx.clip();
-      try {
-        ctx.drawImage(img, 230, 410, 620, 620);
-      } catch {
-        ctx.fillStyle = '#D4380D';
-        ctx.font = '900 48px sans-serif';
-        ctx.fillText('🍲 ' + dishName, 540, 720);
+
+      if (imgSource) {
+        try {
+          ctx.drawImage(imgSource, imgX, imgY, imgSize, imgSize);
+        } catch {
+          ctx.fillStyle = '#F8FAFC';
+          ctx.fillRect(imgX, imgY, imgSize, imgSize);
+        }
+      } else {
+        ctx.fillStyle = '#F8FAFC';
+        ctx.fillRect(imgX, imgY, imgSize, imgSize);
       }
       ctx.restore();
 
-      // 4. DISH & RESTAURANT DETAILS CARD
-      ctx.fillStyle = 'rgba(10, 25, 74, 0.92)';
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(100, 1100, 880, 420, 36);
-      } else {
-        ctx.fillRect(100, 1100, 880, 420);
-      }
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(251, 191, 36, 0.5)';
+      // Border around Photo
+      ctx.strokeStyle = '#E2E8F0';
       ctx.lineWidth = 4;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(imgX, imgY, imgSize, imgSize, imgRadius);
+      } else {
+        ctx.rect(imgX, imgY, imgSize, imgSize);
+      }
       ctx.stroke();
 
-      // Recommendation Tag
+      // 4. Details Box (Selected Restaurant & Selected Dish)
+      const cardX = 80;
+      const cardY = 1260;
+      const cardW = 920;
+      const cardH = 340;
+      const cardRadius = 24;
+
+      ctx.fillStyle = '#F8FAFC';
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(cardX, cardY, cardW, cardH, cardRadius);
+      } else {
+        ctx.fillRect(cardX, cardY, cardW, cardH);
+      }
+      ctx.fill();
+
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Dish
       ctx.fillStyle = '#D4380D';
-      ctx.font = '900 28px sans-serif';
-      ctx.fillText('⭐ TOP FOOD RECOMMENDATION', 540, 1165);
+      ctx.font = '800 24px sans-serif';
+      ctx.fillText('RECOMMENDED DISH', 540, 1315);
 
-      // Dish Name
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 56px sans-serif';
-      ctx.fillText(dishName.toUpperCase(), 540, 1245);
+      ctx.fillStyle = '#0B1B48';
+      ctx.font = '900 50px sans-serif';
+      const cleanDish = dishName.length > 28 ? dishName.slice(0, 26) + '...' : dishName;
+      ctx.fillText(cleanDish, 540, 1375);
 
-      // Restaurant Name & City
-      ctx.fillStyle = '#FBBF24';
-      ctx.font = '800 40px sans-serif';
-      ctx.fillText(`📍 ${restaurantName}`, 540, 1315);
-
-      ctx.fillStyle = '#94A3B8';
-      ctx.font = '700 32px sans-serif';
-      ctx.fillText(`City: ${cityName} • Verified Food Stop`, 540, 1375);
-
-      // Divider Line
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      // Divider
+      ctx.strokeStyle = '#E2E8F0';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(160, 1410);
-      ctx.lineTo(920, 1410);
+      ctx.moveTo(140, 1410);
+      ctx.lineTo(940, 1410);
       ctx.stroke();
 
-      // Certified By Bhookasur Quote
-      ctx.fillStyle = '#E2E8F0';
-      ctx.font = 'italic 700 30px sans-serif';
-      ctx.fillText('“Aapne suggest kiya. Bhookasur ne khaana shuru kar diya!”', 540, 1470);
-
-      // 5. FOOTER BRANDING (GASTRIUM)
+      // Restaurant
       ctx.fillStyle = '#D4380D';
-      ctx.font = '900 44px sans-serif';
-      ctx.fillText('KHAO DIL KHOL KE! 😋', 540, 1620);
+      ctx.font = '800 24px sans-serif';
+      ctx.fillText('SELECTED RESTAURANT', 540, 1460);
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '800 32px sans-serif';
-      ctx.fillText('Fast Relief Gastrium Ke Saath! 💊', 540, 1675);
+      ctx.fillStyle = '#0B1B48';
+      ctx.font = '900 42px sans-serif';
+      const cleanRest = restaurantName.length > 30 ? restaurantName.slice(0, 28) + '...' : restaurantName;
+      ctx.fillText(`📍 ${cleanRest}`, 540, 1515);
 
-      // Slogan Pill
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillStyle = '#64748B';
+      ctx.font = '700 26px sans-serif';
+      ctx.fillText(`City: ${cityName}`, 540, 1565);
+
+      // 5. Website Link Pill
+      const siteDomain = typeof window !== 'undefined' && window.location.host ? window.location.host : 'bhookasur.com';
+
+      const pillX = 100;
+      const pillY = 1630;
+      const pillW = 880;
+      const pillH = 92;
+
+      ctx.fillStyle = '#FFF1EC';
       if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(140, 1720, 800, 70, 35);
+        ctx.roundRect(pillX, pillY, pillW, pillH, 46);
       } else {
-        ctx.fillRect(140, 1720, 800, 70);
+        ctx.fillRect(pillX, pillY, pillW, pillH);
       }
       ctx.fill();
 
-      ctx.fillStyle = '#FBBF24';
-      ctx.font = '800 26px sans-serif';
-      ctx.fillText('🌐 Join Bhookasur Food Tour at bhookasur-food-tour.com', 540, 1765);
+      ctx.strokeStyle = '#D4380D';
+      ctx.lineWidth = 3;
+      ctx.stroke();
 
-      // Update state data URL for download
-      setDownloadUrl(canvas.toDataURL('image/png'));
-      setIsGenerating(false);
+      ctx.fillStyle = '#D4380D';
+      ctx.font = '900 36px sans-serif';
+      ctx.fillText(`🌐 ${siteDomain}`, 540, 1690);
+
+      ctx.fillStyle = '#64748B';
+      ctx.font = '700 26px sans-serif';
+      ctx.fillText('Link par click karke aap bhi favourite food recommend karein!', 540, 1775);
+
+      ctx.fillStyle = '#0B1B48';
+      ctx.font = '800 26px sans-serif';
+      ctx.fillText('Fast Relief Gastrium Ke Saath 💊', 540, 1825);
+
+      try {
+        setDownloadUrl(canvas.toDataURL('image/png'));
+      } catch (err) {
+        console.warn('Canvas export note:', err);
+      }
     };
 
-    img.onload = drawRestOfCard;
-    img.onerror = drawRestOfCard;
-  }, [dishName, plateImg, restaurantName, cityName, participationId]);
+    // Use DOM image element if already loaded, or load cleanly
+    if (imgElementRef.current && imgElementRef.current.complete && imgElementRef.current.naturalWidth > 0) {
+      drawRestOfCard(imgElementRef.current);
+    } else {
+      const img = new Image();
+      img.onload = () => drawRestOfCard(img);
+      img.onerror = () => drawRestOfCard(null);
+      img.src = heroImageSrc;
+      if (img.complete) {
+        drawRestOfCard(img);
+      }
+    }
+  }, [dishName, restaurantName, cityName, participationId, heroImageSrc]);
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(generateCard, 100);
+      const timer = setTimeout(generateCard, 150);
+      return () => clearTimeout(timer);
     }
   }, [isOpen, generateCard]);
 
   if (!isOpen) return null;
 
+  const currentWebUrl = typeof window !== 'undefined' ? window.location.origin : 'https://bhookasur-food-tour.com';
+
   const handleDownload = () => {
-    if (!downloadUrl) return;
+    generateCard();
+    const url = downloadUrl || (canvasRef.current ? canvasRef.current.toDataURL('image/png') : '');
+    if (!url) return;
     const a = document.createElement('a');
-    a.href = downloadUrl;
+    a.href = url;
     a.download = `Bhookasur_Foodie_Pass_${participationId}.png`;
     document.body.appendChild(a);
     a.click();
@@ -230,21 +245,24 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   };
 
   const handleShareWhatsApp = () => {
-    const text = `🔥 *BHOOKASUR KA FOOD TOUR PASS* 🔥\n\nI just recommended *${dishName}* at *${restaurantName} (${cityName})* on Bhookasur Food Tour!\n\nCheck out the food map and win live tour passes here 👇`;
+    const text = `🔥 *BHOOKASUR KA FOOD TOUR PASS* 🔥\n\nI recommended *${dishName}* at *${restaurantName} (${cityName})* on Bhookasur Food Tour!\n\n👇 Click this link to see the tour & recommend your favourite spot:\n${currentWebUrl}`;
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
 
   const handleNativeShare = async () => {
-    if (navigator.share && downloadUrl) {
+    generateCard();
+    const url = downloadUrl || (canvasRef.current ? canvasRef.current.toDataURL('image/png') : '');
+    if (navigator.share && url) {
       try {
-        const response = await fetch(downloadUrl);
+        const response = await fetch(url);
         const blob = await response.blob();
         const file = new File([blob], `Bhookasur_Foodie_Pass_${participationId}.png`, { type: 'image/png' });
 
         await navigator.share({
           title: 'Bhookasur Ka Food Tour Pass',
-          text: `Check out my food recommendation: ${dishName} at ${restaurantName}!`,
+          text: `I recommended ${dishName} at ${restaurantName} (${cityName}) on Bhookasur Food Tour! Click here to join: ${currentWebUrl}`,
+          url: currentWebUrl,
           files: [file]
         });
       } catch {
@@ -256,20 +274,20 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-[#071746] rounded-3xl border-2 border-amber-400/60 shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[92vh] text-white select-none">
-        {/* Top Header */}
-        <div className="p-4 bg-black/40 border-b border-white/10 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] text-slate-900 select-none">
+        {/* Modal Header */}
+        <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Camera className="w-5 h-5 text-amber-400" />
-            <span className="font-black text-sm uppercase tracking-wider text-amber-300">
-              Instagram & WhatsApp Foodie Card
+            <Ticket className="w-5 h-5 text-[#D4380D]" />
+            <span className="font-black text-sm uppercase tracking-wider text-[#0B1B48]">
+              Official Foodie Pass
             </span>
           </div>
           <button
             onClick={onClose}
             type="button"
-            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+            className="p-1.5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-700 transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -278,59 +296,107 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
         {/* Hidden Canvas Element */}
         <canvas ref={canvasRef} className="hidden" />
 
-        {/* Scrollable Preview Section */}
-        <div className="p-4 flex-1 overflow-y-auto flex flex-col items-center justify-center gap-3">
-          {isGenerating ? (
-            <div className="py-16 flex flex-col items-center gap-3">
-              <Sparkles className="w-10 h-10 text-amber-400 animate-spin" />
-              <span className="text-sm font-extrabold text-amber-200">Generating Your Story Card...</span>
-            </div>
-          ) : (
-            downloadUrl && (
-              <div className="relative w-full max-w-[280px] sm:max-w-[320px] rounded-2xl overflow-hidden shadow-2xl border border-amber-400/40 transform hover:scale-[1.02] transition-transform">
-                <img
-                  src={downloadUrl}
-                  alt="Bhookasur Foodie Pass Story Preview"
-                  className="w-full h-auto block"
-                />
+        {/* Pure HTML Pass Card Preview (Guaranteed to show image crystal clear & sharp!) */}
+        <div className="p-3 sm:p-5 flex-1 overflow-y-auto flex flex-col items-center justify-start bg-slate-100/70">
+          <div
+            id="bhookasur-foodie-pass-card"
+            className="w-full max-w-[320px] xs:max-w-[340px] sm:max-w-[360px] bg-white rounded-3xl p-3.5 sm:p-4 shadow-xl border-2 border-slate-200 flex flex-col items-center text-center gap-2.5 relative select-none"
+          >
+            {/* Pass Header */}
+            <div className="flex flex-col items-center w-full">
+              <span className="text-[10px] xs:text-xs font-black uppercase tracking-wider text-[#D4380D]">
+                Bhookasur Ka Food Tour 🍽️
+              </span>
+              <h2 className="text-base xs:text-lg sm:text-xl font-black text-[#0B1B48] tracking-tight leading-tight">
+                OFFICIAL FOODIE PASS
+              </h2>
+              <div className="mt-1 px-3 py-0.5 rounded-full bg-[#FFF1EC] border border-[#D4380D]/40 text-[#D4380D] font-mono font-bold text-[10px] xs:text-xs">
+                PASS ID: {participationId}
               </div>
-            )
-          )}
+            </div>
 
-          <p className="text-xs text-slate-300 text-center max-w-xs font-medium">
-            Post this card on Instagram Story or WhatsApp status to invite friends to Bhookasur Food Tour!
+            {/* Hero Image (Native Image Rendering - 100% Reliable & Crisp) */}
+            <div className="w-full aspect-square rounded-2xl overflow-hidden border-2 border-slate-200 shadow-sm bg-slate-100 relative">
+              <img
+                ref={imgElementRef}
+                src={heroImageSrc}
+                alt="Bhookasur Food Tour Feast"
+                onLoad={() => generateCard()}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Recommendation Details */}
+            <div className="w-full bg-slate-50 rounded-xl p-2.5 sm:p-3 border border-slate-200 flex flex-col items-center text-center gap-1.5">
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#D4380D]">
+                  RECOMMENDED DISH
+                </span>
+                <span className="text-sm xs:text-base font-black text-[#0B1B48] leading-tight">
+                  {dishName}
+                </span>
+              </div>
+
+              <div className="w-full h-px bg-slate-200" />
+
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#D4380D]">
+                  SELECTED RESTAURANT
+                </span>
+                <span className="text-xs xs:text-sm font-black text-[#0B1B48] leading-tight">
+                  📍 {restaurantName}
+                </span>
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-500">
+                  City: {cityName} • Verified Food Spot
+                </span>
+              </div>
+            </div>
+
+            {/* Website Link Pill */}
+            <div className="w-full py-2 px-3 rounded-full bg-[#FFF1EC] border border-[#D4380D] text-[#D4380D] font-black text-xs xs:text-sm flex items-center justify-center gap-1.5 shadow-xs">
+              <span>🌐</span>
+              <span>{typeof window !== 'undefined' ? window.location.host : 'bhookasur.com'}</span>
+            </div>
+
+            <p className="text-[10px] text-slate-500 font-semibold leading-tight">
+              Link par click karke aap bhi food tour mein judiye!
+            </p>
+          </div>
+
+          <p className="text-[11px] text-slate-500 text-center max-w-xs font-semibold mt-2.5">
+            Share this pass on WhatsApp so friends and family can click your link and join!
           </p>
         </div>
 
-        {/* Bottom Action Bar */}
-        <div className="p-4 bg-black/50 border-t border-white/10 flex flex-col gap-2.5">
+        {/* Bottom Clean Action Bar */}
+        <div className="p-4 sm:p-5 bg-white border-t border-slate-100 flex flex-col gap-2.5">
           <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={handleDownload}
               type="button"
-              className="py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+              className="py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
             >
               <Download className="w-4 h-4 stroke-[2.5]" />
-              <span>Download Image</span>
+              <span>Download</span>
             </button>
 
             <button
               onClick={handleShareWhatsApp}
               type="button"
-              className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+              className="py-3.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
             >
               <MessageCircle className="w-4 h-4 fill-white stroke-none" />
-              <span>Share WhatsApp</span>
+              <span>WhatsApp</span>
             </button>
           </div>
 
           <button
             onClick={handleNativeShare}
             type="button"
-            className="w-full py-3 px-4 rounded-xl bg-[#D4380D] hover:bg-[#eb4010] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 border border-white/20"
+            className="w-full py-3.5 px-4 rounded-xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
           >
             <Share2 className="w-4 h-4 stroke-[2.5]" />
-            <span>Share Story Card</span>
+            <span>Share Pass with Link</span>
           </button>
         </div>
       </div>

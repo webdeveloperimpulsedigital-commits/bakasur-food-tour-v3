@@ -54,43 +54,42 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
         ) : <div />}
       </div>
 
-      {/* Top Section: Fire Video Container (Starts full-height & zoomed-in, then shrinks to h-[58%] and zooms out) */}
+      {/* Top Section: Fire Video Container (Increased height for prominent character display) */}
       <div
         className={`relative w-full bg-[#182858] flex items-center justify-center overflow-hidden shrink-0 transition-all duration-1000 ease-in-out ${
           isRevealed
-            ? 'h-[55%] xs:h-[58%] sm:h-[60%]'
+            ? 'h-[64%] xs:h-[66%] sm:h-[68%]'
             : 'h-full'
         }`}
       >
         <video
-          src="/images/all-frames/Fire on stomach v2.mp4"
+          src="/images/final-frames/Acidity-and-Dakare.mp4"
           autoPlay
           loop
           muted
           playsInline
-          className={`w-full h-full object-cover object-center transition-transform duration-1200 ease-in-out ${
+          className={`w-full h-full object-cover object-top transition-transform duration-1200 ease-in-out ${
             isRevealed ? 'scale-100' : 'scale-115'
           }`}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
-        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-black/40 to-transparent pointer-events-none z-20" />
+        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-black/30 to-transparent pointer-events-none z-20" />
       </div>
 
-      {/* Bottom Section: White Content Card (Slides up smoothly from bottom) */}
+      {/* Bottom Section: White Content Card with Enlarged Typography */}
       <div
         onClick={onAutoAdvance}
-        className={`w-full flex-1 bg-white p-5 xs:p-6 sm:p-8 flex flex-col justify-center items-start text-left shadow-[0_-12px_35px_rgba(0,0,0,0.18)] rounded-none z-10 shrink-0 cursor-pointer transition-all duration-1000 ease-in-out transform ${
+        className={`w-full flex-1 bg-white px-4 py-4 xs:px-5 xs:py-5 sm:p-8 flex flex-col justify-center items-start text-left shadow-[0_-12px_35px_rgba(0,0,0,0.18)] rounded-none z-10 shrink-0 cursor-pointer transition-all duration-1000 ease-in-out transform ${
           isRevealed
             ? 'translate-y-0 opacity-100'
             : 'translate-y-full opacity-0 pointer-events-none'
         }`}
       >
-        <div className="space-y-2 sm:space-y-3.5 max-w-2xl my-auto">
-          <h2 className="text-[26px] xs:text-[30px] sm:text-[40px] md:text-[50px] font-black tracking-tight text-[#0B1B48] leading-[1.15]">
+        <div className="space-y-1.5 xs:space-y-2.5 sm:space-y-3.5 max-w-2xl my-auto">
+          <h2 className="text-[28px] xs:text-[32px] sm:text-[42px] md:text-[52px] font-black tracking-tight text-[#0B1B48] leading-[1.12]">
             Plot twist: Pet ne<br />
             <span className="text-[#D4380D]">emergency brake</span> laga di.
           </h2>
-          <p className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-extrabold text-[#0B1B48]/90 leading-snug mt-2">
+          <p className="text-xl xs:text-2xl sm:text-3xl md:text-3xl font-extrabold text-[#0B1B48]/90 leading-snug">
             Khatti dakaarein aur acidity.
           </p>
         </div>

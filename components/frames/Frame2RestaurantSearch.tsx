@@ -1,17 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Search, MapPin, X, Check, Sparkles, Share2 } from 'lucide-react';
+import { Search, MapPin, X, Check, Sparkles } from 'lucide-react';
 import { Restaurant } from '@/lib/db';
-import { RestaurantShareModal } from '../RestaurantShareModal';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
   selectedRestaurant: Restaurant | null;
   userCoords?: { lat: number; lng: number } | null;
+  isSecondRound?: boolean;
   onSelectRestaurant: (restaurant: Restaurant) => void;
   onNext: () => void;
   onBack: () => void;
+  onWatchVideo?: () => void;
 }
 
 // Fallback spots for top cities if search is empty
@@ -123,15 +124,16 @@ function getCityFallbacks(cityName: string): Restaurant[] {
 export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   selectedCity,
   selectedRestaurant,
+  isSecondRound = false,
   onSelectRestaurant,
-  onNext
+  onNext,
+  onWatchVideo
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>(() => {
     return selectedRestaurant ? selectedRestaurant.name : '';
   });
   const [searchResults, setSearchResults] = useState<Restaurant[]>([]);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [firstVisitorInfo, setFirstVisitorInfo] = useState<{
     checked: boolean;
     isFirstVisitor: boolean;
@@ -285,20 +287,26 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     onNext();
   };
 
-  const handleOpenShare = () => {
-    ensureRestaurantSelected();
-    setIsShareModalOpen(true);
-  };
-
   return (
     <div className="w-full h-full flex flex-col justify-start items-start text-left animate-in fade-in duration-300 py-3.5 sm:py-6 px-4 sm:px-8 gap-2.5 sm:gap-3.5 bg-white overflow-y-auto scrollbar-none relative">
       {/* 1. Main Headline & Subtitle */}
       <div className="space-y-0.5 sm:space-y-1 text-left shrink-0">
         <h2 className="text-[20px] xs:text-[24px] sm:text-[32px] md:text-[40px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
-          Apna favourite<br />restaurant batao.
+          {isSecondRound ? (
+            <>
+              Trailer toh ho gaya,<br />
+              ab <span className="text-[#D4380D]">picture</span> dikhao! 🎬
+            </>
+          ) : (
+            <>
+              Apna favourite<br />restaurant batao.
+            </>
+          )}
         </h2>
         <p className="text-[11px] xs:text-xs sm:text-sm md:text-base font-semibold text-[#0B1B48] leading-tight">
-          Jahan jaakar Bhookasur kahe: isi ke liye toh prakat hua tha.
+          {isSecondRound
+            ? 'Ek aur shaandaar restaurant chuno jahan asli daawat shuru ho!'
+            : 'Jahan jaakar Bhookasur kahe: isi ke liye toh prakat hua tha.'}
         </p>
       </div>
 
@@ -381,39 +389,27 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         </div>
       )}
 
-      {/* 3. PRIMARY CTA BUTTONS: YEH WALA PAKKA & SHARE RESTAURANT */}
+      {/* 3. PRIMARY CTA BUTTON: YEH WALA PAKKA & (In Round 2) DEKHO BHOOKASUR NE KYA KYA KHAYA */}
       <div className="w-full shrink-0 mt-auto pt-2 flex flex-col gap-2">
         <button
           onClick={handleConfirm}
           disabled={!selectedRestaurant && !searchQuery.trim()}
           type="button"
-          className="w-full py-3 sm:py-3.5 px-5 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
+          className="w-full py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
         >
           YEH WALA PAKKA
         </button>
 
-        <button
-          onClick={handleOpenShare}
-          disabled={!selectedRestaurant && !searchQuery.trim()}
-          type="button"
-          className="w-full py-2.5 sm:py-3 px-5 rounded-xl sm:rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"
-        >
-          <Share2 className="w-4 h-4 stroke-[2.5]" />
-          <span>RESTAURANT SHARE KARO (WHATSAPP / INSTA)</span>
-        </button>
+        {isSecondRound && onWatchVideo && (
+          <button
+            onClick={onWatchVideo}
+            type="button"
+            className="w-full py-3 sm:py-3.5 px-5 rounded-xl sm:rounded-2xl bg-[#0B1B48] hover:bg-[#071333] active:bg-[#040c22] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
+          >
+            <span>DEKHO BHOOKASUR NE KYA KYA KHAYA 🎬</span>
+          </button>
+        )}
       </div>
-
-      {/* 4. Social Media Share Modal (Option to share restaurant on WhatsApp, Instagram, Facebook as chat) */}
-      <RestaurantShareModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        onContinue={() => {
-          setIsShareModalOpen(false);
-          onNext();
-        }}
-        restaurantName={selectedRestaurant?.name || searchQuery.trim() || 'Selected Restaurant'}
-        cityName={selectedRestaurant?.city || selectedCity || 'Pune'}
-      />
     </div>
   );
 };

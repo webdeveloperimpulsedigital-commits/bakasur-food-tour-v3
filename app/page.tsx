@@ -222,7 +222,9 @@ export default function CampaignPage() {
     };
 
     setSelectedDish(finalDish);
-    setFeastingStage(1);
+    if (feastingStage !== 2) {
+      setFeastingStage(1);
+    }
     triggerFrameTransition(5);
 
     const activeSession = sessionId || getOrCreateSessionId();
@@ -327,11 +329,13 @@ export default function CampaignPage() {
     });
   };
 
-  // Frame 6 (Interstitial) -> Second Eating Stage (2 Random Street Food Dishes)
+  // Frame 6 (Interstitial) -> Second Restaurant & Dish Selection for Round 2
   const handleStartSecondEatingStage = () => {
     playSound('click');
     setFeastingStage(2);
-    setCurrentFrame(5);
+    setSelectedRestaurant(null);
+    setSelectedDish(null);
+    setCurrentFrame(2);
   };
 
   // Frame 6 (Trailer) -> Random Food Tour Spot 1
@@ -698,8 +702,11 @@ export default function CampaignPage() {
   };
 
   const getVideoContainerHeightClass = (frame: number) => {
-    if (frame === 2 || frame === 3 || frame === 4) {
-      return 'h-[52%] xs:h-[54%] md:h-full';
+    if (frame === 8) {
+      return 'h-[66%] xs:h-[68%] md:h-full';
+    }
+    if (frame === 3 || frame === 4) {
+      return 'h-[65%] xs:h-[67%] md:h-full';
     }
     return 'h-[62%] xs:h-[65%] md:h-full';
   };
@@ -718,11 +725,14 @@ export default function CampaignPage() {
             feastingStage={feastingStage}
             soundEnabled={false}
             onBack={() => {
-              if (feastingStage === 2) {
-                setFeastingStage(1);
-              } else {
-                setCurrentFrame(3);
-              }
+              setCurrentFrame(3);
+            }}
+            onWatchVideo={() => {
+              setActiveTransitionVideo({
+                videoUrl: '/images/all-frames/after-second-plate.mp4',
+                buttonText: 'Aage Badho ➡️',
+                nextFrame: 7
+              });
             }}
             onComplete={() => {
               playSound('click');
@@ -819,22 +829,22 @@ export default function CampaignPage() {
             <BakasurVideoPlayer
               videoUrl={
                 currentFrame === 1
-                  ? "/images/all-frames/first-frame.mp4"
+                  ? "/images/final-frames/1.mp4"
                   : currentFrame === 2
-                  ? "/images/all-frames/2-frame.mp4"
+                  ? "/images/final-frames/2.mp4"
                   : currentFrame === 3 || currentFrame === 4
-                  ? "/images/all-frames/Showing Empty Plate.mp4"
+                  ? "/images/final-frames/3.mp4"
                   : currentFrame === 6
                   ? "/images/all-frames/Showing Love.mp4"
                   : currentFrame === 8
-                  ? "/images/all-frames/Fire on stomach v2.mp4"
+                  ? "/images/final-frames/Acidity-and-Dakare.mp4"
                   : currentFrame === 9
                   ? "/images/all-frames/Drinking Gastrium.mp4"
                   : currentFrame === 10
                   ? "/images/all-frames/Thumbs Up.mp4"
                   : currentFrame === 12
                   ? "/images/all-frames/Showing Love.mp4"
-                  : "/images/all-frames/first-frame.mp4"
+                  : "/images/final-frames/1.mp4"
               }
               stageName={
                 currentFrame === 1 ? 'welcome' :
@@ -869,9 +879,23 @@ export default function CampaignPage() {
                   selectedCity={selectedCity}
                   selectedRestaurant={selectedRestaurant}
                   userCoords={userCoords}
+                  isSecondRound={feastingStage === 2}
                   onSelectRestaurant={(r) => setSelectedRestaurant(r)}
                   onNext={handleRestaurantConfirmed}
-                  onBack={() => setCurrentFrame(1)}
+                  onWatchVideo={() => {
+                    setActiveTransitionVideo({
+                      videoUrl: '/images/all-frames/after-second-plate.mp4',
+                      buttonText: 'Aage Badho ➡️',
+                      nextFrame: 2
+                    });
+                  }}
+                  onBack={() => {
+                    if (feastingStage === 2) {
+                      setCurrentFrame(6);
+                    } else {
+                      setCurrentFrame(1);
+                    }
+                  }}
                 />
               )}
 

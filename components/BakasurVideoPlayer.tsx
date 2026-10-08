@@ -353,9 +353,9 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
   // - Frame 12 (Registration): Pointing Downwards.mp4 (Bakasur points down to registration form)
   // - Frame 13 (Pass Confirmed): Thumbs Up.mp4 (Bakasur thumbs up confirmation)
   const activeVideoSrc = useMemo(() => {
-    if (frameNumber === 1) return '/images/all-frames/first-frame.mp4';
-    if (frameNumber === 2) return '/images/all-frames/2-frame.mp4';
-    if (frameNumber === 3 || frameNumber === 4) return '/images/all-frames/Showing Empty Plate.mp4';
+    if (frameNumber === 1) return '/images/final-frames/1.mp4';
+    if (frameNumber === 2) return '/images/final-frames/2.mp4';
+    if (frameNumber === 3 || frameNumber === 4) return '/images/final-frames/3.mp4';
     if (frameNumber === 6) return '/images/all-frames/Showing Love.mp4';
     if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/all-frames/Fire on stomach v2.mp4';
     if (frameNumber === 9) return '/images/all-frames/Drinking Gastrium.mp4';
@@ -364,7 +364,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
     if (frameNumber === 12) return '/images/all-frames/Showing Love.mp4';
     if (frameNumber === 13) return '/images/all-frames/Thumbs Up.mp4';
 
-    return videoUrl || '/images/all-frames/first-frame.mp4';
+    return videoUrl || '/images/final-frames/1.mp4';
   }, [frameNumber, isHeartburn, videoUrl]);
 
   // Autoplay video smoothly on source change
@@ -443,60 +443,60 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/first-frame.mp4"
+            src="/images/final-frames/1.mp4"
             playsInline
             autoPlay
             loop
             muted
-            className="w-full h-full object-cover object-center relative z-10"
+            className="w-full h-full object-cover object-top relative z-10"
           />
         </div>
       ) : frameNumber === 2 ? (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/2-frame.mp4"
+            src="/images/final-frames/2.mp4"
             playsInline
             autoPlay
             loop
             muted
-            className="w-full h-full object-cover object-center relative z-10"
+            className="w-full h-full object-cover object-top relative z-10"
           />
         </div>
       ) : frameNumber === 3 || frameNumber === 4 ? (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/Showing Empty Plate.mp4"
+            src="/images/final-frames/3.mp4"
             playsInline
             autoPlay
             loop
             muted
-            className="w-full h-full object-cover object-center relative z-10"
+            className="w-full h-full object-cover object-top relative z-10"
           />
         </div>
       ) : frameNumber === 6 ? (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/Showing Love.mp4"
+            src="/images/final-frames/5.mp4"
             playsInline
             autoPlay
             loop
             muted
-            className="w-full h-full object-cover object-center relative z-10"
+            className="w-full h-full object-cover object-top relative z-10"
           />
         </div>
       ) : frameNumber === 7 || frameNumber === 8 ? (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/Fire on stomach v2.mp4"
+            src="/images/final-frames/Acidity-and-Dakare.mp4"
             playsInline
             autoPlay
             loop
             muted
-            className="w-full h-full object-cover object-center relative z-10"
+            className="w-full h-full object-cover object-top relative z-10"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
         </div>
