@@ -866,7 +866,7 @@ export default function CampaignPage() {
           </div>
 
           {/* Right Side on Desktop / Bottom Half on Mobile: Content Card */}
-          <div className={`w-full md:w-1/2 flex-1 md:h-full flex flex-col ${currentFrame <= 3 ? 'overflow-hidden' : 'overflow-y-auto'} ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : currentFrame <= 3 || currentFrame === 9 ? 'bg-white p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start md:justify-center`}>
+          <div className={`w-full md:w-1/2 flex-1 md:h-full flex flex-col overflow-y-auto scrollbar-thin ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : currentFrame <= 3 || currentFrame === 9 ? 'bg-white p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start md:justify-center`}>
             <main className="flex-1 w-full flex flex-col justify-start md:justify-center min-h-0 relative">
               {/* Frame 1: Welcome */}
               {currentFrame === 1 && (

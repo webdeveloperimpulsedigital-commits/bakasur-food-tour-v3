@@ -23,10 +23,11 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     let restInfo = await db.getRestaurantById(restId);
     const requestedName = (restName || '').trim();
 
-    // If restInfo not found by ID, look up by name in DB
-    if (!restInfo && requestedName) {
+    // If restInfo not found by ID or name differs, look up by name in DB
+    const namePrefix = requestedName.toLowerCase().split(',')[0].trim();
+    if (requestedName && (!restInfo || !restInfo.name.toLowerCase().includes(namePrefix))) {
       try {
-        const candidates = await db.getRestaurants({ search: requestedName });
+        const candidates = await db.getRestaurants({ search: namePrefix });
         if (candidates && candidates.length > 0) {
           restInfo = candidates[0];
         }
@@ -43,10 +44,27 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       }
     }
 
-    if (!restInfo) {
+    if (requestedName) {
+      restInfo = {
+        ...(restInfo || {}),
+        id: restInfo?.id || restId,
+        name: requestedName,
+        area: restArea || restInfo?.area || 'Local',
+        city: restCity || restInfo?.city || 'Pune',
+        description: restInfo?.description || 'Authentic culinary specialty & live menu',
+        address: restInfo?.address || `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
+        latitude: restInfo?.latitude || 18.5204,
+        longitude: restInfo?.longitude || 73.8407,
+        rating: restInfo?.rating || 4.8,
+        image: restInfo?.image || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+        is_campaign_active: 1,
+        total_visits: restInfo?.total_visits || 1200,
+        status: 'active'
+      };
+    } else if (!restInfo) {
       restInfo = {
         id: restId,
-        name: requestedName || 'Iconic Food Joint',
+        name: 'Iconic Food Joint',
         area: restArea || 'Local Area',
         city: restCity || 'Pune',
         description: 'Authentic culinary specialty & live menu',
@@ -64,11 +82,11 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     // 3. Generate live menu tailored to restaurant identity & cuisine
     const liveDishes = generateLiveMenuForRestaurant(restInfo);
 
-    // 4. Merge dishes: REAL DB DISHES FIRST, then live generated items
+    // 4. Merge dishes: Signature authentic dishes first, then DB dishes
     const seenNames = new Set<string>();
     const finalDishes: Dish[] = [];
 
-    const sourceList = [...dbDishes, ...liveDishes];
+    const sourceList = [...liveDishes, ...dbDishes];
     for (const d of sourceList) {
       const cleanName = d.name.toLowerCase().trim();
       if (!seenNames.has(cleanName)) {
