@@ -62,13 +62,16 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [chompEffect, setChompEffect] = useState<boolean>(false);
   const [bitePopupText, setBitePopupText] = useState<string>('');
   
-  const POPUP_MESSAGES = [
-    'Aur Khilao! Yummy! 🤤',
-    'Maza Aa Gaya! Aur Bhej! 🔥',
-    'Aur Khilao! Super Yum! 😋',
-    'Ek Aur Bite, Fast! 🚀',
-    'Aha! Gazab Taste Hai! 💥'
-  ];
+  const POPUP_MESSAGES = useMemo(() => {
+    const clean = dishName ? dishName.replace(/^Special\s+/i, '').trim() : 'Food';
+    return [
+      `Aur ${clean} khilao! Super Yum! 🤤`,
+      `Maza Aa Gaya! Aur ${clean} bhej! 🔥`,
+      `Aha! Gazab ${clean} hai! 😋`,
+      `Ek aur bite, fast! 🚀`,
+      `Bhookasur loves ${clean}! 💥`
+    ];
+  }, [dishName]);
 
   // Stage 1 uses front-facing video (front-eat-video.mp4), Stage 2 uses side-angle (side-view-final.mp4)
   const MAIN_VIDEO = isSideAngle
@@ -105,8 +108,12 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
   // Selected dish visual asset (plate or user-uploaded image)
   const selectedDishAsset = useMemo(() => {
+    // If user provided custom upload / data URL, use it directly!
+    if (dishImage && (dishImage.startsWith('data:') || dishImage.startsWith('http') || dishImage.includes('upload'))) {
+      return dishImage;
+    }
     const visual = getDishVisualAssets(dishName, dishImage);
-    return visual.plateImage || visual.flyingImage || dishImage || '/images/eating/samosa_dish.jpg';
+    return visual.plateImage || dishImage || visual.flyingImage || '/images/eating/samosa_dish.jpg';
   }, [dishName, dishImage]);
 
   // Food Options: 3 Servings of the USER'S SELECTED DISH
@@ -417,7 +424,13 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-2" />
+        {/* Right side: Selected Dish Badge */}
+        <div className="flex items-center gap-1.5 px-2.5 xs:px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/50 shadow-[0_4px_16px_rgba(0,0,0,0.7)] text-amber-300">
+          <span className="text-xs">🍽️</span>
+          <span className="font-black text-[10px] xs:text-[11px] sm:text-xs uppercase tracking-wide truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[200px]">
+            {dishName || 'Selected Dish'}
+          </span>
+        </div>
       </div>
 
       {/* Center flex container for rapid flying food morsels */}
@@ -486,16 +499,16 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                   onMouseDown={(e) => handleStartDrag(food, e.clientX, e.clientY)}
                   onTouchStart={(e) => handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY)}
                   onClick={(e) => handleFeedFood(food, e.clientX, index, e.currentTarget, e.clientY)}
-                  className={`group relative w-16 h-16 xs:w-18 xs:h-18 sm:w-20 sm:h-20 rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.8)] border-2 transition-all duration-200 flex items-center justify-center shrink-0 p-1 cursor-pointer active:scale-95 ${
+                  className={`group relative w-16 h-16 xs:w-18 xs:h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.85)] border-[2.5px] transition-all duration-200 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 bg-slate-950 ${
                     isEaten
-                      ? 'border-white/30 bg-black/50 opacity-40 grayscale-[40%]'
-                      : 'border-amber-400 bg-black/40 hover:border-amber-300 hover:scale-105 shadow-[0_0_15px_rgba(245,158,11,0.35)]'
+                      ? 'border-white/30 opacity-40 grayscale-[50%]'
+                      : 'border-amber-400 hover:border-amber-300 hover:scale-105 shadow-[0_0_16px_rgba(245,158,11,0.4)]'
                   }`}
                 >
                   <img
                     src={food.image}
                     alt={food.name}
-                    className="w-full h-full object-contain pointer-events-none drop-shadow-[0_6px_16px_rgba(0,0,0,0.95)]"
+                    className="w-full h-full object-cover rounded-full pointer-events-none transition-transform duration-200 group-hover:scale-105"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_dish.jpg';
                     }}
@@ -516,8 +529,8 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             {fedCount < TOTAL_FEEDS && (
               <div className="flex items-center gap-2 cursor-pointer select-none bg-black/60 backdrop-blur-xs px-4 py-2 rounded-full border border-white/20">
                 <ChevronLeft className="w-5 h-5 text-amber-400 stroke-[3] animate-pulse" />
-                <span className="text-white font-black text-xs xs:text-sm sm:text-base tracking-wide uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
-                  Bhookasur ko khilao ({fedCount}/{TOTAL_FEEDS})
+                <span className="text-white font-black text-xs xs:text-sm sm:text-base tracking-wide uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] truncate max-w-[240px] xs:max-w-[280px]">
+                  {dishName ? `${dishName} khilao` : 'Bhookasur ko khilao'} ({fedCount}/{TOTAL_FEEDS})
                 </span>
               </div>
             )}
@@ -543,9 +556,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                 <ChevronUp className="w-6 h-6 stroke-[3]" />
               </div>
 
-              <div className="flex items-center gap-2 text-white font-black text-base sm:text-lg tracking-wide uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
+              <div className="flex items-center gap-2 text-white font-black text-base sm:text-lg tracking-wide uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] truncate max-w-[320px]">
                 <span className="text-xl">👆</span>
-                <span>Swipe ya Click karke khilao ({fedCount}/{TOTAL_FEEDS})</span>
+                <span className="truncate">{dishName ? `${dishName} khilao` : 'Swipe ya Click karke khilao'} ({fedCount}/{TOTAL_FEEDS})</span>
               </div>
             </div>
           )}
@@ -569,14 +582,14 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                   key={food.id}
                   onMouseDown={(e) => handleStartDrag(food, e.clientX, e.clientY)}
                   onTouchStart={(e) => handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY)}
-                  onClick={(e) => handleFeedFood(food, e.clientX, index)}
-                  className="group relative w-22 h-22 xs:w-26 xs:h-26 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-[0_14px_35px_rgba(0,0,0,0.9)] border-[2.5px] border-white/50 bg-slate-900/60 cursor-grab active:cursor-grabbing transition-all duration-150 flex items-center justify-center shrink-0 p-0.5 active:scale-95"
+                  onClick={(e) => handleFeedFood(food, e.clientX, index, e.currentTarget, e.clientY)}
+                  className="group relative w-22 h-22 xs:w-26 xs:h-26 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-[0_14px_35px_rgba(0,0,0,0.9)] border-[2.5px] border-amber-400/80 bg-slate-950 cursor-grab active:cursor-grabbing transition-all duration-150 flex items-center justify-center shrink-0 active:scale-95"
                 >
                   <img
                     src={food.image}
                     alt={food.name}
-                    className={`w-full h-full object-contain pointer-events-none drop-shadow-[0_10px_20px_rgba(0,0,0,0.9)] transition-transform duration-150 group-hover:scale-110 ${
-                      isEaten ? 'opacity-40 grayscale-[30%]' : 'opacity-100'
+                    className={`w-full h-full object-cover rounded-full pointer-events-none transition-transform duration-150 group-hover:scale-105 ${
+                      isEaten ? 'opacity-40 grayscale-[40%]' : 'opacity-100'
                     }`}
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_dish.jpg';

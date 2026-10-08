@@ -9,7 +9,44 @@ export interface DishVisualAssets {
   flyingImage: string;
 }
 
+export function getMatchingFlyingCutout(dishName?: string): string {
+  const n = (dishName || '').toLowerCase().trim();
+  if (n.includes('momo') || n.includes('dimsum')) return '/images/eating/momos_dish_flying.png';
+  if (n.includes('pani puri') || n.includes('golgappa') || n.includes('puchka')) return '/images/eating/pani_puri_dish_flying.png';
+  if (n.includes('samosa')) return '/images/eating/samosa_hero_clean.png';
+  if (n.includes('bun') || n.includes('chai') || n.includes('maska') || n.includes('tea') || n.includes('coffee')) return '/images/eating/bun_maska_flying.png';
+  if (n.includes('pav bhaji')) return '/images/eating/pav_bhaji_dish_flying.png';
+  if (n.includes('misal')) return '/images/eating/misal_dish_flying.png';
+  if (n.includes('chole') || n.includes('bhatur') || n.includes('kulch')) return '/images/eating/chole_bhature_dish_flying.png';
+  if (n.includes('vada pav') || n.includes('vadapav')) return '/images/eating/vada_pav_flying.png';
+  if (n.includes('dosa') || n.includes('idli') || n.includes('uttapam') || n.includes('puran')) return '/images/eating/dosa_dish_flying.png';
+  if (n.includes('rice') || n.includes('noodle') || n.includes('biryani') || n.includes('pulao')) return '/images/eating/biryani_dish_flying.png';
+  if (n.includes('lollipop') || n.includes('lolipop') || n.includes('wing') || n.includes('tikka') || n.includes('kebab') || n.includes('tandoor')) return '/images/eating/tandoori_chicken_tikka_flying.png';
+  if (n.includes('chicken') || n.includes('murgh')) return '/images/eating/butter_chicken_dish_flying.png';
+  if (n.includes('mutton') || n.includes('gosht') || n.includes('thali') || n.includes('fish') || n.includes('prawn') || n.includes('seafood')) return '/images/eating/gavran_mutton_thali_flying.png';
+  if (n.includes('keema')) return '/images/eating/keema_pav_flying.png';
+  if (n.includes('paneer') || n.includes('curry') || n.includes('gravy') || n.includes('sabzi') || n.includes('dal')) return '/images/eating/paneer_dish_flying.png';
+  return '/images/eating/samosa_hero_clean.png';
+}
+
 export function getDishVisualAssets(dishName?: string, dishImage?: string): DishVisualAssets {
+  // 0. If caller already provided a valid menu/database image URL or user upload, preserve it 100%!
+  if (
+    dishImage &&
+    !dishImage.includes('bakasur') &&
+    !dishImage.endsWith('samosa_dish.jpg') &&
+    (dishImage.startsWith('http://') ||
+      dishImage.startsWith('https://') ||
+      dishImage.startsWith('data:') ||
+      dishImage.startsWith('/images/'))
+  ) {
+    const flying = dishImage.includes('_flying.png') ? dishImage : getMatchingFlyingCutout(dishName);
+    return {
+      plateImage: dishImage,
+      flyingImage: flying
+    };
+  }
+
   const n = (dishName || '').toLowerCase().trim();
   const img = (dishImage || '').toLowerCase().trim();
 
@@ -162,12 +199,37 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 11. Butter Chicken / Chicken Handi / Chicken Curry
+  // 11. Chicken Lollipop / Lolipop / Wings / Fried Chicken / Starters
+  if (
+    n.includes('lollipop') ||
+    n.includes('lolipop') ||
+    n.includes('chicken wings') ||
+    n.includes('wings') ||
+    n.includes('crispy chicken') ||
+    n.includes('chicken 65') ||
+    n.includes('chilli chicken') ||
+    n.includes('fried chicken') ||
+    n.includes('drumstick')
+  ) {
+    return {
+      plateImage: '/images/eating/chicken_lollipop_dish.jpg',
+      flyingImage: '/images/eating/tandoori_chicken_tikka_flying.png'
+    };
+  }
+
+  // 11.5 Butter Chicken / Tandoori / Chicken Curries / General Chicken
   if (
     n.includes('butter chicken') ||
-    (n.includes('chicken') && (n.includes('handi') || n.includes('curry') || n.includes('masala') || n.includes('gravy') || n.includes('steak'))) ||
-    img.includes('butter_chicken')
+    n.includes('chicken') ||
+    n.includes('murgh') ||
+    img.includes('chicken')
   ) {
+    if (n.includes('tikka') || n.includes('tandoor') || n.includes('kebab') || n.includes('roast') || n.includes('fry') || n.includes('tangdi')) {
+      return {
+        plateImage: '/images/eating/tandoori_chicken_tikka.jpg',
+        flyingImage: '/images/eating/tandoori_chicken_tikka_flying.png'
+      };
+    }
     return {
       plateImage: '/images/eating/butter_chicken_dish.jpg',
       flyingImage: '/images/eating/butter_chicken_dish_flying.png'
@@ -332,8 +394,15 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 24. Custom valid local or remote image passed from menu
-  if (dishImage && !dishImage.includes('bakasur') && dishImage.endsWith('.png')) {
+  // 24. Custom valid local or remote image passed from menu / database / user upload
+  if (
+    dishImage &&
+    !dishImage.includes('bakasur') &&
+    (dishImage.startsWith('http://') ||
+      dishImage.startsWith('https://') ||
+      dishImage.startsWith('/images/') ||
+      dishImage.startsWith('data:'))
+  ) {
     return {
       plateImage: dishImage,
       flyingImage: dishImage

@@ -9,7 +9,7 @@ interface Frame3DishSelectionProps {
   restaurant: Restaurant;
   selectedDish: Dish | { name: string; id?: number; price?: number; image?: string; description?: string } | null;
   onSelectDish: (dish: Dish | { name: string; id?: number; price?: number; image?: string }) => void;
-  onConfirmDish: () => void;
+  onConfirmDish: (dishName?: string, dishImage?: string) => void;
   onManualEntry?: () => void;
   onBack?: () => void;
 }
@@ -422,7 +422,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       {/* 5. Primary CTA: YEH WALI KHILAO */}
       <div className="shrink-0 w-full pt-1 xs:pt-1.5">
         <button
-          onClick={onConfirmDish}
+          onClick={() => {
+            const finalName = customDishInput.trim() || selectedDish?.name || threeDishes[0]?.name || 'Signature Food';
+            const finalImg = selectedDish?.image || getDishVisualAssets(finalName).plateImage;
+            onConfirmDish(finalName, finalImg);
+          }}
           disabled={!selectedDish && !customDishInput.trim()}
           type="button"
           className="w-full py-2.5 xs:py-3 px-5 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-xs xs:text-sm uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0"

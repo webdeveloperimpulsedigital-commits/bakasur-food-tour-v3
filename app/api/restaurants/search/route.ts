@@ -76,9 +76,8 @@ export async function GET(request: Request) {
       };
     });
 
-    if (hasUserCoords) {
-      finalResults.sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
-    }
+    // For searched queries, preserve relevance ranking from searchLivePlaces.
+    // Distance is attached for user display without overriding search relevance.
 
     return NextResponse.json({
       success: true,

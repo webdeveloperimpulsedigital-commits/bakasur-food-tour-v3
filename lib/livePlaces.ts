@@ -241,6 +241,29 @@ export async function fetchLiveNearbyPlaces(lat: number, lng: number, cityFallba
   return combined;
 }
 
+const VALID_FOOD_VALUES = new Set([
+  'restaurant', 'cafe', 'fast_food', 'food_court', 'ice_cream', 'pub', 'bar', 'dhaba',
+  'bakery', 'pastry', 'confectionery', 'tea', 'bistro', 'eatery', 'canteen'
+]);
+
+function isFoodFeature(f: PhotonFeature): boolean {
+  const osmKey = String(f.properties.osm_key || '').toLowerCase();
+  const osmVal = String(f.properties.osm_value || '').toLowerCase();
+  if (VALID_FOOD_VALUES.has(osmVal)) return true;
+  if (osmKey === 'amenity' && ['restaurant', 'cafe', 'fast_food', 'food_court', 'ice_cream', 'pub', 'bar'].includes(osmVal)) return true;
+  if (osmKey === 'shop' && ['bakery', 'pastry', 'confectionery', 'deli'].includes(osmVal)) return true;
+  
+  const rawName = String(f.properties.name || '').toLowerCase();
+  // Filter out non-food places like tailors, clinics, photography, housing societies, estates
+  if (/\b(tailor|tailors|photo|photography|studio|saloon|salon|niwas|nivas|society|apartment|apartments|hospital|school|college|clinic|estate|farm|residency|enclave|vihar|nagar|park|garden|road)\b/i.test(rawName)) {
+    return false;
+  }
+  if (/\b(restaurant|cafe|dhaba|hotel|bhojanalay|bhojnalaya|bistro|kitchen|bake|bakery|biryani|thali|dosa|sweets|snack|snacks|canteen|eatery|grill|bar|pub|coffee|chai|tea|pizza|burger|roll|rolls|chaat|misal|vadapav)\b/i.test(rawName)) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Search LIVE real restaurants across any location in India in real-time (Instant + Comprehensive)
  */
@@ -255,7 +278,8 @@ export async function searchLivePlaces(options: {
     return fetchLiveNearbyPlaces(lat, lng, city);
   }
 
-  const q = query.toLowerCase().trim();
+  const rawTyped = query.trim();
+  const q = rawTyped.toLowerCase();
   const cacheKey = `search_${q}_${lat.toFixed(2)}_${lng.toFixed(2)}`;
   const cached = placesCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -263,11 +287,9 @@ export async function searchLivePlaces(options: {
   }
 
   const seenNames = new Set<string>();
-  const searchResults: Restaurant[] = [];
+  const searchResults: (Restaurant & { relevanceScore?: number })[] = [];
   let searchId = 800001;
 
-  // Clean query and handle common typos / Indian location variations:
-  // e.g. "janglai" -> "jangali" / "jm", "resturant" -> "restaurant"
   const normalizedQ = q
     .replace(/\bjanglai\b/g, 'jangali')
     .replace(/\bresturant\b/g, 'restaurant')
@@ -282,103 +304,60 @@ export async function searchLivePlaces(options: {
 
   const primaryKeyword = tokens[0] || normalizedQ || q;
 
-  // 1. Instant local database search across Name, Area, City, Description, Cuisine
+  // 1. Instant in-memory database search with robust relevance scoring
   const allCurated = getCuratedRestaurantsWithDistance(lat, lng, city);
   for (const rest of allCurated) {
-    const text = `${rest.name} ${rest.area} ${rest.address} ${rest.description} ${rest.city}`.toLowerCase();
-    
-    // Check exact phrase match
-    const fullMatch = text.includes(q) || (normalizedQ.length >= 2 && text.includes(normalizedQ));
+    const rName = rest.name.toLowerCase().trim();
+    const rArea = (rest.area || '').toLowerCase().trim();
+    const rCity = (rest.city || '').toLowerCase().trim();
+    const rDesc = (rest.description || '').toLowerCase();
+    const fullText = `${rName} ${rArea} ${rCity} ${rDesc}`;
 
-    // Check token matches (e.g. "panchali" in name, "jangali" in address/area)
-    const tokenMatches = tokens.filter(t => text.includes(t));
-    const tokenScore = tokens.length > 0 ? tokenMatches.length / tokens.length : 0;
-    const nameHasPrimary = tokens.length > 0 && rest.name.toLowerCase().includes(tokens[0]);
+    let score = 0;
+    if (rName === q) {
+      score = 1200; // Exact full match
+    } else if (rName.startsWith(q)) {
+      score = 950; // Starts with query
+    } else if (rName.includes(q)) {
+      score = 800; // Contains query
+    } else if (primaryKeyword.length >= 2 && rName.includes(primaryKeyword)) {
+      score = 650; // Contains primary keyword in name
+    } else if (tokens.length > 0 && tokens.every(t => rName.includes(t))) {
+      score = 600; // All tokens in name
+    } else if (tokens.length > 0 && tokens.some(t => rName.includes(t))) {
+      score = 450; // Some tokens in name
+    } else if (rArea.includes(q) || fullText.includes(q)) {
+      score = 300; // In area or description
+    } else if (tokens.length > 0 && tokens.some(t => fullText.includes(t))) {
+      score = 200;
+    }
 
-    if (fullMatch || tokenScore >= 0.5 || nameHasPrimary) {
-      const lowerName = rest.name.toLowerCase().trim();
-      if (!seenNames.has(lowerName)) {
-        seenNames.add(lowerName);
-        searchResults.push(rest);
+    if (score > 0) {
+      if (!seenNames.has(rName)) {
+        seenNames.add(rName);
+        searchResults.push({
+          ...rest,
+          relevanceScore: score
+        });
       }
     }
   }
 
-  // 2. Query Photon live search with primary keyword + city fallback
-  const photonQueries = [
-    `${primaryKeyword} ${city || 'Pune'}`,
-    primaryKeyword
-  ];
-
-  for (const pQuery of photonQueries) {
-    if (searchResults.length >= 6) break;
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 1400);
-      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(pQuery)}&lat=${lat}&lon=${lng}&limit=20`;
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'BakasurFoodTourApp/2.0' },
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
-      if (res.ok) {
-        const json = await res.json();
-        const features = (json.features || []) as PhotonFeature[];
-
-        for (let i = 0; i < features.length; i++) {
-          const f = features[i];
-          const rawName = f.properties.name?.trim();
-          if (!rawName) continue;
-          const lower = rawName.toLowerCase();
-          if (seenNames.has(lower)) continue;
-          seenNames.add(lower);
-
-          const [itemLon, itemLat] = f.geometry.coordinates;
-          const dist = calculateDistance(lat, lng, itemLat, itemLon);
-          const area = (f.properties.street || f.properties.district || f.properties.suburb || f.properties.locality || city || 'Local') as string;
-          const cityName = (f.properties.city || f.properties.state || city || 'India') as string;
-
-          const placeId = searchId++;
-          searchResults.push({
-            id: placeId,
-            name: rawName,
-            description: `Verified live food joint in ${area}, ${cityName}`,
-            address: f.properties.street ? `${f.properties.street}, ${area}` : `${area}, ${cityName}`,
-            area,
-            city: cityName,
-            latitude: itemLat,
-            longitude: itemLon,
-            rating: Math.round((4.6 + ((i % 4) * 0.1)) * 10) / 10,
-            image: pickCuisineImage(rawName),
-            is_campaign_active: 1,
-            total_visits: 800 + ((i * 31) % 1200),
-            status: 'active',
-            distanceKm: dist
-          } as Restaurant & { distanceKm: number });
-        }
-      }
-    } catch {
-      // Ignore remote errors
-    }
-  }
-
-  // 3. Always guarantee the exact searched restaurant name is immediately available to select
-  const rawTyped = query.trim();
+  // 2. Synthesize the user's exact typed restaurant name as an option (guaranteed match)
   if (rawTyped.length >= 2) {
     const formattedExact = rawTyped
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
-    const hasExactMatch = searchResults.some(
-      r => r.name.toLowerCase() === rawTyped.toLowerCase()
-    );
+    const lowerExact = formattedExact.toLowerCase();
+    const hasExactCurated = searchResults.some(r => r.name.toLowerCase() === lowerExact);
 
-    if (!hasExactMatch) {
-      const userSpot: Restaurant = {
+    if (!hasExactCurated) {
+      const userSpot: Restaurant & { relevanceScore: number } = {
         id: searchId++,
         name: formattedExact,
-        description: `Popular dining spot in ${city || 'Pune'}`,
+        description: `Verified local food joint in ${city || 'Pune'}`,
         address: `${city || 'Pune'}, India`,
         area: city || 'Local',
         city: city || 'Pune',
@@ -389,28 +368,85 @@ export async function searchLivePlaces(options: {
         is_campaign_active: 1,
         total_visits: 750,
         status: 'active',
-        distanceKm: 0.8
-      } as Restaurant & { distanceKm: number };
+        distanceKm: 0.8,
+        relevanceScore: 1000 // High relevance so user can pick their exact typed spot
+      } as Restaurant & { distanceKm: number; relevanceScore: number };
 
       searchResults.unshift(userSpot);
+      seenNames.add(lowerExact);
     }
   }
 
-  // Sort by search relevance:
-  // 1. Exact match with primary keyword
-  // 2. Name contains primary keyword
-  // 3. Distance
+  // 3. Fast Parallel Live API search (Photon) with strict 850ms abort timeout
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 850);
+    const searchUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(rawTyped + ' restaurant')}&lat=${lat}&lon=${lng}&limit=15`;
+    
+    const res = await fetch(searchUrl, {
+      headers: { 'User-Agent': 'BakasurFoodTourApp/2.0' },
+      signal: controller.signal
+    }).catch(() => null);
+    
+    clearTimeout(timeout);
+
+    if (res && res.ok) {
+      const json = await res.json().catch(() => null);
+      if (json && Array.isArray(json.features)) {
+        const features = json.features as PhotonFeature[];
+        for (let i = 0; i < features.length; i++) {
+          const f = features[i];
+          const rawName = f.properties.name?.trim();
+          if (!rawName || rawName.length < 2) continue;
+          if (!isFoodFeature(f)) continue;
+
+          const lower = rawName.toLowerCase();
+          if (seenNames.has(lower)) continue;
+          seenNames.add(lower);
+
+          const [itemLon, itemLat] = f.geometry.coordinates;
+          const dist = calculateDistance(lat, lng, itemLat, itemLon);
+          const area = (f.properties.street || f.properties.district || f.properties.suburb || f.properties.locality || city || 'Local') as string;
+          const cityName = (f.properties.city || f.properties.state || city || 'India') as string;
+
+          const placeScore = lower.includes(q) ? 550 : lower.includes(primaryKeyword) ? 400 : 250;
+
+          searchResults.push({
+            id: searchId++,
+            name: rawName,
+            description: `Live food joint in ${area}, ${cityName}`,
+            address: f.properties.street ? `${f.properties.street}, ${area}` : `${area}, ${cityName}`,
+            area,
+            city: cityName,
+            latitude: itemLat,
+            longitude: itemLon,
+            rating: Math.round((4.6 + ((i % 4) * 0.1)) * 10) / 10,
+            image: pickCuisineImage(rawName),
+            is_campaign_active: 1,
+            total_visits: 800 + ((i * 31) % 1200),
+            status: 'active',
+            distanceKm: dist,
+            relevanceScore: placeScore
+          } as Restaurant & { distanceKm: number; relevanceScore: number });
+        }
+      }
+    }
+  } catch {
+    // Graceful fallback to instant in-memory matches
+  }
+
+  // 4. Sort by relevanceScore descending, with distance as tie-breaker
   searchResults.sort((a, b) => {
-    const aName = a.name.toLowerCase();
-    const bName = b.name.toLowerCase();
-    const aMatch = aName.includes(primaryKeyword) ? 1 : 0;
-    const bMatch = bName.includes(primaryKeyword) ? 1 : 0;
-    if (aMatch !== bMatch) return bMatch - aMatch;
+    const scoreDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
+    if (scoreDiff !== 0) return scoreDiff;
     return ((a as unknown as { distanceKm: number }).distanceKm || 0) - ((b as unknown as { distanceKm: number }).distanceKm || 0);
   });
 
-  // Store in cache
-  placesCache.set(cacheKey, { timestamp: Date.now(), data: searchResults });
+  // Limit to top 15 clean results
+  const trimmedResults = searchResults.slice(0, 15);
 
-  return searchResults;
+  // Store in cache
+  placesCache.set(cacheKey, { timestamp: Date.now(), data: trimmedResults });
+
+  return trimmedResults;
 }

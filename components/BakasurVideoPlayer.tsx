@@ -435,7 +435,16 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           <div />
         )}
 
-        <div className="flex items-center gap-2" />
+        <div className="flex items-center gap-2">
+          {dishName && (frameNumber === 3 || frameNumber === 4 || frameNumber === 5 || frameNumber === 6) && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/50 shadow-md text-amber-300">
+              <span className="text-xs">🍽️</span>
+              <span className="font-black text-xs uppercase tracking-wide truncate max-w-[140px] sm:max-w-[180px]">
+                {dishName}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main Stage Media Render */}

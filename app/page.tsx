@@ -905,7 +905,7 @@ export default function CampaignPage() {
                   restaurant={selectedRestaurant}
                   selectedDish={selectedDish}
                   onSelectDish={(d) => setSelectedDish(d)}
-                  onConfirmDish={() => handleDishConfirmed()}
+                  onConfirmDish={(name, img) => handleDishConfirmed(name, img)}
                   onManualEntry={handleGoToManualDish}
                   onBack={() => setCurrentFrame(2)}
                 />
