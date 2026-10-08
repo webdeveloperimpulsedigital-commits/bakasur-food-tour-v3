@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { X, Download, Share2, MessageCircle, Ticket } from 'lucide-react';
+import { X, Instagram, MessageCircle, Ticket } from 'lucide-react';
 
 interface BakasurShareCardModalProps {
   isOpen: boolean;
@@ -232,17 +232,6 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
 
   const currentWebUrl = typeof window !== 'undefined' ? window.location.origin : 'https://bhookasur-food-tour.com';
 
-  const handleDownload = () => {
-    generateCard();
-    const url = downloadUrl || (canvasRef.current ? canvasRef.current.toDataURL('image/png') : '');
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Bhookasur_Foodie_Pass_${participationId}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
 
   const handleShareWhatsApp = () => {
     const text = `🔥 *BHOOKASUR KA FOOD TOUR PASS* 🔥\n\nI recommended *${dishName}* at *${restaurantName} (${cityName})* on Bhookasur Food Tour!\n\n👇 Click this link to see the tour & recommend your favourite spot:\n${currentWebUrl}`;
@@ -250,27 +239,33 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     window.open(url, '_blank');
   };
 
-  const handleNativeShare = async () => {
+  const handleShareInstagram = async () => {
     generateCard();
     const url = downloadUrl || (canvasRef.current ? canvasRef.current.toDataURL('image/png') : '');
-    if (navigator.share && url) {
+    const text = `🔥 *BHOOKASUR KA FOOD TOUR PASS* 🔥\n\nI recommended *${dishName}* at *${restaurantName} (${cityName})* on Bhookasur Food Tour!\n\n👇 Click this link to see the tour & join:\n${currentWebUrl}`;
+
+    if (typeof navigator !== 'undefined' && navigator.share && url) {
       try {
         const response = await fetch(url);
         const blob = await response.blob();
         const file = new File([blob], `Bhookasur_Foodie_Pass_${participationId}.png`, { type: 'image/png' });
-
         await navigator.share({
           title: 'Bhookasur Ka Food Tour Pass',
-          text: `I recommended ${dishName} at ${restaurantName} (${cityName}) on Bhookasur Food Tour! Click here to join: ${currentWebUrl}`,
-          url: currentWebUrl,
+          text,
           files: [file]
         });
-      } catch {
-        handleShareWhatsApp();
+        return;
+      } catch (e) {
+        console.warn('Native Instagram share failed, falling back:', e);
       }
-    } else {
-      handleShareWhatsApp();
     }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {}
+    }
+    window.open('https://www.instagram.com', '_blank');
   };
 
   return (
@@ -364,22 +359,13 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
           </div>
 
           <p className="text-[11px] text-slate-500 text-center max-w-xs font-semibold mt-2.5">
-            Share this pass on WhatsApp so friends and family can click your link and join!
+            Share this pass on WhatsApp or Instagram so friends and family can join!
           </p>
         </div>
 
-        {/* Bottom Clean Action Bar */}
-        <div className="p-4 sm:p-5 bg-white border-t border-slate-100 flex flex-col gap-2.5">
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              onClick={handleDownload}
-              type="button"
-              className="py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-            >
-              <Download className="w-4 h-4 stroke-[2.5]" />
-              <span>Download</span>
-            </button>
-
+        {/* Bottom Clean Action Bar: WhatsApp & Instagram Only */}
+        <div className="p-4 sm:p-5 bg-white border-t border-slate-100">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             <button
               onClick={handleShareWhatsApp}
               type="button"
@@ -388,16 +374,16 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
               <MessageCircle className="w-4 h-4 fill-white stroke-none" />
               <span>WhatsApp</span>
             </button>
-          </div>
 
-          <button
-            onClick={handleNativeShare}
-            type="button"
-            className="w-full py-3.5 px-4 rounded-xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-          >
-            <Share2 className="w-4 h-4 stroke-[2.5]" />
-            <span>Share Pass with Link</span>
-          </button>
+            <button
+              onClick={handleShareInstagram}
+              type="button"
+              className="py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-[#FD1D1D]/25"
+            >
+              <Instagram className="w-4 h-4 stroke-[2.3]" />
+              <span>Instagram</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

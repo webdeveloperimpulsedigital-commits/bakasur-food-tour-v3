@@ -18,7 +18,7 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
   onBack
 }) => {
   return (
-    <div className="w-full h-full flex flex-col bg-[#07153B] overflow-hidden relative">
+    <div className="w-full h-full flex flex-col md:flex-row bg-[#07153B] overflow-hidden relative">
       {onBack && (
         <button
           onClick={onBack}
@@ -31,8 +31,8 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
         </button>
       )}
 
-      {/* Top Section: Increased video height for prominent video display */}
-      <div className="relative w-full h-[62%] xs:h-[64%] sm:h-[65%] md:h-[66%] bg-[#081B4B] flex items-center justify-center overflow-hidden shrink-0">
+      {/* Video Section: Left on Desktop (md:w-1/2 md:h-full), Top on Mobile */}
+      <div className="relative w-full md:w-1/2 h-[62%] xs:h-[64%] sm:h-[65%] md:h-full bg-[#081B4B] flex items-center justify-center overflow-hidden shrink-0">
         <video
           src="/images/final-frames/5.mp4"
           autoPlay
@@ -41,11 +41,12 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
           playsInline
           className="w-full h-full object-cover object-top"
         />
-        <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 inset-x-0 h-10 md:hidden bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
       </div>
 
-      {/* Bottom Section: Compact padding with larger impact typography */}
-      <div className="w-full flex-1 min-h-0 bg-white px-4 py-3.5 xs:px-5 xs:py-4 sm:px-8 sm:py-5 flex flex-col justify-between items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] z-10 shrink-0">
+      {/* Content Section: Right on Desktop (md:w-1/2 md:h-full), Bottom on Mobile */}
+      <div className="w-full md:w-1/2 flex-1 md:h-full min-h-0 bg-white px-4 py-4 xs:px-5 xs:py-5 sm:px-8 sm:py-8 md:px-10 md:py-12 flex flex-col justify-between items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none z-10 shrink-0">
+        <div className="hidden md:block w-full h-4" />
         <div className="w-full max-w-md mx-auto my-auto flex flex-col justify-center items-center">
           <h1 className="text-[25px] xs:text-[28px] sm:text-[34px] md:text-[38px] font-black text-[#0B1B48] tracking-tight leading-[1.16] text-center">
             Itne mein Food Tour nahi,<br />
@@ -54,7 +55,7 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
         </div>
 
         {/* Primary CTA Button */}
-        <div className="w-full max-w-md mx-auto pt-2 pb-1">
+        <div className="w-full max-w-md mx-auto pt-2 pb-1 md:pb-4">
           <button
             onClick={onCompleteLoop}
             type="button"

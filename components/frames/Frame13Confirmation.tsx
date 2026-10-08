@@ -28,15 +28,12 @@ export const Frame13Confirmation: React.FC<Frame13ConfirmationProps> = ({
       {/* ============================================================== */}
       {/* 1. TOP HALF (Mobile) / LEFT HALF (Desktop): Blue Character Art */}
       {/* ============================================================== */}
-      <div className="w-full md:w-1/2 h-[65%] md:h-full bg-[#071952] flex items-center justify-center relative overflow-hidden shrink-0 p-2 sm:p-3 md:p-6">
-        {/* Subtle radial glow background behind character */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(37,99,235,0.25)_0%,_transparent_70%)] pointer-events-none" />
-
-        {/* Cropped Character Illustration matching user mockup */}
+      <div className="w-full md:w-1/2 h-[62%] xs:h-[65%] md:h-full bg-[#0B1B48] flex items-center justify-center relative overflow-hidden shrink-0 p-0">
+        {/* Character Illustration showing Bhookasur holding smartphone with verified pass */}
         <img
-          src="/images/food_tour/bakasur_phone_pass.png"
-          alt="Bakasur Ka Food Tour"
-          className="w-full h-full object-contain pointer-events-none select-none max-h-full drop-shadow-2xl"
+          src="/images/final-frames/Bhookasur-holding-smartphone.png"
+          alt="Bhookasur holding smartphone"
+          className="w-full h-full object-cover object-top pointer-events-none select-none relative z-10"
         />
       </div>
 
