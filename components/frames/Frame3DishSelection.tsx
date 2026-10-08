@@ -271,65 +271,44 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         </p>
       </div>
 
-      {/* 2. Top 3 Signature Dish Cards */}
-      <div className="shrink-0 w-full space-y-1.5">
-        <div className="flex items-center justify-between text-xs font-bold text-[#0B1B48]">
-          <span>🌟 Popular at {restaurant.name.split(',')[0]}</span>
-          <span className="text-[10px] text-slate-500 font-normal">Tap to select</span>
-        </div>
-
+      {/* 2. Top 3 Signature Dish Cards (Name only, side by side) */}
+      <div className="shrink-0 w-full">
         {isLoading && rawDishes.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full animate-pulse">
-            <div className="h-16 w-full bg-slate-200 rounded-xl" />
-            <div className="h-16 w-full bg-slate-200 rounded-xl" />
-            <div className="h-16 w-full bg-slate-200 rounded-xl" />
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full animate-pulse">
+            <div className="h-14 w-full bg-slate-200 rounded-xl" />
+            <div className="h-14 w-full bg-slate-200 rounded-xl" />
+            <div className="h-14 w-full bg-slate-200 rounded-xl" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full">
             {threeDishes.map((dish) => {
               const cleanDishName = formatCleanDishName(dish.name, restaurant.name);
               const isSelected = selectedDish?.name?.toLowerCase() === cleanDishName.toLowerCase() ||
                 selectedDish?.name?.toLowerCase() === dish.name.toLowerCase();
-              const visual = getDishVisualAssets(cleanDishName, dish.image);
 
               return (
                 <button
                   key={`${dish.id}-${dish.name}`}
                   type="button"
                   onClick={() => handleSelectPill(dish)}
-                  className={`w-full p-2.5 rounded-xl transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left shadow-xs border-2 ${
+                  className={`w-full py-3 px-2 sm:py-3.5 sm:px-3 rounded-xl transition-all flex items-center justify-center text-center relative cursor-pointer shadow-xs border-2 min-h-[54px] sm:min-h-[60px] ${
                     isSelected
-                      ? 'bg-orange-50/90 border-[#D4380D] shadow-md shadow-[#D4380D]/15'
-                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200/90 text-slate-800'
+                      ? 'bg-orange-50 border-[#D4380D] text-[#D4380D] shadow-md shadow-[#D4380D]/15 scale-[1.02]'
+                      : 'bg-white hover:bg-slate-50 border-slate-200/90 text-[#0B1B48]'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <img
-                      src={visual.plateImage}
-                      alt={cleanDishName}
-                      className="w-10 h-10 rounded-full object-cover border border-slate-300 shadow-2xs shrink-0"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = '/images/eating/pav_bhaji.jpg';
-                      }}
-                    />
-                    <div className="min-w-0">
-                      <p className={`font-black text-xs leading-tight line-clamp-2 ${isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'}`}>
-                        {cleanDishName}
-                      </p>
-                      <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                        ₹{dish.price || 150}
-                      </p>
+                  {/* Floating Checkmark for Selected State */}
+                  {isSelected && (
+                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#D4380D] text-white flex items-center justify-center shadow-xs z-10">
+                      <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
                     </div>
-                  </div>
-                  {isSelected ? (
-                    <div className="w-5 h-5 rounded-full bg-[#D4380D] text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </div>
-                  ) : (
-                    <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 shrink-0">
-                      Choose
-                    </span>
                   )}
+
+                  <span className={`font-black text-xs sm:text-sm leading-tight line-clamp-2 ${
+                    isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
+                  }`}>
+                    {cleanDishName}
+                  </span>
                 </button>
               );
             })}
@@ -448,10 +427,15 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                     </div>
                   </div>
                   <div className="shrink-0 flex items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[10px] border border-emerald-200">
-                      ₹{dish.price || 150}
-                    </span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-[#D4380D] stroke-[3]" />}
+                    {isSelected ? (
+                      <div className="w-5 h-5 rounded-full bg-[#D4380D] text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-bold text-[#D4380D] bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
+                        Choose
+                      </span>
+                    )}
                   </div>
                 </button>
               );
@@ -460,39 +444,14 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         )}
       </div>
 
-      {/* 4. Active Selected Dish Banner */}
-      <div className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 text-orange-950 shadow-xs shrink-0 animate-in fade-in duration-200">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <img
-            src={currentDishVisual.plateImage}
-            alt={currentDishName}
-            className="w-11 h-11 rounded-full object-cover border-2 border-orange-300 shadow-xs shrink-0"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = '/images/eating/pav_bhaji.jpg';
-            }}
-          />
-          <div className="min-w-0">
-            <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider block">
-              SELECTED DISH FOR BHOOKASUR
-            </span>
-            <p className="text-xs sm:text-sm font-black text-[#0B1B48] truncate">
-              {currentDishName}
-            </p>
-          </div>
-        </div>
-        <span className="text-[10px] sm:text-[11px] font-black text-white bg-[#D4380D] px-2.5 py-1 rounded-lg shadow-xs shrink-0">
-          READY ✓
-        </span>
-      </div>
-
-      {/* 5. Primary CTA Button */}
+      {/* 4. Primary CTA Button */}
       <div className="shrink-0 w-full pt-1">
         <button
           onClick={handleConfirm}
           type="button"
-          className="w-full py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-xs sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
+          className="w-full py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
         >
-          YEH WALI KHILAO: {currentDishName} ➡️
+          YEH WALA PAKKA
         </button>
       </div>
     </div>

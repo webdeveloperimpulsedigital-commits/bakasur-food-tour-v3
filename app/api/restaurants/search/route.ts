@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Restaurant } from '@/lib/db';
 import { searchLivePlaces, fetchLiveNearbyPlaces } from '@/lib/livePlaces';
+import { parseRestaurantQuery } from '@/lib/locationParser';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,18 +44,18 @@ export async function GET(request: Request) {
       lng: hasUserCoords ? lng : undefined
     });
 
-    // 2. If user searched for a custom/new establishment not in maps yet, generate a verified live spot
+    // 2. If user searched for a custom/new establishment not in maps yet, generate a verified live spot with parsed locality
     if (liveSpots.length === 0 && query.trim().length >= 2) {
-      const customName = query.trim();
+      const parsed = parseRestaurantQuery(query.trim(), city || 'Pune', hasUserCoords ? { lat, lng } : null);
       const customSpot: Restaurant = {
         id: 888000 + Math.floor(Math.random() * 1000),
-        name: customName,
-        description: `Verified local food joint in ${city || 'Pune'}`,
-        address: `${city || 'Pune'}, India`,
-        area: city || 'Local',
-        city: city || 'Pune',
-        latitude: hasUserCoords ? lat : 18.5204,
-        longitude: hasUserCoords ? lng : 73.8407,
+        name: parsed.cleanName,
+        description: `Verified local food joint in ${parsed.area}, ${parsed.city}`,
+        address: parsed.address,
+        area: parsed.area,
+        city: parsed.city,
+        latitude: parsed.latitude,
+        longitude: parsed.longitude,
         rating: 4.8,
         image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
         is_campaign_active: 1,

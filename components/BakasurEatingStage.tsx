@@ -9,7 +9,7 @@ export { getDishVisualAssets };
 
 export function getFlyingDishAsset(dishName?: string, dishImage?: string): { image: string; isCircleCrop: boolean } {
   const visual = getDishVisualAssets(dishName, dishImage);
-  return { image: visual.flyingImage || visual.plateImage || dishImage || '/images/eating/samosa_flying.png', isCircleCrop: false };
+  return { image: visual.flyingImage || visual.plateImage || dishImage || '/images/eating/vada_pav_flying.png', isCircleCrop: false };
 }
 
 interface BakasurEatingStageProps {
@@ -109,11 +109,11 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   // Selected dish visual asset (plate or user-uploaded image)
   const selectedDishAsset = useMemo(() => {
     // If user provided custom upload / data URL, use it directly!
-    if (dishImage && (dishImage.startsWith('data:') || dishImage.startsWith('http') || dishImage.includes('upload'))) {
+    if (dishImage && (dishImage.startsWith('data:') || dishImage.includes('upload'))) {
       return dishImage;
     }
     const visual = getDishVisualAssets(dishName, dishImage);
-    return visual.plateImage || dishImage || visual.flyingImage || '/images/eating/samosa_dish.jpg';
+    return visual.plateImage || visual.flyingImage || dishImage || '/images/eating/vada_pav_dish.jpg';
   }, [dishName, dishImage]);
 
   // Food Options: 3 Servings of the USER'S SELECTED DISH
@@ -424,13 +424,6 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           </span>
         </div>
 
-        {/* Right side: Selected Dish Badge */}
-        <div className="flex items-center gap-1.5 px-2.5 xs:px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/50 shadow-[0_4px_16px_rgba(0,0,0,0.7)] text-amber-300">
-          <span className="text-xs">🍽️</span>
-          <span className="font-black text-[10px] xs:text-[11px] sm:text-xs uppercase tracking-wide truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[200px]">
-            {dishName || 'Selected Dish'}
-          </span>
-        </div>
       </div>
 
       {/* Center flex container for rapid flying food morsels */}
@@ -510,7 +503,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                     alt={food.name}
                     className="w-full h-full object-cover rounded-full pointer-events-none transition-transform duration-200 group-hover:scale-105"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_dish.jpg';
+                      (e.currentTarget as HTMLImageElement).src = selectedDishAsset || '/images/eating/vada_pav_dish.jpg';
                     }}
                   />
 
@@ -592,7 +585,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                       isEaten ? 'opacity-40 grayscale-[40%]' : 'opacity-100'
                     }`}
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/images/eating/samosa_dish.jpg';
+                      (e.currentTarget as HTMLImageElement).src = selectedDishAsset || '/images/eating/vada_pav_dish.jpg';
                     }}
                   />
 

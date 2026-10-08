@@ -13,12 +13,13 @@ export function getMatchingFlyingCutout(dishName?: string): string {
   const n = (dishName || '').toLowerCase().trim();
   if (n.includes('momo') || n.includes('dimsum')) return '/images/eating/momos_dish_flying.png';
   if (n.includes('pani puri') || n.includes('golgappa') || n.includes('puchka')) return '/images/eating/pani_puri_dish_flying.png';
+  if (n.includes('sabudana') || n.includes('sago')) return '/images/eating/sabudana_vada_flying.png';
+  if (n.includes('vada') || n.includes('wada') || n.includes('vadi') || n.includes('batata')) return '/images/eating/vada_pav_flying.png';
   if (n.includes('samosa')) return '/images/eating/samosa_hero_clean.png';
   if (n.includes('bun') || n.includes('chai') || n.includes('maska') || n.includes('tea') || n.includes('coffee')) return '/images/eating/bun_maska_flying.png';
   if (n.includes('pav bhaji')) return '/images/eating/pav_bhaji_dish_flying.png';
   if (n.includes('misal')) return '/images/eating/misal_dish_flying.png';
   if (n.includes('chole') || n.includes('bhatur') || n.includes('kulch')) return '/images/eating/chole_bhature_dish_flying.png';
-  if (n.includes('vada pav') || n.includes('vadapav')) return '/images/eating/vada_pav_flying.png';
   if (n.includes('dosa') || n.includes('idli') || n.includes('uttapam') || n.includes('puran')) return '/images/eating/dosa_dish_flying.png';
   if (n.includes('rice') || n.includes('noodle') || n.includes('biryani') || n.includes('pulao')) return '/images/eating/biryani_dish_flying.png';
   if (n.includes('lollipop') || n.includes('lolipop') || n.includes('wing') || n.includes('tikka') || n.includes('kebab') || n.includes('tandoor')) return '/images/eating/tandoori_chicken_tikka_flying.png';
@@ -26,19 +27,58 @@ export function getMatchingFlyingCutout(dishName?: string): string {
   if (n.includes('mutton') || n.includes('gosht') || n.includes('thali') || n.includes('fish') || n.includes('prawn') || n.includes('seafood')) return '/images/eating/gavran_mutton_thali_flying.png';
   if (n.includes('keema')) return '/images/eating/keema_pav_flying.png';
   if (n.includes('paneer') || n.includes('curry') || n.includes('gravy') || n.includes('sabzi') || n.includes('dal')) return '/images/eating/paneer_dish_flying.png';
-  return '/images/eating/samosa_hero_clean.png';
+  return '/images/eating/vada_pav_flying.png';
 }
 
 export function getDishVisualAssets(dishName?: string, dishImage?: string): DishVisualAssets {
-  // 0. If caller already provided a valid menu/database image URL or user upload, preserve it 100%!
+  const n = (dishName || '').toLowerCase().trim();
+  const img = (dishImage || '').toLowerCase().trim();
+
+  // If dishName is NOT a samosa, but dishImage contains samosa or the generic unsplash photo, discard dishImage
+  if (!n.includes('samosa') && dishImage && (dishImage.includes('samosa') || dishImage.includes('photo-1601050690597-df0568f70950'))) {
+    dishImage = undefined;
+  }
+
+  // 1. Sabudana Vada / Sago Delicacy: ALWAYS return genuine Sabudana Vada assets
+  if (n.includes('sabudana') || n.includes('sago') || img.includes('sabudana')) {
+    return {
+      plateImage: '/images/eating/sabudana_vada_dish.jpg',
+      flyingImage: '/images/eating/sabudana_vada_flying.png'
+    };
+  }
+
+  // 2. Vada Pav / Batata Vada / Kothimbir Vadi / Wada: ALWAYS return authentic Vada Pav assets
+  if (
+    !n.includes('samosa') &&
+    (n.includes('vada') ||
+      n.includes('wada') ||
+      n.includes('vadapav') ||
+      n.includes('vada pav') ||
+      n.includes('vada pao') ||
+      n.includes('batata vada') ||
+      n.includes('kothimbir') ||
+      n.includes('vadi'))
+  ) {
+    return {
+      plateImage: '/images/eating/vada_pav_dish.jpg',
+      flyingImage: '/images/eating/vada_pav_flying.png'
+    };
+  }
+
+  // 3. User Custom Upload (data URI or uploaded file)
+  if (dishImage && (dishImage.startsWith('data:') || dishImage.includes('upload'))) {
+    return {
+      plateImage: dishImage,
+      flyingImage: getMatchingFlyingCutout(dishName)
+    };
+  }
+
+  // 4. Caller provided verified local dish image or explicit valid URL (that isn't generic unsplash)
   if (
     dishImage &&
     !dishImage.includes('bakasur') &&
-    !dishImage.endsWith('samosa_dish.jpg') &&
-    (dishImage.startsWith('http://') ||
-      dishImage.startsWith('https://') ||
-      dishImage.startsWith('data:') ||
-      dishImage.startsWith('/images/'))
+    !dishImage.includes('unsplash.com') &&
+    (dishImage.startsWith('/images/') || dishImage.startsWith('http'))
   ) {
     const flying = dishImage.includes('_flying.png') ? dishImage : getMatchingFlyingCutout(dishName);
     return {
@@ -47,10 +87,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  const n = (dishName || '').toLowerCase().trim();
-  const img = (dishImage || '').toLowerCase().trim();
-
-  // 1. Momos / Dimsum / Dumpling
+  // 5. Momos / Dimsum / Dumpling
   if (n.includes('momo') || n.includes('dimsum') || n.includes('dumpling') || img.includes('momo')) {
     return {
       plateImage: '/images/eating/momos_dish.jpg',
@@ -138,14 +175,24 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string): Dish
     };
   }
 
-  // 7. Vada Pav / Batata Vada / Sabudana Vada / Kothimbir Vadi
+  // 6.5 Sabudana Vada / Sago Delicacy
+  if (n.includes('sabudana') || n.includes('sago') || img.includes('sabudana')) {
+    return {
+      plateImage: '/images/eating/sabudana_vada_dish.jpg',
+      flyingImage: '/images/eating/sabudana_vada_flying.png'
+    };
+  }
+
+  // 7. Vada Pav / Batata Vada / Kothimbir Vadi / Wada
   if (
-    n.includes('vada pav') ||
+    n.includes('vada') ||
+    n.includes('wada') ||
     n.includes('vadapav') ||
+    n.includes('vada pav') ||
     n.includes('vada pao') ||
     n.includes('batata vada') ||
-    n.includes('sabudana vada') ||
     n.includes('kothimbir vadi') ||
+    n.includes('vadi') ||
     img.includes('vada_pav')
   ) {
     return {

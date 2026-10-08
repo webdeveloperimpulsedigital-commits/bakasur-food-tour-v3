@@ -15,6 +15,7 @@ export interface Restaurant {
   is_campaign_active: number;
   total_visits: number;
   status: 'active' | 'inactive';
+  distanceKm?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -164,7 +165,7 @@ export const INITIAL_RESTAURANTS: Omit<Restaurant, 'id'>[] = [
 
 
   // Thane & Mumbai Metropolitan Area
-  { name: "Gajanan Vadapav", description: "Thane's world-famous 1978 legendary institution celebrated for hot crispy Batata Vada served with signature yellow besan chutney & fried chillies.", address: "Chhatrapati Shivaji Path, Naupada, Thane West", area: "Naupada", city: "Thane", latitude: 19.1860, longitude: 72.9750, rating: 4.9, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 2800, status: 'active' },
+  { name: "Gajanan Vadapav", description: "Thane's world-famous 1978 legendary institution celebrated for hot crispy Batata Vada served with signature yellow besan chutney & fried chillies.", address: "Chhatrapati Shivaji Path, Naupada, Thane West", area: "Naupada", city: "Thane", latitude: 19.1860, longitude: 72.9750, rating: 4.9, image: "/images/eating/vada_pav_dish.jpg", is_campaign_active: 1, total_visits: 2800, status: 'active' },
   { name: "Mamledar Misal", description: "Thane's iconic spicy Misal landmark at Zilla Parishad since 1946, famous for fiery tarri misal, crispy farsan, and cold chaas.", address: "Opposite Zilla Parishad, Naupada, Thane West", area: "Naupada", city: "Thane", latitude: 19.1870, longitude: 72.9760, rating: 4.8, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 2650, status: 'active' },
   { name: "Prashant Corner", description: "Thane's celebrated heritage sweets and snack destination famous for special Puran Poli, Kaju Katli, and savory chaat.", address: "Mahavir Millenium, Panch Pakhadi, Thane West", area: "Panch Pakhadi", city: "Thane", latitude: 19.1920, longitude: 72.9680, rating: 4.9, image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 3100, status: 'active' },
   { name: "Hitchki Thane", description: "Viviana Mall's premier resto-bar known for Bollywood nostalgia, creative fusion dishes, and vibrant nightlife.", address: "Viviana Mall, Eastern Express Highway, Thane West", area: "Thane West", city: "Thane", latitude: 19.2080, longitude: 72.9720, rating: 4.8, image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 2200, status: 'active' },

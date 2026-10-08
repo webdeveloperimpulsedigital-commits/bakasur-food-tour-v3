@@ -880,7 +880,12 @@ export default function CampaignPage() {
                   selectedRestaurant={selectedRestaurant}
                   userCoords={userCoords}
                   isSecondRound={feastingStage === 2}
-                  onSelectRestaurant={(r) => setSelectedRestaurant(r)}
+                  onSelectRestaurant={(r) => {
+                    setSelectedRestaurant(r);
+                    if (r.city) {
+                      setSelectedCity(r.city);
+                    }
+                  }}
                   onNext={handleRestaurantConfirmed}
                   onWatchVideo={() => {
                     setActiveTransitionVideo({

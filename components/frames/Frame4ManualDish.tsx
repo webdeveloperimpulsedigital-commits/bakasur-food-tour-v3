@@ -188,8 +188,8 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
                         )}
                       </div>
                     </div>
-                    <span className="shrink-0 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-black text-[11px]">
-                      ₹{dish.price}
+                    <span className="shrink-0 px-2.5 py-1 rounded-md bg-orange-50 text-[#D4380D] font-bold text-[10px] border border-orange-200">
+                      Choose
                     </span>
                   </button>
                 );

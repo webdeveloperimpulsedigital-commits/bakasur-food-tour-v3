@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Search, MapPin, X, Check, Sparkles } from 'lucide-react';
 import { Restaurant } from '@/lib/db';
+import { parseRestaurantQuery } from '@/lib/locationParser';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -143,6 +144,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     restaurantName: string;
   } | null>(null);
 
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Popular spots fallback list for the selected city
@@ -157,6 +159,11 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       setSearchResults(popularSpots);
     }
   };
+
+  // Reset selectedIndex on new search results
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [searchResults]);
 
   // Sync searchQuery if selectedRestaurant is explicitly updated
   useEffect(() => {
@@ -222,16 +229,17 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
           setSearchResults(json.data.slice(0, 10));
         } else {
-          // Provide instant custom restaurant for user's query
+          // Provide instant custom restaurant for user's query with accurate locality & city
+          const parsed = parseRestaurantQuery(q, selectedCity, userCoords);
           const customSpot: Restaurant = {
             id: 890000 + Math.floor(Math.random() * 1000),
-            name: q,
-            description: `Verified food spot in ${selectedCity || 'Pune'}`,
-            address: `${q}, ${selectedCity || 'Pune'}`,
-            area: selectedCity || 'Local',
-            city: selectedCity || 'Pune',
-            latitude: userCoords?.lat || 18.5204,
-            longitude: userCoords?.lng || 73.8407,
+            name: parsed.cleanName,
+            description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
+            address: parsed.address,
+            area: parsed.area,
+            city: parsed.city,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
             rating: 4.8,
             image: '/images/eating/pav_bhaji.jpg',
             is_campaign_active: 1,
@@ -242,15 +250,16 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         }
       } catch (err: unknown) {
         if ((err as Error)?.name !== 'AbortError') {
+          const parsed = parseRestaurantQuery(q, selectedCity, userCoords);
           const customSpot: Restaurant = {
             id: 890000 + Math.floor(Math.random() * 1000),
-            name: q,
-            description: `Verified food spot in ${selectedCity || 'Pune'}`,
-            address: `${q}, ${selectedCity || 'Pune'}`,
-            area: selectedCity || 'Local',
-            city: selectedCity || 'Pune',
-            latitude: userCoords?.lat || 18.5204,
-            longitude: userCoords?.lng || 73.8407,
+            name: parsed.cleanName,
+            description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
+            address: parsed.address,
+            area: parsed.area,
+            city: parsed.city,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
             rating: 4.8,
             image: '/images/eating/pav_bhaji.jpg',
             is_campaign_active: 1,
@@ -284,7 +293,9 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   const handleSelectSpot = (spot: Restaurant) => {
     onSelectRestaurant(spot);
     setSearchQuery(
-      spot.name + (spot.area && !spot.name.includes(spot.area) ? `, ${spot.area}` : '')
+      spot.area && !spot.name.toLowerCase().includes(spot.area.toLowerCase())
+        ? `${spot.name}, ${spot.area}`
+        : spot.name
     );
     setShowDropdown(false);
   };
@@ -293,15 +304,16 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     const query = searchQuery.trim();
     let confirmed = selectedRestaurant;
     if (!confirmed && query) {
+      const parsed = parseRestaurantQuery(query, selectedCity, userCoords);
       confirmed = {
         id: Math.floor(Math.random() * 80000) + 10000,
-        name: query,
-        description: `Popular dining spot in ${selectedCity || 'Pune'}`,
-        address: `${query}, ${selectedCity || 'Pune'}`,
-        area: selectedCity || 'Local',
-        city: selectedCity || 'Pune',
-        latitude: userCoords?.lat || 18.5204,
-        longitude: userCoords?.lng || 73.8407,
+        name: parsed.cleanName,
+        description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
+        address: parsed.address,
+        area: parsed.area,
+        city: parsed.city,
+        latitude: parsed.latitude,
+        longitude: parsed.longitude,
         rating: 4.8,
         image: '/images/eating/pav_bhaji.jpg',
         is_campaign_active: 1,
@@ -314,10 +326,13 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       if (match) {
         confirmed = match;
       } else {
+        const parsed = parseRestaurantQuery(query, selectedCity, userCoords);
         confirmed = {
           ...confirmed,
-          name: query,
-          address: `${query}, ${selectedCity || 'Pune'}`
+          name: parsed.cleanName,
+          area: parsed.area,
+          city: parsed.city,
+          address: parsed.address
         };
       }
       onSelectRestaurant(confirmed);
@@ -366,15 +381,28 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
             }}
             onFocus={handleFocus}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                if (searchResults.length > 0) {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setShowDropdown(true);
+                setSelectedIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : 0));
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setShowDropdown(true);
+                setSelectedIndex((prev) => (prev > 0 ? prev - 1 : searchResults.length - 1));
+              } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (selectedIndex >= 0 && searchResults[selectedIndex]) {
+                  handleSelectSpot(searchResults[selectedIndex]);
+                } else if (searchResults.length > 0) {
                   handleSelectSpot(searchResults[0]);
                 } else if (searchQuery.trim()) {
                   ensureRestaurantSelected();
                 }
+              } else if (e.key === 'Escape') {
+                setShowDropdown(false);
               }
             }}
-            placeholder="Restaurant ka naam search karo (e.g. Vaishali, Goodluck, Bawarchi)"
+            placeholder="Restaurant ka naam search karo (e.g. Hotel Temptation Ghansoli)"
             className="w-full bg-transparent text-xs sm:text-base font-semibold text-slate-900 placeholder-[#64748B] focus:outline-none"
           />
           {isSearching ? (
@@ -386,6 +414,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                 setSearchQuery('');
                 setShowDropdown(true);
                 setFirstVisitorInfo(null);
+                setSelectedIndex(-1);
               }}
               className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer mr-1"
             >
@@ -395,82 +424,114 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
           <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#0047BA] shrink-0 stroke-[2.5]" />
         </div>
         <div className="text-[10px] sm:text-xs text-[#64748B] font-medium mt-1 ml-1 text-left flex items-center justify-between">
-          <span>Search verified restaurants & live places</span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Live Google Place Search
+          </span>
           {searchQuery && <span className="text-[#0047BA] font-semibold">Press Enter to select</span>}
         </div>
 
         {/* Live Search Autocomplete Dropdown */}
         {showDropdown && (
-          <div className="absolute top-[105%] inset-x-0 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-[260px] sm:max-h-[300px] overflow-y-auto p-1.5 scrollbar-thin">
+          <div className="absolute top-[105%] inset-x-0 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-[280px] sm:max-h-[320px] overflow-y-auto p-1.5 scrollbar-thin">
             {/* Quick 1-Click Instant Selection for Typed Query */}
-            {searchQuery.trim().length >= 2 && (
-              <button
-                type="button"
-                onClick={() => {
-                  const q = searchQuery.trim();
-                  const customSpot: Restaurant = {
-                    id: Math.floor(Math.random() * 80000) + 10000,
-                    name: q,
-                    description: `Selected dining spot in ${selectedCity || 'Pune'}`,
-                    address: `${q}, ${selectedCity || 'Pune'}`,
-                    area: selectedCity || 'Local',
-                    city: selectedCity || 'Pune',
-                    latitude: userCoords?.lat || 18.5204,
-                    longitude: userCoords?.lng || 73.8407,
-                    rating: 4.8,
-                    image: '/images/eating/pav_bhaji.jpg',
-                    is_campaign_active: 1,
-                    total_visits: 100,
-                    status: 'active'
-                  };
-                  handleSelectSpot(customSpot);
-                }}
-                className="w-full text-left p-2.5 rounded-lg bg-blue-50/80 hover:bg-blue-100/90 border border-blue-200 transition-all flex items-center justify-between gap-2 cursor-pointer mb-1.5 shadow-xs"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-6 h-6 rounded-md bg-[#1D4ED8] text-white flex items-center justify-center shrink-0">
-                    <Sparkles className="w-3.5 h-3.5" />
+            {searchQuery.trim().length >= 2 && (() => {
+              const parsed = parseRestaurantQuery(searchQuery, selectedCity, userCoords);
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const customSpot: Restaurant = {
+                      id: Math.floor(Math.random() * 80000) + 10000,
+                      name: parsed.cleanName,
+                      description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
+                      address: parsed.address,
+                      area: parsed.area,
+                      city: parsed.city,
+                      latitude: parsed.latitude,
+                      longitude: parsed.longitude,
+                      rating: 4.8,
+                      image: '/images/eating/pav_bhaji.jpg',
+                      is_campaign_active: 1,
+                      total_visits: 100,
+                      status: 'active'
+                    };
+                    handleSelectSpot(customSpot);
+                  }}
+                  className="w-full text-left p-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all flex items-center justify-between gap-2 cursor-pointer mb-1.5 shadow-xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-[#1D4ED8] text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-black text-xs sm:text-sm text-[#0B1B48] truncate">
+                        Select &ldquo;{parsed.cleanName}&rdquo;
+                      </p>
+                      <p className="text-[11px] text-[#1D4ED8] font-bold truncate">
+                        📍 {parsed.area}, {parsed.city}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-black text-xs text-[#0B1B48] truncate">
-                      Select &ldquo;{searchQuery.trim()}&rdquo;
-                    </p>
-                    <p className="text-[10px] text-[#1D4ED8] font-semibold truncate">
-                      Click to choose this restaurant in {selectedCity || 'Pune'}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-[#1D4ED8] bg-white px-2 py-0.5 rounded border border-blue-200 shrink-0">
-                  Choose
-                </span>
-              </button>
-            )}
+                  <span className="text-[10px] font-bold text-[#1D4ED8] bg-white px-2.5 py-1 rounded-md border border-blue-200 shrink-0">
+                    Choose
+                  </span>
+                </button>
+              );
+            })()}
 
             {/* List of matching search results */}
             {searchResults.length > 0 ? (
-              searchResults.map((spot) => {
+              searchResults.map((spot, idx) => {
                 const isSelected = selectedRestaurant?.id === spot.id || (selectedRestaurant && selectedRestaurant.name.toLowerCase() === spot.name.toLowerCase());
+                const isHighlighted = idx === selectedIndex;
+                const displayArea = spot.area && spot.city && spot.area !== spot.city ? `${spot.area}, ${spot.city}` : spot.area || spot.city || 'Verified';
+
                 return (
                   <button
-                    key={`${spot.id}-${spot.name}`}
+                    key={`${spot.id}-${spot.name}-${idx}`}
                     type="button"
                     onClick={() => handleSelectSpot(spot)}
-                    className={`w-full text-left p-2 sm:p-2.5 rounded-lg transition-all flex items-center justify-between gap-2 border-b border-slate-100 last:border-b-0 cursor-pointer ${
-                      isSelected ? 'bg-blue-50 text-[#0B1B48]' : 'hover:bg-slate-50'
+                    onMouseEnter={() => setSelectedIndex(idx)}
+                    className={`w-full text-left p-2 sm:p-2.5 rounded-lg transition-all flex items-center justify-between gap-2.5 border-b border-slate-100 last:border-b-0 cursor-pointer ${
+                      isHighlighted
+                        ? 'bg-blue-100/70 border-blue-200 text-[#0B1B48]'
+                        : isSelected
+                        ? 'bg-blue-50 text-[#0B1B48]'
+                        : 'hover:bg-slate-50'
                     }`}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <MapPin className="w-3.5 h-3.5 text-[#0047BA] shrink-0" />
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#1D4ED8] flex items-center justify-center shrink-0 border border-blue-100">
+                        <MapPin className="w-3.5 h-3.5 fill-[#1D4ED8]" />
+                      </div>
                       <div className="min-w-0">
-                        <p className="font-black text-xs text-[#0B1B48] truncate">
-                          {spot.name}{spot.area && !spot.name.includes(spot.area) ? `, ${spot.area}` : ''}
+                        <p className="font-bold text-xs sm:text-sm text-[#0B1B48] truncate">
+                          {spot.name}
                         </p>
-                        <p className="text-[10px] text-slate-500 truncate">
-                          {spot.area || spot.city} • ⭐ {spot.rating || 4.8}
+                        <p className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
+                          <span className="text-[#1D4ED8] font-semibold">{spot.area || spot.city}</span>
+                          {spot.city && spot.area !== spot.city && (
+                            <>
+                              <span className="text-slate-300">•</span>
+                              <span>{spot.city}</span>
+                            </>
+                          )}
+                          {spot.distanceKm ? (
+                            <>
+                              <span className="text-slate-300">•</span>
+                              <span className="text-slate-400">{spot.distanceKm} km</span>
+                            </>
+                          ) : null}
                         </p>
                       </div>
                     </div>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-[#0047BA] stroke-[3] shrink-0" />}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                        ⭐ {spot.rating || 4.8}
+                      </span>
+                      {isSelected && <Check className="w-4 h-4 text-[#0047BA] stroke-[3]" />}
+                    </div>
                   </button>
                 );
               })
@@ -495,7 +556,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                 {selectedRestaurant.name}
               </p>
               <p className="text-[10px] sm:text-xs text-emerald-700 font-medium truncate">
-                {selectedRestaurant.area || selectedRestaurant.city || 'Verified Spot'} • ⭐ {selectedRestaurant.rating || 4.8}
+                📍 {selectedRestaurant.area && selectedRestaurant.city && selectedRestaurant.area !== selectedRestaurant.city ? `${selectedRestaurant.area}, ${selectedRestaurant.city}` : selectedRestaurant.area || selectedRestaurant.city || 'Verified Spot'} • ⭐ {selectedRestaurant.rating || 4.8}
               </p>
             </div>
           </div>

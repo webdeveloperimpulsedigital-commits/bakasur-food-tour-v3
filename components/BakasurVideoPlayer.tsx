@@ -73,8 +73,21 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
     };
   }
 
-  // 1. Vada Pav / Batata Vada
-  if (n.includes('vada pav') || n.includes('vadapav') || n.includes('batata vada') || n.includes('vada pao')) {
+  // 0.8 Sabudana Vada / Sago
+  if (n.includes('sabudana') || n.includes('sago')) {
+    return {
+      category: 'sabudana_vada',
+      biteEmoji: '🥔',
+      biteLabel: 'Crispy Sabudana Vada Feast',
+      munchSound: 'CRUNCH-CRUNCH! Sweet Curd Delight 🤤',
+      actionText: 'Bhookasur is crunching crispy Sabudana Vada...',
+      image: '/images/eating/sabudana_vada_dish.jpg',
+      eatingScene: '/images/eating/sabudana_vada_dish.jpg'
+    };
+  }
+
+  // 1. Vada Pav / Batata Vada / Kothimbir Vadi / Wada
+  if (n.includes('vada') || n.includes('vadapav') || n.includes('wada') || n.includes('vadi') || n.includes('batata')) {
     return {
       category: 'vada_pav',
       biteEmoji: '🍔',
@@ -146,7 +159,7 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
   }
 
   // 6. SPDP / Chaat / Dahi Puri / Bhel
-  if (n.includes('spdp') || n.includes('dahi puri') || n.includes('sev puri') || n.includes('bhel') || n.includes('chaat') || n.includes('dahi') || n.includes('sev') || n.includes('tikki')) {
+  if (n.includes('spdp') || n.includes('dahi puri') || n.includes('sev puri') || n.includes('bhel') || n.includes('chaat') || (n.includes('dahi') && !n.includes('vada') && !n.includes('sabudana')) || n.includes('sev') || n.includes('tikki')) {
     return {
       category: 'spdp',
       biteEmoji: '🥣',
@@ -435,16 +448,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           <div />
         )}
 
-        <div className="flex items-center gap-2">
-          {dishName && (frameNumber === 3 || frameNumber === 4 || frameNumber === 5 || frameNumber === 6) && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/50 shadow-md text-amber-300">
-              <span className="text-xs">🍽️</span>
-              <span className="font-black text-xs uppercase tracking-wide truncate max-w-[140px] sm:max-w-[180px]">
-                {dishName}
-              </span>
-            </div>
-          )}
-        </div>
+        <div />
       </div>
 
       {/* Main Stage Media Render */}

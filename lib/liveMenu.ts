@@ -59,7 +59,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Gajanan Special Yellow Chutney Vada Pav (2 Pcs)",
       description: "Thane's iconic golden potato vada stuffed in soft ladi pav, drenched in legendary spicy-tangy yellow besan chutney.",
       price: 50,
-      image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80",
+      image: "/images/eating/vada_pav_dish.jpg",
       popularity: 100,
       rating: 5.0
     },
@@ -67,7 +67,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Kothimbir Vadi Plate",
       description: "Steamed fresh coriander cilantro diamond cakes shallow-fried crisp with sweet & spicy dip.",
       price: 80,
-      image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80",
+      image: "/images/eating/vada_pav_dish.jpg",
       popularity: 98,
       rating: 4.9
     },
@@ -75,7 +75,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Sabudana Vada with Sweet Dahi",
       description: "Golden fried tapioca pearl patties with roasted crushed peanuts and spiced sweet curd.",
       price: 90,
-      image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80",
+      image: "/images/eating/sabudana_vada_dish.jpg",
       popularity: 97,
       rating: 4.8
     },
@@ -931,10 +931,10 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Vada Pav & Street Food",
     keywords: ['vadapav', 'vada pav', 'wada pav', 'batata vada', 'vada', 'street food', 'babu vadapav', 'gajanan', 'jumbo king'],
     dishes: [
-      { name: "Special Legendary Vada Pav (2 Pcs)", description: "Freshly fried golden potato dumplings stuffed in soft ladi pav with red garlic chutney.", price: 50, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
+      { name: "Special Legendary Vada Pav (2 Pcs)", description: "Freshly fried golden potato dumplings stuffed in soft ladi pav with red garlic chutney.", price: 50, image: "/images/eating/vada_pav_dish.jpg", popularity: 100, rating: 5.0 },
       { name: "Fiery Schezwan Cheese Vada Pav", description: "Loaded with melted mozzarella, spicy schezwan glaze, and roasted garlic chutney.", price: 90, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Crispy Kothimbir Vadi Plate", description: "Steamed cilantro diamond cakes shallow-fried crisp with sweet-tangy chutney.", price: 80, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 },
-      { name: "Crispy Sabudana Vada with Sweet Dahi", description: "Golden fried tapioca patties with roasted peanuts and sweetened curd.", price: 90, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.8 },
+      { name: "Crispy Kothimbir Vadi Plate", description: "Steamed cilantro diamond cakes shallow-fried crisp with sweet-tangy chutney.", price: 80, image: "/images/eating/vada_pav_dish.jpg", popularity: 97, rating: 4.9 },
+      { name: "Crispy Sabudana Vada with Sweet Dahi", description: "Golden fried tapioca patties with roasted peanuts and sweetened curd.", price: 90, image: "/images/eating/sabudana_vada_dish.jpg", popularity: 97, rating: 4.8 },
       { name: "Steamed Kanda Poha Plate", description: "Fluffy flattened rice tempered with mustard, onions, roasted peanuts & lemon.", price: 60, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.7 },
       { name: "Spicy Misal Pav Combo", description: "Fiery sprouted bean curry topped with crispy farsan, onion, lemon & soft pav.", price: 120, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
       { name: "Batata Bhajji (Pakoda) Plate", description: "Crispy spiced gram flour coated potato fritters served with fried green chilies.", price: 70, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", popularity: 94, rating: 4.8 },

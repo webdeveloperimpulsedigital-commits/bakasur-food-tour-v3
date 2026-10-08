@@ -1,4 +1,5 @@
 import { Restaurant, INITIAL_RESTAURANTS } from './db';
+import { parseRestaurantQuery } from './locationParser';
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // km
@@ -266,6 +267,137 @@ function isFoodFeature(f: PhotonFeature): boolean {
 
 /**
  * Search LIVE real restaurants across any location in India in real-time (Instant + Comprehensive)
+/**
+ * Fetch live search autocomplete suggestions from Google's prediction engine
+ */
+async function fetchGoogleSuggestPlaces(
+  query: string,
+  fallbackCity: string,
+  userCoords?: { lat: number; lng: number } | null
+): Promise<Restaurant[]> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 700);
+    const url = `https://suggestqueries.google.com/complete/search?client=chrome&hl=en&gl=in&q=${encodeURIComponent(query)}`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return [];
+    const json = await res.json();
+    const rawSuggestions: string[] = Array.isArray(json) && Array.isArray(json[1]) ? json[1] : [];
+
+    const results: Restaurant[] = [];
+    const seen = new Set<string>();
+    let idCounter = 850000;
+
+    for (const item of rawSuggestions) {
+      if (!item || typeof item !== 'string') continue;
+      const trimmedItem = item.trim();
+
+      // Filter out generic directory phrases (e.g., "hotels in ...", "top 10 restaurants in ...")
+      if (/^(hotels?\s+in\b|restaurants?\s+in\b|cafes?\s+in\b|places?\s+to\b|food\s+in\b|best\s+|top\s+\d+|hotels?\s+near\b|restaurants?\s+near\b)/i.test(trimmedItem)) {
+        continue;
+      }
+
+      // Filter out non-place search junk
+      if (
+        /(contact|phone|ph\s*no|mobile|number|no\b|timing|hours|closing\s*time|open(ing)?\s*time|photos|images|owner|price|review|menu|railway|station|hospital|near\s*me|how\s*to\s*reach|case|closed|complaint|jobs|vacancy|booking|table\s*booking|entry\s*fee|tickets?|distance|location|address|pin\s*code|pincode)/i.test(
+          trimmedItem
+        )
+      ) {
+        continue;
+      }
+
+      const parsed = parseRestaurantQuery(trimmedItem, fallbackCity, userCoords);
+      if (!parsed.cleanName || parsed.cleanName.length < 2) continue;
+      // Do not accept pure generic names like "Hotel" or "Restaurant"
+      if (/^(hotel|restaurant|cafe|dhaba|bar)$/i.test(parsed.cleanName)) continue;
+
+      const lowerKey = `${parsed.cleanName.toLowerCase()}_${parsed.area.toLowerCase()}`;
+      if (seen.has(lowerKey)) continue;
+      seen.add(lowerKey);
+
+      results.push({
+        id: idCounter++,
+        name: parsed.cleanName,
+        description: `Verified dining establishment in ${parsed.area}, ${parsed.city}`,
+        address: parsed.address,
+        area: parsed.area,
+        city: parsed.city,
+        latitude: parsed.latitude,
+        longitude: parsed.longitude,
+        rating: 4.8,
+        image: pickCuisineImage(parsed.cleanName),
+        is_campaign_active: 1,
+        total_visits: 850,
+        status: 'active'
+      });
+    }
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch verified places from OpenStreetMap Nominatim strictly bounded to India
+ */
+async function fetchNominatimPlaces(
+  searchQuery: string,
+  parsedLocality: ReturnType<typeof parseRestaurantQuery>
+): Promise<Restaurant[]> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 750);
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+      searchQuery
+    )}&countrycodes=in&format=json&addressdetails=1&limit=5`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'BakasurFoodTourApp/3.0' },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return [];
+    const json = await res.json();
+    if (!Array.isArray(json)) return [];
+
+    const results: Restaurant[] = [];
+    let idCounter = 870000;
+    for (const place of json) {
+      const name = place.name || (place.display_name ? place.display_name.split(',')[0].trim() : '');
+      if (!name || name.length < 2) continue;
+      const addr = place.address || {};
+      const area = (addr.suburb || addr.neighbourhood || addr.quarter || addr.road || parsedLocality.area) as string;
+      const city = (addr.city || addr.town || addr.municipality || addr.state_district || parsedLocality.city) as string;
+      const lat = parseFloat(place.lat);
+      const lon = parseFloat(place.lon);
+
+      results.push({
+        id: idCounter++,
+        name,
+        description: `Popular dining destination in ${area}, ${city}`,
+        address: addr.road ? `${addr.road}, ${area}` : `${area}, ${city}`,
+        area,
+        city,
+        latitude: !isNaN(lat) ? lat : parsedLocality.latitude,
+        longitude: !isNaN(lon) ? lon : parsedLocality.longitude,
+        rating: 4.8,
+        image: pickCuisineImage(name),
+        is_campaign_active: 1,
+        total_visits: 900,
+        status: 'active'
+      });
+    }
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Search LIVE real restaurants across any location in India in real-time (Google-like Search)
  */
 export async function searchLivePlaces(options: {
   query: string;
@@ -290,6 +422,34 @@ export async function searchLivePlaces(options: {
   const searchResults: (Restaurant & { relevanceScore?: number })[] = [];
   let searchId = 800001;
 
+  // 1. Parse typed query for clean restaurant name, area, and city
+  const parsed = parseRestaurantQuery(rawTyped, city, { lat, lng });
+
+  // 2. Synthesize user's exact typed restaurant name as the top instant selection
+  if (rawTyped.length >= 2) {
+    const userSpot: Restaurant & { relevanceScore: number } = {
+      id: searchId++,
+      name: parsed.cleanName,
+      description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
+      address: parsed.address,
+      area: parsed.area,
+      city: parsed.city,
+      latitude: parsed.latitude,
+      longitude: parsed.longitude,
+      rating: 4.8,
+      image: pickCuisineImage(parsed.cleanName),
+      is_campaign_active: 1,
+      total_visits: 750,
+      status: 'active',
+      distanceKm: calculateDistance(lat, lng, parsed.latitude, parsed.longitude),
+      relevanceScore: 1300 // Highest priority exact user query
+    } as Restaurant & { distanceKm: number; relevanceScore: number };
+
+    searchResults.push(userSpot);
+    seenNames.add(parsed.cleanName.toLowerCase());
+  }
+
+  // 3. Search curated database for matching restaurants
   const normalizedQ = q
     .replace(/\bjanglai\b/g, 'jangali')
     .replace(/\bresturant\b/g, 'restaurant')
@@ -304,7 +464,6 @@ export async function searchLivePlaces(options: {
 
   const primaryKeyword = tokens[0] || normalizedQ || q;
 
-  // 1. Instant in-memory database search with robust relevance scoring
   const allCurated = getCuratedRestaurantsWithDistance(lat, lng, city);
   for (const rest of allCurated) {
     const rName = rest.name.toLowerCase().trim();
@@ -314,22 +473,20 @@ export async function searchLivePlaces(options: {
     const fullText = `${rName} ${rArea} ${rCity} ${rDesc}`;
 
     let score = 0;
-    if (rName === q) {
+    if (rName === q || rName === parsed.cleanName.toLowerCase()) {
       score = 1200; // Exact full match
-    } else if (rName.startsWith(q)) {
-      score = 950; // Starts with query
-    } else if (rName.includes(q)) {
-      score = 800; // Contains query
+    } else if (rName.startsWith(q) || rName.startsWith(parsed.cleanName.toLowerCase())) {
+      score = 1000; // Starts with query
+    } else if (rName.includes(q) || rName.includes(parsed.cleanName.toLowerCase())) {
+      score = 850; // Contains query
     } else if (primaryKeyword.length >= 2 && rName.includes(primaryKeyword)) {
-      score = 650; // Contains primary keyword in name
+      score = 700; // Contains primary keyword
     } else if (tokens.length > 0 && tokens.every(t => rName.includes(t))) {
-      score = 600; // All tokens in name
+      score = 650; // All tokens in name
     } else if (tokens.length > 0 && tokens.some(t => rName.includes(t))) {
-      score = 450; // Some tokens in name
+      score = 500; // Some tokens in name
     } else if (rArea.includes(q) || fullText.includes(q)) {
-      score = 300; // In area or description
-    } else if (tokens.length > 0 && tokens.some(t => fullText.includes(t))) {
-      score = 200;
+      score = 350;
     }
 
     if (score > 0) {
@@ -343,51 +500,57 @@ export async function searchLivePlaces(options: {
     }
   }
 
-  // 2. Synthesize the user's exact typed restaurant name as an option (guaranteed match)
-  if (rawTyped.length >= 2) {
-    const formattedExact = rawTyped
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+  // 4. Parallel Live Google Suggest & Nominatim Search
+  try {
+    const [googleSpots, nominatimSpots] = await Promise.all([
+      fetchGoogleSuggestPlaces(rawTyped, city, { lat, lng }),
+      fetchNominatimPlaces(`${parsed.cleanName} ${parsed.area}`, parsed)
+    ]);
 
-    const lowerExact = formattedExact.toLowerCase();
-    const hasExactCurated = searchResults.some(r => r.name.toLowerCase() === lowerExact);
-
-    if (!hasExactCurated) {
-      const userSpot: Restaurant & { relevanceScore: number } = {
-        id: searchId++,
-        name: formattedExact,
-        description: `Verified local food joint in ${city || 'Pune'}`,
-        address: `${city || 'Pune'}, India`,
-        area: city || 'Local',
-        city: city || 'Pune',
-        latitude: lat,
-        longitude: lng,
-        rating: 4.8,
-        image: pickCuisineImage(rawTyped),
-        is_campaign_active: 1,
-        total_visits: 750,
-        status: 'active',
-        distanceKm: 0.8,
-        relevanceScore: 1000 // High relevance so user can pick their exact typed spot
-      } as Restaurant & { distanceKm: number; relevanceScore: number };
-
-      searchResults.unshift(userSpot);
-      seenNames.add(lowerExact);
+    // Add Google Suggestions
+    for (const gSpot of googleSpots) {
+      const gNameLower = gSpot.name.toLowerCase();
+      if (!seenNames.has(gNameLower)) {
+        seenNames.add(gNameLower);
+        searchResults.push({
+          ...gSpot,
+          distanceKm: calculateDistance(lat, lng, gSpot.latitude, gSpot.longitude),
+          relevanceScore: 1100
+        });
+      }
     }
+
+    // Add Nominatim India Spots
+    for (const nSpot of nominatimSpots) {
+      const nNameLower = nSpot.name.toLowerCase();
+      if (!seenNames.has(nNameLower)) {
+        seenNames.add(nNameLower);
+        searchResults.push({
+          ...nSpot,
+          distanceKm: calculateDistance(lat, lng, nSpot.latitude, nSpot.longitude),
+          relevanceScore: 900
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Live places parallel search error:', err);
   }
 
-  // 3. Fast Parallel Live API search (Photon) with strict 850ms abort timeout
+  // 5. Fast Parallel Photon Search around parsed coordinates with India safety
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 850);
-    const searchUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(rawTyped + ' restaurant')}&lat=${lat}&lon=${lng}&limit=15`;
-    
+    const timeout = setTimeout(() => controller.abort(), 650);
+    const searchAreaTerm = parsed.area && parsed.area.toLowerCase() !== parsed.city.toLowerCase() ? ` ${parsed.area}` : '';
+    const photonSearchQuery = `${parsed.cleanName}${searchAreaTerm} restaurant`;
+    const searchUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(
+      photonSearchQuery
+    )}&lat=${parsed.latitude}&lon=${parsed.longitude}&limit=10`;
+
     const res = await fetch(searchUrl, {
-      headers: { 'User-Agent': 'BakasurFoodTourApp/2.0' },
+      headers: { 'User-Agent': 'BakasurFoodTourApp/3.0' },
       signal: controller.signal
     }).catch(() => null);
-    
+
     clearTimeout(timeout);
 
     if (res && res.ok) {
@@ -400,16 +563,29 @@ export async function searchLivePlaces(options: {
           if (!rawName || rawName.length < 2) continue;
           if (!isFoodFeature(f)) continue;
 
+          // India only check: if country is provided and not India, skip!
+          const country = String(f.properties.country || '').toLowerCase();
+          if (country && country !== 'india' && country !== 'in') continue;
+
           const lower = rawName.toLowerCase();
           if (seenNames.has(lower)) continue;
           seenNames.add(lower);
 
           const [itemLon, itemLat] = f.geometry.coordinates;
           const dist = calculateDistance(lat, lng, itemLat, itemLon);
-          const area = (f.properties.street || f.properties.district || f.properties.suburb || f.properties.locality || city || 'Local') as string;
-          const cityName = (f.properties.city || f.properties.state || city || 'India') as string;
+          const area = (f.properties.district ||
+            f.properties.suburb ||
+            f.properties.locality ||
+            f.properties.street ||
+            parsed.area) as string;
+          const cityName = (f.properties.city || f.properties.state || parsed.city) as string;
 
-          const placeScore = lower.includes(q) ? 550 : lower.includes(primaryKeyword) ? 400 : 250;
+          const placeScore =
+            lower.includes(q) || lower.includes(parsed.cleanName.toLowerCase())
+              ? 600
+              : lower.includes(primaryKeyword)
+              ? 450
+              : 300;
 
           searchResults.push({
             id: searchId++,
@@ -432,14 +608,17 @@ export async function searchLivePlaces(options: {
       }
     }
   } catch {
-    // Graceful fallback to instant in-memory matches
+    // Graceful fallback to collected matches
   }
 
-  // 4. Sort by relevanceScore descending, with distance as tie-breaker
+  // 6. Sort by relevanceScore descending, with distance as tie-breaker
   searchResults.sort((a, b) => {
     const scoreDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
     if (scoreDiff !== 0) return scoreDiff;
-    return ((a as unknown as { distanceKm: number }).distanceKm || 0) - ((b as unknown as { distanceKm: number }).distanceKm || 0);
+    return (
+      ((a as unknown as { distanceKm: number }).distanceKm || 0) -
+      ((b as unknown as { distanceKm: number }).distanceKm || 0)
+    );
   });
 
   // Limit to top 15 clean results
