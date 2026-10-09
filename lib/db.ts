@@ -15,21 +15,44 @@ export interface Restaurant {
   is_campaign_active: number;
   total_visits: number;
   status: 'active' | 'inactive';
+  is_veg?: number;
   distanceKm?: number;
   created_at?: string;
+  cuisine_tags?: string[];
   updated_at?: string;
+}
+
+export interface Category {
+  id: number;
+  slug: string;
+  name: string;
+  hindiName?: string;
+  icon?: string;
+  signatureImage?: string;
+}
+
+export interface RestaurantMenu {
+  id: number;
+  restaurant_id: number;
+  name: string;
+  is_active: number;
+  dishes?: Dish[];
 }
 
 export interface Dish {
   id: number;
   restaurant_id: number;
+  menu_id?: number;
+  category_id?: number;
   name: string;
   description: string;
   price: number;
   image: string;
+  flying_image?: string;
   rating: number;
   popularity: number;
   is_recommended: number;
+  is_veg?: number;
   status: 'active' | 'inactive';
   created_at?: string;
   updated_at?: string;
@@ -643,10 +666,9 @@ class MemoryStore {
     this.nextVideoId = 1;
     this.nextJourneyId = 1;
     this.journeySteps = [];
-    this.restaurants = INITIAL_RESTAURANTS.map(r => ({ ...r, id: this.nextRestId++ }));
-    this.dishes = INITIAL_DISHES.map(d => ({ ...d, id: this.nextDishId++ }));
+    this.restaurants = [];
+    this.dishes = [];
     this.videos = INITIAL_VIDEOS.map(v => ({ ...v, id: this.nextVideoId++ }));
-
 
     // Real live storage only: No fake visits or participants seeded
     this.visits = [];
@@ -741,15 +763,29 @@ export const db = {
           params.push(options.city);
         }
         if (options?.search && options.search.trim()) {
-          sql += ' AND (LOWER(name) LIKE ? OR LOWER(area) LIKE ? OR LOWER(description) LIKE ? OR LOWER(address) LIKE ?)';
-          const term = `%${options.search.trim().toLowerCase()}%`;
-          params.push(term, term, term, term);
+          const rawQ = options.search.trim().toLowerCase();
+          const cleanTokens = rawQ
+            .replace(/\b(hotel|restaurant|resturant|restro|cafe|dhaba|pure\s+veg|veg|bar|stall|the|and|&)\b/gi, ' ')
+            .split(/\s+/)
+            .map(t => t.trim())
+            .filter(t => t.length >= 2);
+
+          const primaryToken = cleanTokens[0] || rawQ;
+          const term = `%${rawQ}%`;
+          const tokenTerm = `%${primaryToken}%`;
+
+          sql += ' AND (LOWER(name) LIKE ? OR LOWER(area) LIKE ? OR LOWER(description) LIKE ? OR LOWER(address) LIKE ? OR LOWER(name) LIKE ?)';
+          params.push(term, term, term, term, tokenTerm);
+          sql += ` ORDER BY (CASE WHEN LOWER(name) LIKE ? THEN 1 WHEN LOWER(name) LIKE ? THEN 2 ELSE 3 END), total_visits DESC, rating DESC`;
+          params.push(term, tokenTerm);
         } else if (options?.area && options.area !== 'All' && options.area !== 'All Areas') {
           sql += ' AND (LOWER(area) LIKE ? OR LOWER(address) LIKE ?)';
           const aTerm = `%${options.area.toLowerCase().trim()}%`;
           params.push(aTerm, aTerm);
+          sql += ' ORDER BY total_visits DESC, rating DESC';
+        } else {
+          sql += ' ORDER BY total_visits DESC, rating DESC';
         }
-        sql += ' ORDER BY total_visits DESC, rating DESC';
         if (options?.limit) {
           sql += ' LIMIT ?';
           params.push(options.limit);
@@ -777,9 +813,6 @@ export const db = {
       console.warn('MySQL getRestaurants fallback:', err);
     }
 
-    if (memoryStore.restaurants.length !== INITIAL_RESTAURANTS.length) {
-      memoryStore.seed();
-    }
     let list = [...memoryStore.restaurants].filter(r => r.status === 'active');
 
     if (options?.city && options.city !== 'All') {
@@ -810,11 +843,30 @@ export const db = {
 
       list = list.filter(r => {
         const fullText = normalize(`${r.name} ${r.area} ${r.city} ${r.address} ${r.description}`);
-        if (fullText.includes(normalizedQuery)) return true;
+        const rName = normalize(r.name);
+        if (fullText.includes(normalizedQuery) || rName.includes(normalizedQuery)) return true;
 
-        return searchTokens.some(token => {
-          return fullText.includes(token) || token.includes(normalize(r.name));
-        });
+        // Name match has highest priority
+        const nameHasToken = searchTokens.some(token => rName.includes(token));
+        if (nameHasToken) return true;
+
+        // If not in name, only accept if non-food brand words match (avoids matching Panchali for Behrouz Biryani)
+        const nonFoodTokens = searchTokens.filter(t => !['biryani', 'pizza', 'burger', 'dosa', 'chai', 'misal', 'thali', 'momo', 'sandwich', 'special'].includes(t));
+        if (nonFoodTokens.length > 0) {
+          return nonFoodTokens.some(token => fullText.includes(token));
+        }
+
+        return searchTokens.some(token => fullText.includes(token));
+      });
+
+      // Sort by name relevance first!
+      list.sort((a, b) => {
+        const aName = normalize(a.name);
+        const bName = normalize(b.name);
+        const aExact = aName.includes(normalizedQuery) ? 2 : (searchTokens.some(t => aName.includes(t)) ? 1 : 0);
+        const bExact = bName.includes(normalizedQuery) ? 2 : (searchTokens.some(t => bName.includes(t)) ? 1 : 0);
+        if (aExact !== bExact) return bExact - aExact;
+        return (b.total_visits || 0) - (a.total_visits || 0);
       });
     } else if (options?.area && options.area !== 'All' && options.area !== 'All Areas') {
       const a = options.area.toLowerCase().trim();
@@ -979,9 +1031,6 @@ export const db = {
       console.warn('MySQL getAllDishes fallback:', err);
     }
 
-    if (memoryStore.dishes.length === 0) {
-      memoryStore.seed();
-    }
     let list = [...memoryStore.dishes].filter(d => d.status === 'active');
     if (options?.restaurantId) {
       list = list.filter(d => d.restaurant_id === options.restaurantId);
@@ -1057,6 +1106,43 @@ export const db = {
       }
     } catch {}
     return memoryStore.dishes.find(d => d.id === id) || null;
+  },
+
+  async getCategories(): Promise<Category[]> {
+    return [
+      { id: 1, slug: 'biryani-rice', name: 'Biryani & Rice', hindiName: 'बिरयानी और चावल', icon: '🍚', signatureImage: '/images/eating/biryani_dish.jpg' },
+      { id: 2, slug: 'north-indian-curries', name: 'North Indian & Mughlai', hindiName: 'उत्तर भारतीय और मुगलई', icon: '🥘', signatureImage: '/images/eating/butter_chicken_dish.jpg' },
+      { id: 3, slug: 'maharashtrian-local', name: 'Maharashtrian Special', hindiName: 'महाराष्ट्रीयन स्पेशल', icon: '🍲', signatureImage: '/images/eating/misal_dish.jpg' },
+      { id: 4, slug: 'street-food-chaat', name: 'Street Food & Chaat', hindiName: 'स्ट्रीट फूड और चाट', icon: '🥪', signatureImage: '/images/eating/vada_pav_dish.jpg' },
+      { id: 5, slug: 'south-indian-tiffin', name: 'South Indian & Tiffin', hindiName: 'साउथ इंडियन और नाश्ता', icon: '🥞', signatureImage: '/images/eating/dosa_dish.jpg' },
+      { id: 6, slug: 'kebabs-tandoori', name: 'Kebabs & Tandoor', hindiName: 'कबाब और तंदूरी', icon: '🍢', signatureImage: '/images/eating/tandoori_chicken_tikka.jpg' },
+      { id: 7, slug: 'chinese-asian', name: 'Chinese & Momos', hindiName: 'चाइनीज और मोमोज', icon: '🥟', signatureImage: '/images/eating/momos_dish.jpg' },
+      { id: 8, slug: 'burgers-pizzas', name: 'Pizzas & Burgers', hindiName: 'पिज़्ज़ा और बर्गर', icon: '🍕', signatureImage: '/images/eating/pizza_dish.jpg' },
+      { id: 9, slug: 'chai-cafe-beverages', name: 'Chai, Coffee & Cafe', hindiName: 'चाय, कॉफी और कैफे', icon: '☕', signatureImage: '/images/eating/bun_maska_dish.jpg' },
+      { id: 10, slug: 'desserts-sweets', name: 'Desserts & Sweets', hindiName: 'मिठाई और आइसक्रीम', icon: '🍨', signatureImage: '/images/eating/falooda_kulfi_dish.jpg' },
+      { id: 11, slug: 'coastal-seafood', name: 'Coastal & Seafood', hindiName: 'सीफूड और फिश', icon: '🐟', signatureImage: '/images/eating/seafood_dish.jpg' },
+      { id: 12, slug: 'traditional-thali', name: 'Grand Indian Thalis', hindiName: 'शाही थाली', icon: '🍽️', signatureImage: '/images/eating/thali_dish.jpg' }
+    ];
+  },
+
+  async getMenusByRestaurant(restaurantId: number): Promise<RestaurantMenu[]> {
+    const dishes = await this.getDishesByRestaurant(restaurantId);
+    return [
+      {
+        id: restaurantId * 10 + 1,
+        restaurant_id: restaurantId,
+        name: 'Recommended Signature Menu',
+        is_active: 1,
+        dishes: dishes.filter(d => d.is_recommended)
+      },
+      {
+        id: restaurantId * 10 + 2,
+        restaurant_id: restaurantId,
+        name: 'Full Restaurant Menu',
+        is_active: 1,
+        dishes
+      }
+    ];
   },
 
   async createDish(data: Omit<Dish, 'id'>) {
@@ -2192,9 +2278,49 @@ export const db = {
     };
   },
 
+  // CLEAR ALL DB DATA
+  async clearAllData() {
+    try {
+      const pool = getMySQLPool();
+      if (pool) {
+        await pool.query('SET FOREIGN_KEY_CHECKS = 0');
+        const tables = [
+          'campaign_visits',
+          'user_journey_steps',
+          'participants',
+          'campaign_sessions',
+          'dish_video_mappings',
+          'dishes',
+          'menus',
+          'restaurants',
+          'categories',
+          'locations',
+          'tour_submissions'
+        ];
+        for (const t of tables) {
+          try {
+            await pool.query(`TRUNCATE TABLE ${t}`);
+          } catch {}
+        }
+        await pool.query('SET FOREIGN_KEY_CHECKS = 1');
+      }
+    } catch (err) {
+      console.warn('MySQL clearAllData warning:', err);
+    }
+
+    memoryStore.restaurants = [];
+    memoryStore.dishes = [];
+    memoryStore.sessions.clear();
+    memoryStore.visits = [];
+    memoryStore.participants = [];
+    memoryStore.journeySteps = [];
+
+    return { success: true, message: 'All database data successfully cleared.' };
+  },
+
   // RESET / RE-SEED
   async resetAndSeed() {
     memoryStore.seed();
-    return { success: true, message: "Database re-seeded with initial restaurants, dishes, and video stages successfully!" };
+    return { success: true, message: "Database re-seeded successfully!" };
   }
 };

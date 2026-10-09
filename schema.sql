@@ -23,6 +23,18 @@ CREATE TABLE IF NOT EXISTS `locations` (
     INDEX `idx_loc_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 0.1 Food Categories Table (Swiggy/Zomato Taxonomy)
+CREATE TABLE IF NOT EXISTS `categories` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `slug` VARCHAR(100) NOT NULL UNIQUE,
+    `name` VARCHAR(150) NOT NULL,
+    `hindi_name` VARCHAR(150),
+    `icon` VARCHAR(30) DEFAULT '🍽️',
+    `signature_image` VARCHAR(1000),
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_cat_slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 1. Restaurants Table
 CREATE TABLE IF NOT EXISTS `restaurants` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,23 +57,55 @@ CREATE TABLE IF NOT EXISTS `restaurants` (
     INDEX `idx_lat_lng` (`latitude`, `longitude`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. Dishes Table
+-- 1.1 Restaurant Menus Table
+CREATE TABLE IF NOT EXISTS `menus` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `restaurant_id` INT NOT NULL,
+    `name` VARCHAR(150) NOT NULL DEFAULT 'Main Menu',
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants`(`id`) ON DELETE CASCADE,
+    INDEX `idx_menu_rest_id` (`restaurant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Dishes Table (Relational: Restaurant, Menu, Category)
 CREATE TABLE IF NOT EXISTS `dishes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `restaurant_id` INT NOT NULL,
+    `menu_id` INT NULL,
+    `category_id` INT NULL,
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT,
     `price` DECIMAL(8, 2) DEFAULT 150.00,
     `image` VARCHAR(1000) NOT NULL,
+    `flying_image` VARCHAR(1000) NULL,
     `rating` DECIMAL(3, 2) DEFAULT 4.70,
     `popularity` INT DEFAULT 95,
     `is_recommended` TINYINT(1) DEFAULT 1,
+    `is_veg` TINYINT(1) DEFAULT 1,
     `status` ENUM('active', 'inactive') DEFAULT 'active',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`menu_id`) REFERENCES `menus`(`id`) ON DELETE SET NULL,
+    FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE SET NULL,
     INDEX `idx_restaurant_id` (`restaurant_id`),
-    INDEX `idx_dish_popularity` (`popularity`)
+    INDEX `idx_menu_id` (`menu_id`),
+    INDEX `idx_category_id` (`category_id`),
+    INDEX `idx_dish_popularity` (`popularity`),
+    INDEX `idx_dish_veg` (`is_veg`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2.1 Food Images & Assets Mapping Table (Swiggy/Zomato Food CDN)
+CREATE TABLE IF NOT EXISTS `food_images` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `category_id` INT NULL,
+    `keyword_patterns` TEXT NOT NULL,
+    `plate_image` VARCHAR(1000) NOT NULL,
+    `flying_image` VARCHAR(1000) NOT NULL,
+    `cuisine` VARCHAR(100) DEFAULT 'Indian',
+    `is_verified` TINYINT(1) DEFAULT 1,
+    FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Bakasur Videos & Eating Stages Table

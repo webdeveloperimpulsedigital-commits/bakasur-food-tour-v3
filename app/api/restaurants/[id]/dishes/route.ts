@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
-import { db, Dish } from '@/lib/db';
+import type { Dish, Restaurant } from '@/lib/db';
 import { generateLiveMenuForRestaurant } from '@/lib/liveMenu';
-import { getDishVisualAssets } from '@/lib/dishAssets';
+import { searchDishesSwiggyZomato } from '@/lib/foodSearchEngine';
+import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
+import { fetchGooglePlaceDetails, extractDishesFromGoogleDetails } from '@/lib/googlePlaces';
+import { isApifyConfigured, fetchSwiggyDishesViaApify } from '@/lib/apifySwiggy';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,203 +13,120 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const params = await Promise.resolve(context.params);
     const restId = parseInt(params.id, 10);
     const { searchParams } = new URL(request.url);
-    const restName = searchParams.get('name') || '';
-    const restArea = searchParams.get('area') || '';
-    const restCity = searchParams.get('city') || '';
-    const searchQuery = (searchParams.get('q') || '').trim().toLowerCase();
+    const restName = (searchParams.get('name') || '').trim();
+    const restArea = (searchParams.get('area') || '').trim();
+    const restCity = (searchParams.get('city') || '').trim();
+    const searchQuery = (searchParams.get('q') || '').trim();
+    const isVegParam = searchParams.get('is_veg');
 
     if (isNaN(restId)) {
       return NextResponse.json({ success: false, error: 'Invalid restaurant id' }, { status: 400 });
     }
 
-    // 1. Fetch restaurant profile (from DB by ID or fuzzy name match)
-    let restInfo = await db.getRestaurantById(restId);
-    const requestedName = (restName || '').trim();
+    // 1. Live Restaurant Identity derived from Live API selection
+    const resolvedName = restName || 'Iconic Food Joint';
+    const visual = getDishVisualAssets(resolvedName);
+    const isVeg = isVegParam === 'true' || isVegParam === '1' ||
+      resolvedName.toLowerCase().includes('pure veg') ||
+      (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non-veg'));
+    
+    const restInfo: Restaurant = {
+      id: restId,
+      name: resolvedName,
+      area: restArea || 'Local Area',
+      city: restCity || 'Pune',
+      description: `Authentic culinary specialty & live menu at ${resolvedName}`,
+      address: `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
+      latitude: 18.5204,
+      longitude: 73.8407,
+      rating: 4.8,
+      is_veg: isVeg ? 1 : 0,
+      image: visual.plateImage || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+      is_campaign_active: 1,
+      total_visits: 1200,
+      status: 'active'
+    };
 
-    // If restInfo not found by ID or name differs, look up by name in DB
-    const namePrefix = requestedName.toLowerCase().split(',')[0].trim();
-    if (requestedName && (!restInfo || !restInfo.name.toLowerCase().includes(namePrefix))) {
-      try {
-        const candidates = await db.getRestaurants({ search: namePrefix });
-        if (candidates && candidates.length > 0) {
-          restInfo = candidates[0];
-        }
-      } catch {}
-    }
-
-    // 2. Fetch real database dishes from MySQL
-    let dbDishes: Dish[] = [];
-    if (restInfo && restInfo.id) {
-      try {
-        dbDishes = await db.getDishesByRestaurant(restInfo.id);
-      } catch {
-        dbDishes = [];
-      }
-    }
-
-    if (requestedName) {
-      restInfo = {
-        ...(restInfo || {}),
-        id: restInfo?.id || restId,
-        name: requestedName,
-        area: restArea || restInfo?.area || 'Local',
-        city: restCity || restInfo?.city || 'Pune',
-        description: restInfo?.description || 'Authentic culinary specialty & live menu',
-        address: restInfo?.address || `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
-        latitude: restInfo?.latitude || 18.5204,
-        longitude: restInfo?.longitude || 73.8407,
-        rating: restInfo?.rating || 4.8,
-        image: restInfo?.image || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
-        is_campaign_active: 1,
-        total_visits: restInfo?.total_visits || 1200,
-        status: 'active'
-      };
-    } else if (!restInfo) {
-      restInfo = {
-        id: restId,
-        name: 'Iconic Food Joint',
-        area: restArea || 'Local Area',
-        city: restCity || 'Pune',
-        description: 'Authentic culinary specialty & live menu',
-        address: `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
-        latitude: 18.5204,
-        longitude: 73.8407,
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
-        is_campaign_active: 1,
-        total_visits: 1200,
-        status: 'active'
-      };
-    }
-
-    // 3. Generate live menu tailored to restaurant identity & cuisine
-    const liveDishes = generateLiveMenuForRestaurant(restInfo);
-
-    // 4. Merge dishes: Signature authentic dishes first, then DB dishes
     const seenNames = new Set<string>();
-    const finalDishes: Dish[] = [];
+    const baseDishes: Dish[] = [];
+    let usedSource = 'curated_culinary_catalog';
 
-    const sourceList = [...liveDishes, ...dbDishes];
-    for (const d of sourceList) {
-      const cleanName = d.name.toLowerCase().trim();
-      if (!seenNames.has(cleanName)) {
-        seenNames.add(cleanName);
-        finalDishes.push(d);
-      }
-    }
-
-    // 5. If searchQuery is provided, search current restaurant menu AND database dishes
-    if (searchQuery) {
-      const qTokens = searchQuery.split(/\s+/).filter(Boolean);
-      
-      // Match within current restaurant's menu
-      let matchingDishes = finalDishes.filter(d => {
-        const text = `${d.name} ${d.description || ''}`.toLowerCase();
-        return qTokens.every(token => text.includes(token)) || text.includes(searchQuery);
-      });
-
-      // Also search dishes directly from MySQL database if query provided
+    // 2. Priority 1: Live Apify Swiggy Scraper ("thirdwatch/swiggy-scraper")
+    if (isApifyConfigured()) {
       try {
-        const dbMatches = await db.getAllDishes({ search: searchQuery });
-        for (const item of dbMatches) {
-          const lowerName = item.name.toLowerCase().trim();
-          if (!seenNames.has(lowerName)) {
-            seenNames.add(lowerName);
-            matchingDishes.push(item);
-          }
-        }
-      } catch {}
-
-      // If fewer than 8 matches, also search across all CUISINE_MENUS and ICONIC_RESTAURANT_DISHES
-      if (matchingDishes.length < 8) {
-        const { CUISINE_MENUS, ICONIC_RESTAURANT_DISHES } = await import('@/lib/liveMenu');
-        
-        // 5a. Check Iconic restaurant dishes
-        for (const dishesList of Object.values(ICONIC_RESTAURANT_DISHES)) {
-          for (const item of dishesList) {
-            const text = `${item.name} ${item.description}`.toLowerCase();
-            if ((qTokens.every(token => text.includes(token)) || text.includes(searchQuery)) && !seenNames.has(item.name.toLowerCase().trim())) {
-              seenNames.add(item.name.toLowerCase().trim());
-              matchingDishes.push({
-                id: restId * 1000 + matchingDishes.length + 1,
-                restaurant_id: restId,
-                name: item.name,
-                description: item.description,
-                price: item.price,
-                image: item.image,
-                rating: item.rating,
-                popularity: item.popularity,
-                is_recommended: 1,
-                status: 'active'
+        const apifyDishes = await fetchSwiggyDishesViaApify(restInfo.name, restInfo.city);
+        if (apifyDishes && apifyDishes.length > 0) {
+          usedSource = 'apify_swiggy';
+          for (const d of apifyDishes) {
+            const cleanName = formatCleanDishName(d.name, restInfo.name);
+            const lower = cleanName.toLowerCase();
+            if (!seenNames.has(lower)) {
+              seenNames.add(lower);
+              baseDishes.push({
+                ...d,
+                name: cleanName
               });
             }
           }
         }
+      } catch (apifyErr) {
+        console.warn('Apify Swiggy menu scraper notice:', apifyErr);
+      }
+    }
 
-        // 5b. Check all cuisine menus
-        for (const profile of CUISINE_MENUS) {
-          for (const item of profile.dishes) {
-            const text = `${item.name} ${item.description}`.toLowerCase();
-            if ((qTokens.every(token => text.includes(token)) || text.includes(searchQuery)) && !seenNames.has(item.name.toLowerCase().trim())) {
-              seenNames.add(item.name.toLowerCase().trim());
-              matchingDishes.push({
-                id: restId * 1000 + matchingDishes.length + 1,
-                restaurant_id: restId,
-                name: item.name,
-                description: item.description,
-                price: item.price,
-                image: item.image,
-                rating: item.rating,
-                popularity: item.popularity,
-                is_recommended: 1,
-                status: 'active'
-              });
-            }
+    // 3. Priority 2: Google Cloud Places API live extraction from customer reviews
+    if (baseDishes.length < 8) {
+      const googlePlace = await fetchGooglePlaceDetails(restInfo.name, restInfo.city);
+      const googleDishes = googlePlace ? extractDishesFromGoogleDetails(googlePlace, restInfo) : [];
+      if (googleDishes.length > 0 && baseDishes.length === 0) {
+        usedSource = 'google_places_reviews';
+      }
+      for (const d of googleDishes) {
+        const cleanName = formatCleanDishName(d.name, restInfo.name);
+        const lower = cleanName.toLowerCase();
+        if (!seenNames.has(lower)) {
+          seenNames.add(lower);
+          baseDishes.push({
+            ...d,
+            name: cleanName,
+            image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
+          });
         }
       }
     }
 
-      // Sort by relevance:
-      // 1. Dish name contains a word starting with the query (e.g. "Momos" for "mo", "Pav" for "pav")
-      // 2. Dish name starts with query
-      // 3. Dish name contains query
-      // 4. Popularity
-      matchingDishes.sort((a, b) => {
-        const aName = a.name.toLowerCase();
-        const bName = b.name.toLowerCase();
-
-        const aWordStart = aName.split(/[\s,/-]+/).some(w => w.startsWith(searchQuery)) ? 2 : 0;
-        const bWordStart = bName.split(/[\s,/-]+/).some(w => w.startsWith(searchQuery)) ? 2 : 0;
-        if (aWordStart !== bWordStart) return bWordStart - aWordStart;
-
-        const aStarts = aName.startsWith(searchQuery) ? 1 : 0;
-        const bStarts = bName.startsWith(searchQuery) ? 1 : 0;
-        if (aStarts !== bStarts) return bStarts - aStarts;
-
-        const aIncludes = aName.includes(searchQuery) ? 1 : 0;
-        const bIncludes = bName.includes(searchQuery) ? 1 : 0;
-        if (aIncludes !== bIncludes) return bIncludes - aIncludes;
-
-        return (b.popularity || 0) - (a.popularity || 0);
-      });
-
-      return NextResponse.json({
-        success: true,
-        count: matchingDishes.length,
-        data: matchingDishes.map(d => ({
-          ...d,
-          image: getDishVisualAssets(d.name, d.image).plateImage
-        }))
-      });
+    // 4. Priority 3: Authentic Restaurant Signature Menu & Cuisine Catalog
+    if (baseDishes.length < 8) {
+      const liveDishes = generateLiveMenuForRestaurant(restInfo);
+      for (const d of liveDishes) {
+        const cleanName = formatCleanDishName(d.name, restInfo.name);
+        const lower = cleanName.toLowerCase();
+        if (!seenNames.has(lower)) {
+          seenNames.add(lower);
+          baseDishes.push({
+            ...d,
+            name: cleanName,
+            image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
+          });
+        }
+      }
     }
+
+    // 3. Run Swiggy / Zomato Dish Search Engine
+    const dishes = searchDishesSwiggyZomato(restInfo, searchQuery, baseDishes);
+
+    // Guarantee that every dish has a dynamically generated AI PNG image URL
+    const aiEnrichedDishes = dishes.map(d => ({
+      ...d,
+      image: d.image || `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}`
+    }));
 
     return NextResponse.json({
       success: true,
-      count: finalDishes.length,
-      data: finalDishes.map(d => ({
-        ...d,
-        image: getDishVisualAssets(d.name, d.image).plateImage
-      }))
+      count: aiEnrichedDishes.length,
+      isLiveAPI: true,
+      source: usedSource,
+      data: aiEnrichedDishes
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to fetch dishes';

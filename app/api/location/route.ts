@@ -201,6 +201,9 @@ function matchCityByName(name?: string) {
   return null;
 }
 
+import { fetchLocationFromIP } from '@/lib/ipLocation';
+
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userLat = parseFloat(searchParams.get('lat') || searchParams.get('latitude') || '');
@@ -208,12 +211,35 @@ export async function GET(request: Request) {
   const requestedCity = searchParams.get('city') || '';
 
   const hasGPS = !isNaN(userLat) && !isNaN(userLng);
+  
+  // Extract client IP address from headers
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIp = request.headers.get('x-real-ip');
+  const cfIp = request.headers.get('cf-connecting-ip');
+  const clientIp = (cfIp || forwarded?.split(',')[0] || realIp || '').trim();
+
+  let effectiveLat = userLat;
+  let effectiveLng = userLng;
+  let detectionSource: 'gps' | 'ip' | 'default' = hasGPS ? 'gps' : 'default';
+  let ipGeoInfo: Awaited<ReturnType<typeof fetchLocationFromIP>> = null;
+
+  // 1. If GPS is absent, fetch location via IP address
+  if (!hasGPS) {
+    ipGeoInfo = await fetchLocationFromIP(clientIp);
+    if (ipGeoInfo) {
+      effectiveLat = ipGeoInfo.lat;
+      effectiveLng = ipGeoInfo.lng;
+      detectionSource = 'ip';
+    }
+  }
+
+  const hasCoords = !isNaN(effectiveLat) && !isNaN(effectiveLng);
   let preciseSublocality: string | null = null;
   let detectedCity: typeof POPULAR_CITIES[0] | null = null;
 
-  // 1. If live GPS coordinates are provided, reverse-geocode accurately
-  if (hasGPS) {
-    const geoInfo = await reverseGeocodeCoords(userLat, userLng);
+  // 2. Reverse-geocode and match metropolitan center
+  if (hasCoords) {
+    const geoInfo = await reverseGeocodeCoords(effectiveLat, effectiveLng);
     if (geoInfo?.sublocality) {
       preciseSublocality = geoInfo.sublocality;
     }
@@ -239,31 +265,33 @@ export async function GET(request: Request) {
 
     for (const city of POPULAR_CITIES) {
       const maxRadius = PROXIMITY_RADIUS_KM[city.name] || 35;
-      const dist = calculateDistanceKm(userLat, userLng, city.latitude, city.longitude);
+      const dist = calculateDistanceKm(effectiveLat, effectiveLng, city.latitude, city.longitude);
       if (dist <= maxRadius) {
         detectedCity = city;
         break;
       }
     }
 
-    // Step B: If proximity didn't match, check aliases of returned city/sublocality/state
+    // Step B: If proximity didn't match, check aliases of returned city/sublocality/state or IP city
     if (!detectedCity) {
       const aliasMatch = 
         matchCityByName(geoInfo?.sublocality) || 
         matchCityByName(geoInfo?.city) || 
-        matchCityByName(geoInfo?.state);
+        matchCityByName(ipGeoInfo?.city) ||
+        matchCityByName(geoInfo?.state) ||
+        matchCityByName(ipGeoInfo?.state);
 
       if (aliasMatch) {
         detectedCity = aliasMatch;
-      } else if (geoInfo?.city) {
-        // Unknown city in India - create dynamic entry
+      } else if (geoInfo?.city || ipGeoInfo?.city) {
+        const cName = geoInfo?.city || ipGeoInfo?.city || 'Local Area';
         detectedCity = {
-          name: geoInfo.city,
-          state: geoInfo.state || 'India',
-          latitude: userLat,
-          longitude: userLng,
+          name: cName,
+          state: geoInfo?.state || ipGeoInfo?.state || 'India',
+          latitude: effectiveLat,
+          longitude: effectiveLng,
           popularSpots: 20,
-          description: `Famous food joints in ${geoInfo.city}`
+          description: `Famous food joints in ${cName}`
         };
       }
     }
@@ -272,7 +300,7 @@ export async function GET(request: Request) {
     if (!detectedCity) {
       let minDistance = Infinity;
       for (const city of POPULAR_CITIES) {
-        const dist = calculateDistanceKm(userLat, userLng, city.latitude, city.longitude);
+        const dist = calculateDistanceKm(effectiveLat, effectiveLng, city.latitude, city.longitude);
         if (dist < minDistance) {
           minDistance = dist;
           detectedCity = city;
@@ -303,10 +331,10 @@ export async function GET(request: Request) {
 
   if (detectedCity.name.toLowerCase() === 'pune') {
     areasForCity = PUNE_AREAS;
-    if (hasGPS) {
+    if (hasCoords) {
       let minAreaDist = Infinity;
       const calculatedAreas = PUNE_AREAS.map(area => {
-        const dist = calculateDistanceKm(userLat, userLng, area.latitude, area.longitude);
+        const dist = calculateDistanceKm(effectiveLat, effectiveLng, area.latitude, area.longitude);
         if (dist < minAreaDist) {
           minAreaDist = dist;
           detectedArea = { ...area, distanceKm: dist };
@@ -324,7 +352,7 @@ export async function GET(request: Request) {
           detectedArea = {
             ...matchingArea,
             displayName: `${preciseSublocality}, Pune`,
-            distanceKm: calculateDistanceKm(userLat, userLng, matchingArea.latitude, matchingArea.longitude)
+            distanceKm: calculateDistanceKm(effectiveLat, effectiveLng, matchingArea.latitude, matchingArea.longitude)
           };
         } else if (detectedArea) {
           const baseArea = detectedArea as AreaInfo;
@@ -354,12 +382,12 @@ export async function GET(request: Request) {
       name: preciseSublocality || `${detectedCity.name} Center`,
       displayName: preciseSublocality ? `${preciseSublocality}, ${detectedCity.name}` : `${detectedCity.name}`,
       city: detectedCity.name,
-      latitude: hasGPS ? userLat : detectedCity.latitude,
-      longitude: hasGPS ? userLng : detectedCity.longitude,
+      latitude: hasCoords ? effectiveLat : detectedCity.latitude,
+      longitude: hasCoords ? effectiveLng : detectedCity.longitude,
       popularSpotsCount: detectedCity.popularSpots || 20,
       popularLandmarks: [`${detectedCity.name} Central`, "Famous Food Street"],
       description: detectedCity.description || `Iconic food hub of ${detectedCity.name}`,
-      distanceKm: hasGPS ? calculateDistanceKm(userLat, userLng, detectedCity.latitude, detectedCity.longitude) : 0
+      distanceKm: hasCoords ? calculateDistanceKm(effectiveLat, effectiveLng, detectedCity.latitude, detectedCity.longitude) : 0
     };
   }
 
@@ -369,8 +397,10 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     success: true,
+    detectionSource,
     hasGPS,
-    userCoords: hasGPS ? { lat: userLat, lng: userLng } : { lat: detectedCity.latitude, lng: detectedCity.longitude },
+    hasCoords,
+    userCoords: hasCoords ? { lat: effectiveLat, lng: effectiveLng } : { lat: detectedCity.latitude, lng: detectedCity.longitude },
     detectedCity,
     detectedArea,
     preciseSublocality,

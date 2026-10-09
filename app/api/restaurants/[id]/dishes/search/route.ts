@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { db, Dish } from '@/lib/db';
+import type { Dish, Restaurant } from '@/lib/db';
 import { generateLiveMenuForRestaurant } from '@/lib/liveMenu';
+import { searchDishesSwiggyZomato } from '@/lib/foodSearchEngine';
+import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,58 +15,62 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     }
 
     const { searchParams } = new URL(request.url);
-    const query = (searchParams.get('q') || searchParams.get('query') || '').toLowerCase().trim();
+    const query = (searchParams.get('q') || searchParams.get('query') || '').trim();
+    const restName = (searchParams.get('name') || '').trim();
+    const restArea = (searchParams.get('area') || '').trim();
+    const restCity = (searchParams.get('city') || '').trim();
+    const isVegParam = searchParams.get('is_veg');
 
-    let restaurant = await db.getRestaurantById(restId);
-    let dbDishes: Dish[] = [];
+    const resolvedName = restName || 'Selected Food Joint';
+    const visual = getDishVisualAssets(resolvedName);
+    const isVeg = isVegParam === 'true' || isVegParam === '1' ||
+      resolvedName.toLowerCase().includes('pure veg') ||
+      (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non-veg'));
 
-    if (!restaurant) {
-      restaurant = {
-        id: restId,
-        name: 'Selected Food Joint',
-        area: 'Pune',
-        city: 'Pune',
-        description: 'Authentic local food spot & culinary specialty',
-        address: 'Pune, Maharashtra',
-        latitude: 18.5204,
-        longitude: 73.8407,
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
-        is_campaign_active: 1,
-        total_visits: 1200,
-        status: 'active'
-      };
-    } else {
-      try {
-        dbDishes = await db.getDishesByRestaurant(restId);
-      } catch {
-        dbDishes = [];
-      }
-    }
+    const restaurant: Restaurant = {
+      id: restId,
+      name: resolvedName,
+      area: restArea || 'Pune',
+      city: restCity || 'Pune',
+      description: `Authentic local food spot & culinary specialty at ${resolvedName}`,
+      address: `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
+      latitude: 18.5204,
+      longitude: 73.8407,
+      rating: 4.8,
+      is_veg: isVeg ? 1 : 0,
+      image: visual.plateImage || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+      is_campaign_active: 1,
+      total_visits: 1200,
+      status: 'active'
+    };
 
     const liveDishes = generateLiveMenuForRestaurant(restaurant);
     const seen = new Set<string>();
     const allDishes: Dish[] = [];
 
-    for (const d of [...dbDishes, ...liveDishes]) {
-      const key = d.name.toLowerCase().trim();
+    for (const d of liveDishes) {
+      const cleanName = formatCleanDishName(d.name, restaurant.name);
+      const key = cleanName.toLowerCase().trim();
       if (!seen.has(key)) {
         seen.add(key);
-        allDishes.push(d);
+        allDishes.push({
+          ...d,
+          name: cleanName,
+          image: getDishVisualAssets(cleanName, d.image).plateImage
+        });
       }
     }
 
-    const filtered = query
-      ? allDishes.filter(d => d.name.toLowerCase().includes(query) || (d.description && d.description.toLowerCase().includes(query)))
-      : allDishes;
+    const matchedDishes = searchDishesSwiggyZomato(restaurant, query, allDishes);
 
     return NextResponse.json({
       success: true,
-      count: filtered.length,
-      data: filtered
+      count: matchedDishes.length,
+      isLiveAPI: true,
+      data: matchedDishes
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to search dishes';
+    const message = error instanceof Error ? error.message : 'Dish search failed';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

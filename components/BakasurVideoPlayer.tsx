@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Volume2, VolumeX, Sparkles, Flame, Play, Pause, Clapperboard, Video, ArrowLeft } from 'lucide-react';
 import { BakasurEatingStage } from './BakasurEatingStage';
+import { getDishVisualAssets } from '@/lib/dishAssets';
 
 export interface SpiceOption {
   id: string;
@@ -58,7 +59,8 @@ export const POPULAR_FOOD_PRESETS = [
 
 export function getDishMomentDetails(dishName?: string, dishImage?: string): DishMomentInfo {
   const n = (dishName || '').toLowerCase().trim();
-  const hasLocalImg = Boolean(dishImage && dishImage.startsWith('/images/eating/'));
+  const visual = getDishVisualAssets(dishName, dishImage);
+  const resolvedImg = visual.plateImage;
 
   // 0. Momos / Dimsum / Dumpling
   if (n.includes('momo') || n.includes('dimsum') || n.includes('dumpling') || (dishImage && dishImage.includes('momo'))) {
@@ -68,8 +70,8 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteLabel: 'Steamed Momos Feast',
       munchSound: 'CHOMP-CHOMP! Spicy Garlic Chutney 🥟',
       actionText: 'Bhookasur is gulping juicy Momos...',
-      image: '/images/eating/momos_dish.jpg',
-      eatingScene: '/images/eating/momos_dish.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
@@ -94,8 +96,8 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteLabel: 'Mumbai Vada Pav Feast',
       munchSound: 'CHOMP-CHOMP! Lasun Chutney Blast 💥',
       actionText: 'Bhookasur is devouring Mumbai Vada Pav...',
-      image: hasLocalImg ? dishImage! : '/images/eating/vada_pav_dish.jpg',
-      eatingScene: '/images/eating/vada_pav_dish.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
@@ -107,38 +109,51 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteLabel: 'Ghee Puran Poli Feast',
       munchSound: 'SLURRP! Ghee Blast 🧈',
       actionText: 'Bhookasur is devouring Ghee Puran Poli...',
-      image: hasLocalImg ? dishImage! : '/images/eating/puran_poli.jpg',
-      eatingScene: '/images/eating/puran_poli.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 3. Dosa / Uttapam / South Indian
-  if (n.includes('dosa') || n.includes('uttapam') || n.includes('mysore masala') || n.includes('rava dosa') || n.includes('set dosa') || n.includes('ghee roast') || n.includes('benne') || n.includes('idli')) {
+  // 3. Idli / Thatte Idli / Medu Vada
+  if (n.includes('idli') || n.includes('medu vada') || n.includes('sambar vada')) {
+    return {
+      category: 'idli',
+      biteEmoji: '🥟',
+      biteLabel: 'Soft Thatte Idli & Sambar',
+      munchSound: 'SOFT & SPONGY SLURP! 🤤',
+      actionText: 'Bhookasur is dipping soft Idli into hot Sambar...',
+      image: resolvedImg,
+      eatingScene: resolvedImg
+    };
+  }
+
+  // 4. Dosa / Uttapam / South Indian
+  if (n.includes('dosa') || n.includes('uttapam') || n.includes('mysore masala') || n.includes('rava dosa') || n.includes('set dosa') || n.includes('ghee roast') || n.includes('benne')) {
     return {
       category: 'dosa',
       biteEmoji: '🥞',
       biteLabel: 'Crispy Butter Dosa Feast',
       munchSound: 'CRUNCH-CRUNCH! 🤤',
       actionText: 'Bhookasur is chomping Crispy Dosa...',
-      image: hasLocalImg ? dishImage! : '/images/eating/dosa.jpg',
-      eatingScene: '/images/eating/dosa.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 4. Pav Bhaji / Masala Pav
-  if (n.includes('pav bhaji') || n.includes('bhaji') || n.includes('pavbhaji') || n.includes('masala pav')) {
+  // 5. Pav Bhaji / Masala Pav
+  if (n.includes('pav bhaji') || (n.includes('bhaji') && n.includes('pav')) || n.includes('pavbhaji') || n.includes('masala pav')) {
     return {
       category: 'pav_bhaji',
       biteEmoji: '🍛',
       biteLabel: 'Butter Pav Bhaji Feast',
       munchSound: 'CHOMP-CHOMP! Extra Butter 🧈',
       actionText: 'Bhookasur is devouring Pav Bhaji...',
-      image: hasLocalImg ? dishImage! : '/images/eating/pav_bhaji.jpg',
-      eatingScene: '/images/eating/pav_bhaji.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 5. Pani Puri / Golgappa
+  // 6. Pani Puri / Golgappa
   if (
     n.includes('pani puri') ||
     n.includes('panipuri') ||
@@ -153,8 +168,8 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteLabel: 'Teekha Pani Puri Feast',
       munchSound: 'TEEKHA PANI CRUNCH! 💥',
       actionText: 'Bhookasur is gulping Teekha Pani Puri...',
-      image: hasLocalImg ? dishImage! : '/images/eating/pani_puri_dish.jpg',
-      eatingScene: '/images/eating/pani_puri_dish.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
@@ -166,51 +181,51 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteLabel: 'SPDP Chaat Blast',
       munchSound: 'CHATPATAA CRUNCH! 🥣',
       actionText: 'Bhookasur is crunching Sev Potato Dahi Puri...',
-      image: hasLocalImg ? dishImage! : '/images/eating/spdp.jpg',
-      eatingScene: '/images/eating/spdp.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 7. Misal / Katakirr / Spicy Curry
-  if (n.includes('misal') || n.includes('katakirr') || n.includes('bedekar') || n.includes('tarri') || n.includes('rassa') || n.includes('kolhapuri')) {
+  // 8. Misal / Katakirr / Spicy Curry
+  if (n.includes('misal') || n.includes('katakirr') || n.includes('bedekar') || n.includes('tarri') || n.includes('rassa') || n.includes('kolhapuri') || n.includes('poha')) {
     return {
       category: 'misal',
       biteEmoji: '🌶️',
       biteLabel: 'Fiery Tarri Misal Feast',
       munchSound: 'HOT TARRI SPICE! 🔥',
       actionText: 'Bhookasur is slurping spicy Tarri Misal...',
-      image: hasLocalImg ? dishImage! : '/images/eating/misal.jpg',
-      eatingScene: '/images/eating/misal.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 8. Biryani
-  if (n.includes('biryani') || n.includes('pulao') || n.includes('dum') || n.includes('rice')) {
+  // 9. Biryani
+  if (n.includes('biryani') || (n.includes('pulao') && !n.includes('dosa')) || n.includes('dum') || n.includes('tahari')) {
     return {
       category: 'biryani',
       biteEmoji: '🍗',
       biteLabel: 'Shahi Dum Biryani Feast',
       munchSound: 'MUNCH-MUNCH! Saffron Aroma 🍗',
       actionText: 'Bhookasur is devouring Dum Biryani...',
-      image: hasLocalImg ? dishImage! : '/images/eating/biryani.jpg',
-      eatingScene: '/images/eating/biryani.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 9. Kebab / Galouti Kebab
-  if (n.includes('kebab') || n.includes('galouti') || n.includes('seekh') || n.includes('shami')) {
+  // 10. Kebab / Galouti Kebab / Tikka
+  if (n.includes('kebab') || n.includes('galouti') || n.includes('seekh') || n.includes('shami') || n.includes('tikka') || n.includes('tandoori') || n.includes('baida roti')) {
     return {
       category: 'kebab',
       biteEmoji: '🍢',
-      biteLabel: 'Melt-in-Mouth Galouti Kebab Feast',
+      biteLabel: 'Melt-in-Mouth Kebab Feast',
       munchSound: 'SUCCULENT MELT! 🤤',
-      actionText: 'Bhookasur is relishing Galouti Kebabs...',
-      image: hasLocalImg ? dishImage! : '/images/eating/kebab_dish.jpg',
-      eatingScene: '/images/eating/kebab_dish.jpg'
+      actionText: 'Bhookasur is relishing juicy Kebabs & Tandoori...',
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 10. Thali / Maharaja Thali
+  // 11. Thali / Maharaja Thali
   if (n.includes('thali') || n.includes('maharaja') || n.includes('meals') || n.includes('bhojan')) {
     return {
       category: 'thali',
@@ -218,51 +233,51 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteLabel: 'Royal Maharaja Thali Feast',
       munchSound: 'SHAHI BHOJAN! 🤤',
       actionText: 'Bhookasur is devouring Royal Maharaja Thali...',
-      image: hasLocalImg ? dishImage! : '/images/eating/thali_dish.jpg',
-      eatingScene: '/images/eating/thali_dish.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 11. Butter Chicken / Chicken Handi / Non-veg
-  if (n.includes('butter chicken') || n.includes('chicken') || n.includes('mutton') || n.includes('handi') || n.includes('korma') || n.includes('curry')) {
+  // 12. Sweets / Desserts / Gulab Jamun / Shahi Tukda / Kheer / Jalebi / Halwa
+  if (n.includes('tukda') || n.includes('gulab jamun') || n.includes('kheer') || n.includes('jalebi') || n.includes('halwa') || n.includes('rasgulla') || n.includes('sweet') || n.includes('mithai')) {
     return {
-      category: 'butter_chicken',
-      biteEmoji: '🍗',
-      biteLabel: 'Butter Chicken & Gravy Feast',
-      munchSound: 'LICKING FINGERS! 🤤',
-      actionText: 'Bhookasur is enjoying rich creamy gravy...',
-      image: hasLocalImg ? dishImage! : '/images/eating/butter_chicken.jpg',
-      eatingScene: '/images/eating/butter_chicken.jpg'
+      category: 'sweets',
+      biteEmoji: '🍮',
+      biteLabel: `${dishName || 'Shahi Sweets'} Feast`,
+      munchSound: 'MEETHA DHAMAKA! 🤤',
+      actionText: `Bhookasur is savoring rich sweet ${dishName || 'mithai'}...`,
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 12. Chole Bhature
-  if (n.includes('chole') || n.includes('bhature') || n.includes('kulche') || n.includes('bhatura')) {
+  // 13. Falooda / Kulfi / Mastani / Ice Cream
+  if (n.includes('falooda') || n.includes('kulfi') || n.includes('mastani') || n.includes('ice cream') || n.includes('custard') || n.includes('sundae')) {
     return {
-      category: 'chole_bhature',
-      biteEmoji: '🫓',
-      biteLabel: 'Fluffy Chole Bhature Feast',
-      munchSound: 'CHOMP-CHOMP! Pure Punjabi Swag 🫓',
-      actionText: 'Bhookasur is tearing hot fluffy Bhature...',
-      image: hasLocalImg ? dishImage! : '/images/eating/chole_bhature.jpg',
-      eatingScene: '/images/eating/chole_bhature.jpg'
+      category: 'falooda',
+      biteEmoji: '🍧',
+      biteLabel: 'Royal Falooda & Kulfi Feast',
+      munchSound: 'CHILLED SWEET CRUNCH! 🍨',
+      actionText: `Bhookasur is relishing chilled ${dishName || 'Falooda'}...`,
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 13. Dal Makhani
-  if (n.includes('dal') || n.includes('makhani') || n.includes('tadka') || n.includes('khichdi')) {
+  // 14. Cold Coffee / Filter Coffee / Chai
+  if (n.includes('coffee') || n.includes('frappe') || n.includes('latte')) {
     return {
-      category: 'dal_makhani',
-      biteEmoji: '🍲',
-      biteLabel: 'Creamy Dal Makhani Feast',
-      munchSound: 'SLURRP! Creamy Butter 🧈',
-      actionText: 'Bhookasur is devouring creamy Dal Makhani...',
-      image: hasLocalImg ? dishImage! : '/images/eating/dal_makhani.jpg',
-      eatingScene: '/images/eating/dal_makhani.jpg'
+      category: 'coffee',
+      biteEmoji: '☕',
+      biteLabel: 'Creamy Cold Coffee Chill',
+      munchSound: 'CHILLED SLURP! ☕',
+      actionText: `Bhookasur is chugging refreshing ${dishName || 'Cold Coffee'}...`,
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 13.5 Bun Maska & Irani Chai
+  // 15. Bun Maska & Irani Chai
   if (n.includes('bun maska') || (n.includes('maska') && !n.includes('keema')) || n.includes('irani chai') || (n.includes('chai') && !n.includes('samosa'))) {
     return {
       category: 'bun_maska',
@@ -270,46 +285,111 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteLabel: 'Buttery Bun Maska & Hot Irani Chai',
       munchSound: 'CRUNCH-SLURP! Irani Chai Butter Bun ☕',
       actionText: 'Bhookasur is dipping crispy Bun Maska into hot Irani Chai...',
-      image: '/images/eating/bun_maska_dish.jpg',
-      eatingScene: '/images/eating/bun_maska_dish.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // 14. Keema Pav / Burgers
-  if (n.includes('keema') || n.includes('bun') || n.includes('burger') || n.includes('sandwich') || n.includes('maska') || n.includes('cutlet') || n.includes('roll')) {
+  // 16. Seafood / Fish / Crab / Prawns
+  if (n.includes('crab') || n.includes('fish') || n.includes('prawn') || n.includes('bombil') || n.includes('surmai') || n.includes('seafood')) {
+    return {
+      category: 'seafood',
+      biteEmoji: '🦀',
+      biteLabel: 'Fresh Seafood Feast',
+      munchSound: 'CRISPY SEAFOOD BITE! 🐟',
+      actionText: `Bhookasur is feasting on ${dishName || 'Seafood'}...`,
+      image: resolvedImg,
+      eatingScene: resolvedImg
+    };
+  }
+
+  // 17. Pizza
+  if (n.includes('pizza') || n.includes('pasta') || n.includes('garlic bread')) {
+    return {
+      category: 'pizza',
+      biteEmoji: '🍕',
+      biteLabel: 'Cheesy Pizza Feast',
+      munchSound: 'CHEESE PULL CRUNCH! 🧀',
+      actionText: 'Bhookasur is chomping hot Cheesy Pizza...',
+      image: resolvedImg,
+      eatingScene: resolvedImg
+    };
+  }
+
+  // 18. Burger / Fries / Fast Food
+  if (n.includes('burger') || n.includes('fries') || n.includes('sandwich') || n.includes('wrap') || n.includes('frankie')) {
+    return {
+      category: 'burger',
+      biteEmoji: '🍔',
+      biteLabel: 'Crispy Burger Feast',
+      munchSound: 'CRISPY PATTY CHOMP! 🍔',
+      actionText: 'Bhookasur is biting into juicy Crispy Burger...',
+      image: resolvedImg,
+      eatingScene: resolvedImg
+    };
+  }
+
+  // 19. Butter Chicken / Chicken Handi / Non-veg
+  if (n.includes('butter chicken') || n.includes('chicken') || (n.includes('mutton') && !n.includes('keema')) || n.includes('handi') || n.includes('korma') || n.includes('curry')) {
+    return {
+      category: 'butter_chicken',
+      biteEmoji: '🍗',
+      biteLabel: 'Butter Chicken & Gravy Feast',
+      munchSound: 'LICKING FINGERS! 🤤',
+      actionText: 'Bhookasur is enjoying rich creamy gravy...',
+      image: resolvedImg,
+      eatingScene: resolvedImg
+    };
+  }
+
+  // 20. Chole Bhature
+  if (n.includes('chole') || n.includes('bhature') || n.includes('kulche') || n.includes('bhatura')) {
+    return {
+      category: 'chole_bhature',
+      biteEmoji: '🫓',
+      biteLabel: 'Fluffy Chole Bhature Feast',
+      munchSound: 'CHOMP-CHOMP! Pure Punjabi Swag 🫓',
+      actionText: 'Bhookasur is tearing hot fluffy Bhature...',
+      image: resolvedImg,
+      eatingScene: resolvedImg
+    };
+  }
+
+  // 21. Dal Makhani
+  if (n.includes('dal') || n.includes('makhani') || n.includes('tadka')) {
+    return {
+      category: 'dal_makhani',
+      biteEmoji: '🍲',
+      biteLabel: 'Creamy Dal Makhani Feast',
+      munchSound: 'SLURRP! Creamy Butter 🧈',
+      actionText: 'Bhookasur is devouring creamy Dal Makhani...',
+      image: resolvedImg,
+      eatingScene: resolvedImg
+    };
+  }
+
+  // 22. Keema Pav / Egg Bhurji
+  if (n.includes('keema') || n.includes('bhurji') || n.includes('anda') || n.includes('egg') || n.includes('cutlet')) {
     return {
       category: 'keema_pav',
       biteEmoji: '🍳',
       biteLabel: 'Spicy Keema Pav Feast',
       munchSound: 'CHOMP-CHOMP! Bun Maska Kick 🍳',
       actionText: 'Bhookasur is gulping Keema Pav...',
-      image: hasLocalImg ? dishImage! : '/images/eating/keema_pav.jpg',
-      eatingScene: '/images/eating/keema_pav.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 
-  // If custom valid image was passed
-  if (dishImage && !dishImage.includes('bakasur') && (dishImage.startsWith('http') || dishImage.startsWith('/'))) {
-    return {
-      category: 'custom',
-      biteEmoji: '🍽️',
-      biteLabel: `${dishName || 'Specialty'} Feast`,
-      munchSound: 'CHOMP-CHOMP! 🤤',
-      actionText: `Bhookasur is devouring ${dishName || 'food'}...`,
-      image: dishImage,
-      eatingScene: dishImage
-    };
-  }
-
-  // Default fallback
+  // Default fallback (uses resolvedImg from getDishVisualAssets)
   return {
-    category: 'generic',
+    category: 'dish',
     biteEmoji: '🍽️',
-    biteLabel: 'Bhookasur Royal Feast',
+    biteLabel: `${dishName || 'Bhookasur'} Feast`,
     munchSound: 'CHOMP-CHOMP! 🤤',
     actionText: `Bhookasur is devouring ${dishName || 'food'}...`,
-    image: '/images/eating/pav_bhaji.jpg',
-    eatingScene: '/images/eating/pav_bhaji.jpg'
+    image: resolvedImg,
+    eatingScene: resolvedImg
   };
 }
 

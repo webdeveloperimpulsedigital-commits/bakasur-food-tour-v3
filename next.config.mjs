@@ -4,6 +4,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  serverExternalPackages: ['mysql2'],
   images: {
     remotePatterns: [
       {
@@ -20,4 +21,3 @@ const nextConfig = {
 };
 
 export default nextConfig;
-// restart trigger

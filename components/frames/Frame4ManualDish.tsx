@@ -78,21 +78,21 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
     if (e) e.preventDefault();
     const name = customDish.trim();
     if (!name) return;
-    const visual = getDishVisualAssets(name, selectedImage);
-    onCustomDishSubmit(name, visual.plateImage);
+    const visual = getDishVisualAssets(name, selectedImage, restaurant.name);
+    onCustomDishSubmit(name, visual.flyingImage || visual.plateImage);
   };
 
   const handleSelectSuggestion = (dish: Dish) => {
     setCustomDish(dish.name);
-    const visual = getDishVisualAssets(dish.name, dish.image);
-    setSelectedImage(visual.plateImage);
-    onCustomDishSubmit(dish.name, visual.plateImage);
+    const visual = getDishVisualAssets(dish.name, dish.image, restaurant.name);
+    setSelectedImage(visual.flyingImage || visual.plateImage);
+    onCustomDishSubmit(dish.name, visual.flyingImage || visual.plateImage);
   };
 
   const handleSelectChip = (sug: string) => {
     setCustomDish(sug);
-    const visual = getDishVisualAssets(sug);
-    setSelectedImage(visual.plateImage);
+    const visual = getDishVisualAssets(sug, undefined, restaurant.name);
+    setSelectedImage(visual.flyingImage || visual.plateImage);
   };
 
   return (
@@ -170,11 +170,11 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <img
-                        src={visual.plateImage}
+                        src={visual.flyingImage || visual.plateImage}
                         alt={dish.name}
-                        className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0"
+                        className="w-8 h-8 rounded-lg object-contain p-0.5 bg-white border border-slate-200 shrink-0"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = '/images/eating/momos_dish.jpg';
+                          (e.currentTarget as HTMLImageElement).src = '/images/eating/vada_pav_flying.png';
                         }}
                       />
                       <div className="min-w-0">

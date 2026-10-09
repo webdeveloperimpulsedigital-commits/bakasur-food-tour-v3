@@ -30,23 +30,27 @@ export async function GET(request: Request) {
     const clean = getRestaurantCleanKey(name);
     let visitCount = 0;
 
-    const pool = getMySQLPool();
-    if (pool) {
-      const [rows] = await pool.query<mysql.RowDataPacket[]>(
-        `SELECT COUNT(*) as visit_count
-         FROM campaign_visits
-         WHERE (restaurant_name IS NOT NULL AND (
-                restaurant_name LIKE ? 
-                OR restaurant_name LIKE ?
-                ${clean ? 'OR LOWER(REPLACE(restaurant_name, " ", "")) LIKE ?' : ''}
-         ))
-         ${restaurantId > 0 && restaurantId < 1000 ? 'OR (restaurant_id = ?)' : ''}`,
-        clean
-          ? [`%${clean}%`, `%${name.trim()}%`, `%${clean}%`, ...(restaurantId > 0 && restaurantId < 1000 ? [restaurantId] : [])]
-          : [`%${name.trim()}%`, `%${name.trim()}%`, ...(restaurantId > 0 && restaurantId < 1000 ? [restaurantId] : [])]
-      );
+    try {
+      const pool = getMySQLPool();
+      if (pool) {
+        const [rows] = await pool.query<mysql.RowDataPacket[]>(
+          `SELECT COUNT(*) as visit_count
+           FROM campaign_visits
+           WHERE (restaurant_name IS NOT NULL AND (
+                  restaurant_name LIKE ? 
+                  OR restaurant_name LIKE ?
+                  ${clean ? 'OR LOWER(REPLACE(restaurant_name, " ", "")) LIKE ?' : ''}
+           ))
+           ${restaurantId > 0 && restaurantId < 1000 ? 'OR (restaurant_id = ?)' : ''}`,
+          clean
+            ? [`%${clean}%`, `%${name.trim()}%`, `%${clean}%`, ...(restaurantId > 0 && restaurantId < 1000 ? [restaurantId] : [])]
+            : [`%${name.trim()}%`, `%${name.trim()}%`, ...(restaurantId > 0 && restaurantId < 1000 ? [restaurantId] : [])]
+        );
 
-      visitCount = Number(rows[0]?.visit_count || 0);
+        visitCount = Number(rows[0]?.visit_count || 0);
+      }
+    } catch {
+      visitCount = 0;
     }
 
     const isFirstVisitor = visitCount === 0;

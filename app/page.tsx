@@ -63,7 +63,7 @@ export default function CampaignPage() {
   }, []);
 
   // Audio FX generator (Disabled - All frames muted)
-  const playSound = useCallback((_type?: string) => {}, []);
+  const playSound = useCallback((_type?: string) => { }, []);
 
   // Initialize Session on Mount
   useEffect(() => {
@@ -87,28 +87,50 @@ export default function CampaignPage() {
     });
   }, [selectedCity]);
 
-  // Real-time GPS detection on app mount
+  // Instant Location Detection via IP address + GPS refinement on app mount
   useEffect(() => {
+    let isMounted = true;
+
+    // 1. Immediately fetch location via IP address (Fast, no permissions required)
+    fetch('/api/location')
+      .then(r => r.json())
+      .then(data => {
+        if (!isMounted) return;
+        if (data.success) {
+          if (data.detectedCity?.name) {
+            setSelectedCity(data.detectedCity.name);
+          }
+          if (data.userCoords?.lat && data.userCoords?.lng) {
+            setUserCoords({ lat: data.userCoords.lat, lng: data.userCoords.lng });
+          }
+        }
+      })
+      .catch(() => {});
+
+    // 2. High-precision GPS refinement if granted by user
     if (typeof window !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
+          if (!isMounted) return;
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
           setUserCoords({ lat, lng });
           try {
             const res = await fetch(`/api/location?lat=${lat}&lng=${lng}`);
             const data = await res.json();
-            if (data.success && data.detectedCity?.name) {
+            if (isMounted && data.success && data.detectedCity?.name) {
               setSelectedCity(data.detectedCity.name);
             }
-          } catch {
-            // Ignore
-          }
+          } catch {}
         },
         () => {},
         { timeout: 5000, enableHighAccuracy: true }
       );
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Frame 1 -> Frame 2 (Welcome -> Restaurant Search)
@@ -445,7 +467,7 @@ export default function CampaignPage() {
           food_meter_percentage: 100
         })
       });
-    } catch {}
+    } catch { }
 
     trackUserStep({
       sessionId: activeSession,
@@ -486,7 +508,7 @@ export default function CampaignPage() {
           current_step: 'gastrium_dose'
         })
       });
-    } catch {}
+    } catch { }
 
     trackUserStep({
       sessionId: activeSession,
@@ -513,7 +535,7 @@ export default function CampaignPage() {
           current_step: 'recommendation_submitted'
         })
       });
-    } catch {}
+    } catch { }
 
     trackUserStep({
       sessionId: activeSession,
@@ -823,7 +845,7 @@ export default function CampaignPage() {
       ) : (
         /* Normal Canvas for Other Frames */
         <div className={`w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] ${currentFrame === 1 ? 'bg-[#f4f6fa]' : 'bg-white'} md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden flex flex-col md:flex-row relative`}>
-          
+
           {/* Left Side on Desktop / Top Half on Mobile: Royal Blue Character Stage */}
           <div className={`w-full md:w-1/2 ${getVideoContainerHeightClass(currentFrame)} md:h-full relative overflow-hidden bg-[#182858] shrink-0`}>
             <BakasurVideoPlayer
@@ -831,29 +853,29 @@ export default function CampaignPage() {
                 currentFrame === 1
                   ? "/images/final-frames/1.mp4"
                   : currentFrame === 2
-                  ? "/images/final-frames/2.mp4"
-                  : currentFrame === 3 || currentFrame === 4
-                  ? "/images/final-frames/3.mp4"
-                  : currentFrame === 6
-                  ? "/images/all-frames/Showing Love.mp4"
-                  : currentFrame === 8
-                  ? "/images/final-frames/Acidity-and-Dakare.mp4"
-                  : currentFrame === 9
-                  ? "/images/all-frames/Drinking Gastrium.mp4"
-                  : currentFrame === 10
-                  ? "/images/all-frames/Thumbs Up.mp4"
-                  : currentFrame === 12
-                  ? "/images/all-frames/Showing Love.mp4"
-                  : "/images/final-frames/1.mp4"
+                    ? "/images/final-frames/2.mp4"
+                    : currentFrame === 3 || currentFrame === 4
+                      ? "/images/final-frames/3.mp4"
+                      : currentFrame === 6
+                        ? "/images/all-frames/Showing Love.mp4"
+                        : currentFrame === 8
+                          ? "/images/final-frames/Acidity-and-Dakare.mp4"
+                          : currentFrame === 9
+                            ? "/images/all-frames/Drinking Gastrium.mp4"
+                            : currentFrame === 10
+                              ? "/images/all-frames/Thumbs Up.mp4"
+                              : currentFrame === 12
+                                ? "/images/all-frames/Showing Love.mp4"
+                                : "/images/final-frames/1.mp4"
               }
               stageName={
                 currentFrame === 1 ? 'welcome' :
-                currentFrame === 2 ? 'restaurant' :
-                currentFrame === 3 || currentFrame === 4 ? 'dish' :
-                currentFrame === 6 ? 'trailer' :
-                currentFrame === 8 ? 'heartburn' :
-                currentFrame === 9 ? 'relief' :
-                currentFrame === 10 ? 'relief_done' : 'map'
+                  currentFrame === 2 ? 'restaurant' :
+                    currentFrame === 3 || currentFrame === 4 ? 'dish' :
+                      currentFrame === 6 ? 'trailer' :
+                        currentFrame === 8 ? 'heartburn' :
+                          currentFrame === 9 ? 'relief' :
+                            currentFrame === 10 ? 'relief_done' : 'map'
               }
               frameNumber={currentFrame}
               feastingStage={feastingStage}
@@ -879,13 +901,7 @@ export default function CampaignPage() {
                   selectedCity={selectedCity}
                   selectedRestaurant={selectedRestaurant}
                   userCoords={userCoords}
-                  isSecondRound={feastingStage === 2}
-                  onSelectRestaurant={(r) => {
-                    setSelectedRestaurant(r);
-                    if (r.city) {
-                      setSelectedCity(r.city);
-                    }
-                  }}
+                  onSelectRestaurant={(r) => setSelectedRestaurant(r)}
                   onNext={handleRestaurantConfirmed}
                   onWatchVideo={() => {
                     setActiveTransitionVideo({
@@ -927,51 +943,51 @@ export default function CampaignPage() {
 
 
 
-            {/* Frame 8: Help Bakasur */}
-            {currentFrame === 8 && (
-              <Frame8HelpBakasur onHelpBakasur={handleHelpBakasur} />
-            )}
+              {/* Frame 8: Help Bakasur */}
+              {currentFrame === 8 && (
+                <Frame8HelpBakasur onHelpBakasur={handleHelpBakasur} />
+              )}
 
-            {/* Frame 9: Gastrium Animation (4 sequential messages + end line) */}
-            {currentFrame === 9 && (
-              <Frame9GastriumAnimation onAnimationComplete={handleGastriumComplete} />
-            )}
+              {/* Frame 9: Gastrium Animation (4 sequential messages + end line) */}
+              {currentFrame === 9 && (
+                <Frame9GastriumAnimation onAnimationComplete={handleGastriumComplete} />
+              )}
 
-            {/* Frame 10: Shukriya Dost / Map Par Dekho (Matching User Mockup 2) */}
-            {currentFrame === 10 && (
-              <Frame10Submitted
-                restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: selectedCity || 'Pune' }}
-                dish={selectedDish || { name: 'Signature Food' }}
-                onViewMap={handleViewMap}
-              />
-            )}
+              {/* Frame 10: Shukriya Dost / Map Par Dekho (Matching User Mockup 2) */}
+              {currentFrame === 10 && (
+                <Frame10Submitted
+                  restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: selectedCity || 'Pune' }}
+                  dish={selectedDish || { name: 'Signature Food' }}
+                  onViewMap={handleViewMap}
+                />
+              )}
 
-            {/* Frame 12: Registration (Mobile number & consent) */}
-            {currentFrame === 12 && (
-              <Frame12Registration
-                onSubmitNumber={async (m, n) => { await handleRegistrationSubmit(m, n); }}
-                onBack={() => setCurrentFrame(11)}
-                isLoading={isRegistering}
-                error={regError}
-                onViewExistingPass={(data) => {
-                  playSound('fanfare');
-                  setRegisteredMobile(data.mobile);
-                  setParticipationId(data.participation_id);
-                  setCurrentFrame(13);
-                  trackUserStep({
-                    sessionId,
-                    stepName: 'frame_13_confirmation',
-                    stepTitle: `Frame 13: Existing Tour Pass Claimed (${data.participation_id})`,
-                    stepNumber: 13,
-                    metadata: { mobile: data.mobile, participation_id: data.participation_id, is_existing: true }
-                  });
-                }}
-              />
-            )}
+              {/* Frame 12: Registration (Mobile number & consent) */}
+              {currentFrame === 12 && (
+                <Frame12Registration
+                  onSubmitNumber={async (m, n) => { await handleRegistrationSubmit(m, n); }}
+                  onBack={() => setCurrentFrame(11)}
+                  isLoading={isRegistering}
+                  error={regError}
+                  onViewExistingPass={(data) => {
+                    playSound('fanfare');
+                    setRegisteredMobile(data.mobile);
+                    setParticipationId(data.participation_id);
+                    setCurrentFrame(13);
+                    trackUserStep({
+                      sessionId,
+                      stepName: 'frame_13_confirmation',
+                      stepTitle: `Frame 13: Existing Tour Pass Claimed (${data.participation_id})`,
+                      stepNumber: 13,
+                      metadata: { mobile: data.mobile, participation_id: data.participation_id, is_existing: true }
+                    });
+                  }}
+                />
+              )}
 
-          </main>
+            </main>
+          </div>
         </div>
-      </div>
       )}
 
       {/* Full-width Story Video Transition Overlay between frames */}
