@@ -13,6 +13,7 @@ interface Frame3DishSelectionProps {
   onConfirmDish: (dishName?: string, dishImage?: string) => void;
   onManualEntry?: () => void;
   onBack?: () => void;
+  isSecondRound?: boolean;
 }
 
 function getInitialDishes(restaurant: Restaurant): Dish[] {
@@ -70,7 +71,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   restaurant,
   selectedDish,
   onSelectDish,
-  onConfirmDish
+  onConfirmDish,
+  isSecondRound = false
 }) => {
   const [rawDishes, setRawDishes] = useState<Dish[]>([]);
   const [customDishInput, setCustomDishInput] = useState<string>('');
@@ -212,16 +214,16 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     return `Search dishes in ${restaurant.name}...`;
   }, [threeDishes, restaurant.name]);
 
-function getEffectiveDishImage(dish: Dish | any, cleanName: string): string {
-  if (dish?.proxy_image) return dish.proxy_image;
-  if (dish?.image) {
-    if (dish.image.startsWith('http')) {
-      return `/api/swiggy-image?url=${encodeURIComponent(dish.image)}`;
+  function getEffectiveDishImage(dish: Dish | any, cleanName: string): string {
+    if (dish?.proxy_image) return dish.proxy_image;
+    if (dish?.image) {
+      if (dish.image.startsWith('http')) {
+        return `/api/swiggy-image?url=${encodeURIComponent(dish.image)}`;
+      }
+      return dish.image;
     }
-    return dish.image;
+    return getDishVisualAssets(cleanName, undefined, '').flyingImage || getDishVisualAssets(cleanName, undefined, '').plateImage;
   }
-  return getDishVisualAssets(cleanName, undefined, '').flyingImage || getDishVisualAssets(cleanName, undefined, '').plateImage;
-}
 
   // Auto-select first dish by default if none selected
   useEffect(() => {
@@ -286,22 +288,21 @@ function getEffectiveDishImage(dish: Dish | any, cleanName: string): string {
 
   return (
     <div className="w-full h-full min-h-0 flex flex-col justify-start items-start text-left animate-in fade-in duration-300 p-3.5 sm:p-5 gap-3 bg-white overflow-y-auto scrollbar-thin relative pb-10 sm:pb-14">
-      {/* 1. Headline & Subtitle */}
-      <div className="space-y-1 text-left shrink-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-            <Sparkles className="w-3 h-3 text-amber-600" /> AI GENERATED MENU
-          </span>
-          <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-            PURE FOOD PNG • ZERO BG
-          </span>
-        </div>
-        <h2 className="text-[20px] xs:text-[22px] sm:text-[28px] font-black text-[#0B1B48] leading-[1.12] tracking-tight">
-          Restaurant mil gaya.<br />Ab plate decide karo! 🍽️
+      {/* 1. Headline */}
+      <div className="text-left shrink-0">
+        <h2 className="text-[20px] xs:text-[22px] sm:text-[28px] font-black text-[#0B1B48] leading-[1.15] tracking-tight">
+          {isSecondRound ? (
+            <>
+              Doosra stop, doosri dish.<br />
+              Bhookasur ko phir impress karo.
+            </>
+          ) : (
+            <>
+              Favourite food stop mil gaya.<br />
+              Ab plate decide karo
+            </>
+          )}
         </h2>
-        <p className="text-xs sm:text-sm font-semibold text-[#0B1B48]/80 leading-tight">
-          {restaurant.name} ki famous dishes me se chuno ya apni manpasand dish search karo.
-        </p>
       </div>
 
       {/* 2. Top 3 Signature Dish Cards with Pure Food PNGs */}
@@ -325,11 +326,10 @@ function getEffectiveDishImage(dish: Dish | any, cleanName: string): string {
                   key={`${dish.id}-${dish.name}`}
                   type="button"
                   onClick={() => handleSelectPill(dish)}
-                  className={`w-full py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-xl transition-all flex flex-col items-center justify-center text-center relative cursor-pointer shadow-xs border-2 min-h-[74px] sm:min-h-[82px] ${
-                    isSelected
+                  className={`w-full py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-xl transition-all flex flex-col items-center justify-center text-center relative cursor-pointer shadow-xs border-2 min-h-[74px] sm:min-h-[82px] ${isSelected
                       ? 'bg-orange-50 border-[#D4380D] text-[#D4380D] shadow-md shadow-[#D4380D]/15 scale-[1.02]'
                       : 'bg-white hover:bg-slate-50 border-slate-200/90 text-[#0B1B48]'
-                  }`}
+                    }`}
                 >
                   {/* Floating Checkmark for Selected State */}
                   {isSelected && (
@@ -351,9 +351,8 @@ function getEffectiveDishImage(dish: Dish | any, cleanName: string): string {
                     />
                   </div>
 
-                  <span className={`font-black text-[11px] sm:text-xs leading-tight line-clamp-2 ${
-                    isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
-                  }`}>
+                  <span className={`font-black text-[11px] sm:text-xs leading-tight line-clamp-2 ${isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
+                    }`}>
                     {cleanDishName}
                   </span>
                   {dish.price ? (
@@ -487,9 +486,8 @@ function getEffectiveDishImage(dish: Dish | any, cleanName: string): string {
                   key={`${dish.id}-${dish.name}`}
                   type="button"
                   onClick={() => handleSelectSuggestion(dish)}
-                  className={`w-full px-2.5 py-2 text-left rounded-xl transition-colors flex items-center justify-between gap-2.5 cursor-pointer border-b border-slate-100 last:border-b-0 ${
-                    isSelected ? 'bg-orange-50 text-[#D4380D]' : 'hover:bg-slate-50 text-slate-800'
-                  }`}
+                  className={`w-full px-2.5 py-2 text-left rounded-xl transition-colors flex items-center justify-between gap-2.5 cursor-pointer border-b border-slate-100 last:border-b-0 ${isSelected ? 'bg-orange-50 text-[#D4380D]' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     {/* Food Menu Image */}
@@ -509,9 +507,8 @@ function getEffectiveDishImage(dish: Dish | any, cleanName: string): string {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Swiggy FSSAI Veg / Non-Veg Icon */}
                         <div
-                          className={`w-3 h-3 rounded-xs border flex items-center justify-center shrink-0 bg-white ${
-                            isVeg ? 'border-emerald-600' : 'border-amber-800'
-                          }`}
+                          className={`w-3 h-3 rounded-xs border flex items-center justify-center shrink-0 bg-white ${isVeg ? 'border-emerald-600' : 'border-amber-800'
+                            }`}
                           title={isVeg ? 'Veg' : 'Non-Veg'}
                         >
                           {isVeg ? (

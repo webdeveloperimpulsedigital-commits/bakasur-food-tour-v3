@@ -517,54 +517,12 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             })}
           </div>
 
-          {/* Prompt at bottom pointing left towards Bhookasur's mouth */}
-          <div className="relative z-30 px-4 pb-5 sm:pb-7 flex flex-col items-center justify-end w-full shrink-0 gap-2">
-            {fedCount < TOTAL_FEEDS && (
-              <div className="flex items-center gap-2 cursor-pointer select-none bg-black/60 backdrop-blur-xs px-4 py-2 rounded-full border border-white/20">
-                <ChevronLeft className="w-5 h-5 text-amber-400 stroke-[3] animate-pulse" />
-                <span className="text-white font-black text-xs xs:text-sm sm:text-base tracking-wide uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] truncate max-w-[240px] xs:max-w-[280px]">
-                  {dishName ? `${dishName} khilao` : 'Bhookasur ko khilao'} ({fedCount}/{TOTAL_FEEDS})
-                </span>
-              </div>
-            )}
-
-            {chompEffect && (
-              <div className="animate-in zoom-in-95 fade-in duration-150 flex flex-col items-center text-center select-none py-1">
-                <div className="flex items-center gap-2 text-amber-300 font-black text-base sm:text-xl uppercase tracking-wider drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] animate-bounce">
-                  <Sparkles className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
-                  <span>{bitePopupText || 'Aur Khilao! Yummy! 🤤'}</span>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Spacer */}
+          <div className="relative z-30 px-4 pb-2 w-full shrink-0" />
         </>
       ) : (
         /* NORMAL STAGE 1 MODE: Food Plates in bottom row */
         <div className="relative z-30 px-4 pb-6 sm:pb-8 flex flex-col items-center justify-end w-full shrink-0 gap-3">
-          {/* Animated Swipe / Click Prompt */}
-          {fedCount < TOTAL_FEEDS && (
-            <div className="flex flex-col items-center gap-1 cursor-pointer select-none">
-              <div className="flex flex-col items-center text-amber-400 animate-bounce">
-                <ChevronUp className="w-6 h-6 -mb-2 stroke-[3]" />
-                <ChevronUp className="w-6 h-6 stroke-[3]" />
-              </div>
-
-              <div className="flex items-center gap-2 text-white font-black text-base sm:text-lg tracking-wide uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] truncate max-w-[320px]">
-                <span className="text-xl">👆</span>
-                <span className="truncate">{dishName ? `${dishName} khilao` : 'Swipe ya Click karke khilao'} ({fedCount}/{TOTAL_FEEDS})</span>
-              </div>
-            </div>
-          )}
-
-          {chompEffect && (
-            <div className="animate-in zoom-in-95 fade-in duration-150 flex flex-col items-center text-center select-none py-1">
-              <div className="flex items-center gap-2 text-amber-300 font-black text-base sm:text-xl uppercase tracking-wider drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] animate-bounce">
-                <Sparkles className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
-                <span>{bitePopupText || 'Aur Khilao! Yummy! 🤤'}</span>
-              </div>
-            </div>
-          )}
-
           {/* 3 Food Item Ceramic Plates Row */}
           <div className="flex items-center justify-center gap-2.5 xs:gap-3 sm:gap-6 w-full max-w-2xl mx-auto pt-1 pb-1">
             {foodOptions.map((food, index) => {

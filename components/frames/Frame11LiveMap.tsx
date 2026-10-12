@@ -179,24 +179,13 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
         </div>
 
         {/* Headline */}
-        <div className="shrink-0">
-          <h1 className="text-[18px] xs:text-[20px] sm:text-[23px] font-black tracking-tight leading-[1.18] text-[#0B1B48]">
-            India ki recommendations.<br />
-            <span className="text-[#D4380D]">Bhookasur ka live Food Tour Map.</span>
+        <div className="shrink-0 w-full text-center">
+          <h1 className="text-[19px] xs:text-[22px] sm:text-[25px] font-black tracking-tight leading-[1.18] text-[#D4380D] text-center">
+            #Bhookasur ka live Food Tour Map.
           </h1>
         </div>
 
-        {/* Center Map Component (Actual Interactive Google Map) */}
-        <div className="w-full h-[250px] xs:h-[270px] sm:h-[300px] shrink-0">
-          <InteractiveTourMap
-            sessionId={sessionId}
-            currentUserSpot={currentUserSpot}
-            onStatsLoaded={(s) => setStats(s)}
-            onShareUserSpot={() => setIsShareModalOpen(true)}
-          />
-        </div>
-
-        {/* Stats Bar */}
+        {/* Stats Bar (Positioned directly under headline) */}
         <div className="w-full bg-[#F3F5FA] rounded-2xl border border-slate-200/90 shadow-xs flex items-center py-1.5 px-1 shrink-0">
           <div className="flex-1 text-center border-r border-slate-200/90 px-1">
             <div className="text-lg sm:text-2xl font-black text-[#D4380D] leading-none">
@@ -224,6 +213,16 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
               Cities on tour
             </div>
           </div>
+        </div>
+
+        {/* Center Map Component (Actual Interactive Google Map) */}
+        <div className="w-full h-[250px] xs:h-[270px] sm:h-[300px] shrink-0">
+          <InteractiveTourMap
+            sessionId={sessionId}
+            currentUserSpot={currentUserSpot}
+            onStatsLoaded={(s) => setStats(s)}
+            onShareUserSpot={() => setIsShareModalOpen(true)}
+          />
         </div>
 
         {/* Primary CTA: EK AUR FOOD STOP JODO */}
@@ -288,10 +287,9 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
         {/* RIGHT SIDE: HEADLINE, STATS & BUTTONS */}
         <div className="w-1/2 h-full flex flex-col justify-center px-8 lg:px-12 py-8 gap-5 lg:gap-6 bg-white overflow-y-auto">
           {/* Headline */}
-          <div>
-            <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-[1.18] text-[#0B1B48]">
-              India ki recommendations.<br />
-              <span className="text-[#D4380D]">Bhookasur ka live Food Tour Map.</span>
+          <div className="w-full text-center">
+            <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-[1.18] text-[#D4380D] text-center">
+              #Bhookasur ka live Food Tour Map.
             </h1>
           </div>
 

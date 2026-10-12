@@ -469,6 +469,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
     const playVideo = async () => {
       try {
         video.currentTime = 0;
+        video.playbackRate = 1.0;
         video.muted = !soundEnabled;
         const p = video.play();
         if (p !== undefined) {
@@ -602,9 +603,27 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop={false}
             muted
+            onTimeUpdate={(e) => {
+              const video = e.currentTarget;
+              if (video.currentTime >= 4.0) {
+                window.dispatchEvent(new CustomEvent('gastrium-stomach-revealed'));
+                // Smooth slow-motion effect for the soothing blue stomach animation
+                if (video.playbackRate !== 0.5) {
+                  video.playbackRate = 0.5;
+                }
+              }
+              // Seamlessly loop the soothing stomach portion so the video never freezes
+              if (video.currentTime >= 7.6) {
+                video.currentTime = 4.1;
+                video.play().catch(() => {});
+              }
+            }}
             onEnded={() => {
-              setIsPlaying(false);
-              if (onVideoEnded) onVideoEnded();
+              if (videoRef.current) {
+                videoRef.current.currentTime = 4.1;
+                videoRef.current.playbackRate = 0.5;
+                videoRef.current.play().catch(() => {});
+              }
             }}
             className="w-full h-full object-cover object-center relative z-10"
           />

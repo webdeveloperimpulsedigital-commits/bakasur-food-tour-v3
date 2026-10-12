@@ -775,6 +775,13 @@ export default function CampaignPage() {
             dish={selectedDish || { name: 'Signature Food', id: 1 }}
             onCompleteLoop={handleStartSecondEatingStage}
             onBack={() => setCurrentFrame(5)}
+            onWatchVideo={() => {
+              setActiveTransitionVideo({
+                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-new.mp4',
+                buttonText: 'Aage Badho ➡️',
+                nextFrame: 7
+              });
+            }}
           />
         </div>
       ) : currentFrame === 7 ? (
@@ -925,6 +932,7 @@ export default function CampaignPage() {
                 <Frame3DishSelection
                   restaurant={selectedRestaurant}
                   selectedDish={selectedDish}
+                  isSecondRound={feastingStage === 2}
                   onSelectDish={(d) => setSelectedDish(d)}
                   onConfirmDish={(name, img) => handleDishConfirmed(name, img)}
                   onManualEntry={handleGoToManualDish}
