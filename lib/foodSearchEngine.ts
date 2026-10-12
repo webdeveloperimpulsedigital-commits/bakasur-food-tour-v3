@@ -36,7 +36,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     name: 'Biryani & Rice',
     hindiName: 'बिरयानी और चावल',
     icon: '🍚',
-    keywords: ['biryani', 'biriyani', 'briyani', 'pulao', 'pulav', 'fried rice', 'schezwan rice', 'tahari', 'khichdi', 'curd rice'],
+    keywords: ['biryani', 'biriyani', 'briyani', 'pulao', 'pulav', 'jeera rice', 'geera rice', 'jeera', 'geera', 'fried rice', 'schezwan rice', 'tahari', 'khichdi', 'curd rice'],
     signatureImage: '/images/eating/biryani_dish.jpg'
   },
   {
@@ -45,7 +45,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     name: 'North Indian & Mughlai',
     hindiName: 'उत्तर भारतीय और मुगलई',
     icon: '🥘',
-    keywords: ['butter chicken', 'paneer butter masala', 'paneer', 'dal makhani', 'korma', 'rogan josh', 'kadai', 'handi', 'tikka masala', 'naan', 'roti', 'paratha'],
+    keywords: ['butter chicken', 'paneer butter masala', 'paneer', 'dal makhani', 'korma', 'rogan josh', 'kadai', 'handi', 'tikka masala', 'naan', 'roti', 'paratha', 'parantha', 'aloo paratha', 'lachha paratha'],
     signatureImage: '/images/eating/butter_chicken_dish.jpg'
   },
   {
@@ -135,13 +135,26 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     name: 'Grand Indian Thalis',
     hindiName: 'शाही थाली',
     icon: '🍽️',
-    keywords: ['thali', 'maharashtrian thali', 'mutton thali', 'gavran thali', 'punjabi thali', 'rajasthani thali', 'gujarati thali', 'shahi thali'],
+    keywords: ['thali', 'veg thali', 'maharaja thali', 'deluxe thali', 'maharashtrian thali', 'mutton thali', 'gavran thali', 'punjabi thali', 'rajasthani thali', 'gujarati thali', 'shahi thali'],
     signatureImage: '/images/eating/thali_dish.jpg'
   }
 ];
 
 // Common Indian culinary spelling variations and typos mapping
 export const SPELLING_TYPOS_MAP: Record<string, string> = {
+  // Rice & Cumin Rice
+  'geera rice': 'jeera rice',
+  'geera': 'jeera',
+  'zeera rice': 'jeera rice',
+  'zeera': 'jeera',
+
+  // Paratha
+  'parantha': 'paratha',
+  'pratha': 'paratha',
+  'parata': 'paratha',
+  'parathas': 'paratha',
+  'paranthas': 'paratha',
+
   // Biryani
   'briyani': 'biryani',
   'biriyani': 'biryani',

@@ -17,7 +17,19 @@ const GOOGLE_API_KEY =
   '';
 
 export function isGooglePlacesConfigured(): boolean {
-  return Boolean(GOOGLE_API_KEY && GOOGLE_API_KEY.trim().length > 10);
+  if (!GOOGLE_API_KEY || typeof GOOGLE_API_KEY !== 'string') return false;
+  const key = GOOGLE_API_KEY.trim();
+  if (key.length < 20) return false;
+  if (
+    key.includes('YourGoogleApiKey') ||
+    key.includes('YOUR_') ||
+    key.toLowerCase().includes('placeholder') ||
+    key.toLowerCase().includes('example') ||
+    key === 'AIzaSyYourGoogleApiKeyHere'
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export interface GooglePlaceResult {
@@ -59,10 +71,10 @@ const CULINARY_DISH_PATTERNS: Array<{ regex: RegExp; name: string; category: str
   // Breads
   { regex: /\b(butter|garlic)\s*naan\b/i, name: "Crispy Butter Garlic Naan (2 Pcs)", category: "Bread", defaultPrice: 90 },
   { regex: /\b(butter\s*)?roti\b/i, name: "Tandoori Butter Roti (3 Pcs)", category: "Bread", defaultPrice: 60 },
-  { regex: /\blachha\s*paratha\b/i, name: "Crispy Lachha Paratha", category: "Bread", defaultPrice: 70 },
+  { regex: /\b(aloo|lachha|paneer|pudina|gobi|butter|plain)?\s*parath?a\b/i, name: "Crispy Butter Lachha Paratha", category: "Bread", defaultPrice: 80 },
 
   // Rice
-  { regex: /\bjeera\s*rice\b/i, name: "Fragrant Jeera Rice Bowl", category: "Rice", defaultPrice: 140 },
+  { regex: /\b(jeera|geera|zeera)\s*rice\b/i, name: "Fragrant Jeera Rice Bowl", category: "Rice", defaultPrice: 140 },
   { regex: /\b(veg\s*)?(dum\s*)?biryani\b/i, name: "Shahi Veg Dum Biryani Handi", category: "Rice", defaultPrice: 220 },
 
   // Vegetables
@@ -136,7 +148,11 @@ export async function searchGoogleNearbyRestaurants(
     clearTimeout(timeout);
 
     if (!res.ok) {
-      console.warn('Google Places API response notice:', res.status, await res.text());
+      if (res.status === 400 || res.status === 403) {
+        console.warn(`Google Places API notice: Status ${res.status} (invalid or unauthorized API key). Falling back to OpenStreetMap & local catalog.`);
+      } else {
+        console.warn('Google Places API response notice:', res.status, await res.text());
+      }
       return [];
     }
 
