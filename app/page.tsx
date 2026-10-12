@@ -709,7 +709,7 @@ export default function CampaignPage() {
       return 'h-[65%] xs:h-[67%] md:h-full';
     }
     if (frame === 10) {
-      return 'h-[50%] xs:h-[53%] md:h-full';
+      return 'h-[54%] xs:h-[56%] md:h-full';
     }
     return 'h-[62%] xs:h-[65%] md:h-full';
   };
