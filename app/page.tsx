@@ -729,7 +729,7 @@ export default function CampaignPage() {
             }}
             onWatchVideo={() => {
               setActiveTransitionVideo({
-                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-new.mp4',
+                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
                 buttonText: 'Aage Badho ➡️',
                 nextFrame: 7
               });
@@ -755,7 +755,7 @@ export default function CampaignPage() {
             onBack={() => setCurrentFrame(5)}
             onWatchVideo={() => {
               setActiveTransitionVideo({
-                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-new.mp4',
+                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
                 buttonText: 'Aage Badho ➡️',
                 nextFrame: 7
               });
@@ -896,7 +896,7 @@ export default function CampaignPage() {
                   onNext={handleRestaurantConfirmed}
                   onWatchVideo={() => {
                     setActiveTransitionVideo({
-                      videoUrl: '/images/final-frames/Bhookasur-Food-Eating-new.mp4',
+                      videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
                       buttonText: 'Aage Badho ➡️',
                       nextFrame: 2
                     });
