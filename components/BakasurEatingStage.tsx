@@ -62,16 +62,13 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [chompEffect, setChompEffect] = useState<boolean>(false);
   const [bitePopupText, setBitePopupText] = useState<string>('');
   
-  const POPUP_MESSAGES = useMemo(() => {
-    const clean = dishName ? dishName.replace(/^Special\s+/i, '').trim() : 'Food';
-    return [
-      `Aur ${clean} khilao! Super Yum! 🤤`,
-      `Maza Aa Gaya! Aur ${clean} bhej! 🔥`,
-      `Aha! Gazab ${clean} hai! 😋`,
-      `Ek aur bite, fast! 🚀`,
-      `Bhookasur loves ${clean}! 💥`
-    ];
-  }, [dishName]);
+  const POPUP_MESSAGES = useMemo(() => [
+    'YUMMM! 🤤',
+    'WOWWW! 🤩',
+    'MAZA AA GAYA! 🔥',
+    'SWAAAD! 😋',
+    'GAZAB! 💥'
+  ], []);
 
   // Stage 1 uses front-facing video (front-eat-video.mp4), Stage 2 uses side-angle (side-view-final.mp4)
   const MAIN_VIDEO = isSideAngle
@@ -477,6 +474,34 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </div>
       )}
 
+      {/* Floating Animated Reaction Text (No Boxes, Pure Kinetic Comic Typography) */}
+      {chompEffect && bitePopupText && (
+        <div
+          key={bitePopupText}
+          className={`absolute inset-x-0 ${
+            isSideAngle
+              ? 'top-[22%] xs:top-[25%] sm:top-[28%] md:left-[20%]'
+              : 'top-[20%] xs:top-[22%] sm:top-[24%]'
+          } flex items-center justify-center pointer-events-none z-50`}
+        >
+          <div className="animate-punchy-pop flex items-center justify-center filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.9)]">
+            <span
+              className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-black tracking-wider uppercase select-none italic text-center text-amber-300 drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)]"
+              style={{
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                background: 'linear-gradient(180deg, #FFF176 0%, #FFB300 45%, #FF3D00 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                WebkitTextStroke: '2px #1A0900',
+                textShadow: '0 0 25px rgba(255, 179, 0, 0.7)'
+              }}
+            >
+              {bitePopupText}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* 4. INTERACTIVE SWIPE AREA & FOOD PLATES */}
       {isSideAngle ? (
         /* SIDE-ANGLE MODE: Food Plates on the RIGHT side, Bhookasur on the LEFT */
@@ -613,6 +638,32 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             ) scale(0.04) rotate(-35deg);
             opacity: 0;
           }
+        }
+        @keyframes punchyPop {
+          0% {
+            transform: scale(0.35) translateY(20px) rotate(-6deg);
+            opacity: 0;
+          }
+          20% {
+            transform: scale(1.25) translateY(-8px) rotate(-3deg);
+            opacity: 1;
+          }
+          35% {
+            transform: scale(1.02) translateY(-14px) rotate(2deg);
+            opacity: 1;
+          }
+          75% {
+            transform: scale(1.0) translateY(-26px) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(0.85) translateY(-48px) rotate(4deg);
+            opacity: 0;
+          }
+        }
+        .animate-punchy-pop {
+          animation: punchyPop 1.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          will-change: transform, opacity;
         }
         .animate-smooth-fly-side {
           animation: smoothFlyToMouthSide 0.46s cubic-bezier(0.22, 1, 0.36, 1) forwards;
