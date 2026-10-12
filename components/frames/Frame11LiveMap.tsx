@@ -238,12 +238,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
 
 
-        {/* Influencer Subtext */}
-        <div className="w-full text-center -my-0.5 shrink-0">
-          <p className="text-[10.5px] sm:text-[11.5px] font-bold text-[#0B1B48]/90 leading-tight">
-            Apne favourite food influencer ke saath Live Food Tour ka chance.
-          </p>
-        </div>
+
 
         {/* Secondary CTA: LIVE FOOD TOUR KE LIYE REGISTER KARO */}
         <div className="w-full pb-1 shrink-0">
@@ -326,12 +321,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
 
 
-          {/* Influencer Subtext */}
-          <div className="w-full text-center">
-            <p className="text-xs lg:text-sm font-bold text-[#0B1B48]/90 leading-tight">
-              Apne favourite food influencer ke saath Live Food Tour ka chance.
-            </p>
-          </div>
+
 
           {/* Secondary CTA: LIVE FOOD TOUR KE LIYE REGISTER KARO */}
           <div className="w-full">
