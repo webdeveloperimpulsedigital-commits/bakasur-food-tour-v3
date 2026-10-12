@@ -42,11 +42,13 @@ export const Frame6PostEating: React.FC<Frame6PostEatingProps> = ({
       {/* Content Section: Right on Desktop (md:w-1/2 md:h-full), Bottom on Mobile */}
       <div className="w-full md:w-1/2 flex-1 md:h-full min-h-0 bg-white px-4 py-4 xs:px-5 xs:py-5 sm:px-8 sm:py-8 md:px-10 md:py-12 flex flex-col justify-between items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none z-10 shrink-0">
         <div className="hidden md:block w-full h-4" />
-        <div className="w-full max-w-md mx-auto my-auto flex flex-col justify-center items-center">
-          <h1 className="text-[24px] xs:text-[27px] sm:text-[32px] md:text-[36px] font-black text-[#0B1B48] tracking-tight leading-[1.18] text-center">
-            Do joints ke baad bhi,<br />
-            <span className="text-[#D4380D]">Bhookasur ka pet nahi bhara!</span>
+        <div className="w-full max-w-md mx-auto my-auto flex flex-col justify-center items-center space-y-2 xs:space-y-2.5">
+          <h1 className="text-[22px] xs:text-[25px] sm:text-[30px] md:text-[36px] font-black text-black tracking-tight leading-[1.18] text-center">
+            Itne se Bhookasur ka kya pet bharega?
           </h1>
+          <p className="text-sm xs:text-base sm:text-lg text-black font-bold leading-snug text-center">
+            Aage pure shehar ka menu saaf kar diya.
+          </p>
         </div>
 
         {/* Primary CTA Button */}

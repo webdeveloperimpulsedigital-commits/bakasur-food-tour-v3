@@ -513,21 +513,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         </div>
       )}
 
-      {/* 2.5 DB FIRST VISITOR POPUP (Only shown if 0 prior visits exist) */}
-      {firstVisitorInfo?.isFirstVisitor && (
-        <div className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 shadow-xs animate-in fade-in duration-200 shrink-0">
-          <div className="w-6 h-6 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 text-xs shadow-xs">
-            🎉
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-black text-amber-900 leading-tight">
-              Aap is place ke pehle visitor hain!
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* 3. PRIMARY CTA BUTTON: YEH WALA PAKKA & (In Round 2) DEKHO BHOOKASUR NE KYA KYA KHAYA */}
+      {/* 3. PRIMARY CTA BUTTON: YEH WALA PAKKA */}
       <div className="w-full shrink-0 mt-auto pt-2 flex flex-col gap-2">
         <button
           onClick={handleConfirm}
@@ -537,16 +523,6 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         >
           YEH WALA PAKKA
         </button>
-
-        {isSecondRound && onWatchVideo && (
-          <button
-            onClick={onWatchVideo}
-            type="button"
-            className="w-full py-3 sm:py-3.5 px-5 rounded-xl sm:rounded-2xl bg-[#0B1B48] hover:bg-[#071333] active:bg-[#040c22] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
-          >
-            <span>DEKHO BHOOKASUR NE KYA KYA KHAYA 🎬</span>
-          </button>
-        )}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Menu, ArrowRight, ArrowLeft, X, Phone, User, CheckCircle2, AlertCircle, HelpCircle, Share2 } from 'lucide-react';
 import { InteractiveTourMap } from './InteractiveTourMap';
-import { BakasurSpotShareModal } from '../BakasurSpotShareModal';
+import { BakasurShareCardModal } from '../BakasurShareCardModal';
 
 interface Frame11LiveMapProps {
   sessionId?: string;
@@ -249,14 +249,16 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           <button
             onClick={handleOpenRegistration}
             type="button"
-            className="w-full py-2 sm:py-2.5 px-5 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-xs sm:text-sm uppercase tracking-wider active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full py-2.5 px-4 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-xs sm:text-sm uppercase tracking-wide active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center"
           >
-            <span>{hasRegistered ? 'TOUR PASS CLAIMED / REGISTERED ✓' : 'LIVE FOOD TOUR KE LIYE REGISTER KARO'}</span>
-            {!hasRegistered && <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />}
+            <span className="leading-tight">
+              {hasRegistered ? 'TOUR PASS CLAIMED / REGISTERED ✓' : 'REGISTER KARO & PAO ZOMATO VOUCHER JEETNE KA MAUKA'}
+            </span>
+            {!hasRegistered && <ArrowRight className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />}
           </button>
         </div>
 
-        {/* Sharing CTA (Positioned right after register): APNA FOOD SPOT SHARE KARO */}
+        {/* Sharing CTA (Positioned right after register): SHARE ON WHATSAPP / INSTA */}
         <div className="w-full pb-1 shrink-0">
           <button
             onClick={() => setIsShareModalOpen(true)}
@@ -264,7 +266,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             className="w-full py-2.5 sm:py-3 px-5 rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
           >
             <Share2 className="w-4 h-4 stroke-[2.5]" />
-            <span>APNA FOOD SPOT SHARE KARO (WHATSAPP / INSTA)</span>
+            <span>SHARE ON WHATSAPP / INSTA</span>
           </button>
         </div>
       </div>
@@ -335,19 +337,21 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             </button>
           </div>
 
-          {/* Register CTA: LIVE FOOD TOUR KE LIYE REGISTER KARO */}
+          {/* Register CTA: REGISTER KARO & PAO ZOMATO VOUCHER JEETNE KA MAUKA */}
           <div className="w-full">
             <button
               onClick={handleOpenRegistration}
               type="button"
-              className="w-full py-3 px-6 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-xs lg:text-sm uppercase tracking-wider active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              className="w-full py-3 px-6 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-xs lg:text-sm uppercase tracking-wide active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
             >
-              <span>{hasRegistered ? 'TOUR PASS CLAIMED / REGISTERED ✓' : 'LIVE FOOD TOUR KE LIYE REGISTER KARO'}</span>
-              {!hasRegistered && <ArrowRight className="w-4 h-4 stroke-[2.5]" />}
+              <span className="leading-tight">
+                {hasRegistered ? 'TOUR PASS CLAIMED / REGISTERED ✓' : 'REGISTER KARO & PAO ZOMATO VOUCHER JEETNE KA MAUKA'}
+              </span>
+              {!hasRegistered && <ArrowRight className="w-4 h-4 stroke-[2.5] shrink-0" />}
             </button>
           </div>
 
-          {/* Sharing CTA (Positioned right after register): APNA FOOD SPOT SHARE KARO */}
+          {/* Sharing CTA (Positioned right after register): SHARE ON WHATSAPP / INSTA */}
           <div className="w-full">
             <button
               onClick={() => setIsShareModalOpen(true)}
@@ -355,7 +359,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
               className="w-full py-3.5 px-6 rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-sm lg:text-base uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
             >
               <Share2 className="w-5 h-5 stroke-[2.5]" />
-              <span>APNA FOOD SPOT SHARE KARO (WHATSAPP / INSTA)</span>
+              <span>SHARE ON WHATSAPP / INSTA</span>
             </button>
           </div>
         </div>
@@ -536,14 +540,15 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
       )}
 
       {/* ========================================================== */}
-      {/* 9. SOCIAL SHARE SPOT MODAL (WhatsApp, Instagram, Facebook) */}
+      {/* 9. FOODIE PASS SHARE MODAL (WhatsApp, Instagram, Facebook) */}
       {/* ========================================================== */}
-      <BakasurSpotShareModal
+      <BakasurShareCardModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         restaurantName={currentUserSpot?.name || 'Local Food Spot'}
         cityName={currentUserSpot?.city || 'Pune'}
         dishName={currentUserSpot?.dishName || 'Specialty Dish'}
+        participationId={participationId || registeredInfo?.participation_id || 'BKT-' + Math.floor(100000 + Math.random() * 900000)}
       />
     </div>
   );

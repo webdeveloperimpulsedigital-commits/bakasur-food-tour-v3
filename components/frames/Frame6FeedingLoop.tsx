@@ -56,7 +56,7 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
           </h1>
         </div>
 
-        {/* Primary CTA Button */}
+        {/* Primary CTA Button & Secondary CTA Button */}
         <div className="w-full max-w-md mx-auto pt-2 pb-1 md:pb-4 flex flex-col gap-2.5 sm:gap-3">
           <button
             onClick={onCompleteLoop}
@@ -65,6 +65,16 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
           >
             EK AUR FOOD JOINT JODO
           </button>
+
+          {onWatchVideo && (
+            <button
+              onClick={onWatchVideo}
+              type="button"
+              className="w-full py-3 sm:py-3.5 px-5 rounded-xl sm:rounded-2xl bg-[#0B1B48] hover:bg-[#071333] active:bg-[#040c22] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
+            >
+              <span>DEKHO BHOOKASUR NE AUR KYA KHAYA</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

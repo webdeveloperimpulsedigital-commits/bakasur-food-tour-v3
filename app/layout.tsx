@@ -24,7 +24,21 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Bhookasur Ka Food Tour – Interactive Food Campaign",
     description: "Feed Bhookasur legendary dishes, fill the food meter, and win grand contest rewards!",
-    type: "website"
+    type: "website",
+    images: [
+      {
+        url: "/images/final-frames/food-tour-img.png",
+        width: 1200,
+        height: 630,
+        alt: "Bhookasur Ka Food Tour"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bhookasur Ka Food Tour",
+    description: "Feed Bhookasur legendary dishes, fill the food meter, and win grand contest rewards!",
+    images: ["/images/final-frames/food-tour-img.png"]
   }
 };
 
