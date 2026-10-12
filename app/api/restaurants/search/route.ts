@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { Restaurant } from '@/lib/db';
-import { searchLivePlaces, fetchLiveNearbyPlaces, getDeterministicPlaceId, isDishOrFoodQuery } from '@/lib/livePlaces';
+import { searchLivePlaces, fetchLiveNearbyPlaces, getDeterministicPlaceId, isDishOrFoodQuery, pickCuisineImage } from '@/lib/livePlaces';
 import { parseRestaurantQuery } from '@/lib/locationParser';
 import { searchRestaurantsSwiggyZomato } from '@/lib/foodSearchEngine';
 import { getDishVisualAssets } from '@/lib/dishAssets';
 import { fetchLocationFromIP } from '@/lib/ipLocation';
+import { isApifyConfigured, fetchSwiggyRestaurantViaApify, parseSwiggyRestaurantUrl, CITY_COORDINATES } from '@/lib/apifySwiggy';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,10 +30,17 @@ export async function GET(request: Request) {
     const city = searchParams.get('city') || '';
     let lat = parseFloat(searchParams.get('lat') || searchParams.get('latitude') || '');
     let lng = parseFloat(searchParams.get('lng') || searchParams.get('longitude') || '');
-    let hasUserCoords = !isNaN(lat) && !isNaN(lng);
+    let hasExplicitCoords = !isNaN(lat) && !isNaN(lng);
+    let hasUserCoords = hasExplicitCoords;
 
-    // If coordinates were not passed in query params, automatically resolve user coordinates via IP address!
-    if (!hasUserCoords) {
+    // If city is explicitly given (e.g. Bangalore) and no explicit lat/lng, use city's center coordinates
+    const cityKey = city.toLowerCase().trim();
+    if (!hasExplicitCoords && cityKey && CITY_COORDINATES[cityKey]) {
+      lat = CITY_COORDINATES[cityKey].lat;
+      lng = CITY_COORDINATES[cityKey].lng;
+      hasUserCoords = true;
+    } else if (!hasUserCoords) {
+      // If no city and no coordinates, resolve via IP address
       const forwarded = request.headers.get('x-forwarded-for');
       const realIp = request.headers.get('x-real-ip');
       const cfIp = request.headers.get('cf-connecting-ip');
@@ -64,16 +72,94 @@ export async function GET(request: Request) {
     const isDish = isDishOrFoodQuery(trimmedQ);
     const isNoise = /(kaise|banaye|banaen|banate|tarika|vidhi|recipe|ingredients|calories|reddit|quora|youtube|zomato|swiggy|lake|dam|talav|gate|darwaja)/i.test(trimmedQ);
 
+    // Check if query is a Swiggy restaurant URL
+    const parsedSwiggyUrl = parseSwiggyRestaurantUrl(trimmedQ);
+    const effectiveCity = parsedSwiggyUrl.city || city || 'Pune';
+    const effectiveSearchName = parsedSwiggyUrl.name || trimmedQ;
+
     // 1. Fetch real-time restaurants directly from Live APIs (Photon, Nominatim, Google Suggest)
     const liveSpots = await searchLivePlaces({
-      query: trimmedQ,
-      city: city || undefined,
+      query: effectiveSearchName,
+      city: effectiveCity,
       lat: hasUserCoords ? lat : undefined,
       lng: hasUserCoords ? lng : undefined
     }).catch(() => []);
 
     const seenNames = new Set<string>();
     const combinedSpots: Restaurant[] = [];
+
+    // If direct Swiggy URL was pasted, add the exact restaurant as top result
+    if (parsedSwiggyUrl.isSwiggyUrl && parsedSwiggyUrl.restaurantId) {
+      const restNum = parseInt(parsedSwiggyUrl.restaurantId, 10);
+      const urlName = parsedSwiggyUrl.name || 'Selected Swiggy Restaurant';
+      seenNames.add(urlName.toLowerCase());
+      combinedSpots.push({
+        id: !isNaN(restNum) ? restNum : 3241,
+        swiggy_id: parsedSwiggyUrl.restaurantId,
+        name: urlName,
+        description: 'Authentic Specialty & Live Swiggy Menu',
+        address: `${effectiveCity}`,
+        area: effectiveCity,
+        city: effectiveCity,
+        latitude: hasUserCoords ? lat : 12.9716,
+        longitude: hasUserCoords ? lng : 77.5946,
+        rating: 4.7,
+        image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80',
+        is_campaign_active: 1,
+        total_visits: 1200,
+        status: 'active'
+      } as any);
+    }
+
+    // 1. Priority: Live Swiggy Scraper via Apify ("thirdwatch/swiggy-scraper")
+    if (isApifyConfigured() && !isNoise) {
+      try {
+        const swiggyRests = await fetchSwiggyRestaurantViaApify(trimmedQ, city || 'Pune', {
+          maxResults: 10,
+          lat: hasUserCoords ? lat : undefined,
+          lng: hasUserCoords ? lng : undefined
+        });
+        for (const s of swiggyRests) {
+          const cleanName = s.name.trim();
+          const lower = cleanName.toLowerCase();
+          if (!seenNames.has(lower)) {
+            seenNames.add(lower);
+            const swiggyId = parseInt(s.restaurant_id, 10);
+            combinedSpots.push({
+              id: !isNaN(swiggyId) ? swiggyId : getDeterministicPlaceId(cleanName, s.city, s.area_name),
+              swiggy_id: s.restaurant_id,
+              name: cleanName,
+              description: `${s.cuisine.slice(0, 3).join(' • ')} | ${s.cost_for_two}`,
+              address: s.address,
+              area: s.area_name || s.locality || city || 'Pune',
+              city: s.city || city || 'Pune',
+              latitude: hasUserCoords ? lat : (s.city ? 12.9716 : 18.5204),
+              longitude: hasUserCoords ? lng : (s.city ? 77.5946 : 73.8407),
+              rating: s.rating,
+              image: s.image_url || pickCuisineImage(cleanName),
+              is_campaign_active: 1,
+              total_visits: 1200,
+              status: 'active',
+              // Rich Swiggy metadata
+              cuisine: s.cuisine,
+              cost_for_two: s.cost_for_two,
+              cost_for_two_rupees: s.cost_for_two_rupees,
+              delivery_time: s.delivery_time,
+              delivery_time_minutes: s.delivery_time_minutes,
+              rating_count: s.rating_count,
+              google_rating: s.google_rating,
+              google_rating_count: s.google_rating_count,
+              offers: s.offers,
+              badges: s.badges,
+              swiggy_url: s.url,
+              url: s.url
+            } as any);
+          }
+        }
+      } catch (apifyErr) {
+        console.warn('Apify restaurant search notice:', apifyErr);
+      }
+    }
 
     // Add live spots (maps, suggestions, dynamic establishments)
     for (const r of liveSpots) {

@@ -6,8 +6,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const name = searchParams.get('name') || searchParams.get('q') || 'Vaishali';
-    const city = searchParams.get('city') || 'Pune';
+    const name = searchParams.get('name') || searchParams.get('q') || 'Meghana Foods';
+    const city = searchParams.get('city') || 'bangalore';
 
     const result = await testApifySwiggyConnection(name, city);
 

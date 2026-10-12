@@ -18,6 +18,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const restCity = (searchParams.get('city') || '').trim();
     const searchQuery = (searchParams.get('q') || '').trim();
     const isVegParam = searchParams.get('is_veg');
+    const swiggyIdParam = searchParams.get('swiggy_id') || searchParams.get('restaurant_id') || '';
+    const latParam = parseFloat(searchParams.get('lat') || '');
+    const lngParam = parseFloat(searchParams.get('lng') || '');
 
     if (isNaN(restId)) {
       return NextResponse.json({ success: false, error: 'Invalid restaurant id' }, { status: 400 });
@@ -37,8 +40,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       city: restCity || 'Pune',
       description: `Authentic culinary specialty & live menu at ${resolvedName}`,
       address: `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
-      latitude: 18.5204,
-      longitude: 73.8407,
+      latitude: !isNaN(latParam) ? latParam : 18.5204,
+      longitude: !isNaN(lngParam) ? lngParam : 73.8407,
       rating: 4.8,
       is_veg: isVeg ? 1 : 0,
       image: visual.plateImage || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
@@ -51,10 +54,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const baseDishes: Dish[] = [];
     let usedSource = 'curated_culinary_catalog';
 
-    // 2. Priority 1: Live Apify Swiggy Scraper ("thirdwatch/swiggy-scraper")
+    // 2. Priority 1: Live Apify Swiggy Scraper ("thirdwatch/swiggy-scraper") & Swiggy Live Menu
     if (isApifyConfigured()) {
       try {
-        const apifyDishes = await fetchSwiggyDishesViaApify(restInfo.name, restInfo.city);
+        const swiggyRestId = swiggyIdParam || (restId > 0 && restId < 890000 ? String(restId) : undefined);
+        const apifyDishes = await fetchSwiggyDishesViaApify(restInfo.name, restInfo.city, {
+          restaurantId: swiggyRestId,
+          lat: restInfo.latitude,
+          lng: restInfo.longitude
+        });
+
         if (apifyDishes && apifyDishes.length > 0) {
           usedSource = 'apify_swiggy';
           for (const d of apifyDishes) {
@@ -112,21 +121,50 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       }
     }
 
-    // 3. Run Swiggy / Zomato Dish Search Engine
-    const dishes = searchDishesSwiggyZomato(restInfo, searchQuery, baseDishes);
+    // 5. Run Swiggy / Zomato Dish Search Engine if a search filter is requested
+    const filteredDishes = searchQuery
+      ? searchDishesSwiggyZomato(restInfo, searchQuery, baseDishes)
+      : baseDishes;
 
-    // Guarantee that every dish has a dynamically generated AI PNG image URL
-    const aiEnrichedDishes = dishes.map(d => ({
-      ...d,
-      image: d.image || `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}`
-    }));
+    // Preserve authentic Swiggy CDN food photography! Only fallback to AI endpoint if no photo exists
+    const finalDishes = filteredDishes.map(d => {
+      const hasRealPhoto = Boolean(
+        d.image &&
+        typeof d.image === 'string' &&
+        (d.image.startsWith('http://') || d.image.startsWith('https://')) &&
+        !d.image.includes('placeholder')
+      );
+
+      const resolvedImage = hasRealPhoto
+        ? d.image
+        : `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}`;
+
+      return {
+        ...d,
+        image: resolvedImage,
+        proxy_image: (d as any).proxy_image || (hasRealPhoto ? `/api/swiggy-image?url=${encodeURIComponent(resolvedImage)}` : resolvedImage),
+        flying_image: resolvedImage
+      };
+    });
+
+    // Extract all unique categories
+    const categories = Array.from(new Set(finalDishes.map((d: any) => d.category || 'Recommended')));
 
     return NextResponse.json({
       success: true,
-      count: aiEnrichedDishes.length,
+      count: finalDishes.length,
       isLiveAPI: true,
       source: usedSource,
-      data: aiEnrichedDishes
+      restaurant: {
+        id: restInfo.id,
+        name: restInfo.name,
+        area: restInfo.area,
+        city: restInfo.city,
+        rating: restInfo.rating,
+        image: restInfo.image
+      },
+      categories,
+      data: finalDishes
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to fetch dishes';

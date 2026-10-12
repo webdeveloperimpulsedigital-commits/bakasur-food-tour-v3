@@ -1,20 +1,80 @@
 /**
  * Apify Swiggy Scraper Integration Engine
- * Supports Actors:
- *  - Primary Menu & Dish Extractor: memo23/swiggy-scraper (Fetches real dishes, prices & photos via /mapi/menu/pl)
- *  - High-Volume Listing Scraper: thirdwatch/swiggy-scraper ("Swiggy Scraper - India Restaurant & Food Delivery Data")
+ * Primary Actor: thirdwatch/swiggy-scraper ("Swiggy Scraper - India Restaurant & Food Delivery Data")
  * 
  * Features:
- * - Live restaurant menu extraction from Swiggy across 30+ Indian cities
- * - Real-world dish pricing, descriptions, veg/non-veg flags, and authentic Swiggy CDN photography
- * - High-speed in-memory caching (2-hour TTL) to conserve Apify usage credits
- * - Multiple schema parsers (flat dishes, category groups, raw Swiggy card structures)
- * - Pure Food PNG AI integration forwarding high-res Swiggy CDN images as cutout source
- * - Resilient timeout and graceful fallback to local curated catalogs when API key is missing
+ * - Live restaurant search and metadata extraction across 30+ Indian cities via Apify
+ * - Direct real-time restaurant food menu extraction with authentic Swiggy CDN photography
+ * - High-speed in-memory caching (2-hour TTL) to conserve Apify usage credits and provide sub-second UI response
+ * - Full food menu parser capturing dishes, categories, prices, discounts, veg/non-veg flags, ratings, and addon options
+ * - Direct Swiggy image CDN URL builder + secure edge proxy (/api/swiggy-image) ensuring 100% reliable food photos
+ * - Smart URL & query parser: auto-detects Swiggy restaurant URLs (e.g. /meghana-foods-...-rest3241) and restaurant IDs
  */
 
-import type { Dish } from './db';
+import type { Dish, Restaurant } from './db';
 import { formatCleanDishName, isDishVeg } from './dishAssets';
+
+export interface SwiggyRestaurantData {
+  restaurant_id: string;
+  name: string;
+  cuisine: string[];
+  rating: number;
+  rating_count: string;
+  google_rating?: number | null;
+  google_rating_count?: string | null;
+  cost_for_two: string;
+  cost_for_two_rupees: number;
+  delivery_time: string;
+  delivery_time_minutes: number;
+  last_mile_distance_km?: number;
+  address: string;
+  locality?: string;
+  area_name?: string;
+  city: string;
+  is_open: boolean;
+  veg_only: boolean;
+  offers: string[];
+  badges: string[];
+  image_url: string;
+  proxy_image_url?: string;
+  url: string;
+  query?: string;
+}
+
+export interface SwiggyAddonChoice {
+  id: string;
+  name: string;
+  price: number;
+  isVeg?: boolean;
+  inStock?: boolean;
+}
+
+export interface SwiggyAddonGroup {
+  groupId: string;
+  groupName: string;
+  choices: SwiggyAddonChoice[];
+  maxAddons?: number;
+  minAddons?: number;
+}
+
+export interface SwiggyDishItem {
+  id: string | number;
+  restaurant_id: string | number;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  original_price?: number;
+  image: string;
+  proxy_image?: string;
+  imageId?: string;
+  is_veg: number; // 1 = veg, 0 = non-veg
+  rating: number;
+  rating_count?: string;
+  is_bestseller?: boolean;
+  addons?: SwiggyAddonGroup[];
+  in_stock?: boolean;
+}
 
 export function getApifyToken(): string {
   return (
@@ -31,42 +91,145 @@ export function isApifyConfigured(): boolean {
 }
 
 export function getApifyActor(): string {
-  const raw = (process.env.APIFY_SWIGGY_ACTOR || 'memo23/swiggy-scraper').trim();
+  const raw = (process.env.APIFY_SWIGGY_ACTOR || 'thirdwatch/swiggy-scraper').trim();
   // Apify REST API requires username~actor-name instead of username/actor-name
   return raw.replace('/', '~');
 }
 
-// In-memory cache for live scraped Swiggy menus
-interface CacheEntry {
+// In-memory caches for live scraped Swiggy menus and restaurants
+interface MenuCacheEntry {
   timestamp: number;
   dishes: Dish[];
+  categories: string[];
 }
-const swiggyMenuCache = new Map<string, CacheEntry>();
+const swiggyMenuCache = new Map<string, MenuCacheEntry>();
+const swiggyRestaurantCache = new Map<string, { timestamp: number; data: SwiggyRestaurantData[] }>();
 const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 export function clearApifySwiggyCache(): void {
   swiggyMenuCache.clear();
+  swiggyRestaurantCache.clear();
+}
+
+/**
+ * Checks if input is a Swiggy URL and extracts restaurant ID, city, and name
+ * Example: https://www.swiggy.com/city/bangalore/meghana-foods-central-bangalore-rest3241
+ */
+export function parseSwiggyRestaurantUrl(input: string): {
+  isSwiggyUrl: boolean;
+  restaurantId?: string;
+  city?: string;
+  slug?: string;
+  name?: string;
+} {
+  if (!input || typeof input !== 'string') {
+    return { isSwiggyUrl: false };
+  }
+
+  const str = input.trim();
+
+  // Pattern 1: https://www.swiggy.com/city/bangalore/meghana-foods-central-bangalore-rest3241
+  const cityUrlMatch = str.match(/swiggy\.com\/city\/([^/]+)\/([^/]+)/i);
+  if (cityUrlMatch) {
+    const city = decodeURIComponent(cityUrlMatch[1]).toLowerCase();
+    const slug = decodeURIComponent(cityUrlMatch[2]);
+    const idMatch = slug.match(/rest(\d+)/i) || slug.match(/-(\d+)$/);
+    const restaurantId = idMatch ? idMatch[1] : undefined;
+    const rawName = slug.replace(/-rest\d+/i, '').replace(/-\d+$/, '').replace(/-/g, ' ');
+    const name = rawName
+      .split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+      .trim();
+    return { isSwiggyUrl: true, restaurantId, city, slug, name };
+  }
+
+  // Pattern 2: https://www.swiggy.com/restaurants/meghana-foods-residency-road-bangalore-3241
+  const restUrlMatch = str.match(/swiggy\.com\/restaurants\/([^/]+)/i);
+  if (restUrlMatch) {
+    const slug = decodeURIComponent(restUrlMatch[1]);
+    const idMatch = slug.match(/rest(\d+)/i) || slug.match(/-(\d+)$/);
+    const restaurantId = idMatch ? idMatch[1] : undefined;
+    return { isSwiggyUrl: true, restaurantId, slug };
+  }
+
+  // Pattern 3: direct rest3241 or 3241
+  const directIdMatch = str.match(/^rest(\d+)$/i) || str.match(/^(\d{2,8})$/);
+  if (directIdMatch) {
+    return { isSwiggyUrl: true, restaurantId: directIdMatch[1] };
+  }
+
+  return { isSwiggyUrl: false };
 }
 
 /**
  * Normalizes restaurant name for optimal search matching on Swiggy
  */
-function cleanRestaurantQuery(name: string): string {
-  return name
-    .replace(/\b(restaurant|hotel|the|famous|pure veg|family|bar|dining|canteen)\b/gi, '')
-    .trim() || name;
+export function cleanRestaurantQuery(name: string): string {
+  // If it's a URL, extract clean name or slug first
+  const parsedUrl = parseSwiggyRestaurantUrl(name);
+  if (parsedUrl.name) {
+    return parsedUrl.name;
+  }
+
+  return (
+    name
+      .replace(/https?:\/\/[^\s]+/gi, '')
+      .replace(/\b(restaurant|hotel|the|famous|pure veg|family|bar|dining|canteen)\b/gi, '')
+      .replace(/[^\w\s]/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim() || name.trim()
+  );
 }
 
 /**
  * Builds full high-resolution Swiggy CDN photo URL from imageId or raw URL
  */
-export function resolveSwiggyDishPhoto(item: any): string | null {
-  if (!item || typeof item !== 'object') return null;
+export function buildSwiggyImageUrl(imageIdOrUrl?: string, width = 500, height = 500): string {
+  if (!imageIdOrUrl || typeof imageIdOrUrl !== 'string') return '';
+  const trimmed = imageIdOrUrl.trim();
+  if (!trimmed) return '';
 
-  // Check direct URL strings
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
+  // Remove potential leading slashes
+  const cleanId = trimmed.replace(/^\/+/, '');
+  return `https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_${width},h_${height},c_fit/${cleanId}`;
+}
+
+/**
+ * Returns proxy image URL through /api/swiggy-image to guarantee 100% CORS and hotlink bypass
+ */
+export function getSwiggyProxyUrl(imageUrl: string): string {
+  if (!imageUrl) return '';
+  if (imageUrl.startsWith('/api/')) return imageUrl;
+  return `/api/swiggy-image?url=${encodeURIComponent(imageUrl)}`;
+}
+
+/**
+ * Builds full high-resolution Swiggy CDN photo URL from imageId or raw URL object
+ */
+export function resolveSwiggyDishPhoto(item: any): string | null {
+  if (!item) return null;
+
+  if (typeof item === 'string') {
+    const trimmed = item.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    if (trimmed.length > 3) {
+      return buildSwiggyImageUrl(trimmed);
+    }
+  }
+
+  if (typeof item !== 'object') return null;
+
+  // Direct image URL fields
   const directUrls = [
-    item.imageUrl,
     item.image_url,
+    item.imageUrl,
     item.image,
     item.dish_image,
     item.photo,
@@ -80,12 +243,10 @@ export function resolveSwiggyDishPhoto(item: any): string | null {
     }
   }
 
-  // Check Swiggy Cloudinary image IDs
+  // Swiggy Cloudinary image IDs
   const rawId = item.imageId || item.cloudinaryImageId || item.dish_image_id || item.creativeId;
   if (rawId && typeof rawId === 'string' && rawId.trim().length > 3) {
-    const cleanId = rawId.trim();
-    // Swiggy Cloudinary CDN endpoint
-    return `https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_500,h_500,c_fit/${cleanId}`;
+    return buildSwiggyImageUrl(rawId.trim());
   }
 
   return null;
@@ -96,7 +257,7 @@ export function resolveSwiggyDishPhoto(item: any): string | null {
  */
 export function parseSwiggyPrice(rawPrice: any): number {
   if (typeof rawPrice === 'number') {
-    // If price is in paise (e.g., 18000 for ₹180)
+    // If price is in paise (e.g., 36500 for ₹365)
     if (rawPrice > 1000) return Math.round(rawPrice / 100);
     return Math.round(rawPrice);
   }
@@ -108,93 +269,105 @@ export function parseSwiggyPrice(rawPrice: any): number {
       return Math.round(num);
     }
   }
-  return 140; // Sensible default
+  return 180; // Sensible default
 }
 
 /**
- * Flattens all dishes from various Apify Actor dataset output schemas
+ * City default coordinates mapping for Indian metropolitan hubs
  */
-function collectRawDishesFromApifyOutput(items: any[]): any[] {
-  const dishBucket: any[] = [];
+export const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  bangalore: { lat: 12.9716, lng: 77.5946 },
+  bengaluru: { lat: 12.9716, lng: 77.5946 },
+  pune: { lat: 18.5204, lng: 73.8567 },
+  mumbai: { lat: 19.076, lng: 72.8777 },
+  delhi: { lat: 28.6139, lng: 77.209 },
+  hyderabad: { lat: 17.385, lng: 78.4867 },
+  kolkata: { lat: 22.5726, lng: 88.3639 },
+  chennai: { lat: 13.0827, lng: 80.2707 },
+  ahmedabad: { lat: 23.0225, lng: 72.5714 },
+  jaipur: { lat: 26.9124, lng: 75.7873 },
+  lucknow: { lat: 26.8467, lng: 80.9462 },
+  chandigarh: { lat: 30.7333, lng: 76.7794 },
+  indore: { lat: 22.7196, lng: 75.8577 },
+  goa: { lat: 15.2993, lng: 74.124 }
+};
 
-  for (const record of items) {
-    if (!record || typeof record !== 'object') continue;
+/**
+ * 1. Search for live restaurants on Swiggy via Apify actor (thirdwatch/swiggy-scraper)
+ * Incorporates smart ranking so exact matches come before promoted ads
+ */
+export async function fetchSwiggyRestaurantViaApify(
+  query: string,
+  city = 'bangalore',
+  options?: {
+    maxResults?: number;
+    lat?: number;
+    lng?: number;
+  }
+): Promise<SwiggyRestaurantData[]> {
+  const maxResults = options?.maxResults || 10;
+  const parsedUrl = parseSwiggyRestaurantUrl(query);
+  const cleanQuery = cleanRestaurantQuery(query);
+  const cityKey = (parsedUrl.city || city || 'bangalore').toLowerCase();
+  const cacheKey = `${cleanQuery.toLowerCase()}_${cityKey}`;
 
-    // Case 1: Record has a menu array (e.g. from memo23/swiggy-scraper)
-    if (Array.isArray(record.menu)) {
-      for (const m of record.menu) {
-        if (Array.isArray(m.items)) dishBucket.push(...m.items);
-        else if (Array.isArray(m.dishes)) dishBucket.push(...m.dishes);
-        else dishBucket.push(m);
-      }
-    }
-
-    // Case 2: Record has categories array containing items
-    if (Array.isArray(record.categories)) {
-      for (const cat of record.categories) {
-        if (Array.isArray(cat.items)) dishBucket.push(...cat.items);
-        else if (Array.isArray(cat.dishes)) dishBucket.push(...cat.dishes);
-      }
-    }
-
-    // Case 3: Record has items or dishes array directly
-    if (Array.isArray(record.items)) dishBucket.push(...record.items);
-    if (Array.isArray(record.dishes)) dishBucket.push(...record.dishes);
-    if (Array.isArray(record.menu_items)) dishBucket.push(...record.menu_items);
-
-    // Case 4: Record is itself a dish (e.g. from searchType: "dish")
-    const isDirectDish = Boolean(
-      (record.dish_name || record.name || record.title) &&
-      (record.price || record.finalPrice || record.imageId || record.description || record.dish_id) &&
-      !record.menu && !record.categories
-    );
-    if (isDirectDish) {
-      dishBucket.push(record);
-    }
+  const cached = swiggyRestaurantCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  return dishBucket;
-}
+  if (!isApifyConfigured()) {
+    // If not configured, but query is a Swiggy URL or has restaurant_id, return synthetic restaurant
+    if (parsedUrl.restaurantId) {
+      return [
+        {
+          restaurant_id: parsedUrl.restaurantId,
+          name: parsedUrl.name || cleanQuery || 'Meghana Foods',
+          cuisine: ['Biryani', 'Andhra', 'South Indian'],
+          rating: 4.7,
+          rating_count: '93K+',
+          cost_for_two: '₹500 for two',
+          cost_for_two_rupees: 500,
+          delivery_time: '30-35 MINS',
+          delivery_time_minutes: 33,
+          address: `${parsedUrl.name || cleanQuery}, ${cityKey}`,
+          city: cityKey,
+          is_open: true,
+          veg_only: false,
+          offers: ['FLAT DEAL: 50% OFF'],
+          badges: ['Best in Biryani', 'Best in Bolt'],
+          image_url: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80',
+          url: query.startsWith('http') ? query : `https://www.swiggy.com/city/${cityKey}/${encodeURIComponent(cleanQuery)}`
+        }
+      ];
+    }
+    return [];
+  }
 
-/**
- * Run a specific Apify actor with normalized payload
- */
-async function callApifyActorSync(
-  actorSlug: string,
-  token: string,
-  query: string,
-  city: string,
-  timeoutSec = 25
-): Promise<any[]> {
-  const actorId = actorSlug.replace('/', '~');
+  const token = getApifyToken();
+  const actorId = getApifyActor();
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), (timeoutSec + 3) * 1000);
+  const timer = setTimeout(() => controller.abort(), 35000);
 
-  const isMemo = actorId.includes('memo23');
-  const payload = isMemo
-    ? {
-        cities: [(city || 'pune').toLowerCase()],
-        queries: [query],
-        includeMenu: true,
-        maxItems: 2,
-        maxMenuItems: 15
-      }
-    : {
-        queries: [query],
-        city: (city || 'pune').toLowerCase(),
-        searchType: 'restaurant',
-        maxResults: 2
-      };
+  const cityCoords = CITY_COORDINATES[cityKey] || { lat: 12.9716, lng: 77.5946 };
+  const lat = options?.lat || cityCoords.lat;
+  const lng = options?.lng || cityCoords.lng;
 
   try {
-    const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${token}&timeout=${timeoutSec}`;
+    const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${token}&timeout=30`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'BakasurFoodTour/3.0'
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        queries: [cleanQuery],
+        city: cityKey,
+        searchType: 'restaurant',
+        maxResults,
+        ...(lat && lng ? { latitude: lat, longitude: lng } : {})
+      }),
       signal: controller.signal
     });
 
@@ -206,112 +379,331 @@ async function callApifyActorSync(
     }
 
     const items = await res.json();
-    return Array.isArray(items) ? items : [];
+    if (!Array.isArray(items)) return [];
+
+    const parsed: SwiggyRestaurantData[] = items.map((r: any) => {
+      const restImg = resolveSwiggyDishPhoto(r) || r.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80';
+      return {
+        restaurant_id: String(r.restaurant_id || r.id || ''),
+        name: r.name || cleanQuery,
+        cuisine: Array.isArray(r.cuisine) ? r.cuisine : (r.cuisines || ['Multi-Cuisine']),
+        rating: parseFloat(r.rating) || 4.5,
+        rating_count: r.rating_count ? String(r.rating_count) : '1K+',
+        google_rating: r.google_rating ? parseFloat(r.google_rating) : null,
+        google_rating_count: r.google_rating_count ? String(r.google_rating_count) : null,
+        cost_for_two: r.cost_for_two || `₹${r.cost_for_two_rupees || 400} for two`,
+        cost_for_two_rupees: parseSwiggyPrice(r.cost_for_two_rupees || r.cost_for_two),
+        delivery_time: r.delivery_time || `${r.delivery_time_minutes || 30} MINS`,
+        delivery_time_minutes: parseInt(r.delivery_time_minutes, 10) || 30,
+        last_mile_distance_km: r.last_mile_distance_km ? parseFloat(r.last_mile_distance_km) : undefined,
+        address: r.address || `${r.area_name || ''}, ${city}`,
+        locality: r.locality || r.area_name || '',
+        area_name: r.area_name || r.locality || city,
+        city: r.city || city,
+        is_open: r.is_open !== false,
+        veg_only: Boolean(r.veg_only),
+        offers: Array.isArray(r.offers) ? r.offers : [],
+        badges: Array.isArray(r.badges) ? r.badges : [],
+        image_url: restImg,
+        proxy_image_url: getSwiggyProxyUrl(restImg),
+        url: r.url || `https://www.swiggy.com/city/${cityKey}/${encodeURIComponent(r.name || cleanQuery)}`,
+        query: r.query || cleanQuery
+      };
+    });
+
+    // Smart Ranking: Rank exact matches or substring matches first over sponsored ads!
+    const queryLower = cleanQuery.toLowerCase();
+    parsed.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const aExact = aName === queryLower ? 100 : aName.startsWith(queryLower) ? 50 : aName.includes(queryLower) ? 25 : 0;
+      const bExact = bName === queryLower ? 100 : bName.startsWith(queryLower) ? 50 : bName.includes(queryLower) ? 25 : 0;
+      return bExact - aExact;
+    });
+
+    if (parsed.length > 0) {
+      swiggyRestaurantCache.set(cacheKey, { timestamp: Date.now(), data: parsed });
+    }
+
+    return parsed;
   } catch (err: any) {
     clearTimeout(timer);
-    console.warn(`Apify actor ${actorId} call notice:`, err.message || err);
+    console.warn(`Apify actor ${actorId} search notice:`, err.message || err);
     return [];
   }
 }
 
 /**
- * Live scrape restaurant menu items and images from Swiggy using Apify
+ * 2. Fetch full restaurant menu directly from Swiggy's menu endpoint with authentic photos and addons
  */
-export async function fetchSwiggyDishesViaApify(
-  restaurantName: string,
-  city = 'Pune'
+export async function fetchSwiggyRestaurantMenu(
+  restaurantId: string | number,
+  lat?: number,
+  lng?: number
 ): Promise<Dish[]> {
-  if (!isApifyConfigured()) {
-    return [];
-  }
+  const cleanId = String(restaurantId).trim().replace(/^rest/i, '');
+  if (!cleanId || cleanId === '0') return [];
 
-  const query = cleanRestaurantQuery(restaurantName);
-  const cacheKey = `${query.toLowerCase()}_${(city || 'pune').toLowerCase()}`;
+  // Check cache
+  const cacheKey = `menu_${cleanId}`;
   const cached = swiggyMenuCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.dishes;
   }
 
-  const token = getApifyToken();
-  const primaryActor = getApifyActor();
+  const defaultCoords = { lat: lat || 12.9716, lng: lng || 77.5946 };
+  const url = `https://www.swiggy.com/mapi/menu/pl?page-type=REGULAR_MENU&complete-menu=true&lat=${defaultCoords.lat}&lng=${defaultCoords.lng}&restaurantId=${cleanId}`;
 
-  // 1. Try primary actor (defaults to memo23/swiggy-scraper which extracts live menu items & photos)
-  let items = await callApifyActorSync(primaryActor, token, query, city, 25);
-  let rawDishes = collectRawDishesFromApifyOutput(items);
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
 
-  // 2. If primary was thirdwatch or returned no menu items, try memo23 as fallback for dishes
-  if (rawDishes.length === 0 && !primaryActor.includes('memo23')) {
-    items = await callApifyActorSync('memo23/swiggy-scraper', token, query, city, 25);
-    rawDishes = collectRawDishesFromApifyOutput(items);
-  }
-
-  if (rawDishes.length === 0) {
-    return [];
-  }
-
-  const extractedDishes: Dish[] = [];
-  const seenNames = new Set<string>();
-
-  for (const item of rawDishes) {
-    const rawName = item.name || item.dish_name || item.title || item.itemName || '';
-    if (!rawName || typeof rawName !== 'string' || rawName.trim().length < 2) continue;
-
-    const cleanName = formatCleanDishName(rawName.trim(), restaurantName);
-    const lower = cleanName.toLowerCase();
-    if (seenNames.has(lower)) continue;
-    seenNames.add(lower);
-
-    const price = parseSwiggyPrice(
-      item.price ?? item.defaultPrice ?? item.finalPrice ?? item.original_price ?? item.originalPrice
-    );
-    const description = (
-      item.description ||
-      item.desc ||
-      `Authentic specialty freshly prepared at ${restaurantName} on Swiggy`
-    ).trim();
-
-    const swiggyPhoto = resolveSwiggyDishPhoto(item);
-
-    // Build AI-cutout dish image URL with original Swiggy photo as high-res source
-    const finalDishImageUrl = swiggyPhoto
-      ? `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName)}&imgUrl=${encodeURIComponent(swiggyPhoto)}`
-      : `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName)}`;
-
-    const rawRating = item.rating?.rating || item.dish_rating || item.rating;
-    const parsedRating = typeof rawRating === 'number' && rawRating > 0 && rawRating <= 5 ? rawRating : 4.8;
-
-    extractedDishes.push({
-      id: 900000 + extractedDishes.length + 1,
-      restaurant_id: 1,
-      name: cleanName,
-      description,
-      price,
-      image: finalDishImageUrl,
-      rating: parsedRating,
-      popularity: item.isBestseller ? 100 : 98,
-      is_recommended: extractedDishes.length < 3 ? 1 : 0,
-      status: 'active'
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'application/json, text/plain, */*',
+        Referer: 'https://www.swiggy.com/'
+      },
+      signal: controller.signal
     });
 
-    if (extractedDishes.length >= 15) break;
+    clearTimeout(timer);
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const json = await res.json();
+    const cards = json?.data?.cards || [];
+    const groupedCard =
+      cards.find((c: any) => c.groupedCard)?.groupedCard?.cardGroupMap?.REGULAR?.cards || [];
+
+    const extractedDishes: Dish[] = [];
+    const seenNames = new Set<string>();
+
+    const processItemInfo = (info: any, categoryName: string) => {
+      if (!info || !info.name || typeof info.name !== 'string') return;
+      const rawName = info.name.trim();
+      const lower = rawName.toLowerCase();
+      if (seenNames.has(lower)) return;
+      seenNames.add(lower);
+
+      const price = parseSwiggyPrice(info.price ?? info.defaultPrice ?? 18000);
+      const originalPrice = info.originalPrice ? parseSwiggyPrice(info.originalPrice) : undefined;
+      const imageId = info.imageId;
+      const photoUrl = imageId
+        ? buildSwiggyImageUrl(imageId)
+        : resolveSwiggyDishPhoto(info);
+
+      const isVeg =
+        info.isVeg === 1 ||
+        info.itemAttribute?.vegClassifier === 'VEG' ||
+        isDishVeg(rawName);
+
+      const rawRating = parseFloat(info.ratings?.aggregatedRating?.rating);
+      const rating = !isNaN(rawRating) && rawRating > 0 && rawRating <= 5 ? rawRating : 4.7;
+      const ratingCount = info.ratings?.aggregatedRating?.ratingCountV2 || '';
+
+      // Extract addon options
+      const addonGroups: SwiggyAddonGroup[] = [];
+      if (Array.isArray(info.addons)) {
+        for (const grp of info.addons) {
+          if (Array.isArray(grp.choices)) {
+            addonGroups.push({
+              groupId: String(grp.groupId || grp.id || ''),
+              groupName: grp.groupName || 'Addons',
+              maxAddons: grp.maxAddons,
+              minAddons: grp.minAddons,
+              choices: grp.choices.map((ch: any) => ({
+                id: String(ch.id || ''),
+                name: ch.name || '',
+                price: parseSwiggyPrice(ch.price || 0),
+                isVeg: ch.isVeg === 1,
+                inStock: ch.inStock !== 0
+              }))
+            });
+          }
+        }
+      }
+
+      extractedDishes.push({
+        id: parseInt(info.id, 10) || 900000 + extractedDishes.length + 1,
+        restaurant_id: parseInt(cleanId, 10) || 1,
+        name: rawName,
+        description: (info.description || '').trim(),
+        price,
+        image: photoUrl || '',
+        proxy_image: photoUrl ? getSwiggyProxyUrl(photoUrl) : '',
+        rating,
+        popularity: info.isBestseller ? 100 : 96,
+        is_recommended: categoryName.toLowerCase().includes('recommended') ? 1 : 0,
+        is_veg: isVeg ? 1 : 0,
+        status: 'active',
+        // Rich Swiggy metadata
+        ...(originalPrice ? { original_price: originalPrice } : {}),
+        ...(ratingCount ? { rating_count: ratingCount } : {}),
+        ...(info.isBestseller ? { is_bestseller: true } : {}),
+        ...(addonGroups.length > 0 ? { addons: addonGroups } : {}),
+        category: categoryName || 'Recommended'
+      } as any);
+    };
+
+    // Filter out non-category cards (SEO content, licensing, FAQs, app download)
+    const EXCLUDED_CATEGORIES = [
+      'about',
+      'faq',
+      'frequently asked',
+      'popular search',
+      'license',
+      'fssai',
+      'download',
+      'order from',
+      'footer',
+      'gridwidget'
+    ];
+
+    for (const gc of groupedCard) {
+      const itemCard = gc?.card?.card;
+      if (!itemCard) continue;
+
+      const cardType = (itemCard['@type'] || '').toLowerCase();
+      const catTitle = (itemCard.title || '').trim();
+
+      // Skip non-item cards
+      if (!cardType.includes('itemcategory') && !itemCard.itemCards && !itemCard.categories) {
+        continue;
+      }
+      if (EXCLUDED_CATEGORIES.some(exc => catTitle.toLowerCase().includes(exc))) {
+        continue;
+      }
+
+      const safeCategoryName = catTitle || 'Recommended';
+
+      // 1. itemCards
+      if (Array.isArray(itemCard.itemCards)) {
+        for (const ic of itemCard.itemCards) {
+          processItemInfo(ic?.card?.info, safeCategoryName);
+        }
+      }
+
+      // 2. nested categories
+      if (Array.isArray(itemCard.categories)) {
+        for (const subCat of itemCard.categories) {
+          const subTitle = subCat.title || safeCategoryName;
+          if (Array.isArray(subCat.itemCards)) {
+            for (const ic of subCat.itemCards) {
+              processItemInfo(ic?.card?.info, subTitle);
+            }
+          }
+        }
+      }
+    }
+
+    if (extractedDishes.length > 0) {
+      const categories = Array.from(new Set(extractedDishes.map((d: any) => d.category || 'Recommended')));
+      swiggyMenuCache.set(cacheKey, {
+        timestamp: Date.now(),
+        dishes: extractedDishes,
+        categories
+      });
+    }
+
+    return extractedDishes;
+  } catch (err: any) {
+    console.warn(`Swiggy direct menu endpoint notice for ${cleanId}:`, err.message || err);
+    return [];
+  }
+}
+
+/**
+ * 3. Primary dish extractor: live scrape restaurant menu items and images from Swiggy
+ * Coordinates Apify actor discovery + direct menu retrieval
+ */
+export async function fetchSwiggyDishesViaApify(
+  restaurantName: string,
+  city = 'bangalore',
+  options?: {
+    restaurantId?: string | number;
+    lat?: number;
+    lng?: number;
+  }
+): Promise<Dish[]> {
+  const parsedUrl = parseSwiggyRestaurantUrl(restaurantName);
+  const targetId = options?.restaurantId || parsedUrl.restaurantId;
+  const cleanName = parsedUrl.name || cleanRestaurantQuery(restaurantName);
+  const cityKey = (parsedUrl.city || city || 'bangalore').toLowerCase();
+  const cacheKey = `${cleanName.toLowerCase()}_${cityKey}`;
+
+  const cached = swiggyMenuCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.dishes;
   }
 
-  if (extractedDishes.length > 0) {
-    swiggyMenuCache.set(cacheKey, { timestamp: Date.now(), dishes: extractedDishes });
+  // Determine coordinates for the city
+  const cityCoords = CITY_COORDINATES[cityKey] || { lat: 12.9716, lng: 77.5946 };
+  const lat = options?.lat || cityCoords.lat;
+  const lng = options?.lng || cityCoords.lng;
+
+  let directDishes: Dish[] = [];
+
+  // A. If restaurantId is already known (e.g. 3241 for Meghana Foods), fetch full menu directly
+  if (targetId) {
+    directDishes = await fetchSwiggyRestaurantMenu(targetId, lat, lng);
   }
 
-  return extractedDishes;
+  // B. If not found or no ID provided, search restaurant on Swiggy via Apify thirdwatch actor
+  if (directDishes.length === 0 && isApifyConfigured()) {
+    try {
+      const scrapedRestaurants = await fetchSwiggyRestaurantViaApify(cleanName, cityKey, {
+        maxResults: 10,
+        lat,
+        lng
+      });
+
+      if (scrapedRestaurants.length > 0) {
+        // Find the best matching restaurant
+        const queryLower = cleanName.toLowerCase();
+        let matchedRest = scrapedRestaurants.find(r => r.name.toLowerCase().includes(queryLower));
+        if (!matchedRest) {
+          // Check if any word from cleanName is in restaurant name
+          const words = queryLower.split(' ').filter(w => w.length > 2);
+          matchedRest = scrapedRestaurants.find(r => words.some(w => r.name.toLowerCase().includes(w)));
+        }
+        if (!matchedRest) {
+          matchedRest = scrapedRestaurants[0];
+        }
+
+        if (matchedRest && matchedRest.restaurant_id) {
+          directDishes = await fetchSwiggyRestaurantMenu(matchedRest.restaurant_id, lat, lng);
+        }
+      }
+    } catch (apifySearchErr) {
+      console.warn('Apify restaurant search notice:', apifySearchErr);
+    }
+  }
+
+  // Cache results if dishes were found
+  if (directDishes.length > 0) {
+    const categories = Array.from(new Set(directDishes.map((d: any) => d.category || 'Recommended')));
+    swiggyMenuCache.set(cacheKey, {
+      timestamp: Date.now(),
+      dishes: directDishes,
+      categories
+    });
+  }
+
+  return directDishes;
 }
 
 /**
  * Diagnostic tool to test the Apify connection and view scraped dishes
  */
 export async function testApifySwiggyConnection(
-  restaurantName = 'Vaishali',
-  city = 'Pune'
+  restaurantName = 'Meghana Foods',
+  city = 'bangalore'
 ) {
   const configured = isApifyConfigured();
-  const token = getApifyToken();
   const actor = getApifyActor();
 
   if (!configured) {
@@ -326,6 +718,7 @@ export async function testApifySwiggyConnection(
 
   const startTime = Date.now();
   try {
+    const restaurants = await fetchSwiggyRestaurantViaApify(restaurantName, city, { maxResults: 5 });
     const dishes = await fetchSwiggyDishesViaApify(restaurantName, city);
     const durationMs = Date.now() - startTime;
 
@@ -336,12 +729,16 @@ export async function testApifySwiggyConnection(
       restaurant: restaurantName,
       city,
       durationMs,
+      foundRestaurant: restaurants.length > 0 ? restaurants[0] : null,
       dishCount: dishes.length,
       sampleDishes: dishes.slice(0, 5).map(d => ({
         name: d.name,
+        category: (d as any).category,
         price: d.price,
         rating: d.rating,
+        is_veg: (d as any).is_veg,
         image: d.image,
+        proxy_image: (d as any).proxy_image,
         description: d.description
       }))
     };
