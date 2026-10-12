@@ -19,7 +19,8 @@ export async function GET(request: Request) {
         totalRestaurants: result.stats.foodSpots,
         points: mapPoints,
         stats: result.stats,
-        currentUserPoint: result.currentUserPoint
+        currentUserPoint: result.currentUserPoint,
+        currentUserSpots: (result as any).currentUserSpots || (result.currentUserPoint ? [result.currentUserPoint] : [])
       }
     });
   } catch (error: unknown) {

@@ -15,17 +15,22 @@ export interface TourMapPoint {
   total_visits: number;
   featured_dish?: string;
   isCurrentUserSpot?: boolean;
+  stopNumber?: number;
+}
+
+export interface CurrentUserSpotInfo {
+  name: string;
+  city: string;
+  dishName: string;
+  latitude?: number;
+  longitude?: number;
+  stopNumber?: number;
 }
 
 interface InteractiveTourMapProps {
   sessionId?: string;
-  currentUserSpot?: {
-    name: string;
-    city: string;
-    dishName: string;
-    latitude?: number;
-    longitude?: number;
-  } | null;
+  currentUserSpot?: CurrentUserSpotInfo | null;
+  currentUserSpots?: CurrentUserSpotInfo[];
   onSelectPoint?: (point: TourMapPoint) => void;
   onStatsLoaded?: (stats: { foodSpots: number; mustTryDishes: number; citiesCount: number }) => void;
   onShareUserSpot?: () => void;
@@ -34,6 +39,7 @@ interface InteractiveTourMapProps {
 export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
   sessionId,
   currentUserSpot,
+  currentUserSpots,
   onSelectPoint,
   onStatsLoaded,
   onShareUserSpot
@@ -63,45 +69,79 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
             (p: any) => typeof p.latitude === 'number' && typeof p.longitude === 'number' && !isNaN(p.latitude) && !isNaN(p.longitude)
           );
 
-          // If currentUserSpot is passed, ensure it is in the list and uniquely marked as current user
-          if (currentUserSpot && currentUserSpot.name) {
-            const userLat = currentUserSpot.latitude || 18.5204;
-            const userLng = currentUserSpot.longitude || 73.8407;
-            setUserCenterCoords([userLat, userLng]);
+          // Determine all user visited spots (either passed via prop or retrieved from DB by session_id)
+          const propSpots: CurrentUserSpotInfo[] = (currentUserSpots && currentUserSpots.length > 0)
+            ? currentUserSpots
+            : (currentUserSpot && currentUserSpot.name ? [currentUserSpot] : []);
 
-            // Clear any stale isCurrentUserSpot flags on other points
+          const dbSpots: CurrentUserSpotInfo[] = (json.data.currentUserSpots && Array.isArray(json.data.currentUserSpots) && json.data.currentUserSpots.length > 0)
+            ? json.data.currentUserSpots.map((s: any, idx: number) => ({
+                name: s.name,
+                city: s.city,
+                dishName: s.featured_dish || 'Specialty Dish',
+                latitude: s.latitude,
+                longitude: s.longitude,
+                stopNumber: s.stopNumber || idx + 1
+              }))
+            : [];
+
+          const activeUserSpots: CurrentUserSpotInfo[] = dbSpots.length >= propSpots.length && dbSpots.length > 0
+            ? dbSpots
+            : (propSpots.length > 0 ? propSpots : dbSpots);
+
+          if (activeUserSpots.length > 0) {
+            const userNamesSet = new Set(activeUserSpots.map(s => (s.name || '').toLowerCase().trim()));
+
+            // Clear stale flags
             list.forEach(p => {
-              if (p.name.toLowerCase() !== currentUserSpot.name.toLowerCase()) {
+              if (!userNamesSet.has((p.name || '').toLowerCase().trim())) {
                 p.isCurrentUserSpot = false;
               }
             });
 
-            const existingIdx = list.findIndex(
-              p => p.name && p.name.toLowerCase() === currentUserSpot.name.toLowerCase()
-            );
+            // Mark or insert each user spot
+            activeUserSpots.forEach((spot, idx) => {
+              const spotLat = spot.latitude || 18.5204;
+              const spotLng = spot.longitude || 73.8407;
+              const stopNumber = spot.stopNumber || (idx + 1);
 
-            if (existingIdx !== -1) {
-              list[existingIdx] = {
-                ...list[existingIdx],
-                name: currentUserSpot.name,
-                city: currentUserSpot.city || list[existingIdx].city,
-                featured_dish: currentUserSpot.dishName || list[existingIdx].featured_dish,
-                latitude: userLat,
-                longitude: userLng,
-                isCurrentUserSpot: true
-              };
-            } else {
-              list.unshift({
-                id: 999999,
-                name: currentUserSpot.name,
-                city: currentUserSpot.city,
-                latitude: userLat,
-                longitude: userLng,
-                rating: 4.9,
-                total_visits: 1,
-                featured_dish: currentUserSpot.dishName,
-                isCurrentUserSpot: true
-              });
+              const existingIdx = list.findIndex(
+                p => p.name && (
+                  p.name.toLowerCase().trim() === (spot.name || '').toLowerCase().trim() ||
+                  p.name.toLowerCase().includes((spot.name || '').toLowerCase().trim()) ||
+                  (spot.name || '').toLowerCase().includes(p.name.toLowerCase().trim())
+                )
+              );
+
+              if (existingIdx !== -1) {
+                list[existingIdx] = {
+                  ...list[existingIdx],
+                  name: spot.name,
+                  city: spot.city || list[existingIdx].city,
+                  featured_dish: spot.dishName || list[existingIdx].featured_dish,
+                  latitude: spotLat,
+                  longitude: spotLng,
+                  isCurrentUserSpot: true,
+                  stopNumber
+                };
+              } else {
+                list.unshift({
+                  id: 999990 + idx,
+                  name: spot.name,
+                  city: spot.city,
+                  latitude: spotLat,
+                  longitude: spotLng,
+                  rating: 4.9,
+                  total_visits: 1,
+                  featured_dish: spot.dishName,
+                  isCurrentUserSpot: true,
+                  stopNumber
+                });
+              }
+            });
+
+            if (activeUserSpots[0]?.latitude && activeUserSpots[0]?.longitude) {
+              setUserCenterCoords([activeUserSpots[0].latitude, activeUserSpots[0].longitude]);
             }
           } else if (json.data?.currentUserPoint) {
             const cur = json.data.currentUserPoint;
@@ -131,7 +171,7 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [sessionId, currentUserSpot]);
+  }, [sessionId, currentUserSpot, currentUserSpots]);
 
   // 2. Initialize and render Leaflet Google Map
   useEffect(() => {
@@ -188,24 +228,33 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         const pointLng = point.longitude;
 
         if (isCurrent) {
-          // BLUE PIN: Current User's Visited Spot (Clean teardrop marker without bulky text label)
+          // BLUE PIN: Current User's Visited Spot with clear Floating Name Label & Glowing Halo
+          const stopTitle = point.stopNumber ? `Stop ${point.stopNumber}` : 'Aapka Spot';
+          const pinBadgeText = point.stopNumber ? `${point.stopNumber}` : `${point.total_visits || 1}`;
+          const cleanDisplayName = point.name.length > 22 ? point.name.slice(0, 20) + '...' : point.name;
+
           const blueIcon = L.divIcon({
             className: 'custom-user-blue-pin',
             html: `
               <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
+                <!-- High-visibility Floating Name Badge Label -->
+                <div style="background: #1D4ED8; color: #FFFFFF; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(29,78,216,0.45); white-space: nowrap; margin-bottom: 3px; border: 1.5px solid #FFFFFF; letter-spacing: 0.2px; display: flex; align-items: center; gap: 4px; pointer-events: none;">
+                  <span style="color: #93C5FD; font-size: 9px; text-transform: uppercase;">${stopTitle}</span>
+                  <span style="color: #FFFFFF;">${cleanDisplayName}</span>
+                </div>
                 <!-- Pulsing outer halo to highlight user's spot -->
-                <div style="position: absolute; top: -3px; left: -3px; width: 34px; height: 34px; border-radius: 50%; background-color: rgba(37,99,235,0.35); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-                <!-- Teardrop Pin Marker with Visit Count -->
+                <div style="position: absolute; top: 20px; width: 34px; height: 34px; border-radius: 50%; background-color: rgba(37,99,235,0.35); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+                <!-- Teardrop Pin Marker with Visit / Stop Number -->
                 <div style="position: relative; display: flex; align-items: center; justify-content: center; z-index: 10;">
                   <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #1D4ED8); border: 2.5px solid #FFFFFF; box-shadow: 0 6px 16px rgba(37,99,235,0.6); display: flex; align-items: center; justify-content: center;">
-                    <span style="font-size: 11px; font-weight: 900; color: #FFFFFF; line-height: 1;">${point.total_visits}</span>
+                    <span style="font-size: 11px; font-weight: 900; color: #FFFFFF; line-height: 1;">${pinBadgeText}</span>
                   </div>
                   <div style="position: absolute; bottom: -4px; width: 8px; height: 8px; background-color: #1D4ED8; transform: rotate(45deg);"></div>
                 </div>
               </div>
             `,
-            iconSize: [28, 36],
-            iconAnchor: [14, 36]
+            iconSize: [160, 58],
+            iconAnchor: [80, 58]
           });
 
           const marker = L.marker([point.latitude, point.longitude], {
@@ -217,7 +266,7 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
             <div style="font-family: inherit; padding: 4px 6px; min-width: 150px; text-align: left;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 6px;">
                 <span style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1D4ED8; background: #DBEAFE; padding: 1px 6px; border-radius: 4px;">
-                  Aapka Visited Spot
+                  Aapka Visited Spot ${point.stopNumber ? `(Stop ${point.stopNumber})` : ''}
                 </span>
                 <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 900; color: #1D4ED8; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 1px 6px; border-radius: 9999px;">
                   👥 ${point.total_visits} ${point.total_visits === 1 ? 'Visit' : 'Visits'}
@@ -310,11 +359,18 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         }
       });
 
-      // Fit bounds to show all food tour spots in a clean, zoomed-out national view
-      if (points.length > 0) {
+      // Initial View: Focus directly on user's visited food tour spots so both locations show clearly!
+      const userSpots = points.filter(p => p.isCurrentUserSpot);
+      if (userSpots.length >= 2) {
+        const userBounds = L.latLngBounds(userSpots.map(p => [p.latitude, p.longitude]));
+        if (userBounds.isValid()) {
+          map.fitBounds(userBounds, { padding: [50, 50], maxZoom: 14 });
+        }
+      } else if (userSpots.length === 1) {
+        map.setView([userSpots[0].latitude, userSpots[0].longitude], 13);
+      } else if (points.length > 0) {
         const bounds = L.latLngBounds(points.map(p => [p.latitude, p.longitude]));
         if (bounds.isValid()) {
-          // maxZoom: 5.0 ensures the map stays nicely zoomed out, showing all locations across India
           map.fitBounds(bounds, { padding: [20, 20], maxZoom: 5.0 });
         }
       } else {
@@ -343,12 +399,26 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         mapInstanceRef.current = null;
       }
     };
-  }, [points, currentUserSpot]);
+  }, [points, currentUserSpot, currentUserSpots]);
 
-  // Center on Current User Pin
-  const handleZoomToUser = () => {
+  // Center on Current User Pin (or bounds of both user visited spots)
+  const handleZoomToUser = async () => {
     if (!mapInstanceRef.current) return;
-    const current = points.find(p => p.isCurrentUserSpot);
+    const userSpots = points.filter(p => p.isCurrentUserSpot);
+    if (userSpots.length > 1) {
+      try {
+        const L = (await import('leaflet')).default;
+        const bounds = L.latLngBounds(userSpots.map(p => [p.latitude, p.longitude]));
+        if (bounds.isValid()) {
+          mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+          return;
+        }
+      } catch (err) {
+        console.warn('Bounds zoom notice:', err);
+      }
+    }
+
+    const current = userSpots[0] || points.find(p => p.isCurrentUserSpot);
     if (current) {
       mapInstanceRef.current.flyTo([current.latitude, current.longitude], 13, { duration: 1.2 });
     } else if (currentUserSpot?.latitude && currentUserSpot?.longitude) {

@@ -16,7 +16,16 @@ interface Frame11LiveMapProps {
     dishName: string;
     latitude?: number;
     longitude?: number;
+    stopNumber?: number;
   } | null;
+  currentUserSpots?: Array<{
+    name: string;
+    city: string;
+    dishName: string;
+    latitude?: number;
+    longitude?: number;
+    stopNumber?: number;
+  }>;
   onRegisterLiveTour?: () => void;
   onSuggestAnotherSpot: () => void;
   onRegisterSubmit?: (mobile: string, name?: string, concern?: string) => Promise<boolean | void>;
@@ -32,6 +41,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
   registeredMobile = '',
   participationId = '',
   currentUserSpot,
+  currentUserSpots,
   onRegisterLiveTour,
   onSuggestAnotherSpot,
   onRegisterSubmit,
@@ -46,9 +56,10 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
     citiesCount: null
   });
 
-  // Registration Popup State (Only Mobile Number & User Consent Checkbox)
+  // Registration Popup State (Name, Mobile Number & User Consent Checkbox)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const [name, setName] = useState<string>('');
   const [mobile, setMobile] = useState<string>('');
   const [consent, setConsent] = useState<boolean>(false);
   const [localError, setLocalError] = useState<string>('');
@@ -136,9 +147,20 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
     e.preventDefault();
     setLocalError('');
 
+    const cleanName = name.trim();
+    if (!cleanName || cleanName.length < 2) {
+      setLocalError('Kripya apna naam daalein (kam se kam 2 akshar).');
+      return;
+    }
+
+    if (!/^[a-zA-Z\s]+$/.test(cleanName)) {
+      setLocalError('Naam mein sirf letters (characters) allow hain, numbers ya symbols nahi.');
+      return;
+    }
+
     const cleanMobile = mobile.replace(/\D/g, '');
     if (!cleanMobile || cleanMobile.length !== 10) {
-      setLocalError('Kripya apna sahi 10-digit mobile number daalein.');
+      setLocalError('Kripya apna sahi 10-digit mobile number daalein (sirf 10 numbers).');
       return;
     }
 
@@ -153,7 +175,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
     }
 
     if (onRegisterSubmit) {
-      const ok = await onRegisterSubmit(cleanMobile);
+      const ok = await onRegisterSubmit(cleanMobile, cleanName);
       if (ok) {
         setIsSubmittedSuccess(true);
         setTimeout(() => {
@@ -228,6 +250,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           <InteractiveTourMap
             sessionId={sessionId}
             currentUserSpot={currentUserSpot}
+            currentUserSpots={currentUserSpots}
             onStatsLoaded={(s) => setStats(s)}
             onShareUserSpot={() => setIsShareModalOpen(true)}
           />
@@ -281,6 +304,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             <InteractiveTourMap
               sessionId={sessionId}
               currentUserSpot={currentUserSpot}
+              currentUserSpots={currentUserSpots}
               onStatsLoaded={(s) => setStats(s)}
               onShareUserSpot={() => setIsShareModalOpen(true)}
             />
@@ -398,9 +422,30 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                 <p className="text-xs text-slate-600">Aapka Tour Pass generate ho raha hai...</p>
               </div>
             ) : (
-              /* Registration Form: ONLY Mobile Number + Consent Checkbox */
+              /* Registration Form: Name + Mobile Number + Consent Checkbox */
               <form onSubmit={handleModalSubmit} className="flex flex-col gap-3">
-                {/* Field 1: Mobile Number (Required) */}
+                {/* Field 1: Aapka Naam (Required - Only characters) */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-black text-[#0B1B48] uppercase tracking-wider flex items-center justify-between">
+                    <span>Aapka Naam</span>
+                    <span className="text-[#D4380D] font-bold text-[10px]">* Required</span>
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
+                      placeholder="Jaise: Rahul Sharma"
+                      maxLength={50}
+                      required
+                      autoFocus
+                      className="w-full pl-10 pr-3 py-2.5 rounded-xl text-sm font-bold placeholder-slate-400 border border-slate-300 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#D4380D] focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Field 2: Mobile Number (Required - Strictly 10 digits) */}
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-black text-[#0B1B48] uppercase tracking-wider flex items-center justify-between">
                     <span>Mobile Number</span>
@@ -417,7 +462,6 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                       placeholder="10-digit number"
                       maxLength={10}
                       required
-                      autoFocus
                       className={`w-full pl-16 pr-3 py-2.5 rounded-xl text-sm font-black tracking-wider placeholder-slate-400 border transition-all focus:outline-none focus:ring-2 ${
                         registeredInfo?.isRegistered
                           ? 'bg-amber-50/70 border-amber-400 text-amber-950 focus:ring-amber-500'
@@ -486,7 +530,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                   </div>
                 )}
 
-                {/* Field 2: User Consent Checkbox (Required) */}
+                {/* Field 3: User Consent Checkbox (Required) */}
                 <div className="flex flex-col gap-1 pt-0.5">
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
@@ -514,7 +558,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                 <div className="pt-1">
                   <button
                     type="submit"
-                    disabled={isRegistering || isCheckingMobile || mobile.length !== 10 || !consent || registeredInfo?.isRegistered}
+                    disabled={isRegistering || isCheckingMobile || mobile.length !== 10 || name.trim().length < 2 || !consent || registeredInfo?.isRegistered}
                     className={`w-full py-3 px-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                       registeredInfo?.isRegistered
                         ? 'bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300'

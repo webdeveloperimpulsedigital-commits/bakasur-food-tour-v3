@@ -73,9 +73,20 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
     e.preventDefault();
     setLocalError('');
 
+    const cleanName = name.trim();
+    if (!cleanName || cleanName.length < 2) {
+      setLocalError('Kripya apna naam daalein (kam se kam 2 akshar).');
+      return;
+    }
+
+    if (!/^[a-zA-Z\s]+$/.test(cleanName)) {
+      setLocalError('Naam mein sirf letters (characters) allow hain, numbers ya symbols nahi.');
+      return;
+    }
+
     const clean = mobile.replace(/\D/g, '');
     if (!clean || clean.length !== 10) {
-      setLocalError('Kripya apna sahi 10-digit mobile number daalein.');
+      setLocalError('Kripya apna sahi 10-digit mobile number daalein (sirf 10 numbers).');
       return;
     }
 
@@ -89,7 +100,7 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
       return;
     }
 
-    await onSubmitNumber(clean, name.trim());
+    await onSubmitNumber(clean, cleanName);
   };
 
   return (
@@ -118,18 +129,21 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
 
       {/* Registration Form */}
       <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col justify-start sm:justify-center gap-2 sm:gap-2.5">
-        {/* Optional Name */}
+        {/* Name (Required - Only characters) */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-            Aapka Naam (Optional):
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+            <span>Aapka Naam:</span>
+            <span className="text-[#D4380D] font-bold text-[10px]">* Required</span>
           </label>
           <div className="relative">
-            <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
               placeholder="Jaise: Rahul Sharma"
+              maxLength={50}
+              required
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white text-slate-900 text-xs sm:text-sm font-semibold placeholder-slate-400 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#D4380D] shadow-sm"
             />
           </div>

@@ -14,7 +14,8 @@ export async function POST(request: Request) {
       dish_name,
       city = 'Pune',
       latitude = 18.5204,
-      longitude = 73.8407
+      longitude = 73.8407,
+      round_number = 1
     } = body;
 
     if (!session_id) {
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
     const dishId = dish_id ? Number(dish_id) : null;
     const lat = Number(latitude) || 18.5204;
     const lng = Number(longitude) || 73.8407;
+    const roundNum = Number(round_number) || 1;
 
     // Record visit in MySQL & memoryStore
     const visit = await db.recordVisit({
@@ -38,7 +40,8 @@ export async function POST(request: Request) {
       dish_name: dish_name ? String(dish_name) : undefined,
       city: String(city),
       latitude: lat,
-      longitude: lng
+      longitude: lng,
+      round_number: roundNum
     });
 
     // Also register or update tour_submissions in DB if available

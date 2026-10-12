@@ -24,6 +24,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export async function GET(request: Request) {
+  console.log('[SEARCH ROUTE] GET called with url:', request.url);
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || searchParams.get('query') || '';

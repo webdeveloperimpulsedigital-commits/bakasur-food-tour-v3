@@ -64,15 +64,24 @@ export function isDishVeg(dishName?: string): boolean {
 export function getDishVisualAssets(dishName?: string, dishImage?: string, restaurantName?: string): DishVisualAssets {
   const cleanName = formatCleanDishName(dishName, restaurantName);
 
+  // If dishImage is already an AI endpoint URL, check that it matches cleanName
   if (dishImage && dishImage.startsWith('/api/ai/dish-image')) {
-    return {
-      plateImage: dishImage,
-      flyingImage: dishImage
-    };
+    try {
+      const url = new URL(dishImage, 'http://localhost');
+      const urlDish = url.searchParams.get('dish') || '';
+      if (urlDish && (cleanName.toLowerCase().includes(urlDish.toLowerCase().slice(0, 6)) || urlDish.toLowerCase().includes(cleanName.toLowerCase().slice(0, 6)))) {
+        return {
+          plateImage: dishImage,
+          flyingImage: dishImage
+        };
+      }
+    } catch {
+      // ignore
+    }
   }
 
   let aiPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName || '')}`;
-  // Only forward verified remote Swiggy CDN or Cloudinary API images, never local assets
+  // Only forward verified remote Swiggy CDN or Cloudinary API images, never local assets or generic Unsplash URLs
   if (dishImage && (dishImage.startsWith('http://') || dishImage.startsWith('https://')) && (dishImage.includes('swiggy.com') || dishImage.includes('cloudinary.com'))) {
     aiPngUrl += `&imgUrl=${encodeURIComponent(dishImage)}`;
   }

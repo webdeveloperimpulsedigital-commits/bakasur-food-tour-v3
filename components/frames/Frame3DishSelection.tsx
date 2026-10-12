@@ -84,8 +84,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   // Fetch Live Menu from API for selected restaurant
   useEffect(() => {
     let isCancelled = false;
+    setRawDishes([]);
+    setCustomDishInput('');
+    setSuggestions([]);
+    setIsLoading(true);
+
     async function loadDishes() {
-      setIsLoading(true);
       try {
         const queryParams = new URLSearchParams({
           name: restaurant.name || '',
@@ -110,7 +114,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [restaurant]);
+  }, [restaurant.id, restaurant.name]);
 
   // Live in-restaurant dish search (Swiggy / Zomato style)
   useEffect(() => {
@@ -153,7 +157,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [customDishInput, restaurant]);
+  }, [customDishInput, restaurant.id, restaurant.name]);
 
   // Click outside listener to dismiss suggestions dropdown
   useEffect(() => {
@@ -205,17 +209,23 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     return `Search dishes in ${restaurant.name}...`;
   }, [threeDishes, restaurant.name]);
 
-  // Auto-select first dish by default if none selected
+  // Auto-select first dish by default if none selected or if selectedDish doesn't belong to this restaurant
   useEffect(() => {
-    if (threeDishes.length > 0 && !selectedDish) {
-      const first = threeDishes[0];
-      const cleanDishName = formatCleanDishName(first.name, restaurant.name);
-      const visual = getDishVisualAssets(first.name, first.image, restaurant.name);
-      onSelectDish({
-        ...first,
-        name: cleanDishName,
-        image: visual.plateImage
-      });
+    if (threeDishes.length > 0) {
+      const isCurrentDishInThree = selectedDish && threeDishes.some(
+        d => formatCleanDishName(d.name, restaurant.name).toLowerCase() === selectedDish.name.toLowerCase() ||
+             d.name.toLowerCase() === selectedDish.name.toLowerCase()
+      );
+      if (!selectedDish || !isCurrentDishInThree) {
+        const first = threeDishes[0];
+        const cleanDishName = formatCleanDishName(first.name, restaurant.name);
+        const visual = getDishVisualAssets(first.name, first.image, restaurant.name);
+        onSelectDish({
+          ...first,
+          name: cleanDishName,
+          image: visual.plateImage
+        });
+      }
     }
   }, [threeDishes, selectedDish, restaurant.name, onSelectDish]);
 
@@ -310,6 +320,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                     <img
                       src={visual.flyingImage || visual.plateImage}
                       alt={cleanDishName}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.includes('default_feast')) {
+                          target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Feast')}&restaurant=Indian`;
+                        }
+                      }}
                       className="w-full h-full object-contain filter drop-shadow-sm pointer-events-none"
                     />
                   </div>
@@ -404,6 +420,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                           <img
                             src={visual.flyingImage || visual.plateImage}
                             alt={cleanName}
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              if (!target.src.includes('default_feast')) {
+                                target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Dish')}&restaurant=Indian`;
+                              }
+                            }}
                             className="w-7 h-7 rounded-full object-contain p-0.5 bg-slate-50 border border-slate-200 shrink-0"
                           />
                           <span className="text-xs font-bold truncate">{cleanName}</span>
@@ -436,6 +458,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                     <img
                       src={visual.flyingImage || visual.plateImage}
                       alt={dish.name}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.includes('default_feast')) {
+                          target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Dish')}&restaurant=Indian`;
+                        }
+                      }}
                       className="w-8 h-8 rounded-full object-contain p-0.5 bg-slate-50 border border-slate-200 shrink-0"
                     />
                     <div className="min-w-0">

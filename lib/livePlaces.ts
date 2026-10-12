@@ -1,4 +1,4 @@
-import type { Restaurant } from './db';
+import { INITIAL_RESTAURANTS, type Restaurant } from './db';
 import { getDishVisualAssets } from './dishAssets';
 import { parseRestaurantQuery } from './locationParser';
 import { isGooglePlacesConfigured, searchGoogleNearbyRestaurants } from './googlePlaces';
@@ -101,67 +101,140 @@ export function getDeterministicPlaceId(name: string, city: string = '', area: s
  * Fetch LIVE real restaurants strictly around the user's current location area (Top 4 to 5 closest only)
  */
 export async function fetchLiveNearbyPlaces(lat: number, lng: number, cityFallback = 'Pune'): Promise<Restaurant[]> {
-  const cacheKey = `nearby_v2_${lat.toFixed(3)}_${lng.toFixed(3)}`;
+  const cacheKey = `nearby_v3_${lat.toFixed(3)}_${lng.toFixed(3)}`;
   const cached = placesCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.data.slice(0, 5);
   }
 
   const seenNames = new Set<string>();
-  const combined: Restaurant[] = [];
+  const combined: (Restaurant & { distanceKm: number })[] = [];
 
   // 0. If Google Places API is configured, use official Google Cloud Places Search (<200ms)
   if (isGooglePlacesConfigured()) {
     try {
       const googleNearby = await searchGoogleNearbyRestaurants(lat, lng, 3000);
       if (googleNearby && googleNearby.length > 0) {
-        placesCache.set(cacheKey, { timestamp: Date.now(), data: googleNearby });
-        return googleNearby.slice(0, 5);
+        for (const spot of googleNearby) {
+          const lower = spot.name.toLowerCase().trim();
+          if (!seenNames.has(lower)) {
+            seenNames.add(lower);
+            const dist = typeof (spot as any).distanceKm === 'number'
+              ? (spot as any).distanceKm
+              : calculateDistance(lat, lng, spot.latitude, spot.longitude);
+            combined.push({
+              ...spot,
+              distanceKm: dist
+            });
+          }
+        }
       }
     } catch (gErr) {
       console.warn('Google Places nearby search fallback notice:', gErr);
     }
   }
 
-  // 1. Query OpenStreetMap Nominatim Live API within immediate ~2km bounding box of user's current location
-  try {
-    const delta = 0.022; // ~2.2km immediate neighborhood bounding box
-    const viewbox = `${lng - delta},${lat + delta},${lng + delta},${lat - delta}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
-    const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=restaurant&bounded=1&viewbox=${viewbox}&limit=20&addressdetails=1`;
-    const res = await fetch(nominatimUrl, {
-      headers: { 'User-Agent': 'BakasurFoodTourApp/3.0' },
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    if (res.ok) {
-      const places = await res.json();
-      if (Array.isArray(places)) {
-        for (let i = 0; i < places.length; i++) {
-          const p = places[i];
-          const rawName = p.name || (p.display_name ? p.display_name.split(',')[0].trim() : '');
+  // 1 & 2. Run Nominatim and Photon Live APIs concurrently with fast 1500ms timeout
+  const delta = 0.025; // ~2.5km neighborhood bounding box
+  const viewbox = `${lng - delta},${lat + delta},${lng + delta},${lat - delta}`;
+
+  const fetchNominatim = async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 1500);
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=restaurant&bounded=1&viewbox=${viewbox}&limit=20&addressdetails=1`;
+      const res = await fetch(nominatimUrl, {
+        headers: { 'User-Agent': 'BakasurFoodTourApp/3.0' },
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const places = await res.json();
+        if (Array.isArray(places)) {
+          for (let i = 0; i < places.length; i++) {
+            const p = places[i];
+            const rawName = p.name || (p.display_name ? p.display_name.split(',')[0].trim() : '');
+            if (!rawName || rawName.length < 3) continue;
+
+            const lower = rawName.toLowerCase().trim();
+            if (['restaurant', 'cafe', 'hotel', 'food', 'bar', 'dhaba', 'tea', 'bakery'].includes(lower)) continue;
+            if (/(\broad\b|\bmarg\b|\blane\b|\bstreet\b|\bhighway\b|\bbridge\b|\bflyover\b|\bpath\b)/i.test(lower) && !/(hotel|restaurant|cafe|dhaba|bhojanalay|kitchen|bistro|bar|eatery|corner|sweets|bakery|canteen|bhel|snacks|paratha|biryani|dosa|thali|punjabi|chinese)/i.test(lower)) {
+              continue;
+            }
+            if (seenNames.has(lower)) continue;
+
+            const itemLat = parseFloat(p.lat);
+            const itemLon = parseFloat(p.lon);
+            const dist = calculateDistance(lat, lng, itemLat, itemLon);
+            if (dist > 10) continue; // Keep within immediate area
+
+            seenNames.add(lower);
+            const addr = p.address || {};
+            const area = (addr.suburb || addr.neighbourhood || addr.residential || addr.quarter || addr.subdistrict || addr.road || cityFallback) as string;
+            const cityName = (addr.city || addr.town || addr.municipality || addr.state_district || cityFallback) as string;
+
+            combined.push({
+              id: getDeterministicPlaceId(rawName, cityName, area),
+              name: rawName,
+              description: `Live dining spot in ${area}, ${cityName}`,
+              address: addr.road ? `${addr.road}, ${area}` : `${area}, ${cityName}`,
+              area,
+              city: cityName,
+              latitude: itemLat,
+              longitude: itemLon,
+              rating: Math.round((4.5 + ((i % 5) * 0.1)) * 10) / 10,
+              image: pickCuisineImage(rawName),
+              is_campaign_active: 1,
+              total_visits: 500 + ((i * 43) % 1500),
+              status: 'active',
+              distanceKm: dist
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Nominatim immediate area notice:', err);
+    }
+  };
+
+  const fetchPhoton = async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 1500);
+      const url = `https://photon.komoot.io/api/?q=restaurant&lat=${lat}&lon=${lng}&limit=25`;
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const json = await res.json();
+        const liveFeatures = (json.features || []) as PhotonFeature[];
+        for (let i = 0; i < liveFeatures.length; i++) {
+          const f = liveFeatures[i];
+          const rawName = f.properties.name?.trim();
           if (!rawName || rawName.length < 3) continue;
 
-          const lower = rawName.toLowerCase().trim();
-          if (['restaurant', 'cafe', 'hotel', 'food', 'bar', 'dhaba', 'tea', 'bakery'].includes(lower)) continue;
+          const lower = rawName.toLowerCase();
+          if (['restaurant', 'cafe', 'hotel', 'food', 'bar', 'dhaba', 'tea', 'bakery', 'bar & restaurant', 'bar and restaurant'].includes(lower)) continue;
+          if (/(\broad\b|\bmarg\b|\blane\b|\bstreet\b|\bhighway\b|\bbridge\b|\bflyover\b|\bpath\b)/i.test(lower) && !/(hotel|restaurant|cafe|dhaba|bhojanalay|kitchen|bistro|bar|eatery|corner|sweets|bakery|canteen|bhel|snacks|paratha|biryani|dosa|thali|punjabi|chinese)/i.test(lower)) {
+            continue;
+          }
           if (seenNames.has(lower)) continue;
-          seenNames.add(lower);
 
-          const itemLat = parseFloat(p.lat);
-          const itemLon = parseFloat(p.lon);
+          const [itemLon, itemLat] = f.geometry.coordinates;
           const dist = calculateDistance(lat, lng, itemLat, itemLon);
-          if (dist > 8) continue; // Keep within immediate area
+          if (dist > 10) continue; // Keep within immediate area
 
-          const addr = p.address || {};
-          const area = (addr.suburb || addr.neighbourhood || addr.residential || addr.quarter || addr.subdistrict || addr.road || cityFallback) as string;
-          const cityName = (addr.city || addr.town || addr.municipality || addr.state_district || cityFallback) as string;
+          seenNames.add(lower);
+          const area = (f.properties.district || f.properties.suburb || f.properties.street || f.properties.locality || cityFallback) as string;
+          const cityName = (f.properties.city || f.properties.state || cityFallback) as string;
 
           combined.push({
             id: getDeterministicPlaceId(rawName, cityName, area),
             name: rawName,
-            description: `Live dining spot in ${area}, ${cityName}`,
-            address: addr.road ? `${addr.road}, ${area}` : `${area}, ${cityName}`,
+            description: `Live food joint located at ${area}, ${cityName}`,
+            address: f.properties.street ? `${f.properties.street}, ${area}` : `${area}, ${cityName}`,
             area,
             city: cityName,
             latitude: itemLat,
@@ -169,74 +242,62 @@ export async function fetchLiveNearbyPlaces(lat: number, lng: number, cityFallba
             rating: Math.round((4.5 + ((i % 5) * 0.1)) * 10) / 10,
             image: pickCuisineImage(rawName),
             is_campaign_active: 1,
-            total_visits: 500 + ((i * 43) % 1500),
+            total_visits: 600 + ((i * 37) % 1400),
             status: 'active',
             distanceKm: dist
-          } as Restaurant & { distanceKm: number });
+          });
         }
       }
+    } catch (err) {
+      console.warn('Photon live API notice:', err);
     }
-  } catch (err) {
-    console.warn('Nominatim immediate area notice:', err);
-  }
+  };
 
-  // 2. Query Photon API with user's exact live coordinates for nearby dining spots
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
-    const url = `https://photon.komoot.io/api/?q=restaurant&lat=${lat}&lon=${lng}&limit=25`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
-      signal: controller.signal
+  await Promise.allSettled([fetchNominatim(), fetchPhoton()]);
+
+  // 3. Robust Location-Based Backfill:
+  // If external live APIs returned fewer than 5 places (or timed out), calculate distance from user's live coordinates
+  // to curated restaurants and append the closest ones so the user always has 4 to 5 accurate nearby options
+  if (combined.length < 5) {
+    const candidates = INITIAL_RESTAURANTS.map((r) => {
+      const dist = calculateDistance(lat, lng, r.latitude, r.longitude);
+      return { r, dist };
     });
-    clearTimeout(timeout);
-    if (res.ok) {
-      const json = await res.json();
-      const liveFeatures = (json.features || []) as PhotonFeature[];
-      for (let i = 0; i < liveFeatures.length; i++) {
-        const f = liveFeatures[i];
-        const rawName = f.properties.name?.trim();
-        if (!rawName || rawName.length < 3) continue;
 
-        const lower = rawName.toLowerCase();
-        if (['restaurant', 'cafe', 'hotel', 'food', 'bar', 'dhaba', 'tea', 'bakery', 'bar & restaurant', 'bar and restaurant'].includes(lower)) continue;
-        if (seenNames.has(lower)) continue;
+    // Sort strictly by closest distance to user coordinates
+    candidates.sort((a, b) => a.dist - b.dist);
 
-        const [itemLon, itemLat] = f.geometry.coordinates;
-        const dist = calculateDistance(lat, lng, itemLat, itemLon);
-        if (dist > 8) continue; // Keep within immediate area
+    for (const { r, dist } of candidates) {
+      if (combined.length >= 5) break;
+      const lower = r.name.toLowerCase().trim();
+      if (seenNames.has(lower)) continue;
+      seenNames.add(lower);
 
-        seenNames.add(lower);
-
-        const area = (f.properties.district || f.properties.suburb || f.properties.street || f.properties.locality || cityFallback) as string;
-        const cityName = (f.properties.city || f.properties.state || cityFallback) as string;
-
-        combined.push({
-          id: getDeterministicPlaceId(rawName, cityName, area),
-          name: rawName,
-          description: `Live food joint located at ${area}, ${cityName}`,
-          address: f.properties.street ? `${f.properties.street}, ${area}` : `${area}, ${cityName}`,
-          area,
-          city: cityName,
-          latitude: itemLat,
-          longitude: itemLon,
-          rating: Math.round((4.5 + ((i % 5) * 0.1)) * 10) / 10,
-          image: pickCuisineImage(rawName),
-          is_campaign_active: 1,
-          total_visits: 600 + ((i * 37) % 1400),
-          status: 'active',
-          distanceKm: dist
-        } as Restaurant & { distanceKm: number });
-      }
+      combined.push({
+        id: getDeterministicPlaceId(r.name, r.city, r.area),
+        name: r.name,
+        description: r.description,
+        address: r.address,
+        area: r.area,
+        city: r.city,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        rating: r.rating || 4.8,
+        image: r.image && !r.image.includes('photo-1601050690597-df0568f70950')
+          ? r.image
+          : pickCuisineImage(r.name),
+        is_campaign_active: r.is_campaign_active ?? 1,
+        total_visits: r.total_visits ?? 1200,
+        status: 'active',
+        distanceKm: dist
+      });
     }
-  } catch (err) {
-    console.warn('Photon live API error in fetchLiveNearbyPlaces:', err);
   }
 
-  // 3. Sort strictly by closest distance to user's live GPS/IP coordinates
-  combined.sort((a, b) => ((a as unknown as { distanceKm: number }).distanceKm || 0) - ((b as unknown as { distanceKm: number }).distanceKm || 0));
+  // 4. Sort strictly by closest distance to user's live GPS/IP coordinates
+  combined.sort((a, b) => a.distanceKm - b.distanceKm);
 
-  // 4. Return strictly ONLY top 4 to 5 closest spots in user's current location area
+  // 5. Return strictly top 4 to 5 closest spots in user's current location area
   const topFive = combined.slice(0, 5);
 
   // Store in cache

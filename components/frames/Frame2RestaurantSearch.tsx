@@ -53,6 +53,27 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     }
   }, [userCoords]);
 
+  // Direct geolocation detection on Frame 2 if coords not passed yet
+  useEffect(() => {
+    if (!coords && !userCoords && typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            },
+            () => {},
+            { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
+          );
+        },
+        { timeout: 5000, enableHighAccuracy: true, maximumAge: 30000 }
+      );
+    }
+  }, [coords, userCoords]);
+
   // 1. IP Location Detection & Live Nearby Restaurants Fetch
   useEffect(() => {
     let isCancelled = false;

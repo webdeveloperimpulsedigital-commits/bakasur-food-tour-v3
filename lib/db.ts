@@ -106,6 +106,7 @@ export interface CampaignVisit {
   latitude: number;
   longitude: number;
   visited_at: string;
+  round_number?: number;
 }
 
 export interface Participant {
@@ -1667,11 +1668,13 @@ export const db = {
     city: string;
     latitude: number;
     longitude: number;
+    round_number?: number;
   }) {
     const id = memoryStore.visits.length + 1;
     const matchedRest = memoryStore.restaurants.find(r => r.id === data.restaurant_id);
     const finalRestName = data.restaurant_name || matchedRest?.name || 'Local Food Spot';
     const finalDishName = data.dish_name || 'Specialty Dish';
+    const roundNumber = data.round_number || 1;
 
     const visit: CampaignVisit = {
       id,
@@ -1683,16 +1686,18 @@ export const db = {
       city: data.city,
       latitude: data.latitude,
       longitude: data.longitude,
-      visited_at: new Date().toISOString()
+      visited_at: new Date().toISOString(),
+      round_number: roundNumber
     };
-    // Check if memoryStore already has a visit for this session and restaurant
+    // Check if memoryStore already has a visit for this session and round
     const existingIndex = memoryStore.visits.findIndex(
-      v => v.session_id === data.session_id && v.restaurant_id === data.restaurant_id
+      v => v.session_id === data.session_id && (v.round_number === roundNumber || (!v.round_number && v.restaurant_id === data.restaurant_id))
     );
     if (existingIndex >= 0) {
       memoryStore.visits[existingIndex].dish_name = finalDishName;
       memoryStore.visits[existingIndex].dish_id = data.dish_id ?? null;
       memoryStore.visits[existingIndex].restaurant_name = finalRestName;
+      memoryStore.visits[existingIndex].round_number = roundNumber;
     } else {
       memoryStore.visits.push(visit);
       if (matchedRest) {
@@ -1777,10 +1782,10 @@ export const db = {
           }
         }
 
-        // 4. Save/Update visit in campaign_visits
+        // 4. Save/Update visit in campaign_visits with round_number
         const [existing] = await pool.query<mysql.RowDataPacket[]>(
-          'SELECT id FROM campaign_visits WHERE session_id = ? AND (restaurant_id = ? OR restaurant_name = ?) LIMIT 1',
-          [data.session_id, targetRestaurantId, finalRestName]
+          'SELECT id FROM campaign_visits WHERE session_id = ? AND round_number = ? LIMIT 1',
+          [data.session_id, roundNumber]
         );
         if (existing && existing.length > 0) {
           await pool.query(
@@ -1791,8 +1796,8 @@ export const db = {
           );
         } else {
           await pool.query(
-            `INSERT INTO campaign_visits (session_id, restaurant_id, dish_id, city, latitude, longitude, restaurant_name, dish_name)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO campaign_visits (session_id, restaurant_id, dish_id, city, latitude, longitude, restaurant_name, dish_name, round_number)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               data.session_id,
               targetRestaurantId,
@@ -1801,7 +1806,8 @@ export const db = {
               data.latitude,
               data.longitude,
               finalRestName,
-              finalDishName
+              finalDishName,
+              roundNumber
             ]
           );
         }
@@ -1824,7 +1830,7 @@ export const db = {
       if (pool) {
         // 1. Get ONLY real user-searched & visited restaurants from MySQL campaign_visits
         const [visitRows] = await pool.query<mysql.RowDataPacket[]>(
-          `SELECT cv.id, cv.session_id, cv.restaurant_id, cv.dish_id, cv.city, 
+          `SELECT cv.id, cv.session_id, cv.restaurant_id, cv.dish_id, cv.city, cv.round_number,
                   CAST(COALESCE(cv.latitude, r.latitude, 18.5204) AS DECIMAL(10,6)) as latitude, 
                   CAST(COALESCE(cv.longitude, r.longitude, 73.8407) AS DECIMAL(10,6)) as longitude, 
                   cv.visited_at,
@@ -1883,7 +1889,8 @@ export const db = {
               image: String(v.image || ''),
               total_visits: totalVisits,
               featured_dish: String(v.dish_name || 'Specialty Dish'),
-              isCurrentUserSpot: isCurrent
+              isCurrentUserSpot: isCurrent,
+              stopNumber: v.round_number ? Number(v.round_number) : undefined
             });
           } else if (isCurrent) {
             // Prioritize current user's session marker
@@ -1892,7 +1899,8 @@ export const db = {
               ...existing,
               session_id: String(v.session_id || ''),
               featured_dish: String(v.dish_name || existing.featured_dish),
-              isCurrentUserSpot: true
+              isCurrentUserSpot: true,
+              stopNumber: v.round_number ? Number(v.round_number) : existing.stopNumber
             });
           }
         });
@@ -1960,6 +1968,8 @@ export const db = {
     const totalDishes = visitedPoints.length;
     const totalCities = new Set(visitedPoints.map(p => p.city)).size;
 
+    const userSpots = visitedPoints.filter(p => p.isCurrentUserSpot);
+    userSpots.sort((a, b) => (a.stopNumber || 1) - (b.stopNumber || 1));
     return {
       points: visitedPoints,
       stats: {
@@ -1967,7 +1977,8 @@ export const db = {
         mustTryDishes: totalDishes,
         citiesCount: totalCities
       },
-      currentUserPoint: visitedPoints.find(p => p.isCurrentUserSpot) || null
+      currentUserPoint: userSpots[0] || null,
+      currentUserSpots: userSpots
     };
   },
 
@@ -2095,15 +2106,25 @@ export const db = {
 
         // 2. Also insert into tour_submissions if available
         try {
+          let rid = (typeof data.restaurant_id === 'number' && Number.isInteger(data.restaurant_id) && data.restaurant_id > 0) ? data.restaurant_id : null;
+          let did = (typeof data.dish_id === 'number' && Number.isInteger(data.dish_id) && data.dish_id > 0) ? data.dish_id : null;
+          if (rid !== null) {
+            const [rRows] = await pool.query<mysql.RowDataPacket[]>('SELECT id FROM restaurants WHERE id = ? LIMIT 1', [rid]);
+            if (!rRows || rRows.length === 0) rid = null;
+          }
+          if (did !== null) {
+            const [dRows] = await pool.query<mysql.RowDataPacket[]>('SELECT id FROM dishes WHERE id = ? LIMIT 1', [did]);
+            if (!dRows || dRows.length === 0) did = null;
+          }
           await pool.query(
             `INSERT INTO tour_submissions (session_id, location_name, restaurant_id, restaurant_name, dish_id, dish_name, spice_level, is_relieved)
              VALUES (?, ?, ?, ?, ?, ?, 3, 1)`,
             [
               data.session_id,
               data.city,
-              data.restaurant_id || null,
+              rid,
               data.restaurant_name || 'Food Spot',
-              data.dish_id || null,
+              did,
               data.dish_name || 'Specialty'
             ]
           );

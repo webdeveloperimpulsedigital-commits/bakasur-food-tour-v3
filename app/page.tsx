@@ -35,6 +35,8 @@ export default function CampaignPage() {
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [selectedDish, setSelectedDish] = useState<Dish | { name: string; id?: number; price?: number; image?: string; description?: string } | null>(null);
+  const [firstRoundRestaurant, setFirstRoundRestaurant] = useState<Restaurant | null>(null);
+  const [firstRoundDish, setFirstRoundDish] = useState<Dish | { name: string; id?: number; price?: number; image?: string; description?: string } | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [feastingStage, setFeastingStage] = useState<1 | 2 | 3>(1);
   const [registeredMobile, setRegisteredMobile] = useState<string>('');
@@ -108,24 +110,33 @@ export default function CampaignPage() {
       })
       .catch(() => {});
 
-    // 2. High-precision GPS refinement if granted by user
+    // 2. High-precision GPS refinement if granted by user (with WiFi triangulation fallback)
+    const handleGpsSuccess = async (pos: GeolocationPosition) => {
+      if (!isMounted) return;
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setUserCoords({ lat, lng });
+      try {
+        const res = await fetch(`/api/location?lat=${lat}&lng=${lng}`);
+        const data = await res.json();
+        if (isMounted && data.success && data.detectedCity?.name) {
+          setSelectedCity(data.detectedCity.name);
+        }
+      } catch {}
+    };
+
     if (typeof window !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          if (!isMounted) return;
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          setUserCoords({ lat, lng });
-          try {
-            const res = await fetch(`/api/location?lat=${lat}&lng=${lng}`);
-            const data = await res.json();
-            if (isMounted && data.success && data.detectedCity?.name) {
-              setSelectedCity(data.detectedCity.name);
-            }
-          } catch {}
+        handleGpsSuccess,
+        () => {
+          // If high accuracy GPS times out or fails (e.g. on laptops/desktops), fallback immediately to standard network/WiFi location
+          navigator.geolocation.getCurrentPosition(
+            handleGpsSuccess,
+            () => {},
+            { timeout: 10000, enableHighAccuracy: false, maximumAge: 60000 }
+          );
         },
-        () => {},
-        { timeout: 5000, enableHighAccuracy: true }
+        { timeout: 6000, enableHighAccuracy: true, maximumAge: 30000 }
       );
     }
 
@@ -175,6 +186,7 @@ export default function CampaignPage() {
   // Frame 2 -> Frame 3 (Restaurant Chosen -> 3 Dish Options)
   const handleRestaurantConfirmed = async () => {
     playSound('click');
+    setSelectedDish(null);
     triggerFrameTransition(3);
 
     const activeSession = sessionId || getOrCreateSessionId();
@@ -270,7 +282,7 @@ export default function CampaignPage() {
         })
       });
 
-      // Save visit to campaign_visits in DB
+      // Save visit to campaign_visits in DB (distinguishing round 1 and round 2)
       await fetch('/api/campaign/visit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -282,7 +294,8 @@ export default function CampaignPage() {
           dish_name: finalDish.name,
           city: selectedRestaurant?.city || selectedCity || 'Pune',
           latitude: selectedRestaurant?.latitude || userCoords?.lat || 18.5204,
-          longitude: selectedRestaurant?.longitude || userCoords?.lng || 73.8407
+          longitude: selectedRestaurant?.longitude || userCoords?.lng || 73.8407,
+          round_number: feastingStage === 2 ? 2 : 1
         })
       });
     } catch (err) {
@@ -355,6 +368,13 @@ export default function CampaignPage() {
   // Frame 6 (Interstitial) -> Second Restaurant & Dish Selection for Round 2
   const handleStartSecondEatingStage = () => {
     playSound('click');
+    // Preserve round 1 restaurant and dish before resetting selection for round 2
+    if (selectedRestaurant) {
+      setFirstRoundRestaurant(selectedRestaurant);
+    }
+    if (selectedDish) {
+      setFirstRoundDish(selectedDish);
+    }
     setFeastingStage(2);
     setSelectedRestaurant(null);
     setSelectedDish(null);
@@ -570,7 +590,8 @@ export default function CampaignPage() {
           dish_name: selectedDish?.name || 'Signature Food',
           city: selectedRestaurant?.city || selectedCity || 'Pune',
           latitude: selectedRestaurant?.latitude || userCoords?.lat || 18.5204,
-          longitude: selectedRestaurant?.longitude || userCoords?.lng || 73.8407
+          longitude: selectedRestaurant?.longitude || userCoords?.lng || 73.8407,
+          round_number: feastingStage === 2 ? 2 : 1
         })
       });
 
@@ -651,6 +672,16 @@ export default function CampaignPage() {
   const handleRegistrationSubmit = async (mobile: string, name?: string, concern?: string) => {
     setIsRegistering(true);
     setRegError('');
+
+    // Combine both visited restaurant names if user did 2 rounds
+    const combinedRestName = firstRoundRestaurant && selectedRestaurant && firstRoundRestaurant.name !== selectedRestaurant.name
+      ? `${firstRoundRestaurant.name} & ${selectedRestaurant.name}`
+      : (selectedRestaurant?.name || firstRoundRestaurant?.name || 'Local Food Spot');
+
+    const combinedDishName = firstRoundDish && selectedDish && firstRoundDish.name !== selectedDish.name
+      ? `${firstRoundDish.name} & ${selectedDish.name}`
+      : (selectedDish?.name || firstRoundDish?.name || 'Signature Food');
+
     try {
       const res = await fetch('/api/campaign/participate', {
         method: 'POST',
@@ -659,13 +690,13 @@ export default function CampaignPage() {
           session_id: sessionId,
           mobile,
           name: name || 'Foodie Follower',
-          city: selectedRestaurant?.city || selectedCity,
-          restaurant_id: selectedRestaurant?.id || null,
-          restaurant_name: selectedRestaurant?.name || null,
-          dish_id: (selectedDish as { id?: number })?.id || null,
-          dish_name: selectedDish?.name || null,
-          latitude: selectedRestaurant?.latitude || 18.5204,
-          longitude: selectedRestaurant?.longitude || 73.8407,
+          city: selectedRestaurant?.city || firstRoundRestaurant?.city || selectedCity,
+          restaurant_id: selectedRestaurant?.id || firstRoundRestaurant?.id || null,
+          restaurant_name: combinedRestName,
+          dish_id: (selectedDish as { id?: number })?.id || (firstRoundDish as { id?: number })?.id || null,
+          dish_name: combinedDishName,
+          latitude: selectedRestaurant?.latitude || firstRoundRestaurant?.latitude || 18.5204,
+          longitude: selectedRestaurant?.longitude || firstRoundRestaurant?.longitude || 73.8407,
           consent: true,
           terms_accepted: true,
           user_concern: concern
@@ -710,6 +741,8 @@ export default function CampaignPage() {
     setSessionId(newSess);
     setSelectedRestaurant(null);
     setSelectedDish(null);
+    setFirstRoundRestaurant(null);
+    setFirstRoundDish(null);
     setFeastingStage(1);
     setTourSpotRound(0);
     setCurrentTourSpot(null);
@@ -820,38 +853,56 @@ export default function CampaignPage() {
         /* Standalone Map Frame matching user_mockup_map.png */
         /* Desktop: Horizontal side-by-side (md:max-w-5xl lg:max-w-6xl), Mobile: Exact phone card (max-w-[440px]) */
         <div className="w-full h-full max-w-[440px] md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-white rounded-none md:rounded-none md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] overflow-hidden relative flex flex-col">
-          <Frame11LiveMap
-            sessionId={sessionId}
-            isRegistered={Boolean(registeredMobile || participationId)}
-            registeredMobile={registeredMobile}
-            participationId={participationId}
-            currentUserSpot={selectedRestaurant ? {
-              name: selectedRestaurant.name,
-              city: selectedRestaurant.city,
-              dishName: selectedDish?.name || 'Specialty Dish',
-              latitude: selectedRestaurant.latitude,
-              longitude: selectedRestaurant.longitude
-            } : null}
-            onRegisterLiveTour={handleRegisterLiveTour}
-            onSuggestAnotherSpot={handleAddAnotherSpot}
-            onRegisterSubmit={handleRegistrationSubmit}
-            isRegistering={isRegistering}
-            regError={regError}
-            onBack={() => triggerFrameTransition(10)}
-            onViewExistingPass={(data) => {
-              playSound('fanfare');
-              setRegisteredMobile(data.mobile);
-              setParticipationId(data.participation_id);
-              setCurrentFrame(13);
-              trackUserStep({
-                sessionId,
-                stepName: 'frame_13_confirmation',
-                stepTitle: `Frame 13: Existing Tour Pass Claimed (${data.participation_id})`,
-                stepNumber: 13,
-                metadata: { mobile: data.mobile, participation_id: data.participation_id, is_existing: true }
-              });
-            }}
-          />
+          {(() => {
+            const userSpotsList = [
+              ...(firstRoundRestaurant ? [{
+                name: firstRoundRestaurant.name,
+                city: firstRoundRestaurant.city,
+                dishName: firstRoundDish?.name || 'Specialty Dish',
+                latitude: firstRoundRestaurant.latitude,
+                longitude: firstRoundRestaurant.longitude,
+                stopNumber: 1
+              }] : []),
+              ...(selectedRestaurant ? [{
+                name: selectedRestaurant.name,
+                city: selectedRestaurant.city,
+                dishName: selectedDish?.name || 'Specialty Dish',
+                latitude: selectedRestaurant.latitude,
+                longitude: selectedRestaurant.longitude,
+                stopNumber: firstRoundRestaurant ? 2 : 1
+              }] : [])
+            ];
+
+            return (
+              <Frame11LiveMap
+                sessionId={sessionId}
+                isRegistered={Boolean(registeredMobile || participationId)}
+                registeredMobile={registeredMobile}
+                participationId={participationId}
+                currentUserSpot={userSpotsList[0] || null}
+                currentUserSpots={userSpotsList}
+                onRegisterLiveTour={handleRegisterLiveTour}
+                onSuggestAnotherSpot={handleAddAnotherSpot}
+                onRegisterSubmit={handleRegistrationSubmit}
+                isRegistering={isRegistering}
+                regError={regError}
+                onBack={() => triggerFrameTransition(10)}
+                onViewExistingPass={(data) => {
+                  playSound('fanfare');
+                  setRegisteredMobile(data.mobile);
+                  setParticipationId(data.participation_id);
+                  setCurrentFrame(13);
+                  trackUserStep({
+                    sessionId,
+                    stepName: 'frame_13_confirmation',
+                    stepTitle: `Frame 13: Existing Tour Pass Claimed (${data.participation_id})`,
+                    stepNumber: 13,
+                    metadata: { mobile: data.mobile, participation_id: data.participation_id, is_existing: true }
+                  });
+                }}
+              />
+            );
+          })()}
         </div>
       ) : currentFrame === 13 ? (
         /* Frame 13: Last Frame (Registration Completed) */
@@ -860,8 +911,8 @@ export default function CampaignPage() {
           <Frame13Confirmation
             participationId={participationId}
             mobile={registeredMobile}
-            restaurant={selectedRestaurant}
-            dish={selectedDish}
+            restaurant={selectedRestaurant || firstRoundRestaurant}
+            dish={selectedDish || firstRoundDish}
             onBackToMap={() => setCurrentFrame(11)}
             onRestart={handleRestart}
           />
@@ -926,7 +977,10 @@ export default function CampaignPage() {
                   selectedRestaurant={selectedRestaurant}
                   userCoords={userCoords}
                   isSecondRound={feastingStage === 2}
-                  onSelectRestaurant={(r) => setSelectedRestaurant(r)}
+                  onSelectRestaurant={(r) => {
+                    setSelectedRestaurant(r);
+                    setSelectedDish(null);
+                  }}
                   onNext={handleRestaurantConfirmed}
                   onWatchVideo={() => {
                     setActiveTransitionVideo({
@@ -948,6 +1002,7 @@ export default function CampaignPage() {
               {/* Frame 3: Dish Selection (3 Options) */}
               {currentFrame === 3 && selectedRestaurant && (
                 <Frame3DishSelection
+                  key={`${selectedRestaurant.id}-${selectedRestaurant.name}`}
                   restaurant={selectedRestaurant}
                   selectedDish={selectedDish}
                   isSecondRound={feastingStage === 2}

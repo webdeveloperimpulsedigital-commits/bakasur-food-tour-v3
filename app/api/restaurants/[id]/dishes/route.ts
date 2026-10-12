@@ -126,18 +126,22 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       ? searchDishesSwiggyZomato(restInfo, searchQuery, baseDishes)
       : baseDishes;
 
-    // Preserve authentic Swiggy CDN food photography! Only fallback to AI endpoint if no photo exists
+    // Guarantee pure food visuals with authentic culinary photography
     const finalDishes = filteredDishes.map(d => {
+      const isAiEndpoint = typeof d.image === 'string' && d.image.startsWith('/api/ai/dish-image');
       const hasRealPhoto = Boolean(
         d.image &&
         typeof d.image === 'string' &&
         (d.image.startsWith('http://') || d.image.startsWith('https://')) &&
+        (d.image.includes('swiggy.com') || d.image.includes('cloudinary.com') || d.image.includes('zmtcdn.com')) &&
         !d.image.includes('placeholder')
       );
 
-      const resolvedImage = hasRealPhoto
+      const resolvedImage = isAiEndpoint
         ? d.image
-        : `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}`;
+        : hasRealPhoto
+          ? `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}&imgUrl=${encodeURIComponent(d.image)}`
+          : `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}`;
 
       return {
         ...d,

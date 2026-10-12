@@ -43,11 +43,19 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { session_id, name, mobile, email, city, restaurant_id, dish_id, consent, terms_accepted } = body;
 
-    const cleanMobile = (mobile || '').replace(/\D/g, '');
-    const tenDigit = cleanMobile.length >= 10 ? cleanMobile.slice(-10) : cleanMobile;
-    if (!tenDigit || tenDigit.length !== 10) {
-      return NextResponse.json({ success: false, error: 'Please enter a valid 10-digit mobile number' }, { status: 400 });
+    const rawMobile = String(mobile || '').trim();
+    const cleanMobile = rawMobile.replace(/\D/g, '');
+    if (!cleanMobile || cleanMobile.length !== 10 || !/^\d{10}$/.test(rawMobile)) {
+      return NextResponse.json({ success: false, error: 'Kripya apna sahi 10-digit mobile number daalein (sirf numbers allow hain).' }, { status: 400 });
     }
+    const tenDigit = cleanMobile;
+
+    // Validate Name: Only characters (letters and spaces), 2-60 chars
+    const rawName = String(name || '').trim();
+    if (!rawName || !/^[a-zA-Z\s]{2,60}$/.test(rawName)) {
+      return NextResponse.json({ success: false, error: 'Kripya apna sahi naam darj karein (sirf characters allow hain).' }, { status: 400 });
+    }
+    const finalName = rawName;
 
     // 0. STRICT CHECK: Check if this mobile number is already registered (DO NOT ADD DUPLICATE ENTRIES)
     const existing = await db.getParticipantByMobile(tenDigit);
@@ -68,7 +76,6 @@ export async function POST(request: Request) {
       }, { status: 409 });
     }
 
-    const finalName = name?.trim() || 'Foodie Follower';
     const finalEmail = (email?.trim() && email.includes('@')) ? email.trim() : `${tenDigit}@foodtour.com`;
     const finalCity = city?.trim() || 'Pune';
     const isConsentGiven = Boolean(consent || terms_accepted);
@@ -84,34 +91,42 @@ export async function POST(request: Request) {
     let finalRestId = restaurant_id ? parseInt(restaurant_id, 10) : null;
     let finalDishId = dish_id ? parseInt(dish_id, 10) : null;
 
-    // 2. If restaurant_id or details missing, query latest visit from campaign_visits or session
-    if ((!finalRestId || !dishName || !restaurantName || restaurantName === 'Local Food Spot') && session_id) {
+    // 2. Query all visits for session to capture both restaurants if multi-stop tour
+    if (session_id) {
       try {
         const pool = getMySQLPool();
         if (pool) {
           const [visits] = await pool.query<RowDataPacket[]>(
-            `SELECT restaurant_id, restaurant_name, dish_id, dish_name, city, latitude, longitude FROM campaign_visits WHERE session_id = ? ORDER BY id DESC LIMIT 1`,
+            `SELECT restaurant_id, restaurant_name, dish_id, dish_name, city, latitude, longitude FROM campaign_visits WHERE session_id = ? ORDER BY id ASC`,
             [session_id]
           );
           if (visits && visits.length > 0) {
+            const visitedRestNames = Array.from(new Set(visits.map(v => String(v.restaurant_name || '').trim()).filter(Boolean)));
+            if (visitedRestNames.length > 1 && (!restaurantName || !restaurantName.includes('&'))) {
+              restaurantName = visitedRestNames.join(' & ');
+            } else if (!restaurantName || restaurantName === 'Local Food Spot') {
+              restaurantName = String(visits[visits.length - 1].restaurant_name || '').trim() || restaurantName;
+            }
+
+            const visitedDishNames = Array.from(new Set(visits.map(v => String(v.dish_name || '').trim()).filter(Boolean)));
+            if (visitedDishNames.length > 1 && (!dishName || !dishName.includes('&'))) {
+              dishName = visitedDishNames.join(' & ');
+            } else if (!dishName || dishName === 'Signature Specialty') {
+              dishName = String(visits[visits.length - 1].dish_name || '').trim() || dishName;
+            }
+
             if (!finalRestId && visits[0].restaurant_id) {
               finalRestId = Number(visits[0].restaurant_id);
             }
             if (!finalDishId && visits[0].dish_id) {
               finalDishId = Number(visits[0].dish_id);
             }
-            if (!restaurantName || restaurantName === 'Local Food Spot') {
-              restaurantName = String(visits[0].restaurant_name || '').trim() || restaurantName;
-            }
-            if (!dishName || dishName === 'Signature Specialty') {
-              dishName = String(visits[0].dish_name || '').trim() || dishName;
-            }
             if (visits[0].latitude) restLat = Number(visits[0].latitude);
             if (visits[0].longitude) restLng = Number(visits[0].longitude);
           }
         }
       } catch (visitErr) {
-        console.warn('Session visit lookup notice:', visitErr);
+        console.warn('Session visits lookup notice:', visitErr);
       }
     }
 
