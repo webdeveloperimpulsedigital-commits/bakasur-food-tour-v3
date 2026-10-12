@@ -497,10 +497,10 @@ export default function CampaignPage() {
     });
   };
 
-  // Frame 9 -> Frame 11 (Gastrium Animation Finished -> Live Food Tour Map)
+  // Frame 9 -> Frame 10 (Gastrium Animation Finished -> Thank You / Shukriya Frame)
   const handleGastriumComplete = async () => {
     playSound('fanfare');
-    triggerFrameTransition(11);
+    triggerFrameTransition(10);
     const activeSession = sessionId || getOrCreateSessionId();
 
     try {
@@ -708,6 +708,9 @@ export default function CampaignPage() {
     if (frame === 3 || frame === 4) {
       return 'h-[65%] xs:h-[67%] md:h-full';
     }
+    if (frame === 10) {
+      return 'h-[50%] xs:h-[53%] md:h-full';
+    }
     return 'h-[62%] xs:h-[65%] md:h-full';
   };
 
@@ -799,6 +802,7 @@ export default function CampaignPage() {
             onRegisterSubmit={handleRegistrationSubmit}
             isRegistering={isRegistering}
             regError={regError}
+            onBack={() => triggerFrameTransition(10)}
             onViewExistingPass={(data) => {
               playSound('fanfare');
               setRegisteredMobile(data.mobile);
