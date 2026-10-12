@@ -63,11 +63,11 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [bitePopupText, setBitePopupText] = useState<string>('');
   
   const POPUP_MESSAGES = useMemo(() => [
-    'YUMMM! 🤤',
-    'WOWWW! 🤩',
-    'MAZA AA GAYA! 🔥',
-    'SWAAAD! 😋',
-    'GAZAB! 💥'
+    'YUMMM!',
+    'WOWWW!',
+    'MAZA AA GAYA!',
+    'SWAAAD!',
+    'GAZAB!'
   ], []);
 
   // Stage 1 uses front-facing video (front-eat-video.mp4), Stage 2 uses side-angle (side-view-final.mp4)
@@ -491,16 +491,14 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
               : 'top-[20%] xs:top-[22%] sm:top-[24%]'
           } flex items-center justify-center pointer-events-none z-50`}
         >
-          <div className="animate-punchy-pop flex items-center justify-center filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.9)]">
+          <div className="animate-punchy-pop flex items-center justify-center filter drop-shadow-[0_10px_24px_rgba(0,0,0,0.95)]">
             <span
-              className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-black tracking-wider uppercase select-none italic text-center text-amber-300 drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)]"
+              className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-black tracking-wider uppercase select-none italic text-center text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.95)]"
               style={{
                 fontFamily: 'system-ui, -apple-system, sans-serif',
-                background: 'linear-gradient(180deg, #FFF176 0%, #FFB300 45%, #FF3D00 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                WebkitTextStroke: '2px #1A0900',
-                textShadow: '0 0 25px rgba(255, 179, 0, 0.7)'
+                color: '#FFFFFF',
+                WebkitTextStroke: '2px #000000',
+                textShadow: '0 4px 18px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.85)'
               }}
             >
               {bitePopupText}
