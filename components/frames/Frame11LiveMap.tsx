@@ -236,17 +236,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           </button>
         </div>
 
-        {/* Social Share CTA: SHARE TO WHATSAPP / INSTAGRAM / FACEBOOK */}
-        <div className="w-full shrink-0">
-          <button
-            onClick={() => setIsShareModalOpen(true)}
-            type="button"
-            className="w-full py-2.5 sm:py-3 px-5 rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
-          >
-            <Share2 className="w-4 h-4 stroke-[2.5]" />
-            <span>APNA FOOD SPOT SHARE KARO (WHATSAPP / INSTA)</span>
-          </button>
-        </div>
+
 
         {/* Influencer Subtext */}
         <div className="w-full text-center -my-0.5 shrink-0">
@@ -334,17 +324,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             </button>
           </div>
 
-          {/* Social Share CTA: SHARE TO WHATSAPP / INSTAGRAM / FACEBOOK */}
-          <div className="w-full">
-            <button
-              onClick={() => setIsShareModalOpen(true)}
-              type="button"
-              className="w-full py-3.5 px-6 rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-sm lg:text-base uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
-            >
-              <Share2 className="w-5 h-5 stroke-[2.5]" />
-              <span>APNA FOOD SPOT SHARE KARO (WHATSAPP / INSTA)</span>
-            </button>
-          </div>
+
 
           {/* Influencer Subtext */}
           <div className="w-full text-center">
