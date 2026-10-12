@@ -75,7 +75,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
   // Stage 1 uses front-facing video (front-eat-video.mp4), Stage 2 uses side-angle (side-view-final.mp4)
   const MAIN_VIDEO = isSideAngle
-    ? '/images/final-frames/side-view-final.mp4'
+    ? '/images/final-frames/side-view-final.mp4?v=2'
     : '/images/final-frames/front-eat-video.mp4';
 
   const [isEatingVideoPlaying, setIsEatingVideoPlaying] = useState<boolean>(false);
@@ -162,9 +162,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     if (isSideAngle) {
       // In Side-Angle mode: Morsels fly from Right side plate arc directly into mouth on the Left!
       // In side-view-final.mp4 (1080x1920), with object-cover object-left:
-      // Exact mouth cavity in 1080x1920: X = 382px (35.37% of 1080), Y = 834px (43.44% of 1920)
-      let targetMouthX = -58;
-      let targetMouthY = -66;
+      // Exact mouth cavity in new video (1080x1920): X = 465px (43.05% of 1080), Y = 1035px (53.90% of 1920)
+      let targetMouthX = 10;
+      let targetMouthY = 32;
       let plateStartX = 140;
       let plateStartY = 0;
 
@@ -193,8 +193,8 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           videoTop = 0;
         }
 
-        const mouthPixelX = videoLeft + videoW * (382 / 1080);
-        const mouthPixelY = videoTop + videoH * (834 / 1920);
+        const mouthPixelX = videoLeft + videoW * (465 / 1080);
+        const mouthPixelY = videoTop + videoH * (1035 / 1920);
 
         targetMouthX = Math.round(mouthPixelX - centerX);
         targetMouthY = Math.round(mouthPixelY - centerY);
@@ -592,24 +592,24 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           30% {
             /* Smooth upward arc across screen space towards Bhookasur */
             transform: translate(
-              calc(var(--start-x, 140px) * 0.45 + var(--target-x, -58px) * 0.55),
-              calc(var(--start-y, 0px) * 0.35 + var(--target-y, -66px) * 0.65 - 35px)
+              calc(var(--start-x, 140px) * 0.45 + var(--target-x, 10px) * 0.55),
+              calc(var(--start-y, 0px) * 0.35 + var(--target-y, 32px) * 0.65 - 35px)
             ) scale(1.15) rotate(-14deg);
             opacity: 1;
           }
           70% {
             /* Reaches directly in front of Bhookasur's wide open mouth lips */
             transform: translate(
-              calc(var(--target-x, -58px) + 20px),
-              calc(var(--target-y, -66px) - 2px)
+              calc(var(--target-x, 10px) + 20px),
+              calc(var(--target-y, 32px) - 2px)
             ) scale(0.7) rotate(-22deg);
             opacity: 0.98;
           }
           100% {
             /* Plunges deep into the center of the dark mouth cavity and vanishes */
             transform: translate(
-              var(--target-x, -58px),
-              var(--target-y, -66px)
+              var(--target-x, 10px),
+              var(--target-y, 32px)
             ) scale(0.04) rotate(-35deg);
             opacity: 0;
           }
