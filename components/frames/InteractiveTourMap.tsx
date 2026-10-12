@@ -188,28 +188,24 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         const pointLng = point.longitude;
 
         if (isCurrent) {
-          // BLUE PIN: Current User's Visited Spot
+          // BLUE PIN: Current User's Visited Spot (Clean teardrop marker without bulky text label)
           const blueIcon = L.divIcon({
             className: 'custom-user-blue-pin',
             html: `
               <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
-                <!-- Attached Name + Count Tag -->
-                <div style="background-color: #1D4ED8; color: white; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); border: 2px solid #ffffff; white-space: nowrap; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
-                  <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #93C5FD;"></span>
-                  <span>📍 ${point.name} (Aap)</span>
-                  <span style="background-color: #3B82F6; color: white; font-size: 9px; font-weight: 900; padding: 0 5px; border-radius: 9999px;">${point.total_visits}</span>
-                </div>
+                <!-- Pulsing outer halo to highlight user's spot -->
+                <div style="position: absolute; top: -3px; left: -3px; width: 34px; height: 34px; border-radius: 50%; background-color: rgba(37,99,235,0.35); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
                 <!-- Teardrop Pin Marker with Visit Count -->
-                <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-                  <div style="width: 28px; height: 28px; border-radius: 50%; background-color: #2563EB; border: 2.5px solid #FFFFFF; box-shadow: 0 6px 16px rgba(37,99,235,0.5); display: flex; align-items: center; justify-content: center;">
+                <div style="position: relative; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                  <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #1D4ED8); border: 2.5px solid #FFFFFF; box-shadow: 0 6px 16px rgba(37,99,235,0.6); display: flex; align-items: center; justify-content: center;">
                     <span style="font-size: 11px; font-weight: 900; color: #FFFFFF; line-height: 1;">${point.total_visits}</span>
                   </div>
-                  <div style="position: absolute; bottom: -4px; width: 8px; height: 8px; background-color: #2563EB; transform: rotate(45deg);"></div>
+                  <div style="position: absolute; bottom: -4px; width: 8px; height: 8px; background-color: #1D4ED8; transform: rotate(45deg);"></div>
                 </div>
               </div>
             `,
-            iconSize: [32, 54],
-            iconAnchor: [16, 54]
+            iconSize: [28, 36],
+            iconAnchor: [14, 36]
           });
 
           const marker = L.marker([point.latitude, point.longitude], {
@@ -260,27 +256,22 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           marker.addTo(markersLayer);
           userMarkerInstance = marker;
         } else {
-          // RED PIN: Existing Visited Restaurants with verified DB visit count
+          // RED PIN: Existing Visited Restaurants (Clean teardrop marker without bulky text label)
           const redIcon = L.divIcon({
             className: 'custom-existing-red-pin',
             html: `
               <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
-                <!-- Attached Name + Count Pill Tag -->
-                <div style="background-color: #0F172A; color: white; font-size: 9.5px; font-weight: 800; padding: 1.5px 6px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 1.5px solid #ffffff; white-space: nowrap; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
-                  <span>${point.name}</span>
-                  <span style="background-color: #DC2626; color: white; padding: 0 4px; border-radius: 9999px; font-size: 8.5px; font-weight: 900;">${point.total_visits}</span>
-                </div>
                 <!-- Teardrop Pin Marker with Visit Count Inside -->
                 <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-                  <div style="width: 24px; height: 24px; border-radius: 50%; background-color: #DC2626; border: 2px solid #FFFFFF; box-shadow: 0 4px 10px rgba(220,38,38,0.4); display: flex; align-items: center; justify-content: center;">
-                    <span style="font-size: 10px; font-weight: 900; color: #FFFFFF; line-height: 1;">${point.total_visits}</span>
+                  <div style="width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #EF4444, #DC2626); border: 2px solid #FFFFFF; box-shadow: 0 4px 10px rgba(220,38,38,0.5); display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 9px; font-weight: 900; color: #FFFFFF; line-height: 1;">${point.total_visits}</span>
                   </div>
-                  <div style="position: absolute; bottom: -4px; width: 6px; height: 6px; background-color: #DC2626; transform: rotate(45deg);"></div>
+                  <div style="position: absolute; bottom: -3.5px; width: 6px; height: 6px; background-color: #DC2626; transform: rotate(45deg);"></div>
                 </div>
               </div>
             `,
-            iconSize: [28, 38],
-            iconAnchor: [14, 38]
+            iconSize: [22, 28],
+            iconAnchor: [11, 28]
           });
 
           const marker = L.marker([pointLat, pointLng], {
@@ -319,24 +310,24 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         }
       });
 
-      // Fit bounds to show all user-searched pins cleanly
+      // Fit bounds to show all food tour spots in a clean, zoomed-out national view
       if (points.length > 0) {
         const bounds = L.latLngBounds(points.map(p => [p.latitude, p.longitude]));
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [35, 35], maxZoom: 12 });
+          // maxZoom: 5.0 ensures the map stays nicely zoomed out, showing all locations across India
+          map.fitBounds(bounds, { padding: [20, 20], maxZoom: 5.0 });
         }
+      } else {
+        map.setView([21.5, 78.9], 4.8);
       }
 
       // Save map instance
       mapInstanceRef.current = map;
 
-      // Invalidate size and auto open user popup after brief delay
+      // Invalidate size smoothly without auto-opening popup (opens only on click)
       setTimeout(() => {
         if (!isCancelled && map) {
           map.invalidateSize();
-          if (userMarkerInstance) {
-            userMarkerInstance.openPopup();
-          }
         }
       }, 250);
     }

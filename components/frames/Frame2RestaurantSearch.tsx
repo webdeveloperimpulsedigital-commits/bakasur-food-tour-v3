@@ -352,20 +352,20 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         <h2 className="text-[20px] xs:text-[24px] sm:text-[32px] md:text-[40px] font-black text-[#0B1B48] leading-[1.08] tracking-tight">
           {isSecondRound ? (
             <>
-              Trailer toh ho gaya,<br />
-              ab <span className="text-[#D4380D]">picture</span> dikhao! 🎬
+              Foodie ho.<br />
+              Sirf ek favourite food stop thodi hoga.
             </>
           ) : (
             <>
-              Apna favourite<br />restaurant batao.
+              Apna favourite<br />food stop batavo.
             </>
           )}
         </h2>
-        <p className="text-[11px] xs:text-xs sm:text-sm md:text-base font-semibold text-[#0B1B48] leading-tight">
-          {isSecondRound
-            ? 'Ek aur shaandaar restaurant chuno jahan asli daawat shuru ho!'
-            : 'Jahan jaakar Bhookasur kahe: isi ke liye toh prakat hua tha.'}
-        </p>
+        {!isSecondRound && (
+          <p className="text-[11px] xs:text-xs sm:text-sm md:text-base font-semibold text-[#0B1B48] leading-tight">
+            Jahan jaakar Bhookasur kahe: isi ke liye toh prakat hua tha.
+          </p>
+        )}
       </div>
 
       {/* 2. SEARCH BAR (Google Maps Search) */}
@@ -580,8 +580,8 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         </div>
       )}
 
-      {/* 3. PRIMARY CTA BUTTON: YEH WALA PAKKA & (In Round 2) DEKHO BHOOKASUR NE KYA KYA KHAYA */}
-      <div className="w-full shrink-0 mt-auto pt-2 flex flex-col gap-2">
+      {/* 3. PRIMARY CTA BUTTON: YEH WALA PAKKA */}
+      <div className="w-full shrink-0 mt-auto pt-2">
         <button
           onClick={handleConfirm}
           disabled={!selectedRestaurant && !searchQuery.trim()}
@@ -590,16 +590,6 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         >
           YEH WALA PAKKA
         </button>
-
-        {isSecondRound && onWatchVideo && (
-          <button
-            onClick={onWatchVideo}
-            type="button"
-            className="w-full py-3 sm:py-3.5 px-5 rounded-xl sm:rounded-2xl bg-[#0B1B48] hover:bg-[#071333] active:bg-[#040c22] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
-          >
-            <span>DEKHO BHOOKASUR NE KYA KYA KHAYA 🎬</span>
-          </button>
-        )}
       </div>
     </div>
   );

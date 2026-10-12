@@ -13,6 +13,7 @@ interface Frame3DishSelectionProps {
   onConfirmDish: (dishName?: string, dishImage?: string) => void;
   onManualEntry?: () => void;
   onBack?: () => void;
+  isSecondRound?: boolean;
 }
 
 function getInitialDishes(restaurant: Restaurant): Dish[] {
@@ -69,7 +70,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   restaurant,
   selectedDish,
   onSelectDish,
-  onConfirmDish
+  onConfirmDish,
+  isSecondRound = false
 }) => {
   const [rawDishes, setRawDishes] = useState<Dish[]>([]);
   const [customDishInput, setCustomDishInput] = useState<string>('');
@@ -261,14 +263,21 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
   return (
     <div className="w-full h-full min-h-0 flex flex-col justify-start items-start text-left animate-in fade-in duration-300 p-3.5 sm:p-5 gap-3 bg-white overflow-y-auto scrollbar-thin relative pb-10 sm:pb-14">
-      {/* 1. Headline & Subtitle */}
-      <div className="space-y-0.5 text-left shrink-0">
-        <h2 className="text-[20px] xs:text-[22px] sm:text-[28px] font-black text-[#0B1B48] leading-[1.12] tracking-tight">
-          Restaurant mil gaya.<br />Ab plate decide karo! 🍽️
+      {/* 1. Headline */}
+      <div className="text-left shrink-0">
+        <h2 className="text-[20px] xs:text-[22px] sm:text-[28px] font-black text-[#0B1B48] leading-[1.15] tracking-tight">
+          {isSecondRound ? (
+            <>
+              Doosra stop, doosri dish.<br />
+              Bhookasur ko phir impress karo.
+            </>
+          ) : (
+            <>
+              Favourite food stop mil gaya.<br />
+              Ab plate decide karo
+            </>
+          )}
         </h2>
-        <p className="text-xs sm:text-sm font-semibold text-[#0B1B48]/80 leading-tight">
-          {restaurant.name} ki famous dishes me se chuno ya apni manpasand dish search karo.
-        </p>
       </div>
 
       {/* 2. Top 3 Signature Dish Cards (Name only, side by side) */}

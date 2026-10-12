@@ -1,32 +1,64 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Frame9GastriumAnimationProps {
   onAnimationComplete: () => void;
 }
 
 export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = ({ onAnimationComplete }) => {
-  const DURATION_MS = 8000; // Calibrated to 7.83s Drinking Gastrium video
+  const [showTagline, setShowTagline] = useState<boolean>(false);
 
   useEffect(() => {
+    // 1. Listen for exact video time update (at ~4.0s when blue stomach appears)
+    const handleStomachRevealed = () => {
+      setShowTagline(true);
+    };
+
+    window.addEventListener('gastrium-stomach-revealed', handleStomachRevealed);
+
+    // 2. Fallback timer if event doesn't fire (4.2s based on video keyframe 102 @ 24fps)
+    const fallbackTimer = setTimeout(() => {
+      setShowTagline(true);
+    }, 4200);
+
+    return () => {
+      window.removeEventListener('gastrium-stomach-revealed', handleStomachRevealed);
+      clearTimeout(fallbackTimer);
+    };
+  }, []);
+
+  // When tagline appears, ensure it stays for 7.5 to 8 seconds so user can read comfortably
+  useEffect(() => {
+    if (!showTagline) return;
+
     const timer = setTimeout(() => {
       onAnimationComplete();
-    }, DURATION_MS);
+    }, 7500);
 
     return () => clearTimeout(timer);
-  }, [onAnimationComplete]);
+  }, [showTagline, onAnimationComplete]);
 
   return (
     <div
       onClick={onAnimationComplete}
-      className="w-full h-full flex items-center justify-start text-left px-5 sm:px-8 md:px-10 bg-white cursor-pointer select-none"
+      className="w-full h-full flex items-center justify-center text-center px-4 sm:px-8 md:px-10 bg-white cursor-pointer select-none"
     >
-      {/* ONLY Bold GASTRIUM IN headline exactly matching Design Mockup */}
-      <h1 className="text-[52px] xs:text-[62px] sm:text-[74px] md:text-[88px] font-black tracking-tight leading-none uppercase select-none">
-        <span className="text-[#071746]">GASTRIUM</span>{' '}
-        <span className="text-[#E2370A]">IN</span>
-      </h1>
+      {!showTagline ? (
+        <div className="flex flex-col items-center justify-center text-center animate-in fade-in duration-300">
+          <h1 className="text-[44px] xs:text-[54px] sm:text-[68px] md:text-[80px] font-black tracking-tight leading-none uppercase select-none">
+            <span className="text-[#071746]">GASTRIUM</span>{' '}
+            <span className="text-[#E2370A]">IN</span>
+          </h1>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-600 max-w-lg mx-auto">
+          <h1 className="text-[34px] xs:text-[42px] sm:text-[54px] md:text-[66px] font-black italic tracking-tight text-[#071746] leading-[1.08] select-none text-center">
+            Acidity ko bolo<br />
+            <span className="text-[#0047BA]">goodnight</span>
+          </h1>
+        </div>
+      )}
     </div>
   );
 };

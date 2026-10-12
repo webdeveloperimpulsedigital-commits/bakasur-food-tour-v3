@@ -18,7 +18,7 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
 }) => {
   const [isRevealed, setIsRevealed] = useState<boolean>(false);
 
-  // Initial 1.2s delay for full-screen video zoom reveal, then auto advance after 6s
+  // Initial 1.2s delay for full-screen video zoom reveal, then auto advance after 7.5s (stay for 6-8s)
   useEffect(() => {
     const revealTimer = setTimeout(() => {
       setIsRevealed(true);
@@ -26,7 +26,7 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
 
     const autoAdvanceTimer = setTimeout(() => {
       onAutoAdvance();
-    }, 6000);
+    }, 7500);
 
     return () => {
       clearTimeout(revealTimer);
@@ -78,20 +78,19 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
       {/* Content Card: Right on Desktop (md:w-1/2 md:h-full), Bottom on Mobile */}
       <div
         onClick={onAutoAdvance}
-        className={`w-full md:w-1/2 flex-1 md:h-full bg-white px-4 py-4 xs:px-5 xs:py-5 sm:p-8 md:p-12 flex flex-col justify-center items-start text-left shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none rounded-none z-10 shrink-0 cursor-pointer transition-all duration-1000 ease-in-out transform ${
+        className={`w-full md:w-1/2 flex-1 md:h-full bg-white px-4 py-4 xs:px-5 xs:py-5 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none rounded-none z-10 shrink-0 cursor-pointer transition-all duration-1000 ease-in-out transform ${
           isRevealed
             ? 'translate-y-0 md:translate-x-0 opacity-100'
             : 'translate-y-full md:translate-x-full opacity-0 pointer-events-none'
         }`}
       >
-        <div className="space-y-1.5 xs:space-y-2.5 sm:space-y-3.5 max-w-2xl my-auto">
-          <h2 className="text-[28px] xs:text-[32px] sm:text-[42px] md:text-[52px] font-black tracking-tight text-[#0B1B48] leading-[1.12]">
-            Plot twist: Pet ne<br />
-            <span className="text-[#D4380D]">emergency brake</span> laga di.
-          </h2>
-          <p className="text-xl xs:text-2xl sm:text-3xl md:text-3xl font-extrabold text-[#0B1B48]/90 leading-snug">
-            Khatti dakaarein aur acidity.
+        <div className="space-y-3 xs:space-y-4 sm:space-y-5 max-w-2xl my-auto mx-auto flex flex-col items-center justify-center text-center">
+          <p className="text-[17px] xs:text-[19px] sm:text-[24px] md:text-[28px] font-black text-[#0B1B48] leading-tight tracking-tight whitespace-nowrap text-center">
+            Plot twist: Pet ne <span className="text-[#D4380D]">emergency brake</span> laga di.
           </p>
+          <h2 className="text-[30px] xs:text-[36px] sm:text-[46px] md:text-[54px] font-black tracking-tight text-[#0B1B48] leading-[1.08] text-center">
+            Khatti dakaarein<br />aur acidity.
+          </h2>
         </div>
       </div>
     </div>
