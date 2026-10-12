@@ -7,6 +7,9 @@ import { BakasurSpotShareModal } from '../BakasurSpotShareModal';
 
 interface Frame11LiveMapProps {
   sessionId?: string;
+  isRegistered?: boolean;
+  registeredMobile?: string;
+  participationId?: string;
   currentUserSpot?: {
     name: string;
     city: string;
@@ -25,6 +28,9 @@ interface Frame11LiveMapProps {
 
 export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
   sessionId,
+  isRegistered = false,
+  registeredMobile = '',
+  participationId = '',
   currentUserSpot,
   onRegisterLiveTour,
   onSuggestAnotherSpot,
@@ -58,6 +64,8 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
     restaurant_name?: string;
     dish_name?: string;
   } | null>(null);
+
+  const hasRegistered = Boolean(isRegistered || registeredMobile || participationId || isSubmittedSuccess || registeredInfo?.isRegistered);
 
   // Debounced check whenever 10 digits are typed
   React.useEffect(() => {
@@ -240,17 +248,30 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
 
 
-        {/* Secondary CTA: LIVE FOOD TOUR KE LIYE REGISTER KARO */}
-        <div className="w-full pb-1 shrink-0">
-          <button
-            onClick={handleOpenRegistration}
-            type="button"
-            className="w-full py-2.5 sm:py-3 px-5 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-xs sm:text-sm uppercase tracking-wider active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <span>LIVE FOOD TOUR KE LIYE REGISTER KARO</span>
-            <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-          </button>
-        </div>
+        {/* Secondary CTA: If registered, show sharing CTA! Otherwise show Register CTA */}
+        {hasRegistered ? (
+          <div className="w-full pb-1 shrink-0">
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              type="button"
+              className="w-full py-2.5 sm:py-3 px-5 rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
+            >
+              <Share2 className="w-4 h-4 stroke-[2.5]" />
+              <span>APNA FOOD SPOT SHARE KARO (WHATSAPP / INSTA)</span>
+            </button>
+          </div>
+        ) : (
+          <div className="w-full pb-1 shrink-0">
+            <button
+              onClick={handleOpenRegistration}
+              type="button"
+              className="w-full py-2.5 sm:py-3 px-5 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-xs sm:text-sm uppercase tracking-wider active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>LIVE FOOD TOUR KE LIYE REGISTER KARO</span>
+              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ========================================================== */}
@@ -323,17 +344,30 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
 
 
-          {/* Secondary CTA: LIVE FOOD TOUR KE LIYE REGISTER KARO */}
-          <div className="w-full">
-            <button
-              onClick={handleOpenRegistration}
-              type="button"
-              className="w-full py-3.5 px-6 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-sm lg:text-base uppercase tracking-wider active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-            >
-              <span>LIVE FOOD TOUR KE LIYE REGISTER KARO</span>
-              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-            </button>
-          </div>
+          {/* Secondary CTA: If registered, show sharing CTA! Otherwise show Register CTA */}
+          {hasRegistered ? (
+            <div className="w-full">
+              <button
+                onClick={() => setIsShareModalOpen(true)}
+                type="button"
+                className="w-full py-3.5 px-6 rounded-2xl bg-[#00A859] hover:bg-[#00914c] text-white font-black text-sm lg:text-base uppercase tracking-wider shadow-md shadow-[#00A859]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
+              >
+                <Share2 className="w-5 h-5 stroke-[2.5]" />
+                <span>APNA FOOD SPOT SHARE KARO (WHATSAPP / INSTA)</span>
+              </button>
+            </div>
+          ) : (
+            <div className="w-full">
+              <button
+                onClick={handleOpenRegistration}
+                type="button"
+                className="w-full py-3.5 px-6 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-sm lg:text-base uppercase tracking-wider active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <span>LIVE FOOD TOUR KE LIYE REGISTER KARO</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

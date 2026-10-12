@@ -790,6 +790,9 @@ export default function CampaignPage() {
         <div className="w-full h-full max-w-[440px] md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-white md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative flex flex-col">
           <Frame11LiveMap
             sessionId={sessionId}
+            isRegistered={Boolean(registeredMobile || participationId)}
+            registeredMobile={registeredMobile}
+            participationId={participationId}
             currentUserSpot={selectedRestaurant ? {
               name: selectedRestaurant.name,
               city: selectedRestaurant.city,
