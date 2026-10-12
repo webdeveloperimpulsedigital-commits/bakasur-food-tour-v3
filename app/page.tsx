@@ -10,6 +10,7 @@ import { Frame3DishSelection } from '@/components/frames/Frame3DishSelection';
 import { Frame4ManualDish } from '@/components/frames/Frame4ManualDish';
 import { Frame5EatingBegins } from '@/components/frames/Frame5EatingBegins';
 import { Frame6FeedingLoop } from '@/components/frames/Frame6FeedingLoop';
+import { Frame6PostEating } from '@/components/frames/Frame6PostEating';
 import { Frame6RandomFoodSpot } from '@/components/frames/Frame6RandomFoodSpot';
 import { FoodTourSpot, getRandomFoodSpot } from '@/lib/foodTourSpots';
 import { Frame7AcidityAppears } from '@/components/frames/Frame7AcidityAppears';
@@ -739,11 +740,7 @@ export default function CampaignPage() {
             }}
             onComplete={() => {
               playSound('click');
-              if (feastingStage === 1) {
-                setCurrentFrame(6);
-              } else {
-                handleFeedingLoopComplete();
-              }
+              setCurrentFrame(6);
             }}
             onPlayBite={() => playSound('bite')}
           />
@@ -751,19 +748,25 @@ export default function CampaignPage() {
       ) : currentFrame === 6 && tourSpotRound === 0 ? (
         /* Frame 6 Interstitial with bakasur_empty_plate video & smooth zoom-out reveal animation */
         <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#07153B] md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative flex flex-col">
-          <Frame6FeedingLoop
-            restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: 'Pune' }}
-            dish={selectedDish || { name: 'Signature Food', id: 1 }}
-            onCompleteLoop={handleStartSecondEatingStage}
-            onBack={() => setCurrentFrame(5)}
-            onWatchVideo={() => {
-              setActiveTransitionVideo({
-                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
-                buttonText: 'Aage Badho ➡️',
-                nextFrame: 7
-              });
-            }}
-          />
+          {feastingStage === 1 ? (
+            <Frame6FeedingLoop
+              restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: 'Pune' }}
+              dish={selectedDish || { name: 'Signature Food', id: 1 }}
+              onCompleteLoop={handleStartSecondEatingStage}
+              onBack={() => setCurrentFrame(5)}
+            />
+          ) : (
+            <Frame6PostEating
+              onBack={() => setCurrentFrame(5)}
+              onWatchVideo={() => {
+                setActiveTransitionVideo({
+                  videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
+                  buttonText: 'Aage Badho ➡️',
+                  nextFrame: 7
+                });
+              }}
+            />
+          )}
         </div>
       ) : currentFrame === 7 ? (
         /* Frame 7 Acidity Appears with Fire on stomach video & smooth zoom-out reveal animation */
