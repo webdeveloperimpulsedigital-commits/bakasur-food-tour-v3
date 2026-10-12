@@ -549,11 +549,11 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
           />
         </div>
       ) : frameNumber === 10 ? (
-        <div className="relative w-full h-full flex items-end justify-center overflow-hidden bg-[#062c97]">
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#062c97]">
           <img
             src="/images/final-frames/thank-you-frame.jpg"
             alt="Bhookasur Shukriya"
-            className="w-full h-full object-contain object-bottom relative z-10"
+            className="w-full h-full object-contain object-center relative z-10"
           />
         </div>
       ) : (
