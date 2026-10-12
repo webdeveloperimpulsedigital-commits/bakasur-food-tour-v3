@@ -628,6 +628,14 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             className="w-full h-full object-cover object-center relative z-10"
           />
         </div>
+      ) : frameNumber === 10 ? (
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#062c97]">
+          <img
+            src="/images/final-frames/thank-you-frame.jpg"
+            alt="Bhookasur Shukriya"
+            className="w-full h-full object-contain object-center relative z-10"
+          />
+        </div>
       ) : (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video

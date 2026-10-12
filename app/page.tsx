@@ -519,10 +519,10 @@ export default function CampaignPage() {
     });
   };
 
-  // Frame 9 -> Frame 11 (Gastrium Animation Finished -> Live Food Tour Map)
+  // Frame 9 -> Frame 10 (Gastrium Animation Finished -> Thank You / Shukriya Frame)
   const handleGastriumComplete = async () => {
     playSound('fanfare');
-    triggerFrameTransition(11);
+    triggerFrameTransition(10);
     const activeSession = sessionId || getOrCreateSessionId();
 
     try {
@@ -730,6 +730,9 @@ export default function CampaignPage() {
     if (frame === 3 || frame === 4) {
       return 'h-[65%] xs:h-[67%] md:h-full';
     }
+    if (frame === 10) {
+      return 'h-[54%] xs:h-[56%] md:h-full';
+    }
     return 'h-[62%] xs:h-[65%] md:h-full';
   };
 
@@ -751,7 +754,7 @@ export default function CampaignPage() {
             }}
             onWatchVideo={() => {
               setActiveTransitionVideo({
-                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-new.mp4',
+                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
                 buttonText: 'Aage Badho ➡️',
                 nextFrame: 7
               });
@@ -777,7 +780,7 @@ export default function CampaignPage() {
             onBack={() => setCurrentFrame(5)}
             onWatchVideo={() => {
               setActiveTransitionVideo({
-                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-new.mp4',
+                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
                 buttonText: 'Aage Badho ➡️',
                 nextFrame: 7
               });
@@ -809,6 +812,9 @@ export default function CampaignPage() {
         <div className="w-full h-full max-w-[440px] md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-white md:rounded-[2.5rem] md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] md:border-[4px] md:border-slate-800/80 overflow-hidden relative flex flex-col">
           <Frame11LiveMap
             sessionId={sessionId}
+            isRegistered={Boolean(registeredMobile || participationId)}
+            registeredMobile={registeredMobile}
+            participationId={participationId}
             currentUserSpot={selectedRestaurant ? {
               name: selectedRestaurant.name,
               city: selectedRestaurant.city,
@@ -821,6 +827,7 @@ export default function CampaignPage() {
             onRegisterSubmit={handleRegistrationSubmit}
             isRegistering={isRegistering}
             regError={regError}
+            onBack={() => triggerFrameTransition(10)}
             onViewExistingPass={(data) => {
               playSound('fanfare');
               setRegisteredMobile(data.mobile);
@@ -912,7 +919,7 @@ export default function CampaignPage() {
                   onNext={handleRestaurantConfirmed}
                   onWatchVideo={() => {
                     setActiveTransitionVideo({
-                      videoUrl: '/images/final-frames/Bhookasur-Food-Eating-new.mp4',
+                      videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
                       buttonText: 'Aage Badho ➡️',
                       nextFrame: 2
                     });

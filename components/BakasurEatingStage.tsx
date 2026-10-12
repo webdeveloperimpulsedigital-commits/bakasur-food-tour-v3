@@ -62,20 +62,17 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [chompEffect, setChompEffect] = useState<boolean>(false);
   const [bitePopupText, setBitePopupText] = useState<string>('');
   
-  const POPUP_MESSAGES = useMemo(() => {
-    const clean = dishName ? dishName.replace(/^Special\s+/i, '').trim() : 'Food';
-    return [
-      `Aur ${clean} khilao! Super Yum! 🤤`,
-      `Maza Aa Gaya! Aur ${clean} bhej! 🔥`,
-      `Aha! Gazab ${clean} hai! 😋`,
-      `Ek aur bite, fast! 🚀`,
-      `Bhookasur loves ${clean}! 💥`
-    ];
-  }, [dishName]);
+  const POPUP_MESSAGES = useMemo(() => [
+    'YUMMM!',
+    'WOWWW!',
+    'MAZA AA GAYA!',
+    'SWAAAD!',
+    'GAZAB!'
+  ], []);
 
   // Stage 1 uses front-facing video (front-eat-video.mp4), Stage 2 uses side-angle (side-view-final.mp4)
   const MAIN_VIDEO = isSideAngle
-    ? '/images/final-frames/side-view-final.mp4'
+    ? '/images/final-frames/side-view-final.mp4?v=2'
     : '/images/final-frames/front-eat-video.mp4';
 
   const [isEatingVideoPlaying, setIsEatingVideoPlaying] = useState<boolean>(false);
@@ -162,9 +159,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     if (isSideAngle) {
       // In Side-Angle mode: Morsels fly from Right side plate arc directly into mouth on the Left!
       // In side-view-final.mp4 (1080x1920), with object-cover object-left:
-      // Exact mouth cavity in 1080x1920: X = 382px (35.37% of 1080), Y = 834px (43.44% of 1920)
-      let targetMouthX = -58;
-      let targetMouthY = -66;
+      // Exact mouth cavity in new video (1080x1920): X = 465px (43.05% of 1080), Y = 1035px (53.90% of 1920)
+      let targetMouthX = 10;
+      let targetMouthY = 32;
       let plateStartX = 140;
       let plateStartY = 0;
 
@@ -193,8 +190,8 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           videoTop = 0;
         }
 
-        const mouthPixelX = videoLeft + videoW * (382 / 1080);
-        const mouthPixelY = videoTop + videoH * (834 / 1920);
+        const mouthPixelX = videoLeft + videoW * (465 / 1080);
+        const mouthPixelY = videoTop + videoH * (1035 / 1920);
 
         targetMouthX = Math.round(mouthPixelX - centerX);
         targetMouthY = Math.round(mouthPixelY - centerY);
@@ -216,26 +213,33 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       }
 
       const pIdx = typeof plateIndex === 'number' ? plateIndex : 1;
-      const itemId = `${food.id}_bite_${Date.now()}_${Math.random()}`;
-      const rotation = pIdx === 0 ? 12 : pIdx === 2 ? -12 : 0;
+      const BURST_COUNT = 2;
+      for (let i = 0; i < BURST_COUNT; i++) {
+        setTimeout(() => {
+          const itemId = `${food.id}_side_${Date.now()}_${i}_${Math.random()}`;
+          const offsetStartX = plateStartX + (i === 0 ? 0 : (Math.random() > 0.5 ? 8 : -8));
+          const offsetStartY = plateStartY + (i === 0 ? 0 : (Math.random() > 0.5 ? 10 : -10));
+          const rotation = (i === 0 ? -12 : 12) + (Math.random() * 8 - 4);
 
-      setActiveFlyingItems((prev) => [
-        ...prev,
-        {
-          id: itemId,
-          image: flyingPNG,
-          name: food.name,
-          startX: plateStartX,
-          startY: plateStartY,
-          targetX: targetMouthX,
-          targetY: targetMouthY,
-          rotation
-        }
-      ]);
+          setActiveFlyingItems((prev) => [
+            ...prev,
+            {
+              id: itemId,
+              image: flyingPNG,
+              name: food.name,
+              startX: offsetStartX,
+              startY: offsetStartY,
+              targetX: targetMouthX,
+              targetY: targetMouthY,
+              rotation
+            }
+          ]);
 
-      setTimeout(() => {
-        setActiveFlyingItems((prev) => prev.filter((item) => item.id !== itemId));
-      }, 520);
+          setTimeout(() => {
+            setActiveFlyingItems((prev) => prev.filter((item) => item.id !== itemId));
+          }, 520);
+        }, i * 85);
+      }
     } else {
       // Stage 1: Bottom to Top flying arc
       let baseOffsetX = 0;
@@ -442,7 +446,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
               }
               className={`${
                 isSideAngle
-                  ? 'w-16 h-16 xs:w-20 xs:h-20 animate-smooth-fly-side'
+                  ? 'w-20 h-20 sm:w-26 sm:h-26 animate-smooth-fly-side'
                   : 'w-20 h-20 sm:w-28 sm:h-28 animate-smooth-fly'
               } flex items-center justify-center`}
             >
@@ -474,6 +478,32 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             alt="Dragging Food Morsel PNG"
             className="w-full h-full object-contain"
           />
+        </div>
+      )}
+
+      {/* Floating Animated Reaction Text (No Boxes, Pure Kinetic Comic Typography) */}
+      {chompEffect && bitePopupText && (
+        <div
+          key={bitePopupText}
+          className={`absolute inset-x-0 ${
+            isSideAngle
+              ? 'top-[22%] xs:top-[25%] sm:top-[28%] md:left-[20%]'
+              : 'top-[20%] xs:top-[22%] sm:top-[24%]'
+          } flex items-center justify-center pointer-events-none z-50`}
+        >
+          <div className="animate-punchy-pop flex items-center justify-center filter drop-shadow-[0_10px_24px_rgba(0,0,0,0.95)]">
+            <span
+              className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-black tracking-wider uppercase select-none italic text-center text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.95)]"
+              style={{
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                color: '#FFFFFF',
+                WebkitTextStroke: '2px #000000',
+                textShadow: '0 4px 18px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.85)'
+              }}
+            >
+              {bitePopupText}
+            </span>
+          </div>
         </div>
       )}
 
@@ -586,36 +616,59 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
         @keyframes smoothFlyToMouthSide {
           0% {
-            transform: translate(var(--start-x, 140px), var(--start-y, 0px)) scale(1) rotate(var(--start-rot, 0deg));
+            transform: translate(var(--start-x, 140px), var(--start-y, 0px)) scale(0.9) rotate(var(--start-rot, 0deg));
             opacity: 1;
           }
-          30% {
-            /* Smooth upward arc across screen space towards Bhookasur */
+          45% {
+            /* Arcs upward in mid-air towards mouth, scaling up like stage 1 */
             transform: translate(
-              calc(var(--start-x, 140px) * 0.45 + var(--target-x, -58px) * 0.55),
-              calc(var(--start-y, 0px) * 0.35 + var(--target-y, -66px) * 0.65 - 35px)
-            ) scale(1.15) rotate(-14deg);
+              calc(var(--start-x, 140px) * 0.45 + var(--target-x, 10px) * 0.55),
+              calc(var(--start-y, 0px) * 0.45 + var(--target-y, 32px) * 0.55 - 45px)
+            ) scale(1.22) rotate(calc(var(--start-rot, 0deg) * 0.5));
             opacity: 1;
           }
-          70% {
-            /* Reaches directly in front of Bhookasur's wide open mouth lips */
+          80% {
+            /* Right at the mouth entrance */
             transform: translate(
-              calc(var(--target-x, -58px) + 20px),
-              calc(var(--target-y, -66px) - 2px)
-            ) scale(0.7) rotate(-22deg);
-            opacity: 0.98;
+              calc(var(--target-x, 10px) + 10px),
+              calc(var(--target-y, 32px) - 2px)
+            ) scale(0.35) rotate(0deg);
+            opacity: 0.9;
           }
           100% {
-            /* Plunges deep into the center of the dark mouth cavity and vanishes */
-            transform: translate(
-              var(--target-x, -58px),
-              var(--target-y, -66px)
-            ) scale(0.04) rotate(-35deg);
+            /* Plunges directly into the mouth opening and vanishes */
+            transform: translate(var(--target-x, 10px), var(--target-y, 32px)) scale(0.04) rotate(0deg);
             opacity: 0;
           }
         }
+        @keyframes punchyPop {
+          0% {
+            transform: scale(0.35) translateY(20px) rotate(-6deg);
+            opacity: 0;
+          }
+          20% {
+            transform: scale(1.25) translateY(-8px) rotate(-3deg);
+            opacity: 1;
+          }
+          35% {
+            transform: scale(1.02) translateY(-14px) rotate(2deg);
+            opacity: 1;
+          }
+          75% {
+            transform: scale(1.0) translateY(-26px) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(0.85) translateY(-48px) rotate(4deg);
+            opacity: 0;
+          }
+        }
+        .animate-punchy-pop {
+          animation: punchyPop 1.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          will-change: transform, opacity;
+        }
         .animate-smooth-fly-side {
-          animation: smoothFlyToMouthSide 0.46s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: smoothFlyToMouthSide 0.44s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
           will-change: transform, opacity;
         }
       `}</style>
