@@ -86,10 +86,12 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
       >
         <div className="space-y-3 xs:space-y-4 sm:space-y-5 max-w-2xl my-auto mx-auto flex flex-col items-center justify-center text-center">
           <p className="text-[17px] xs:text-[19px] sm:text-[24px] md:text-[28px] font-black text-[#0B1B48] leading-tight tracking-tight whitespace-nowrap text-center">
-            Plot twist: Pet ne <span className="text-[#D4380D]">emergency brake</span> laga di.
+            Plot twist: Pet ne emergency brake laga di.
           </p>
-          <h2 className="text-[30px] xs:text-[36px] sm:text-[46px] md:text-[54px] font-black tracking-tight text-[#D4380D] leading-[1.08] text-center">
-            Acidity aur<br />khatti dakaarein.
+          <h2 className="text-[30px] xs:text-[36px] sm:text-[46px] md:text-[54px] font-black tracking-tight leading-[1.08] text-center">
+            <span className="text-[#D4380D]">Acidity</span>{' '}
+            <span className="text-black">aur</span><br />
+            <span className="text-[#D4380D]">khatti dakaarein.</span>
           </h2>
         </div>
       </div>

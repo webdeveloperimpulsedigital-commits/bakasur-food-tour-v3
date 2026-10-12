@@ -265,14 +265,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
   return (
     <div className="w-full h-full min-h-0 flex flex-col justify-start items-start text-left animate-in fade-in duration-300 p-3.5 sm:p-5 gap-3 bg-white overflow-y-auto scrollbar-thin relative pb-10 sm:pb-14">
-      {/* 1. Headline & Subtitle */}
-      <div className="space-y-1 text-left shrink-0">
+      {/* 1. Headline */}
+      <div className="text-left shrink-0">
         <h2 className="text-[20px] xs:text-[22px] sm:text-[28px] font-black text-[#0B1B48] leading-[1.12] tracking-tight">
-          Restaurant mil gaya.<br />Ab plate decide karo! 🍽️
+          Favourite food stop mil gaya<br />Ab plate decide karo.
         </h2>
-        <p className="text-xs sm:text-sm font-semibold text-[#0B1B48]/80 leading-tight">
-          {restaurant.name} ki famous dishes me se chuno ya apni manpasand dish search karo.
-        </p>
       </div>
 
       {/* 2. Top 3 Signature Dish Cards with Pure Food PNGs */}
@@ -296,11 +293,10 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                   key={`${dish.id}-${dish.name}`}
                   type="button"
                   onClick={() => handleSelectPill(dish)}
-                  className={`w-full py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-xl transition-all flex flex-col items-center justify-center text-center relative cursor-pointer shadow-xs border-2 min-h-[74px] sm:min-h-[82px] ${
-                    isSelected
+                  className={`w-full py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-xl transition-all flex flex-col items-center justify-center text-center relative cursor-pointer shadow-xs border-2 min-h-[74px] sm:min-h-[82px] ${isSelected
                       ? 'bg-orange-50 border-[#D4380D] text-[#D4380D] shadow-md shadow-[#D4380D]/15 scale-[1.02]'
                       : 'bg-white hover:bg-slate-50 border-slate-200/90 text-[#0B1B48]'
-                  }`}
+                    }`}
                 >
                   {/* Floating Checkmark for Selected State */}
                   {isSelected && (
@@ -318,9 +314,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                     />
                   </div>
 
-                  <span className={`font-black text-[11px] sm:text-xs leading-tight line-clamp-2 ${
-                    isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
-                  }`}>
+                  <span className={`font-black text-[11px] sm:text-xs leading-tight line-clamp-2 ${isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
+                    }`}>
                     {cleanDishName}
                   </span>
                 </button>
@@ -330,12 +325,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         )}
       </div>
 
-      {/* 3. In-Restaurant Menu Search Bar with Live Suggestions Dropdown (Swiggy / Zomato style) */}
+      {/* 3. In-Restaurant Menu Search Bar with Live Suggestions Dropdown */}
       <div ref={dropdownRef} className="relative w-full space-y-1 shrink-0 mt-1">
         <label className="text-xs font-bold text-[#0B1B48] flex items-center">
           <span>🔍 {restaurant.name} Menu Search</span>
         </label>
-
         <div className="relative flex items-center w-full px-3 py-2 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
           <Utensils className="w-4 h-4 text-[#0047BA] shrink-0 mr-2" />
           <input
@@ -435,9 +429,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                   key={`${dish.id}-${dish.name}`}
                   type="button"
                   onClick={() => handleSelectSuggestion(dish)}
-                  className={`w-full px-2.5 py-2 text-left rounded-lg transition-colors flex items-center justify-between gap-2.5 cursor-pointer border-b border-slate-100 last:border-b-0 ${
-                    isSelected ? 'bg-orange-50 text-[#D4380D]' : 'hover:bg-slate-50 text-slate-800'
-                  }`}
+                  className={`w-full px-2.5 py-2 text-left rounded-lg transition-colors flex items-center justify-between gap-2.5 cursor-pointer border-b border-slate-100 last:border-b-0 ${isSelected ? 'bg-orange-50 text-[#D4380D]' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <img
