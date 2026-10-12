@@ -37,7 +37,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'बिरयानी और चावल',
     icon: '🍚',
     keywords: ['biryani', 'biriyani', 'briyani', 'pulao', 'pulav', 'jeera rice', 'geera rice', 'jeera', 'geera', 'fried rice', 'schezwan rice', 'tahari', 'khichdi', 'curd rice'],
-    signatureImage: '/images/eating/biryani_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Biryani'
   },
   {
     id: 2,
@@ -46,7 +46,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'उत्तर भारतीय और मुगलई',
     icon: '🥘',
     keywords: ['butter chicken', 'paneer butter masala', 'paneer', 'dal makhani', 'korma', 'rogan josh', 'kadai', 'handi', 'tikka masala', 'naan', 'roti', 'paratha', 'parantha', 'aloo paratha', 'lachha paratha'],
-    signatureImage: '/images/eating/butter_chicken_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Butter%20Chicken'
   },
   {
     id: 3,
@@ -55,7 +55,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'महाराष्ट्रीयन स्पेशल',
     icon: '🍲',
     keywords: ['misal', 'misal pav', 'katakirr', 'tarri', 'rassa', 'tambda pandhra rassa', 'pithla bhakri', 'bhakri', 'puran poli', 'thalipeeth', 'modak', 'kothimbir vadi'],
-    signatureImage: '/images/eating/misal_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Misal%20Pav'
   },
   {
     id: 4,
@@ -64,7 +64,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'स्ट्रीट फूड और चाट',
     icon: '🥪',
     keywords: ['vada pav', 'vadapav', 'wada pav', 'batata vada', 'pav bhaji', 'pavbhaji', 'samosa', 'pani puri', 'golgappe', 'puchka', 'spdp', 'bhel', 'sev puri', 'dahi samosa'],
-    signatureImage: '/images/eating/vada_pav_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Vada%20Pav'
   },
   {
     id: 5,
@@ -73,7 +73,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'साउथ इंडियन और नाश्ता',
     icon: '🥞',
     keywords: ['dosa', 'masala dosa', 'benne dosa', 'idli', 'thatte idli', 'medu vada', 'uttapam', 'appam', 'podi', 'sambar', 'filter coffee', 'upma', 'sheera'],
-    signatureImage: '/images/eating/dosa_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Masala%20Dosa'
   },
   {
     id: 6,
@@ -82,7 +82,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'कबाब और तंदूरी',
     icon: '🍢',
     keywords: ['tandoori', 'tikka', 'kebab', 'kabab', 'seekh', 'galouti', 'lollipop', 'chicken lollipop', 'baida roti', 'shawarma', 'rolls', 'kathi roll'],
-    signatureImage: '/images/eating/tandoori_chicken_tikka.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Tandoori%20Chicken'
   },
   {
     id: 7,
@@ -91,7 +91,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'चाइनीज और मोमोज',
     icon: '🥟',
     keywords: ['momos', 'momo', 'dimsum', 'dumpling', 'triple schezwan', 'manchurian', 'noodles', 'chowmein', 'chilli chicken', 'spring roll'],
-    signatureImage: '/images/eating/momos_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Momos'
   },
   {
     id: 8,
@@ -100,7 +100,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'पिज़्ज़ा और बर्गर',
     icon: '🍕',
     keywords: ['pizza', 'burger', 'pasta', 'fries', 'french fries', 'sandwich', 'garlic bread', 'cheese burst', 'wrap'],
-    signatureImage: '/images/eating/pizza_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Pizza'
   },
   {
     id: 9,
@@ -109,7 +109,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'चाय, कॉफी और कैफे',
     icon: '☕',
     keywords: ['bun maska', 'irani chai', 'chai', 'tea', 'cold coffee', 'coffee', 'frappe', 'latte', 'cappuccino', 'lassi', 'milkshake', 'shake'],
-    signatureImage: '/images/eating/bun_maska_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Bun%20Maska'
   },
   {
     id: 10,
@@ -118,7 +118,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'मिठाई और आइसक्रीम',
     icon: '🍨',
     keywords: ['mastani', 'falooda', 'faluda', 'kulfi', 'ice cream', 'gulab jamun', 'rasgulla', 'jalebi', 'kheer', 'rabdi', 'halwa', 'pastry', 'waffle'],
-    signatureImage: '/images/eating/falooda_kulfi_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Falooda'
   },
   {
     id: 11,
@@ -127,7 +127,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'सीफूड और फिश',
     icon: '🐟',
     keywords: ['fish', 'fish fry', 'surmai', 'pomfret', 'prawns', 'crab', 'malvani', 'solkadhi', 'seafood thali'],
-    signatureImage: '/images/eating/seafood_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Seafood'
   },
   {
     id: 12,
@@ -136,7 +136,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     hindiName: 'शाही थाली',
     icon: '🍽️',
     keywords: ['thali', 'veg thali', 'maharaja thali', 'deluxe thali', 'maharashtrian thali', 'mutton thali', 'gavran thali', 'punjabi thali', 'rajasthani thali', 'gujarati thali', 'shahi thali'],
-    signatureImage: '/images/eating/thali_dish.jpg'
+    signatureImage: '/api/ai/dish-image?dish=Veg%20Thali'
   }
 ];
 
@@ -523,7 +523,7 @@ export function searchRestaurantsSwiggyZomato(
       // Visual Image enrichment: Ensure restaurant has verified cuisine image
       const verifiedImage = rest.image && !rest.image.includes('placeholder')
         ? rest.image
-        : (intent.matchedCategory?.signatureImage || '/images/eating/thali_dish.jpg');
+        : (intent.matchedCategory?.signatureImage || '/api/ai/dish-image?dish=Veg%20Thali');
 
       results.push({
         restaurant: {

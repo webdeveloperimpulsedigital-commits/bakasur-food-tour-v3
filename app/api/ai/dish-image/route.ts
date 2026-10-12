@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import sharp from 'sharp';
-import fs from 'fs';
-import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,73 +7,73 @@ export const dynamic = 'force-dynamic';
 const imageBufferCache = new Map<string, { buffer: Buffer; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-// Verified authentic culinary photography assets (Local verified assets prioritized)
+// Verified authentic culinary photography assets (100% remote API & CDN hosted URLs)
 const CANONICAL_FOOD_PHOTOS: Record<string, string> = {
   // Grand Thalis
-  thali: '/images/eating/thali_dish.jpg',
-  mutton_thali: '/images/eating/gavran_mutton_thali.jpg',
+  thali: 'https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?w=800&auto=format&fit=crop&q=85',
+  mutton_thali: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=85',
 
   // Indian Breads & Parathas
-  paratha: '/images/eating/paratha_dish.jpg',
-  garlic_naan: '/images/eating/garlic_naan_dish.jpg',
-  bhakri: '/images/eating/bhakri_bhaji_dish.jpg',
-  puran_poli: '/images/eating/puran_poli.jpg',
+  paratha: 'https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85',
+  garlic_naan: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=85',
+  bhakri: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=85',
+  puran_poli: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=85',
 
   // Rice & Biryani
-  jeera_rice: '/images/eating/jeera_rice_dish.jpg',
-  biryani: '/images/eating/biryani_dish.jpg',
-  fried_rice: '/images/eating/fried_rice_dish.jpg',
+  jeera_rice: 'https://images.unsplash.com/photo-1789991184293-224a84e41900?w=800&auto=format&fit=crop&q=85',
+  biryani: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=85',
+  fried_rice: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&auto=format&fit=crop&q=85',
 
   // Curries & Gravies
-  paneer_butter_masala: '/images/eating/paneer_dish.jpg',
+  paneer_butter_masala: 'https://images.unsplash.com/photo-1545247181-516773cae754?w=800&auto=format&fit=crop&q=85',
   kaju_curry: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=800&auto=format&fit=crop&q=85',
   dal_makhani: 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=800&auto=format&fit=crop&q=85',
   dal_tadka: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=85',
   veg_kolhapuri: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85',
-  chole_bhature: '/images/eating/chole_bhature_dish.jpg',
+  chole_bhature: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
 
   // Street Snacks & Fast Food
-  misal_pav: '/images/eating/misal_dish.jpg',
-  pav_bhaji: '/images/eating/pav_bhaji_dish.jpg',
-  vada_pav: '/images/eating/vada_pav_dish.jpg',
-  samosa: '/images/eating/samosa_dish.jpg',
-  pani_puri: '/images/eating/pani_puri_dish.jpg',
-  sabudana_vada: '/images/eating/sabudana_vada_dish.jpg',
-  spdp: '/images/eating/spdp.jpg',
+  misal_pav: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85',
+  pav_bhaji: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&auto=format&fit=crop&q=85',
+  vada_pav: 'https://images.unsplash.com/photo-1750767396969-f37060ebe07d?w=800&auto=format&fit=crop&q=85',
+  samosa: 'https://images.unsplash.com/photo-1747008624832-e068ee496908?w=800&auto=format&fit=crop&q=85',
+  pani_puri: 'https://images.unsplash.com/photo-1649140041688-0f75446e707e?w=800&auto=format&fit=crop&q=85',
+  sabudana_vada: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=85',
+  spdp: 'https://images.unsplash.com/photo-1649140041688-0f75446e707e?w=800&auto=format&fit=crop&q=85',
 
   // South Indian
-  dosa: '/images/eating/dosa_dish.jpg',
-  idli: '/images/eating/idli_dish.jpg',
+  dosa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
+  idli: 'https://images.unsplash.com/photo-1741376509047-66dae5df90f9?w=800&auto=format&fit=crop&q=85',
   medu_vada: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
 
   // Fast Food & Asian
-  momos: '/images/eating/momos_dish.jpg',
-  pizza: '/images/eating/pizza_dish.jpg',
-  burger: '/images/eating/burger_dish.jpg',
+  momos: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop&q=85',
+  pizza: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&auto=format&fit=crop&q=85',
+  burger: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&auto=format&fit=crop&q=85',
   fries: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=800&auto=format&fit=crop&q=85',
   sandwich: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&auto=format&fit=crop&q=85',
 
   // Non-Veg
-  butter_chicken: '/images/eating/butter_chicken_dish.jpg',
-  tandoori_chicken: '/images/eating/tandoori_chicken_tikka.jpg',
-  chicken_lollipop: '/images/eating/chicken_lollipop_dish.jpg',
-  seafood: '/images/eating/seafood_dish.jpg',
+  butter_chicken: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&auto=format&fit=crop&q=85',
+  tandoori_chicken: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=800&auto=format&fit=crop&q=85',
+  chicken_lollipop: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&auto=format&fit=crop&q=85',
+  seafood: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=85',
 
   // Desserts & Beverages
   gulab_jamun: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=85',
-  mango_mastani: '/images/eating/mango_mastani_dish.jpg',
-  chocolate_mastani: '/images/eating/chocolate_mastani_dish.png',
-  falooda: '/images/eating/falooda_kulfi_dish.jpg',
-  kulfi: '/images/eating/falooda_kulfi_dish.jpg',
+  mango_mastani: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&auto=format&fit=crop&q=85',
+  chocolate_mastani: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&auto=format&fit=crop&q=85',
+  falooda: 'https://images.unsplash.com/photo-1579954115563-e72bf1381629?w=800&auto=format&fit=crop&q=85',
+  kulfi: 'https://images.unsplash.com/photo-1505394033641-40c6ad1178d7?w=800&auto=format&fit=crop&q=85',
   lassi: 'https://images.unsplash.com/photo-1553787499-6f9133860278?w=800&auto=format&fit=crop&q=85',
-  cold_coffee: '/images/eating/cold_coffee_dish.jpg',
-  bun_maska: '/images/eating/bun_maska_dish.jpg',
+  cold_coffee: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800&auto=format&fit=crop&q=85',
+  bun_maska: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&auto=format&fit=crop&q=85',
   poha: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
   upma: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=85',
   sheera: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=85',
   filter_coffee: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=85',
   masala_chai: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
-  default_feast: '/images/eating/thali_dish.jpg'
+  default_feast: 'https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?w=800&auto=format&fit=crop&q=85'
 };
 
 /**
@@ -315,11 +313,14 @@ export async function GET(request: Request) {
       });
     }
 
-    // 1. Identify primary authentic photo source (Swiggy CDN or verified local culinary catalog)
+    // 1. Identify primary authentic photo source (Swiggy CDN or verified remote culinary API catalog)
     const isVerifiedExplicit = explicitImgUrl && (
+      explicitImgUrl.startsWith('http://') ||
+      explicitImgUrl.startsWith('https://')
+    ) && (
       explicitImgUrl.includes('swiggy.com') ||
       explicitImgUrl.includes('cloudinary.com') ||
-      explicitImgUrl.startsWith('/images/eating/')
+      explicitImgUrl.includes('unsplash.com')
     );
 
     const photoUrl = isVerifiedExplicit
@@ -327,25 +328,14 @@ export async function GET(request: Request) {
       : resolveDishPhotoUrl(dish, restaurant);
     let finalPngBuffer: Buffer | null = null;
 
-    // Fetch or load the authentic photographic visual
+    // Fetch the authentic photographic visual strictly via remote API / CDN
     try {
-      let rawBuffer: Buffer | null = null;
-      if (photoUrl.startsWith('/')) {
-        const localPath = path.join(process.cwd(), 'public', photoUrl);
-        if (fs.existsSync(localPath)) {
-          rawBuffer = await fs.promises.readFile(localPath);
-        }
-      } else {
-        const imgRes = await fetch(photoUrl, {
-          headers: { 'User-Agent': 'BakasurFoodAI/3.0' },
-          next: { revalidate: 86400 }
-        });
-        if (imgRes.ok) {
-          rawBuffer = Buffer.from(await imgRes.arrayBuffer());
-        }
-      }
-
-      if (rawBuffer) {
+      const imgRes = await fetch(photoUrl, {
+        headers: { 'User-Agent': 'BakasurFoodAI/3.0' },
+        next: { revalidate: 86400 }
+      });
+      if (imgRes.ok) {
+        const rawBuffer = Buffer.from(await imgRes.arrayBuffer());
         finalPngBuffer = await processFoodImageToPurePng(rawBuffer);
       }
     } catch (fetchErr) {

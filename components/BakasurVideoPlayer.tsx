@@ -44,17 +44,17 @@ export interface DishMomentInfo {
 
 // Preset popular food quick-picks for testing/dynamic preview
 export const POPULAR_FOOD_PRESETS = [
-  { name: 'Steamed Veg Momos', icon: '🥟', image: '/images/eating/momos_dish.jpg' },
-  { name: 'Crispy Butter Masala Dosa', icon: '🥞', image: '/images/eating/dosa.jpg' },
-  { name: 'Shahi Chicken Dum Biryani', icon: '🍗', image: '/images/eating/biryani.jpg' },
-  { name: 'Aslam Special Butter Chicken', icon: '🍗', image: '/images/eating/butter_chicken.jpg' },
-  { name: 'Sita Ram Chole Bhature', icon: '🫓', image: '/images/eating/chole_bhature.jpg' },
-  { name: 'Famous Creamy Dal Makhani', icon: '🍲', image: '/images/eating/dal_makhani.jpg' },
-  { name: 'Extra Butter Pav Bhaji', icon: '🍛', image: '/images/eating/pav_bhaji.jpg' },
-  { name: 'Spicy Katakirr Tarri Misal', icon: '🌶️', image: '/images/eating/misal.jpg' },
-  { name: 'Mutton Keema Ghotala & Pav', icon: '🍳', image: '/images/eating/keema_pav.jpg' },
-  { name: 'Sajuk Tupatli Puran Poli', icon: '🧈', image: '/images/eating/puran_poli.jpg' },
-  { name: 'SPDP Chaat Crunch', icon: '🥣', image: '/images/eating/spdp.jpg' }
+  { name: 'Steamed Veg Momos', icon: '🥟', image: '/api/ai/dish-image?dish=Momos' },
+  { name: 'Crispy Butter Masala Dosa', icon: '🥞', image: '/api/ai/dish-image?dish=Masala%20Dosa' },
+  { name: 'Shahi Chicken Dum Biryani', icon: '🍗', image: '/api/ai/dish-image?dish=Chicken%20Biryani' },
+  { name: 'Aslam Special Butter Chicken', icon: '🍗', image: '/api/ai/dish-image?dish=Butter%20Chicken' },
+  { name: 'Sita Ram Chole Bhature', icon: '🫓', image: '/api/ai/dish-image?dish=Chole%20Bhature' },
+  { name: 'Famous Creamy Dal Makhani', icon: '🍲', image: '/api/ai/dish-image?dish=Dal%20Makhani' },
+  { name: 'Extra Butter Pav Bhaji', icon: '🍛', image: '/api/ai/dish-image?dish=Pav%20Bhaji' },
+  { name: 'Spicy Katakirr Tarri Misal', icon: '🌶️', image: '/api/ai/dish-image?dish=Misal%20Pav' },
+  { name: 'Mutton Keema Ghotala & Pav', icon: '🍳', image: '/api/ai/dish-image?dish=Keema%20Pav' },
+  { name: 'Sajuk Tupatli Puran Poli', icon: '🧈', image: '/api/ai/dish-image?dish=Puran%20Poli' },
+  { name: 'SPDP Chaat Crunch', icon: '🥣', image: '/api/ai/dish-image?dish=SPDP' }
 ];
 
 export function getDishMomentDetails(dishName?: string, dishImage?: string): DishMomentInfo {
@@ -83,8 +83,8 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
       biteLabel: 'Crispy Sabudana Vada Feast',
       munchSound: 'CRUNCH-CRUNCH! Sweet Curd Delight 🤤',
       actionText: 'Bhookasur is crunching crispy Sabudana Vada...',
-      image: '/images/eating/sabudana_vada_dish.jpg',
-      eatingScene: '/images/eating/sabudana_vada_dish.jpg'
+      image: resolvedImg,
+      eatingScene: resolvedImg
     };
   }
 

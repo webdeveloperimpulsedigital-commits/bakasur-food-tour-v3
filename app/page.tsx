@@ -241,7 +241,7 @@ export default function CampaignPage() {
       name: dishName,
       id: customDishName ? Math.floor(Math.random() * 80000) + 10000 : ((selectedDish as { id?: number })?.id || 1),
       price: selectedDish?.price || 150,
-      image: visual.plateImage || selectedDish?.image || '/images/eating/momos_dish.jpg'
+      image: visual.plateImage || selectedDish?.image || `/api/ai/dish-image?dish=${encodeURIComponent(dishName)}`
     };
 
     setSelectedDish(finalDish);

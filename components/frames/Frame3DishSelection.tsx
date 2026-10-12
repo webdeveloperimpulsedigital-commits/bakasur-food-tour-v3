@@ -289,6 +289,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
               const cleanDishName = formatCleanDishName(dish.name, restaurant.name);
               const isSelected = selectedDish?.name?.toLowerCase() === cleanDishName.toLowerCase() ||
                 selectedDish?.name?.toLowerCase() === dish.name.toLowerCase();
+              const visual = getDishVisualAssets(cleanDishName, dish.image, restaurant.name);
 
               return (
                 <button
@@ -311,7 +312,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                   {/* Pure Food PNG Image (Zero background) */}
                   <div className="w-9 h-9 sm:w-11 sm:h-11 mb-1 flex items-center justify-center shrink-0">
                     <img
-                      src={dish.image || getDishVisualAssets(cleanDishName).flyingImage}
+                      src={visual.flyingImage || visual.plateImage}
                       alt={cleanDishName}
                       className="w-full h-full object-contain filter drop-shadow-sm pointer-events-none"
                     />
@@ -331,9 +332,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
       {/* 3. In-Restaurant Menu Search Bar with Live Suggestions Dropdown (Swiggy / Zomato style) */}
       <div ref={dropdownRef} className="relative w-full space-y-1 shrink-0 mt-1">
-        <label className="text-xs font-bold text-[#0B1B48] flex items-center justify-between">
+        <label className="text-xs font-bold text-[#0B1B48] flex items-center">
           <span>🔍 {restaurant.name} Menu Search</span>
-          <span className="text-[10px] text-slate-400 font-normal">Swiggy &amp; Zomato Catalog</span>
         </label>
 
         <div className="relative flex items-center w-full px-3 py-2 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
@@ -408,7 +408,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <img
-                            src={dish.image || visual.flyingImage}
+                            src={visual.flyingImage || visual.plateImage}
                             alt={cleanName}
                             className="w-7 h-7 rounded-full object-contain p-0.5 bg-slate-50 border border-slate-200 shrink-0"
                           />
@@ -441,7 +441,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <img
-                      src={dish.image || visual.flyingImage || visual.plateImage}
+                      src={visual.flyingImage || visual.plateImage}
                       alt={dish.name}
                       className="w-8 h-8 rounded-full object-contain p-0.5 bg-slate-50 border border-slate-200 shrink-0"
                     />

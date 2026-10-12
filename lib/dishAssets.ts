@@ -72,8 +72,8 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string, resta
   }
 
   let aiPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName || '')}`;
-  // Only forward verified Swiggy CDN or local assets as explicit imgUrl, not generic Unsplash stock URLs
-  if (dishImage && (dishImage.includes('swiggy.com') || dishImage.includes('cloudinary.com') || dishImage.startsWith('/images/eating/'))) {
+  // Only forward verified remote Swiggy CDN or Cloudinary API images, never local assets
+  if (dishImage && (dishImage.startsWith('http://') || dishImage.startsWith('https://')) && (dishImage.includes('swiggy.com') || dishImage.includes('cloudinary.com'))) {
     aiPngUrl += `&imgUrl=${encodeURIComponent(dishImage)}`;
   }
 

@@ -9,7 +9,7 @@ export { getDishVisualAssets };
 
 export function getFlyingDishAsset(dishName?: string, dishImage?: string): { image: string; isCircleCrop: boolean } {
   const visual = getDishVisualAssets(dishName, dishImage);
-  return { image: visual.flyingImage || visual.plateImage || dishImage || '/images/eating/vada_pav_flying.png', isCircleCrop: false };
+  return { image: visual.flyingImage || visual.plateImage || '/api/ai/dish-image?dish=Vada%20Pav', isCircleCrop: false };
 }
 
 interface BakasurEatingStageProps {
@@ -110,7 +110,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       return dishImage;
     }
     const visual = getDishVisualAssets(dishName, dishImage);
-    return visual.plateImage || visual.flyingImage || dishImage || '/images/eating/vada_pav_dish.jpg';
+    return visual.plateImage || visual.flyingImage || '/api/ai/dish-image?dish=Vada%20Pav';
   }, [dishName, dishImage]);
 
   // Food Options: 3 Servings of the USER'S SELECTED DISH
@@ -533,7 +533,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                     alt={food.name}
                     className="w-full h-full object-cover rounded-full pointer-events-none transition-transform duration-200 group-hover:scale-105"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = selectedDishAsset || '/images/eating/vada_pav_dish.jpg';
+                      (e.currentTarget as HTMLImageElement).src = selectedDishAsset || '/api/ai/dish-image?dish=Vada%20Pav';
                     }}
                   />
 
@@ -573,7 +573,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                       isEaten ? 'opacity-40 grayscale-[40%]' : 'opacity-100'
                     }`}
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = selectedDishAsset || '/images/eating/vada_pav_dish.jpg';
+                      (e.currentTarget as HTMLImageElement).src = selectedDishAsset || '/api/ai/dish-image?dish=Vada%20Pav';
                     }}
                   />
 

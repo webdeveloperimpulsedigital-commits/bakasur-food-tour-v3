@@ -199,7 +199,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
             latitude: parsed.latitude,
             longitude: parsed.longitude,
             rating: 4.8,
-            image: '/images/eating/pav_bhaji.jpg',
+            image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
             is_campaign_active: 1,
             total_visits: 120,
             status: 'active'
@@ -219,7 +219,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
             latitude: parsed.latitude,
             longitude: parsed.longitude,
             rating: 4.8,
-            image: '/images/eating/pav_bhaji.jpg',
+            image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
             is_campaign_active: 1,
             total_visits: 120,
             status: 'active'
@@ -272,7 +272,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         latitude: coords?.lat || 18.5204,
         longitude: coords?.lng || 73.8407,
         rating: 4.8,
-        image: '/images/eating/pav_bhaji.jpg',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
         is_campaign_active: 1,
         total_visits: 100,
         status: 'active'
@@ -400,7 +400,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                       latitude: parsed.latitude,
                       longitude: parsed.longitude,
                       rating: 4.8,
-                      image: '/images/eating/pav_bhaji.jpg',
+                      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
                       is_campaign_active: 1,
                       total_visits: 100,
                       status: 'active'

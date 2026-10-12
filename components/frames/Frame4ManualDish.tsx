@@ -174,7 +174,7 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
                         alt={dish.name}
                         className="w-8 h-8 rounded-lg object-contain p-0.5 bg-white border border-slate-200 shrink-0"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = '/images/eating/vada_pav_flying.png';
+                          (e.currentTarget as HTMLImageElement).src = '/api/ai/dish-image?dish=Vada%20Pav';
                         }}
                       />
                       <div className="min-w-0">
