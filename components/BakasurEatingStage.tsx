@@ -213,26 +213,33 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       }
 
       const pIdx = typeof plateIndex === 'number' ? plateIndex : 1;
-      const itemId = `${food.id}_bite_${Date.now()}_${Math.random()}`;
-      const rotation = pIdx === 0 ? 12 : pIdx === 2 ? -12 : 0;
+      const BURST_COUNT = 2;
+      for (let i = 0; i < BURST_COUNT; i++) {
+        setTimeout(() => {
+          const itemId = `${food.id}_side_${Date.now()}_${i}_${Math.random()}`;
+          const offsetStartX = plateStartX + (i === 0 ? 0 : (Math.random() > 0.5 ? 8 : -8));
+          const offsetStartY = plateStartY + (i === 0 ? 0 : (Math.random() > 0.5 ? 10 : -10));
+          const rotation = (i === 0 ? -12 : 12) + (Math.random() * 8 - 4);
 
-      setActiveFlyingItems((prev) => [
-        ...prev,
-        {
-          id: itemId,
-          image: flyingPNG,
-          name: food.name,
-          startX: plateStartX,
-          startY: plateStartY,
-          targetX: targetMouthX,
-          targetY: targetMouthY,
-          rotation
-        }
-      ]);
+          setActiveFlyingItems((prev) => [
+            ...prev,
+            {
+              id: itemId,
+              image: flyingPNG,
+              name: food.name,
+              startX: offsetStartX,
+              startY: offsetStartY,
+              targetX: targetMouthX,
+              targetY: targetMouthY,
+              rotation
+            }
+          ]);
 
-      setTimeout(() => {
-        setActiveFlyingItems((prev) => prev.filter((item) => item.id !== itemId));
-      }, 520);
+          setTimeout(() => {
+            setActiveFlyingItems((prev) => prev.filter((item) => item.id !== itemId));
+          }, 520);
+        }, i * 85);
+      }
     } else {
       // Stage 1: Bottom to Top flying arc
       let baseOffsetX = 0;
@@ -439,7 +446,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
               }
               className={`${
                 isSideAngle
-                  ? 'w-16 h-16 xs:w-20 xs:h-20 animate-smooth-fly-side'
+                  ? 'w-20 h-20 sm:w-26 sm:h-26 animate-smooth-fly-side'
                   : 'w-20 h-20 sm:w-28 sm:h-28 animate-smooth-fly'
               } flex items-center justify-center`}
             >
@@ -611,31 +618,28 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
         @keyframes smoothFlyToMouthSide {
           0% {
-            transform: translate(var(--start-x, 140px), var(--start-y, 0px)) scale(1) rotate(var(--start-rot, 0deg));
+            transform: translate(var(--start-x, 140px), var(--start-y, 0px)) scale(0.9) rotate(var(--start-rot, 0deg));
             opacity: 1;
           }
-          30% {
-            /* Smooth upward arc across screen space towards Bhookasur */
+          45% {
+            /* Arcs upward in mid-air towards mouth, scaling up like stage 1 */
             transform: translate(
               calc(var(--start-x, 140px) * 0.45 + var(--target-x, 10px) * 0.55),
-              calc(var(--start-y, 0px) * 0.35 + var(--target-y, 32px) * 0.65 - 35px)
-            ) scale(1.15) rotate(-14deg);
+              calc(var(--start-y, 0px) * 0.45 + var(--target-y, 32px) * 0.55 - 45px)
+            ) scale(1.22) rotate(calc(var(--start-rot, 0deg) * 0.5));
             opacity: 1;
           }
-          70% {
-            /* Reaches directly in front of Bhookasur's wide open mouth lips */
+          80% {
+            /* Right at the mouth entrance */
             transform: translate(
-              calc(var(--target-x, 10px) + 20px),
+              calc(var(--target-x, 10px) + 10px),
               calc(var(--target-y, 32px) - 2px)
-            ) scale(0.7) rotate(-22deg);
-            opacity: 0.98;
+            ) scale(0.35) rotate(0deg);
+            opacity: 0.9;
           }
           100% {
-            /* Plunges deep into the center of the dark mouth cavity and vanishes */
-            transform: translate(
-              var(--target-x, 10px),
-              var(--target-y, 32px)
-            ) scale(0.04) rotate(-35deg);
+            /* Plunges directly into the mouth opening and vanishes */
+            transform: translate(var(--target-x, 10px), var(--target-y, 32px)) scale(0.04) rotate(0deg);
             opacity: 0;
           }
         }
@@ -666,7 +670,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           will-change: transform, opacity;
         }
         .animate-smooth-fly-side {
-          animation: smoothFlyToMouthSide 0.46s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: smoothFlyToMouthSide 0.44s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
           will-change: transform, opacity;
         }
       `}</style>
