@@ -437,7 +437,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const media = window.matchMedia('(min-width: 768px)');
+    const media = window.matchMedia('(min-width: 1024px)');
     setIsDesktop(media.matches);
     const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
     media.addEventListener('change', listener);
