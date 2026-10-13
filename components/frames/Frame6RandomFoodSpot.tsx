@@ -99,10 +99,10 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
   return (
     <div
       onClick={handleStageClick}
-      className="w-full h-full flex flex-col md:flex-row bg-white overflow-hidden relative select-none cursor-pointer"
+      className="w-full h-full flex flex-col lg:flex-row bg-white overflow-hidden relative select-none cursor-pointer"
     >
-      {/* LEFT (Desktop) / TOP (Mobile): Visual Media Showcase */}
-      <div className="w-full md:w-1/2 h-[70%] md:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
+      {/* LEFT (Desktop) / TOP (Mobile/Tablet): Visual Media Showcase */}
+      <div className="w-full lg:w-1/2 h-[65%] sm:h-[60%] lg:h-full relative overflow-hidden bg-[#182858] shrink-0 flex items-center justify-center">
         {/* Top Header Overlay with Back Button */}
         {onBack && (
           <div className="absolute top-3 left-3 z-30 pointer-events-auto">
@@ -153,8 +153,8 @@ export const Frame6RandomFoodSpot: React.FC<Frame6RandomFoodSpotProps> = ({
         </div>
       </div>
 
-      {/* RIGHT (Desktop) / BOTTOM (Mobile): Clean Punchy Copy & Action Section */}
-      <div className="w-full md:w-1/2 flex-1 md:h-full min-h-0 flex flex-col justify-center items-start text-left bg-white py-4 xs:py-5 sm:py-7 md:py-9 px-5 sm:px-8 md:px-10 z-20 gap-3 sm:gap-4 overflow-y-auto scrollbar-thin">
+      {/* RIGHT (Desktop) / BOTTOM (Mobile/Tablet): Clean Punchy Copy & Action Section */}
+      <div className="w-full lg:w-1/2 flex-1 lg:h-full min-h-0 flex flex-col justify-center items-start text-left bg-white py-4 xs:py-5 sm:py-7 lg:py-9 px-5 sm:px-8 lg:px-10 z-20 gap-3 sm:gap-4 overflow-y-auto scrollbar-thin">
         {/* Comedic Headline matching reference mockup */}
         <div className="space-y-1 shrink-0 flex flex-col justify-center">
           <h1 className="text-[28px] xs:text-[32px] sm:text-[38px] md:text-[44px] font-black text-[#0B1B48] tracking-tight leading-[1.12]">

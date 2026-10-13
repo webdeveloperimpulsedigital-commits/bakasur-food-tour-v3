@@ -464,7 +464,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
             zIndex: 9999,
             pointerEvents: 'none'
           }}
-          className="w-22 h-22 sm:w-26 sm:h-26 flex items-center justify-center filter drop-shadow-[0_12px_28px_rgba(0,0,0,0.85)]"
+          className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center filter drop-shadow-[0_12px_28px_rgba(0,0,0,0.85)]"
         >
           <img
             src={draggingFood.flyingPNG}
@@ -525,7 +525,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                   onMouseDown={(e) => handleStartDrag(food, e.clientX, e.clientY)}
                   onTouchStart={(e) => handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY)}
                   onClick={(e) => handleFeedFood(food, e.clientX, index, e.currentTarget, e.clientY)}
-                  className={`group relative w-16 h-16 xs:w-18 xs:h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.85)] border-[2.5px] transition-all duration-200 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 bg-slate-950 ${
+                  className={`group relative w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.85)] border-[2.5px] transition-all duration-200 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 bg-slate-950 ${
                     isEaten
                       ? 'border-white/30 opacity-40 grayscale-[50%]'
                       : 'border-amber-400 hover:border-amber-300 hover:scale-105 shadow-[0_0_16px_rgba(245,158,11,0.4)]'
@@ -567,7 +567,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
                   onMouseDown={(e) => handleStartDrag(food, e.clientX, e.clientY)}
                   onTouchStart={(e) => handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY)}
                   onClick={(e) => handleFeedFood(food, e.clientX, index, e.currentTarget, e.clientY)}
-                  className="group relative w-22 h-22 xs:w-26 xs:h-26 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-[0_14px_35px_rgba(0,0,0,0.9)] border-[2.5px] border-amber-400/80 bg-slate-950 cursor-grab active:cursor-grabbing transition-all duration-150 flex items-center justify-center shrink-0 active:scale-95"
+                  className="group relative w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden shadow-[0_14px_35px_rgba(0,0,0,0.9)] border-[2.5px] border-amber-400/80 bg-slate-950 cursor-grab active:cursor-grabbing transition-all duration-150 flex items-center justify-center shrink-0 active:scale-95"
                 >
                   <img
                     src={food.image}

@@ -191,9 +191,9 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
   return (
     <div className="w-full h-full flex flex-col justify-between text-left animate-in fade-in duration-300 bg-white relative overflow-hidden">
       {/* ========================================================== */}
-      {/* 1. MOBILE VIEW (< md): EXACT VERTICAL LAYOUT */}
+      {/* 1. MOBILE & TABLET PORTRAIT VIEW (< lg): EXACT VERTICAL LAYOUT */}
       {/* ========================================================== */}
-      <div className="flex md:hidden flex-1 flex-col justify-between px-3.5 sm:px-4 py-2 sm:py-3 gap-2 overflow-y-auto">
+      <div className="flex lg:hidden flex-1 flex-col justify-between px-3.5 sm:px-4 py-2 sm:py-3 gap-2 overflow-y-auto">
         {/* Top Header Controls with Back Button */}
         <div className="shrink-0 pt-1 flex items-center justify-between">
           {onBack ? (
@@ -286,9 +286,9 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
       </div>
 
       {/* ========================================================== */}
-      {/* 3. DESKTOP VIEW (md:flex): LEFT SIDE MAP, RIGHT SIDE BUTTONS */}
+      {/* 3. DESKTOP VIEW (lg:flex): LEFT SIDE MAP, RIGHT SIDE BUTTONS */}
       {/* ========================================================== */}
-      <div className="hidden md:flex flex-1 min-h-0 flex-row overflow-hidden">
+      <div className="hidden lg:flex flex-1 min-h-0 flex-row overflow-hidden">
         {/* LEFT SIDE: MAP */}
         <div className="w-1/2 h-full flex items-center justify-center p-4 lg:p-6 bg-slate-50/70 border-r border-slate-200/80 relative overflow-hidden">
           <div className="w-full h-full flex items-center justify-center">

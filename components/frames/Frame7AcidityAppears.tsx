@@ -35,7 +35,7 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
   }, [onAutoAdvance]);
 
   return (
-    <div className="w-full h-full flex flex-col md:flex-row bg-[#07153B] overflow-hidden relative">
+    <div className="w-full h-full flex flex-col lg:flex-row bg-[#07153B] overflow-hidden relative">
       {/* Top Header Overlay Controls */}
       <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-auto">
         {onBack ? (
@@ -54,11 +54,11 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
         ) : <div />}
       </div>
 
-      {/* Video Container: Left on Desktop (md:w-1/2 md:h-full), Top on Mobile */}
+      {/* Video Container: Left on Desktop (lg:w-1/2 lg:h-full), Top on Mobile/Tablet */}
       <div
-        className={`relative w-full md:w-1/2 bg-[#182858] flex items-center justify-center overflow-hidden shrink-0 transition-all duration-1000 ease-in-out md:transition-none md:h-full ${
+        className={`relative w-full lg:w-1/2 bg-[#182858] flex items-center justify-center overflow-hidden shrink-0 transition-all duration-1000 ease-in-out lg:transition-none lg:h-full ${
           isRevealed
-            ? 'h-[64%] xs:h-[66%] sm:h-[68%]'
+            ? 'h-[64%] xs:h-[66%] sm:h-[60%]'
             : 'h-full'
         }`}
       >
@@ -68,17 +68,17 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
           loop
           muted
           playsInline
-          className={`w-full h-full object-cover object-top transition-transform duration-1200 ease-in-out md:scale-100 md:transition-none ${
+          className={`w-full h-full object-cover object-top transition-transform duration-1200 ease-in-out lg:scale-100 lg:transition-none ${
             isRevealed ? 'scale-100' : 'scale-115'
           }`}
         />
-        <div className="absolute bottom-0 inset-x-0 h-12 md:hidden bg-gradient-to-t from-black/30 to-transparent pointer-events-none z-20" />
+        <div className="absolute bottom-0 inset-x-0 h-12 lg:hidden bg-gradient-to-t from-black/30 to-transparent pointer-events-none z-20" />
       </div>
 
-      {/* Content Card: Right on Desktop (md:w-1/2 md:h-full), Bottom on Mobile */}
+      {/* Content Card: Right on Desktop (lg:w-1/2 lg:h-full), Bottom on Mobile/Tablet */}
       <div
         onClick={onAutoAdvance}
-        className={`w-full md:w-1/2 flex-1 md:h-full bg-white px-4 py-4 xs:px-5 xs:py-5 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none rounded-none z-10 shrink-0 cursor-pointer md:translate-x-0 md:opacity-100 md:pointer-events-auto md:transition-none transition-all duration-1000 ease-in-out transform ${
+        className={`w-full lg:w-1/2 flex-1 lg:h-full bg-white px-4 py-4 xs:px-5 xs:py-5 sm:p-8 lg:p-12 flex flex-col justify-center items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] lg:shadow-none rounded-none z-10 shrink-0 cursor-pointer lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto lg:transition-none transition-all duration-1000 ease-in-out transform ${
           isRevealed
             ? 'translate-y-0 opacity-100'
             : 'translate-y-full opacity-0 pointer-events-none'

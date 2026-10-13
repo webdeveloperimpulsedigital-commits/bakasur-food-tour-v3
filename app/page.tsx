@@ -62,7 +62,7 @@ export default function CampaignPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const media = window.matchMedia('(min-width: 768px)');
+    const media = window.matchMedia('(min-width: 1024px)');
     setIsDesktop(media.matches);
     const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
     media.addEventListener('change', listener);
@@ -768,20 +768,20 @@ export default function CampaignPage() {
 
   const getVideoContainerHeightClass = (frame: number) => {
     if (frame === 8) {
-      return 'h-[66%] xs:h-[68%] md:h-full';
+      return 'h-[66%] xs:h-[68%] sm:h-[62%] lg:h-full';
     }
     if (frame === 3 || frame === 4) {
-      return 'h-[65%] xs:h-[67%] md:h-full';
+      return 'h-[65%] xs:h-[67%] sm:h-[60%] lg:h-full';
     }
     if (frame === 10) {
-      return 'h-[54%] xs:h-[56%] md:h-full';
+      return 'h-[54%] xs:h-[56%] sm:h-[52%] lg:h-full';
     }
-    return 'h-[62%] xs:h-[65%] md:h-full';
+    return 'h-[62%] xs:h-[65%] sm:h-[60%] lg:h-full';
   };
 
   return (
     <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#07153B] overflow-hidden select-none p-0">
-      {/* Responsive Canvas: Mobile portrait stack (< md), Desktop split screen (md:flex-row, Left: Video, Right: Content) */}
+      {/* Responsive Canvas: Mobile/Tablet portrait stack (< lg), Desktop split screen (lg:flex-row, Left: Video, Right: Content) */}
       {/* If Frame 5: FULL SCREEN EATING STAGE */}
       {currentFrame === 5 ? (
         <div className="w-full h-full flex items-center justify-center bg-[#031058] overflow-hidden relative">
@@ -917,8 +917,8 @@ export default function CampaignPage() {
         </div>
       ) : currentFrame === 13 ? (
         /* Frame 13: Last Frame (Registration Completed) */
-        /* Desktop view is horizontal (w-full h-full md:flex-row), Mobile view is vertical (flex-col) */
-        <div className="w-full h-full bg-white overflow-hidden relative flex flex-col md:flex-row">
+        /* Desktop view is horizontal (w-full h-full lg:flex-row), Mobile/Tablet view is vertical (flex-col) */
+        <div className="w-full h-full bg-white overflow-hidden relative flex flex-col lg:flex-row">
           <Frame13Confirmation
             participationId={participationId}
             mobile={registeredMobile}
@@ -929,11 +929,11 @@ export default function CampaignPage() {
           />
         </div>
       ) : (
-        /* Normal Canvas for Other Frames - Full Screen Bleed (Left 50% Video, Right 50% Content) */
-        <div className={`w-full h-full ${currentFrame === 1 ? 'bg-[#f4f6fa]' : 'bg-white'} overflow-hidden flex flex-col md:flex-row relative`}>
+        /* Normal Canvas for Other Frames - Full Screen Bleed (Left 50% Video, Right 50% Content on Desktop) */
+        <div className={`w-full h-full ${currentFrame === 1 ? 'bg-[#f4f6fa]' : 'bg-white'} overflow-hidden flex flex-col lg:flex-row relative`}>
 
-          {/* Left Side on Desktop / Top Half on Mobile: Royal Blue Character Stage */}
-          <div className={`w-full md:w-1/2 ${getVideoContainerHeightClass(currentFrame)} md:h-full relative overflow-hidden bg-[#182858] shrink-0`}>
+          {/* Left Side on Desktop / Top Half on Mobile & Tablet: Royal Blue Character Stage */}
+          <div className={`w-full lg:w-1/2 ${getVideoContainerHeightClass(currentFrame)} lg:h-full relative overflow-hidden bg-[#182858] shrink-0`}>
             <BakasurVideoPlayer
               videoUrl={
                 currentFrame === 1
@@ -975,9 +975,9 @@ export default function CampaignPage() {
             />
           </div>
 
-          {/* Right Side on Desktop / Bottom Half on Mobile: Content Card */}
-          <div className={`w-full md:w-1/2 flex-1 md:h-full flex flex-col overflow-y-auto scrollbar-thin ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : currentFrame <= 3 || currentFrame === 9 ? 'bg-white p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start md:justify-center`}>
-            <main className="flex-1 w-full flex flex-col justify-start md:justify-center min-h-0 relative">
+          {/* Right Side on Desktop / Bottom Half on Mobile & Tablet: Content Card */}
+          <div className={`w-full lg:w-1/2 flex-1 lg:h-full flex flex-col overflow-y-auto scrollbar-thin ${currentFrame === 1 ? 'bg-[#f4f6fa] p-0' : currentFrame <= 3 || currentFrame === 9 ? 'bg-white p-0' : 'bg-white p-2 sm:p-4 md:p-6 lg:p-8'} text-slate-900 relative z-20 justify-start lg:justify-center`}>
+            <main className="flex-1 w-full flex flex-col justify-start lg:justify-center min-h-0 relative">
               {/* Frame 1: Welcome */}
               {currentFrame === 1 && (
                 <Frame1Welcome onStart={handleStartTour} cityName={selectedCity} />
