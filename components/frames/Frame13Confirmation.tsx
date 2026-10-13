@@ -24,11 +24,11 @@ export const Frame13Confirmation: React.FC<Frame13ConfirmationProps> = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
   return (
-    <div className="w-full h-full flex flex-col md:flex-row overflow-hidden bg-white animate-in fade-in duration-300 select-none">
+    <div className="w-full h-full flex flex-col lg:flex-row overflow-hidden bg-white animate-in fade-in duration-300 select-none">
       {/* ============================================================== */}
-      {/* 1. TOP HALF (Mobile) / LEFT HALF (Desktop): Blue Character Art */}
+      {/* 1. TOP HALF (Mobile/Tablet) / LEFT HALF (Desktop): Blue Character Art */}
       {/* ============================================================== */}
-      <div className="w-full md:w-1/2 h-[62%] xs:h-[65%] md:h-full bg-[#0B1B48] flex items-center justify-center relative overflow-hidden shrink-0 p-0">
+      <div className="w-full lg:w-1/2 h-[62%] xs:h-[65%] sm:h-[60%] lg:h-full bg-[#0B1B48] flex items-center justify-center relative overflow-hidden shrink-0 p-0">
         {/* Character Illustration showing Bhookasur holding smartphone with verified pass */}
         <img
           src="/images/final-frames/Bhookasur-holding-smartphone.png"
@@ -38,11 +38,11 @@ export const Frame13Confirmation: React.FC<Frame13ConfirmationProps> = ({
       </div>
 
       {/* ============================================================== */}
-      {/* 2. BOTTOM HALF (Mobile) / RIGHT HALF (Desktop): Content Card   */}
+      {/* 2. BOTTOM HALF (Mobile/Tablet) / RIGHT HALF (Desktop): Content Card   */}
       {/* ============================================================== */}
-      <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col justify-between items-center text-center px-4 py-3 sm:px-6 sm:py-5 md:px-10 md:py-8 bg-white overflow-y-auto gap-2 sm:gap-3">
+      <div className="w-full lg:w-1/2 flex-1 lg:h-full flex flex-col justify-between items-center text-center px-4 py-3 sm:px-6 sm:py-5 lg:px-10 lg:py-8 bg-white overflow-y-auto gap-2 sm:gap-3">
         {/* Spacer on Desktop for center balance */}
-        <div className="hidden md:block w-full h-2" />
+        <div className="hidden lg:block w-full h-2" />
 
         {/* Copy Section */}
         <div className="flex flex-col items-center gap-1.5 sm:gap-2 my-auto">

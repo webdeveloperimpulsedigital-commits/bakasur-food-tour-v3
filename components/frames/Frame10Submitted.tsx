@@ -15,17 +15,17 @@ export const Frame10Submitted: React.FC<Frame10SubmittedProps> = ({
   return (
     <div className="w-full h-full flex flex-col justify-center items-center text-center animate-in fade-in duration-300 py-3 xs:py-4 sm:py-6 md:py-8 px-3 xs:px-4 sm:px-8 md:px-10 gap-3 sm:gap-4 md:gap-5 overflow-y-auto scrollbar-none">
       {/* 2. Main Headline */}
-      <div className="space-y-0.5 sm:space-y-1 w-full max-w-lg mx-auto flex flex-col items-center text-center">
-        <h1 className="text-[20px] xs:text-[23px] sm:text-[32px] md:text-[40px] lg:text-[46px] font-black tracking-tight leading-[1.18] text-center">
-          <span className="text-[#0B1B48] whitespace-nowrap">Khilane wale bahut mile.</span><br />
-          <span className="text-[#D4380D] whitespace-nowrap">Sambhalne wale tum nikle.</span><br />
-          <span className="text-[#0B1B48] whitespace-nowrap">Shukriya Dost.</span>
+      <div className="space-y-0.5 sm:space-y-1 w-full max-w-md mx-auto flex flex-col items-center text-center">
+        <h1 className="text-[20px] xs:text-[23px] sm:text-[28px] md:text-[30px] lg:text-[34px] font-black tracking-tight leading-[1.22] text-center">
+          <span className="text-[#0B1B48]">Khilane wale bahut mile.</span><br />
+          <span className="text-[#D4380D]">Sambhalne wale tum nikle.</span><br />
+          <span className="text-[#0B1B48]">Shukriya Dost.</span>
         </h1>
       </div>
 
-      {/* 3. Subtext (in one line) */}
-      <div className="w-full max-w-lg mx-auto flex flex-col items-center text-center">
-        <p className="text-[13px] xs:text-[14px] sm:text-[17px] md:text-[19px] font-bold text-[#0B1B48]/90 leading-snug text-center whitespace-nowrap">
+      {/* 3. Subtext */}
+      <div className="w-full max-w-md mx-auto flex flex-col items-center text-center">
+        <p className="text-[13px] xs:text-[14px] sm:text-[16px] md:text-[17px] font-bold text-[#0B1B48]/90 leading-snug text-center">
           Aapka favourite food stop map par add hua hai.
         </p>
       </div>

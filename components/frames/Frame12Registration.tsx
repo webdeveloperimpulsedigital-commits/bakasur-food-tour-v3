@@ -141,7 +141,7 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
-              placeholder="Jaise: Rahul Sharma"
+              placeholder="Rahul Sharma"
               maxLength={50}
               required
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white text-slate-900 text-xs sm:text-sm font-semibold placeholder-slate-400 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#D4380D] shadow-sm"
@@ -219,7 +219,7 @@ export const Frame12Registration: React.FC<Frame12RegistrationProps> = ({
             className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#D4380D] focus:ring-[#D4380D] cursor-pointer"
           />
           <span className="text-xs text-slate-600 font-medium leading-tight">
-            I agree to receive campaign-related communication.
+            Zomato voucher result aur Food Tour details WhatsApp par paane ke liye sehmat hoon.
           </span>
         </label>
 

@@ -20,7 +20,7 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
   onWatchVideo
 }) => {
   return (
-    <div className="w-full h-full flex flex-col md:flex-row bg-[#07153B] overflow-hidden relative">
+    <div className="w-full h-full flex flex-col lg:flex-row bg-[#07153B] overflow-hidden relative">
       {onBack && (
         <button
           onClick={onBack}
@@ -33,8 +33,8 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
         </button>
       )}
 
-      {/* Video Section: Left on Desktop (md:w-1/2 md:h-full), Top on Mobile */}
-      <div className="relative w-full md:w-1/2 h-[62%] xs:h-[64%] sm:h-[65%] md:h-full bg-[#081B4B] flex items-center justify-center overflow-hidden shrink-0">
+      {/* Video Section: Left on Desktop (lg:w-1/2 lg:h-full), Top on Mobile/Tablet */}
+      <div className="relative w-full lg:w-1/2 h-[62%] xs:h-[64%] sm:h-[60%] lg:h-full bg-[#081B4B] flex items-center justify-center overflow-hidden shrink-0">
         <video
           src="/images/final-frames/5.mp4"
           autoPlay
@@ -43,14 +43,14 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
           playsInline
           className="w-full h-full object-cover object-top"
         />
-        <div className="absolute bottom-0 inset-x-0 h-10 md:hidden bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 inset-x-0 h-10 lg:hidden bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
       </div>
 
-      {/* Content Section: Right on Desktop (md:w-1/2 md:h-full), Bottom on Mobile */}
-      <div className="w-full md:w-1/2 flex-1 md:h-full min-h-0 bg-white px-4 py-4 xs:px-5 xs:py-5 sm:px-8 sm:py-8 md:px-10 md:py-12 flex flex-col justify-between items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none z-10 shrink-0">
-        <div className="hidden md:block w-full h-4" />
+      {/* Content Section: Right on Desktop (lg:w-1/2 lg:h-full), Bottom on Mobile/Tablet */}
+      <div className="w-full lg:w-1/2 flex-1 lg:h-full min-h-0 bg-white px-4 py-4 xs:px-5 xs:py-5 sm:px-8 sm:py-8 lg:px-10 lg:py-12 flex flex-col justify-between items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] lg:shadow-none z-10 shrink-0">
+        <div className="hidden lg:block w-full h-4" />
         <div className="w-full max-w-md mx-auto my-auto flex flex-col justify-center items-center">
-          <h1 className="text-[25px] xs:text-[28px] sm:text-[34px] md:text-[38px] font-black text-[#0B1B48] tracking-tight leading-[1.16] text-center">
+          <h1 className="text-[24px] xs:text-[26px] sm:text-[30px] md:text-[34px] font-black text-[#0B1B48] tracking-tight leading-[1.18] text-center">
             Itne mein Food Tour nahi,<br />
             sirf <span className="text-[#D4380D]">food trailer</span> banta hai.
           </h1>

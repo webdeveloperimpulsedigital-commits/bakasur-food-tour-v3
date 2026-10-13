@@ -12,11 +12,11 @@ export const Frame1Welcome: React.FC<Frame1WelcomeProps> = ({ onStart }) => {
   return (
     <div className="w-full h-full flex flex-col justify-center items-center text-center animate-in fade-in duration-300 py-3 sm:py-5 md:py-8 px-4 sm:px-8 md:px-10 gap-2 sm:gap-4 bg-white overflow-y-auto scrollbar-none">
       {/* 2. Main Headline & Subtitle */}
-      <div className="space-y-1.5 sm:space-y-3 flex flex-col items-center text-center max-w-lg">
-        <h1 className="text-[26px] xs:text-[30px] sm:text-[38px] md:text-[48px] font-black text-[#0B1B48] tracking-tight leading-[1.1] text-center">
+      <div className="space-y-1.5 sm:space-y-3 flex flex-col items-center text-center max-w-md">
+        <h1 className="text-[24px] xs:text-[28px] sm:text-[34px] md:text-[38px] lg:text-[42px] font-black text-[#0B1B48] tracking-tight leading-[1.12] text-center">
           Aapke sheher mein<br />Bhookasur ka agla stop?
         </h1>
-        <p className="text-sm xs:text-base sm:text-lg md:text-xl text-[#0B1B48]/90 font-bold leading-snug max-w-xs sm:max-w-md text-center">
+        <p className="text-sm xs:text-base sm:text-base md:text-lg text-[#0B1B48]/90 font-bold leading-snug max-w-xs sm:max-w-md text-center">
           Woh jagah batao jahan aapke andar ka Bhookasur jaag uthe.
         </p>
       </div>
