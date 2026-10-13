@@ -25,6 +25,20 @@ export const BakasurSpotShareModal: React.FC<BakasurSpotShareModalProps> = ({
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [isStoryModalOpen, setIsStoryModalOpen] = useState<boolean>(false);
+  const preloadedFileRef = React.useRef<File | null>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch('/images/final-frames/food-tour-img.jpg')
+      .then(res => res.blob())
+      .then(blob => {
+        if (isMounted && blob && blob.size > 1000) {
+          preloadedFileRef.current = new File([blob], 'bhookasur-food-tour.jpg', { type: 'image/jpeg' });
+        }
+      })
+      .catch(e => console.warn('Preload spot share pass error:', e));
+    return () => { isMounted = false; };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -33,10 +47,24 @@ export const BakasurSpotShareModal: React.FC<BakasurSpotShareModalProps> = ({
   const shareUrl = `${baseUrl}/?ref=share&rest=${encodeURIComponent(restaurantName)}&dish=${encodeURIComponent(dishName)}&city=${encodeURIComponent(cityName)}`;
 
   // Formatted share message with emojis
-  const shareMessage = `🔥 Mene Bhookasur ko mera favourite food spot khilaya! 😋\n\n📍 Restaurant: ${restaurantName} (${cityName})\n🍽️ Famous Dish: ${dishName}\n\nBhookasur ki bhookh abhi bhi shant nahi hui! Kya tum uski bhookh mita sakte ho? Apna favourite food spot batao aur Live Food Tour jeeto! 🏆\n\nPlay & Challenge Bhookasur here 👇\n${shareUrl}`;
+  const shareMessage = `🔥 Mene Bhookasur ko mera favourite food spot khilaya! 😋\n\n📍 Restaurant: ${restaurantName} (${cityName})\n🍽️ Famous Dish: ${dishName}\n\n🎟️ Dekho Mera Foodie Pass:\n${baseUrl}/pass\n\nBhookasur ki bhookh abhi bhi shant nahi hui! Kya tum uski bhookh mita sakte ho? Apna favourite food spot batao aur Live Food Tour jeeto! 🏆\n\nPlay & Challenge Bhookasur here 👇\n${shareUrl}`;
 
   // WhatsApp share link
-  const handleShareWhatsApp = () => {
+  const handleShareWhatsApp = async () => {
+    const file = preloadedFileRef.current;
+    if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `Bhookasur Ka Food Tour - ${restaurantName}`,
+          text: shareMessage
+        });
+        return;
+      } catch (e) {
+        if ((e as Error)?.name === 'AbortError') return;
+      }
+    }
+
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
     window.open(url, '_blank');
   };
@@ -49,14 +77,26 @@ export const BakasurSpotShareModal: React.FC<BakasurSpotShareModalProps> = ({
 
   // Native share sheet (WhatsApp, Instagram DM, Telegram, Snapchat, SMS, etc.)
   const handleNativeShare = async () => {
+    const file = preloadedFileRef.current;
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `Bhookasur Ka Food Tour - ${restaurantName}`,
+            text: shareMessage
+          });
+          return;
+        }
+
         await navigator.share({
           title: `Bhookasur Ka Food Tour - ${restaurantName}`,
           text: shareMessage,
           url: shareUrl
         });
-      } catch {
+        return;
+      } catch (e) {
+        if ((e as Error)?.name === 'AbortError') return;
         handleShareWhatsApp();
       }
     } else {

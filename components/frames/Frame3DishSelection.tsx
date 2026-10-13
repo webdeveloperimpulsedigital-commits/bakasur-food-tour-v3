@@ -97,7 +97,13 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           city: restaurant.city || '',
           is_veg: restaurant.is_veg ? '1' : '0'
         });
-        const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`);
+        const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
         const json = await res.json();
         if (!isCancelled && json.success && Array.isArray(json.data) && json.data.length > 0) {
           setRawDishes(json.data);
@@ -137,7 +143,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           is_veg: restaurant.is_veg ? '1' : '0'
         });
         const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
-          signal: controller.signal
+          signal: controller.signal,
+          cache: 'no-store'
         });
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -209,14 +216,21 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     return `Search dishes in ${restaurant.name}...`;
   }, [threeDishes, restaurant.name]);
 
-  // Auto-select first dish by default if none selected or if selectedDish doesn't belong to this restaurant
+  // Auto-select first dish by default whenever restaurant changes or if current dish doesn't belong to this restaurant
+  const hasAutoSelectedRef = useRef<boolean>(false);
+  useEffect(() => {
+    hasAutoSelectedRef.current = false;
+  }, [restaurant.id, restaurant.name]);
+
   useEffect(() => {
     if (threeDishes.length > 0) {
-      const isCurrentDishInThree = selectedDish && threeDishes.some(
-        d => formatCleanDishName(d.name, restaurant.name).toLowerCase() === selectedDish.name.toLowerCase() ||
-             d.name.toLowerCase() === selectedDish.name.toLowerCase()
+      const isDishInCurrentMenu = selectedDish && (
+        threeDishes.some(d => formatCleanDishName(d.name, restaurant.name).toLowerCase() === selectedDish.name.toLowerCase()) ||
+        rawDishes.some(d => formatCleanDishName(d.name, restaurant.name).toLowerCase() === selectedDish.name.toLowerCase())
       );
-      if (!selectedDish || !isCurrentDishInThree) {
+
+      if (!selectedDish || !isDishInCurrentMenu) {
+        hasAutoSelectedRef.current = true;
         const first = threeDishes[0];
         const cleanDishName = formatCleanDishName(first.name, restaurant.name);
         const visual = getDishVisualAssets(first.name, first.image, restaurant.name);
@@ -227,12 +241,42 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         });
       }
     }
-  }, [threeDishes, selectedDish, restaurant.name, onSelectDish]);
+  }, [threeDishes, rawDishes, selectedDish, restaurant.name, onSelectDish]);
+
+  // Complete list of dishes to display in the existing menu dropdown:
+  // Shows all available menu options for this restaurant (from DB + Live catalog)
+  // And live-filters in real-time if the user types in the search box
+  const dropdownDishes = useMemo(() => {
+    const allDishes = rawDishes.length > 0 ? rawDishes : threeDishes;
+    const q = customDishInput.trim().toLowerCase();
+    if (!q) {
+      return allDishes;
+    }
+    // If the input matches the currently selected dish, still show all dishes
+    if (selectedDish?.name && selectedDish.name.toLowerCase() === q) {
+      return allDishes;
+    }
+    const directMatches = allDishes.filter(d => {
+      const clean = formatCleanDishName(d.name, restaurant.name).toLowerCase();
+      return clean.includes(q) || (d.description || '').toLowerCase().includes(q) || d.name.toLowerCase().includes(q);
+    });
+
+    const seen = new Set(directMatches.map(d => formatCleanDishName(d.name, restaurant.name).toLowerCase()));
+    const result = [...directMatches];
+    for (const s of suggestions) {
+      const sClean = formatCleanDishName(s.name, restaurant.name).toLowerCase();
+      if (!seen.has(sClean)) {
+        seen.add(sClean);
+        result.push(s);
+      }
+    }
+    return result;
+  }, [customDishInput, rawDishes, suggestions, threeDishes, restaurant.name, selectedDish]);
 
   const handleSelectPill = (dish: Dish) => {
-    setCustomDishInput('');
-    setShowDropdown(false);
     const cleanName = formatCleanDishName(dish.name, restaurant.name);
+    setCustomDishInput(cleanName);
+    setShowDropdown(false);
     const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
     onSelectDish({
       ...dish,
@@ -247,7 +291,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
   const handleSelectSuggestion = (dish: Dish) => {
     const cleanName = formatCleanDishName(dish.name, restaurant.name);
-    setCustomDishInput('');
+    setCustomDishInput(cleanName);
     const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
     onSelectDish({
       ...dish,
@@ -263,13 +307,57 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     setShowDropdown(false);
   };
 
-  // Determine current active dish name and visual image
-  const currentDishName = selectedDish?.name || customDishInput.trim() || threeDishes[0]?.name || 'Special Plate';
-  const currentDishVisual = getDishVisualAssets(currentDishName, selectedDish?.image, restaurant.name);
-
   const handleConfirm = () => {
-    const finalName = currentDishName;
-    const finalImg = currentDishVisual.flyingImage || selectedDish?.image || currentDishVisual.plateImage;
+    let finalName = '';
+    let finalImg = '';
+
+    const trimmedInput = customDishInput.trim();
+    // If user has typed in search input AND it differs from the selectedDish, find matching or use custom input
+    if (trimmedInput && (!selectedDish?.name || selectedDish.name.toLowerCase() !== trimmedInput.toLowerCase())) {
+      const allAvailable = [...rawDishes, ...suggestions, ...threeDishes];
+      const match = allAvailable.find(d => {
+        const clean = formatCleanDishName(d.name, restaurant.name).toLowerCase();
+        return clean === trimmedInput.toLowerCase() || d.name.toLowerCase() === trimmedInput.toLowerCase();
+      }) || allAvailable.find(d => {
+        const clean = formatCleanDishName(d.name, restaurant.name).toLowerCase();
+        return clean.includes(trimmedInput.toLowerCase()) || trimmedInput.toLowerCase().includes(clean);
+      });
+
+      if (match) {
+        const cleanName = formatCleanDishName(match.name, restaurant.name);
+        const visual = getDishVisualAssets(cleanName, match.image, restaurant.name);
+        finalName = cleanName;
+        finalImg = visual.flyingImage || visual.plateImage;
+        onSelectDish({
+          ...match,
+          name: cleanName,
+          image: finalImg
+        });
+      } else {
+        const cleanName = formatCleanDishName(trimmedInput, restaurant.name);
+        const visual = getDishVisualAssets(cleanName, undefined, restaurant.name);
+        finalName = cleanName;
+        finalImg = visual.flyingImage || visual.plateImage;
+        onSelectDish({
+          name: cleanName,
+          image: finalImg
+        });
+      }
+    } else if (selectedDish?.name) {
+      finalName = formatCleanDishName(selectedDish.name, restaurant.name);
+      const visual = getDishVisualAssets(finalName, selectedDish.image, restaurant.name);
+      finalImg = visual.flyingImage || selectedDish.image || visual.plateImage;
+    } else if (threeDishes.length > 0) {
+      const first = threeDishes[0];
+      finalName = formatCleanDishName(first.name, restaurant.name);
+      const visual = getDishVisualAssets(finalName, first.image, restaurant.name);
+      finalImg = visual.flyingImage || visual.plateImage;
+    } else {
+      finalName = 'Special Plate';
+      const visual = getDishVisualAssets(finalName, undefined, restaurant.name);
+      finalImg = visual.plateImage;
+    }
+
     onConfirmDish(finalName, finalImg);
   };
 
@@ -358,10 +446,23 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                if (suggestions.length > 0) {
-                  handleSelectSuggestion(suggestions[0]);
-                } else if (rawDishes.length > 0) {
-                  handleSelectSuggestion(rawDishes[0]);
+                const q = customDishInput.trim();
+                if (!q) return;
+                const allAvailable = [...rawDishes, ...suggestions, ...threeDishes];
+                const match = allAvailable.find(d => {
+                  const clean = formatCleanDishName(d.name, restaurant.name).toLowerCase();
+                  return clean === q.toLowerCase() || clean.includes(q.toLowerCase());
+                });
+                if (match) {
+                  handleSelectSuggestion(match);
+                } else {
+                  const cleanName = formatCleanDishName(q, restaurant.name);
+                  const visual = getDishVisualAssets(cleanName, undefined, restaurant.name);
+                  onSelectDish({
+                    name: cleanName,
+                    image: visual.flyingImage || visual.plateImage
+                  });
+                  setShowDropdown(false);
                 }
               }
             }}
@@ -397,7 +498,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             </div>
 
             {/* If user searched and no results were found in this restaurant */}
-            {customDishInput.trim().length > 0 && suggestions.length === 0 && !isSearching && (
+            {customDishInput.trim().length > 0 && dropdownDishes.length === 0 && !isSearching && (
               <div className="p-3 text-center space-y-1.5">
                 <p className="text-xs font-bold text-slate-700">
                   No dishes matching &ldquo;{customDishInput.trim()}&rdquo; on {restaurant.name}&rsquo;s menu.
@@ -441,10 +542,13 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             )}
 
             {/* List of matching or catalog dishes strictly from this restaurant */}
-            {(customDishInput.trim().length > 0 ? suggestions : (rawDishes.length > 0 ? rawDishes : threeDishes)).map((dish) => {
+            {dropdownDishes.map((dish) => {
               const visual = getDishVisualAssets(dish.name, dish.image, restaurant.name);
               const cleanName = formatCleanDishName(dish.name, restaurant.name);
-              const isSelected = selectedDish?.name === cleanName;
+              const isSelected = !!selectedDish?.name && (
+                selectedDish.name.toLowerCase() === cleanName.toLowerCase() ||
+                selectedDish.name.toLowerCase() === dish.name.toLowerCase()
+              );
 
               return (
                 <button

@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/images/final-frames/food-tour-img.jpg",
-        width: 1200,
-        height: 1200,
+        width: 1080,
+        height: 1080,
         alt: "Bhookasur Ka Food Tour"
       }
     ]
