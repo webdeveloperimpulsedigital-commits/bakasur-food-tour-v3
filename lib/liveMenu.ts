@@ -48,7 +48,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Kothimbir Vadi Plate with Green Chutney",
       description: "Steamed coriander cakes shallow-fried extra crisp with spicy mint chutney.",
       price: 90,
-      image: "https://images.unsplash.com/photo-1747008624832-e068ee496908?w=800&auto=format&fit=crop&q=85",
+      image: "/images/food/kothimbir_vadi.jpg",
       popularity: 98,
       rating: 4.9
     },
@@ -56,7 +56,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Steamed Ukdiche Modak with Saffron Infusion (2 Pcs)",
       description: "Delicate steamed rice flour dumplings filled with grated coconut, jaggery and pure cardamom ghee.",
       price: 120,
-      image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=85",
+      image: "/images/food/modak.jpg",
       popularity: 99,
       rating: 5.0
     },
@@ -569,7 +569,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Kothimbir Vadi Plate",
       description: "Steamed fresh coriander cilantro diamond cakes shallow-fried crisp with sweet & spicy dip.",
       price: 80,
-      image: "/api/ai/dish-image?dish=Vada%20Pav",
+      image: "/images/food/kothimbir_vadi.jpg",
       popularity: 98,
       rating: 4.9
     },
@@ -641,7 +641,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Kothimbir Vadi Plate",
       description: "Steamed fresh coriander cakes shallow-fried crisp with spicy green chutney.",
       price: 80,
-      image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80",
+      image: "/images/food/kothimbir_vadi.jpg",
       popularity: 97,
       rating: 4.9
     },
@@ -1845,7 +1845,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     dishes: [
       { name: "Special Legendary Vada Pav (2 Pcs)", description: "Freshly fried golden potato dumplings stuffed in soft ladi pav with red garlic chutney.", price: 50, image: "/api/ai/dish-image?dish=Vada%20Pav", popularity: 100, rating: 5.0 },
       { name: "Fiery Schezwan Cheese Vada Pav", description: "Loaded with melted mozzarella, spicy schezwan glaze, and roasted garlic chutney.", price: 90, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Crispy Kothimbir Vadi Plate", description: "Steamed cilantro diamond cakes shallow-fried crisp with sweet-tangy chutney.", price: 80, image: "/api/ai/dish-image?dish=Vada%20Pav", popularity: 97, rating: 4.9 },
+      { name: "Crispy Kothimbir Vadi Plate", description: "Steamed cilantro diamond cakes shallow-fried crisp with sweet-tangy chutney.", price: 80, image: "/images/food/kothimbir_vadi.jpg", popularity: 97, rating: 4.9 },
       { name: "Crispy Sabudana Vada with Sweet Dahi", description: "Golden fried tapioca patties with roasted peanuts and sweetened curd.", price: 90, image: "/api/ai/dish-image?dish=Sabudana%20Vada", popularity: 97, rating: 4.8 },
       { name: "Steamed Kanda Poha Plate", description: "Fluffy flattened rice tempered with mustard, onions, roasted peanuts & lemon.", price: 60, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.7 },
       { name: "Spicy Misal Pav Combo", description: "Fiery sprouted bean curry topped with crispy farsan, onion, lemon & soft pav.", price: 120, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
@@ -1865,8 +1865,8 @@ export const CUISINE_MENUS: CuisineProfile[] = [
       { name: "Special Bhakri Bhaji Thali", description: "Authentic roasted jowar bhakri with spicy vegetable bhaji, green thecha, onion & pickle.", price: 190, image: "/api/ai/dish-image?dish=Bhakri", popularity: 100, rating: 5.0 },
       { name: "Crispy Bhajani Thalipeeth with White Butter", description: "Multi-grain savory spiced flatbread served with fresh homemade white makkhan.", price: 120, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 },
       { name: "Bharli Vangi (Stuffed Eggplant Curry)", description: "Baby eggplants slow-cooked in rich roasted peanut, coconut and sesame gravy.", price: 190, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.8 },
-      { name: "Khandeshi Shev Bhaji with Pav", description: "Fiery spicy roasted red gravy served with thick crunchy ratlami shev.", price: 170, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 96, rating: 4.8 },
-      { name: "Steamed Ukdiche Modak (2 Pcs)", description: "Delicate rice dough dumplings filled with freshly grated coconut, jaggery & ghee.", price: 120, image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0 },
+      { name: "Khandeshi Shev Bhaji with Pav", description: "Fiery spicy roasted red gravy served with thick crunchy ratlami shev.", price: 170, image: "/images/food/shev_bhaji.jpg", popularity: 96, rating: 4.8 },
+      { name: "Steamed Ukdiche Modak (2 Pcs)", description: "Delicate rice dough dumplings filled with freshly grated coconut, jaggery & ghee.", price: 120, image: "/images/food/modak.jpg", popularity: 99, rating: 5.0 },
       { name: "Chilled Kokum Solkadhi Glass", description: "Pink digestive drink made of fresh coconut milk, kokum extract, garlic & cilantro.", price: 50, image: "https://images.unsplash.com/photo-1553787499-6f9133860278?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 }
     ]
   },
@@ -2008,20 +2008,21 @@ export const CUISINE_MENUS: CuisineProfile[] = [
       'swayampakghar', 'swayampak', 'swayam', 'khanawal', 'poli bhaji', 'poli', 'bhaji kendra',
       'boarding', 'bhojanalay', 'bhojanalaya', 'dining hall', 'shabree', 'sukanta', 'shreyas',
       'durvankur', 'badshahi', 'poona boarding', 'aaswad', 'marathi', 'maharashtrian',
-      'puneri', 'kothimbir', 'puran poli', 'pithla', 'pitla', 'bhakri', 'varan bhat',
+      'puneri', 'kothimbir', 'alu vadi', 'aloo vadi', 'patra', 'puran poli', 'pithla', 'pitla', 'bhakri', 'varan bhat',
       'thecha', 'modak', 'zunka', 'bharli vangi', 'sathe', 'chapati'
     ],
     dishes: [
       { name: "Special Puran Poli Thali with Pure Desi Ghee", description: "Soft melt-in-mouth puran poli served with aromatic Katachi Amti, batata bhaji & pure desi ghee.", price: 230, image: "https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85", popularity: 100, rating: 5.0 },
       { name: "Garma Garam Pithla Bhakri with Thecha & Kanda", description: "Hot golden besan pithla served with fresh jowar bhakri, green thecha and fresh sliced onions.", price: 180, image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800&auto=format&fit=crop&q=85", popularity: 100, rating: 5.0 },
       { name: "Maharashtrian Special Veg Thali", description: "2 Chapatis, seasonal sabzi, usal, dal varan bhat with pure ghee, koshimbir, papad & sweet.", price: 210, image: "https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?w=800&auto=format&fit=crop&q=85", popularity: 99, rating: 4.9 },
-      { name: "Crispy Kothimbir Vadi with Mint Chutney", description: "Fresh coriander and spiced gram flour savory diamond cutlets fried crunchy.", price: 90, image: "https://images.unsplash.com/photo-1747008624832-e068ee496908?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9 },
-      { name: "Steamed Ukdiche Modak with Saffron Ghee (2 Pcs)", description: "Traditional sweet rice dumplings stuffed with fresh grated coconut & jaggery.", price: 110, image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9 },
+      { name: "Crispy Kothimbir Vadi with Mint Chutney", description: "Fresh coriander and spiced gram flour savory diamond cutlets fried crunchy.", price: 90, image: "/images/food/kothimbir_vadi.jpg", popularity: 98, rating: 4.9 },
+      { name: "Steamed & Fried Alu Vadi Plate (Patra)", description: "Colocasia leaf spiced pinwheels garnished with roasted sesame seeds & grated coconut.", price: 90, image: "/images/food/alu_vadi.jpg", popularity: 98, rating: 4.9 },
+      { name: "Steamed Ukdiche Modak with Saffron Ghee (2 Pcs)", description: "Traditional sweet rice dumplings stuffed with fresh grated coconut & jaggery.", price: 110, image: "/images/food/modak.jpg", popularity: 98, rating: 4.9 },
       { name: "Authentic Bharli Vangi with Jowar Bhakri", description: "Spiced baby brinjals simmered in rich roasted peanut and sesame goda gravy.", price: 200, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85", popularity: 97, rating: 4.8 },
       { name: "Indrayani Varan Bhat with Pure Desi Ghee", description: "Steaming aromatic soft rice topped with yellow lentil varan, fresh lemon & ghee.", price: 140, image: "https://images.unsplash.com/photo-1789991184293-224a84e41900?w=800&auto=format&fit=crop&q=85", popularity: 96, rating: 4.8 },
       { name: "Digestive Pink Kokum Solkadhi", description: "Chilled fresh coconut milk extract with wild kokum, garlic, and fresh coriander.", price: 50, image: "https://images.unsplash.com/photo-1543362906-acfc16c67564?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9 },
       { name: "Authentic Bhajani Thalipeeth with White Butter", description: "Crispy multigrain roasted flatbread served with homemade white butter and pickle.", price: 120, image: "https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85", popularity: 97, rating: 4.8 },
-      { name: "Khandeshi Shev Bhaji with Pav", description: "Fiery spicy roasted red masala gravy served with thick crunchy ratlami shev.", price: 170, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85", popularity: 96, rating: 4.8 }
+      { name: "Khandeshi Shev Bhaji with Pav", description: "Fiery spicy roasted red masala gravy served with thick crunchy ratlami shev.", price: 170, image: "/images/food/shev_bhaji.jpg", popularity: 96, rating: 4.8 }
     ]
   },
 

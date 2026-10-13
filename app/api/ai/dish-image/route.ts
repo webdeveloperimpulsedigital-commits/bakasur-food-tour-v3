@@ -6,7 +6,7 @@ import path from 'path';
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v5_verified_culinary_assets';
+const CACHE_VERSION = 'v7_kothimbir_alu_vadi_assets';
 const imageBufferCache = new Map<string, { buffer: Buffer; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -35,6 +35,10 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   paneer_butter_masala: 'paneer_butter_masala.jpg',
   paneer_tikka: 'paneer_tikka.jpg',
   veg_kolhapuri: 'veg_kolhapuri.jpg',
+  shev_bhaji: 'shev_bhaji.jpg',
+  modak: 'modak.jpg',
+  kothimbir_vadi: 'kothimbir_vadi.jpg',
+  alu_vadi: 'alu_vadi.jpg',
   pav_bhaji: 'pav_bhaji.jpg',
   vada_pav: 'vada_pav.jpg',
   samosa: 'samosa.jpg',
@@ -180,8 +184,18 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
     return 'vada_pav';
   }
 
+  // Kothimbir Vadi (Maharashtrian fresh coriander & besan diamond cutlets)
+  if (d.includes('kothimbir') || d.includes('kothambir') || d.includes('coriander vadi')) {
+    return 'kothimbir_vadi';
+  }
+
+  // Alu Vadi / Aloo Vadi / Patra (Colocasia leaf spiral rolls)
+  if (d.includes('alu vadi') || d.includes('aloo vadi') || d.includes('aluvadi') || d.includes('aloovadi') || d.includes('patra') || d.includes('colocasia')) {
+    return 'alu_vadi';
+  }
+
   // Samosa & Kachori
-  if (d.includes('samosa') || d.includes('samose') || d.includes('kachori') || d.includes('kothimbir vadi') || d.includes('alu vadi')) {
+  if (d.includes('samosa') || d.includes('samose') || d.includes('kachori')) {
     return 'samosa';
   }
 
@@ -266,7 +280,11 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   if (d.includes('paneer') || d.includes('cottage cheese') || d.includes('shahi paneer') || d.includes('kadai paneer') || d.includes('palak paneer') || d.includes('matar paneer')) {
     return 'paneer_butter_masala';
   }
-  if (d.includes('kolhapuri') || d.includes('handi') || d.includes('kadai') || d.includes('shev bhaji') || d.includes('mix veg') || d.includes('vangi') || d.includes('baingan') || d.includes('kaju curry') || d.includes('cashew curry') || d.includes('veg korma') || d.includes('malai kofta') || d.includes('dum aloo')) {
+  // Shev Bhaji / Sev Bhaji / Sev Tamatar / Khandeshi Shev Bhaji
+  if (d.includes('shev bhaji') || d.includes('sev bhaji') || d.includes('shev curry') || d.includes('sev curry') || d.includes('sev tamatar') || d.includes('shev tamatar') || (d.includes('shev') && !d.includes('sev puri')) || d.includes('ratlami shev')) {
+    return 'shev_bhaji';
+  }
+  if (d.includes('kolhapuri') || d.includes('handi') || d.includes('kadai') || d.includes('mix veg') || d.includes('vangi') || d.includes('baingan') || d.includes('kaju curry') || d.includes('cashew curry') || d.includes('veg korma') || d.includes('malai kofta') || d.includes('dum aloo')) {
     return 'veg_kolhapuri';
   }
 
@@ -285,10 +303,14 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   }
 
   // === 11. DESSERTS, SWEETS & BEVERAGES ===
+  // Steamed Ukdiche Modak / Modak
+  if (d.includes('modak')) {
+    return 'modak';
+  }
   if (d.includes('jalebi') || d.includes('imarti') || d.includes('rabdi')) {
     return 'jalebi';
   }
-  if (d.includes('gulab jamun') || d.includes('jamun') || d.includes('rasgulla') || d.includes('rasmalai') || d.includes('halwa') || d.includes('sheera') || d.includes('modak') || d.includes('sweet') || d.includes('mithai') || d.includes('laddoo') || d.includes('kaju katli') || d.includes('barfi') || d.includes('peda')) {
+  if (d.includes('gulab jamun') || d.includes('jamun') || d.includes('rasgulla') || d.includes('rasmalai') || d.includes('halwa') || d.includes('sheera') || d.includes('sweet') || d.includes('mithai') || d.includes('laddoo') || d.includes('kaju katli') || d.includes('barfi') || d.includes('peda')) {
     return 'gulab_jamun';
   }
   if (d.includes('chocolate mastani')) {
