@@ -56,7 +56,7 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
 
       {/* Video Container: Left on Desktop (md:w-1/2 md:h-full), Top on Mobile */}
       <div
-        className={`relative w-full md:w-1/2 bg-[#182858] flex items-center justify-center overflow-hidden shrink-0 transition-all duration-1000 ease-in-out md:h-full ${
+        className={`relative w-full md:w-1/2 bg-[#182858] flex items-center justify-center overflow-hidden shrink-0 transition-all duration-1000 ease-in-out md:transition-none md:h-full ${
           isRevealed
             ? 'h-[64%] xs:h-[66%] sm:h-[68%]'
             : 'h-full'
@@ -68,7 +68,7 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
           loop
           muted
           playsInline
-          className={`w-full h-full object-cover object-top transition-transform duration-1200 ease-in-out ${
+          className={`w-full h-full object-cover object-top transition-transform duration-1200 ease-in-out md:scale-100 md:transition-none ${
             isRevealed ? 'scale-100' : 'scale-115'
           }`}
         />
@@ -78,17 +78,17 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
       {/* Content Card: Right on Desktop (md:w-1/2 md:h-full), Bottom on Mobile */}
       <div
         onClick={onAutoAdvance}
-        className={`w-full md:w-1/2 flex-1 md:h-full bg-white px-4 py-4 xs:px-5 xs:py-5 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none rounded-none z-10 shrink-0 cursor-pointer transition-all duration-1000 ease-in-out transform ${
+        className={`w-full md:w-1/2 flex-1 md:h-full bg-white px-4 py-4 xs:px-5 xs:py-5 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none rounded-none z-10 shrink-0 cursor-pointer md:translate-x-0 md:opacity-100 md:pointer-events-auto md:transition-none transition-all duration-1000 ease-in-out transform ${
           isRevealed
-            ? 'translate-y-0 md:translate-x-0 opacity-100'
-            : 'translate-y-full md:translate-x-full opacity-0 pointer-events-none'
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-full opacity-0 pointer-events-none'
         }`}
       >
-        <div className="space-y-2.5 xs:space-y-3 sm:space-y-4 max-w-xl my-auto mx-auto flex flex-col items-center justify-center text-center px-1">
-          <p className="text-[15px] xs:text-[17px] sm:text-[22px] md:text-[26px] font-black text-[#0B1B48] leading-snug tracking-tight text-center">
+        <div className="space-y-2.5 xs:space-y-3 sm:space-y-4 max-w-md my-auto mx-auto flex flex-col items-center justify-center text-center px-2">
+          <p className="text-[15px] xs:text-[17px] sm:text-[20px] md:text-[22px] lg:text-[24px] font-black text-[#0B1B48] leading-snug tracking-tight text-center">
             Plot twist: Pet ne emergency brake laga di.
           </p>
-          <h2 className="text-[28px] xs:text-[34px] sm:text-[44px] md:text-[52px] font-black tracking-tight leading-[1.1] text-center">
+          <h2 className="text-[26px] xs:text-[30px] sm:text-[36px] md:text-[40px] lg:text-[44px] font-black tracking-tight leading-[1.12] text-center">
             <span className="text-[#D4380D]">Acidity</span>{' '}
             <span className="text-black">aur</span><br />
             <span className="text-[#D4380D]">khatti dakaarein.</span>

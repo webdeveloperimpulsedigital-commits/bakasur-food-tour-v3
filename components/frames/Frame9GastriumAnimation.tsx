@@ -45,15 +45,15 @@ export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = (
       className="w-full h-full flex items-center justify-center text-center px-4 sm:px-8 md:px-10 bg-white cursor-pointer select-none"
     >
       {!showTagline ? (
-        <div className="flex flex-col items-center justify-center text-center animate-in fade-in duration-300">
-          <h1 className="text-[44px] xs:text-[54px] sm:text-[68px] md:text-[80px] font-black tracking-tight leading-none uppercase select-none">
+        <div className="flex flex-col items-center justify-center text-center animate-in fade-in duration-300 px-2">
+          <h1 className="text-[38px] xs:text-[46px] sm:text-[54px] md:text-[58px] lg:text-[64px] font-black tracking-tight leading-none uppercase select-none">
             <span className="text-[#071746]">GASTRIUM</span>{' '}
             <span className="text-[#E2370A]">IN</span>
           </h1>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-600 max-w-lg mx-auto">
-          <h1 className="text-[34px] xs:text-[42px] sm:text-[54px] md:text-[66px] font-black italic tracking-tight text-[#071746] leading-[1.08] select-none text-center">
+        <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-600 max-w-md mx-auto px-2">
+          <h1 className="text-[28px] xs:text-[34px] sm:text-[40px] md:text-[44px] lg:text-[48px] font-black italic tracking-tight text-[#071746] leading-[1.12] select-none text-center">
             Acidity ko bolo<br />
             <span className="text-[#0047BA]">goodnight</span>
           </h1>

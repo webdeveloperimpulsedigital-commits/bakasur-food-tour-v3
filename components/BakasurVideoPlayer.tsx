@@ -433,9 +433,20 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
     }
   }, [soundEnabled]);
 
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(min-width: 768px)');
+    setIsDesktop(media.matches);
+    const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, []);
+
   // Video resolution across 13 frames from design team:
   // - Frame 1 (Welcome): Pointing Downwards.mp4 (Bakasur points down to start food tour)
-  // - Frame 2 (Restaurant Search): Ask for location.mp4 (Bakasur asks for where to go)
+  // - Frame 2 (Restaurant Search): Desktop = Bakasur-Pointing-Rightside.mp4, Mobile = 2.mp4
   // - Frame 3 & 4 (Dish Selection / Manual Dish): Showing Empty Plate.mp4 (Holding empty plate ready for food)
   // - Frame 5 (Eating Begins): Full-screen eating stage
   // - Frame 6 (Trailer): Showing Love.mp4 / Food Tour spots (Dosa.mp4, Pav Bhaji.mp4, Biryani.mp4)
@@ -447,11 +458,15 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
   // - Frame 13 (Pass Confirmed): Thumbs Up.mp4 (Bakasur thumbs up confirmation)
   const activeVideoSrc = useMemo(() => {
     if (frameNumber === 1) return '/images/final-frames/1.mp4';
-    if (frameNumber === 2) return '/images/final-frames/2.mp4';
+    if (frameNumber === 2) {
+      return isDesktop
+        ? '/images/final-frames/Bakasur-Pointing-Rightside.mp4'
+        : '/images/final-frames/2.mp4';
+    }
     if (frameNumber === 3 || frameNumber === 4) return '/images/final-frames/3.mp4';
     if (frameNumber === 6) return '/images/all-frames/Showing Love.mp4';
-    if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/all-frames/Fire on stomach v2.mp4';
-    if (frameNumber === 9) return '/images/all-frames/Drinking Gastrium.mp4';
+    if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/final-frames/Acidity-and-Dakare.mp4';
+    if (frameNumber === 9) return '/images/final-frames/Bhookasur-Drinking-Gastrium.mp4';
     if (frameNumber === 10) return '/images/all-frames/Thumbs Up.mp4';
     if (frameNumber === 11) return '/images/all-frames/Showing Love.mp4';
     if (frameNumber === 12) return '/images/all-frames/Showing Love.mp4';
@@ -549,7 +564,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/final-frames/2.mp4"
+            src={isDesktop ? "/images/final-frames/Bakasur-Pointing-Rightside.mp4" : "/images/final-frames/2.mp4"}
             playsInline
             autoPlay
             loop
@@ -598,31 +613,15 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
-            src="/images/all-frames/Drinking Gastrium.mp4"
+            src="/images/final-frames/Bhookasur-Drinking-Gastrium.mp4"
             playsInline
             autoPlay
-            loop={false}
+            loop
             muted
             onTimeUpdate={(e) => {
               const video = e.currentTarget;
-              if (video.currentTime >= 4.0) {
+              if (video.currentTime >= 3.8) {
                 window.dispatchEvent(new CustomEvent('gastrium-stomach-revealed'));
-                // Smooth slow-motion effect for the soothing blue stomach animation
-                if (video.playbackRate !== 0.5) {
-                  video.playbackRate = 0.5;
-                }
-              }
-              // Seamlessly loop the soothing stomach portion so the video never freezes
-              if (video.currentTime >= 7.6) {
-                video.currentTime = 4.1;
-                video.play().catch(() => {});
-              }
-            }}
-            onEnded={() => {
-              if (videoRef.current) {
-                videoRef.current.currentTime = 4.1;
-                videoRef.current.playbackRate = 0.5;
-                videoRef.current.play().catch(() => {});
               }
             }}
             className="w-full h-full object-cover object-center relative z-10"

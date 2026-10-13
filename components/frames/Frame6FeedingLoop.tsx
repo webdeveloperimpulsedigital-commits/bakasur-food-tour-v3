@@ -50,7 +50,7 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
       <div className="w-full md:w-1/2 flex-1 md:h-full min-h-0 bg-white px-4 py-4 xs:px-5 xs:py-5 sm:px-8 sm:py-8 md:px-10 md:py-12 flex flex-col justify-between items-center text-center shadow-[0_-12px_35px_rgba(0,0,0,0.18)] md:shadow-none z-10 shrink-0">
         <div className="hidden md:block w-full h-4" />
         <div className="w-full max-w-md mx-auto my-auto flex flex-col justify-center items-center">
-          <h1 className="text-[25px] xs:text-[28px] sm:text-[34px] md:text-[38px] font-black text-[#0B1B48] tracking-tight leading-[1.16] text-center">
+          <h1 className="text-[24px] xs:text-[26px] sm:text-[30px] md:text-[34px] font-black text-[#0B1B48] tracking-tight leading-[1.18] text-center">
             Itne mein Food Tour nahi,<br />
             sirf <span className="text-[#D4380D]">food trailer</span> banta hai.
           </h1>

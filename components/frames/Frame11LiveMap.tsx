@@ -226,21 +226,12 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 text-center border-r border-slate-200/90 px-1">
+          <div className="flex-1 text-center px-1">
             <div className="text-lg sm:text-2xl font-black text-[#D4380D] leading-none">
               [{stats.mustTryDishes !== null ? stats.mustTryDishes : '...'}]
             </div>
             <div className="text-[10px] sm:text-[11px] font-black text-[#0B1B48] mt-0.5 tracking-tight">
               Must-try dishes
-            </div>
-          </div>
-
-          <div className="flex-1 text-center px-1">
-            <div className="text-lg sm:text-2xl font-black text-[#D4380D] leading-none">
-              [{stats.citiesCount !== null ? stats.citiesCount : '...'}]
-            </div>
-            <div className="text-[10px] sm:text-[11px] font-black text-[#0B1B48] mt-0.5 tracking-tight">
-              Cities on tour
             </div>
           </div>
         </div>
@@ -275,7 +266,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             className="w-full py-2.5 px-4 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-xs sm:text-sm uppercase tracking-wide active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center"
           >
             <span className="leading-tight">
-              {hasRegistered ? 'TOUR PASS CLAIMED / REGISTERED ✓' : 'REGISTER KARO & PAO ZOMATO VOUCHER JEETNE KA MAUKA'}
+              {hasRegistered ? 'TOUR PASS CLAIMED / REGISTERED ✓' : 'REGISTER NOW AND GET CHANCE TO WIN ZOMATO VOUCHER'}
             </span>
             {!hasRegistered && <ArrowRight className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />}
           </button>
@@ -331,21 +322,12 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
               </div>
             </div>
 
-            <div className="flex-1 text-center border-r border-slate-200/90 px-2">
+            <div className="flex-1 text-center px-2">
               <div className="text-2xl lg:text-3xl font-black text-[#D4380D] leading-none">
                 [{stats.mustTryDishes !== null ? stats.mustTryDishes : '...'}]
               </div>
               <div className="text-xs lg:text-sm font-black text-[#0B1B48] mt-1 tracking-tight">
                 Must-try dishes
-              </div>
-            </div>
-
-            <div className="flex-1 text-center px-2">
-              <div className="text-2xl lg:text-3xl font-black text-[#D4380D] leading-none">
-                [{stats.citiesCount !== null ? stats.citiesCount : '...'}]
-              </div>
-              <div className="text-xs lg:text-sm font-black text-[#0B1B48] mt-1 tracking-tight">
-                Cities on tour
               </div>
             </div>
           </div>
@@ -361,7 +343,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
             </button>
           </div>
 
-          {/* Register CTA: REGISTER KARO & PAO ZOMATO VOUCHER JEETNE KA MAUKA */}
+          {/* Register CTA: REGISTER NOW AND GET CHANCE TO WIN ZOMATO VOUCHER */}
           <div className="w-full">
             <button
               onClick={handleOpenRegistration}
@@ -369,7 +351,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
               className="w-full py-3 px-6 rounded-2xl bg-white hover:bg-slate-50 text-[#0B1B48] border-2 border-[#0B1B48] font-black text-xs lg:text-sm uppercase tracking-wide active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
             >
               <span className="leading-tight">
-                {hasRegistered ? 'TOUR PASS CLAIMED / REGISTERED ✓' : 'REGISTER KARO & PAO ZOMATO VOUCHER JEETNE KA MAUKA'}
+                {hasRegistered ? 'TOUR PASS CLAIMED / REGISTERED ✓' : 'REGISTER NOW AND GET CHANCE TO WIN ZOMATO VOUCHER'}
               </span>
               {!hasRegistered && <ArrowRight className="w-4 h-4 stroke-[2.5] shrink-0" />}
             </button>
@@ -406,12 +388,9 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
 
             {/* Modal Title */}
             <div>
-              <h3 className="text-lg font-black text-[#0B1B48] leading-tight">
-                Live Food Tour Registration
+              <h3 className="text-base sm:text-lg font-black text-[#0B1B48] leading-tight pr-6">
+                Register karein aur paayein Zomato voucher jeetne ka mauka!
               </h3>
-              <p className="text-[11px] font-semibold text-[#0B1B48]/75 mt-0.5 leading-snug">
-                Apne favourite food influencer ke saath tour par chalne ke liye apna number register karein.
-              </p>
             </div>
 
             {/* Success State if Submitted */}
@@ -436,7 +415,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
-                      placeholder="Jaise: Rahul Sharma"
+                      placeholder="Rahul Sharma"
                       maxLength={50}
                       required
                       autoFocus
@@ -541,7 +520,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                       className="mt-0.5 rounded text-[#D4380D] focus:ring-[#D4380D] h-4 w-4 border-slate-300 accent-[#D4380D] cursor-pointer"
                     />
                     <span className="text-[10.5px] sm:text-[11px] font-semibold text-slate-700 leading-snug">
-                      Main contest updates, WhatsApp messages aur Live Food Tour ki details prapt karne ke liye sehmat hoon. <span className="text-[#D4380D] font-bold">*</span>
+                      Zomato voucher result aur Food Tour details WhatsApp par paane ke liye sehmat hoon. <span className="text-[#D4380D] font-bold">*</span>
                     </span>
                   </label>
                 </div>

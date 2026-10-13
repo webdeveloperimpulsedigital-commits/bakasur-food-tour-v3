@@ -55,10 +55,19 @@ export default function CampaignPage() {
     onVideoComplete?: () => void;
   } | null>(null);
 
-  // Bakasur Transition Loader State
   const [isLoaderOpen, setIsLoaderOpen] = useState<boolean>(false);
   const [targetLoaderFrame, setTargetLoaderFrame] = useState<number>(2);
   const [loaderMessage, setLoaderMessage] = useState<string>('');
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(min-width: 768px)');
+    setIsDesktop(media.matches);
+    const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, []);
 
   const triggerFrameTransition = useCallback((targetFrame: FrameNumber, onTransitionComplete?: () => void, customMsg?: string) => {
     setCurrentFrame(targetFrame);
@@ -771,38 +780,40 @@ export default function CampaignPage() {
   };
 
   return (
-    <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#050b1e] overflow-hidden select-none p-0 md:p-6 lg:p-8">
+    <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#07153B] overflow-hidden select-none p-0">
       {/* Responsive Canvas: Mobile portrait stack (< md), Desktop split screen (md:flex-row, Left: Video, Right: Content) */}
       {/* If Frame 5: FULL SCREEN EATING STAGE */}
       {currentFrame === 5 ? (
-        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#031058] rounded-none md:rounded-none md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] overflow-hidden relative">
-          <BakasurEatingStage
-            dishName={selectedDish?.name || 'Signature Dish'}
-            dishImage={selectedDish?.image}
-            restaurantName={selectedRestaurant?.name}
-            restaurant={selectedRestaurant}
-            feastingStage={feastingStage}
-            soundEnabled={false}
-            onBack={() => {
-              setCurrentFrame(3);
-            }}
-            onWatchVideo={() => {
-              setActiveTransitionVideo({
-                videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
-                buttonText: 'Aage Badho ➡️',
-                nextFrame: 7
-              });
-            }}
-            onComplete={() => {
-              playSound('click');
-              setCurrentFrame(6);
-            }}
-            onPlayBite={() => playSound('bite')}
-          />
+        <div className="w-full h-full flex items-center justify-center bg-[#031058] overflow-hidden relative">
+          <div className="w-full h-full max-w-[480px] lg:max-w-[500px] bg-[#031058] overflow-hidden relative">
+            <BakasurEatingStage
+              dishName={selectedDish?.name || 'Signature Dish'}
+              dishImage={selectedDish?.image}
+              restaurantName={selectedRestaurant?.name}
+              restaurant={selectedRestaurant}
+              feastingStage={feastingStage}
+              soundEnabled={false}
+              onBack={() => {
+                setCurrentFrame(3);
+              }}
+              onWatchVideo={() => {
+                setActiveTransitionVideo({
+                  videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
+                  buttonText: 'Aage Badho ➡️',
+                  nextFrame: 7
+                });
+              }}
+              onComplete={() => {
+                playSound('click');
+                setCurrentFrame(6);
+              }}
+              onPlayBite={() => playSound('bite')}
+            />
+          </div>
         </div>
       ) : currentFrame === 6 && tourSpotRound === 0 ? (
         /* Frame 6 Interstitial with bakasur_empty_plate video & smooth zoom-out reveal animation */
-        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#07153B] rounded-none md:rounded-none md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] overflow-hidden relative flex flex-col">
+        <div className="w-full h-full bg-[#07153B] overflow-hidden relative flex flex-col">
           {feastingStage === 1 ? (
             <Frame6FeedingLoop
               restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: 'Pune' }}
@@ -832,7 +843,7 @@ export default function CampaignPage() {
         </div>
       ) : currentFrame === 7 ? (
         /* Frame 7 Acidity Appears with Fire on stomach video & smooth zoom-out reveal animation */
-        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-[#07153B] rounded-none md:rounded-none md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] overflow-hidden relative flex flex-col">
+        <div className="w-full h-full bg-[#07153B] overflow-hidden relative flex flex-col">
           <Frame7AcidityAppears
             onAutoAdvance={handleAcidityAutoAdvance}
             onBack={() => setCurrentFrame(6)}
@@ -840,7 +851,7 @@ export default function CampaignPage() {
           />
         </div>
       ) : currentFrame === 6 && tourSpotRound > 0 && currentTourSpot ? (
-        <div className="w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-white rounded-none md:rounded-none md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] overflow-hidden relative">
+        <div className="w-full h-full bg-white overflow-hidden relative">
           <Frame6RandomFoodSpot
             spot={currentTourSpot}
             round={tourSpotRound}
@@ -851,8 +862,8 @@ export default function CampaignPage() {
         </div>
       ) : currentFrame === 11 ? (
         /* Standalone Map Frame matching user_mockup_map.png */
-        /* Desktop: Horizontal side-by-side (md:max-w-5xl lg:max-w-6xl), Mobile: Exact phone card (max-w-[440px]) */
-        <div className="w-full h-full max-w-[440px] md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] bg-white rounded-none md:rounded-none md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] overflow-hidden relative flex flex-col">
+        /* Desktop: Horizontal side-by-side (w-full h-full), Mobile: Full viewport phone card */
+        <div className="w-full h-full bg-white overflow-hidden relative flex flex-col">
           {(() => {
             const userSpotsList = [
               ...(firstRoundRestaurant ? [{
@@ -906,8 +917,8 @@ export default function CampaignPage() {
         </div>
       ) : currentFrame === 13 ? (
         /* Frame 13: Last Frame (Registration Completed) */
-        /* Desktop view is horizontal (md:flex-row), Mobile view is vertical (flex-col) */
-        <div className="w-full h-full md:max-w-4xl lg:max-w-5xl md:h-[88vh] md:max-h-[820px] bg-white rounded-none md:rounded-none md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] overflow-hidden relative flex flex-col md:flex-row">
+        /* Desktop view is horizontal (w-full h-full md:flex-row), Mobile view is vertical (flex-col) */
+        <div className="w-full h-full bg-white overflow-hidden relative flex flex-col md:flex-row">
           <Frame13Confirmation
             participationId={participationId}
             mobile={registeredMobile}
@@ -918,8 +929,8 @@ export default function CampaignPage() {
           />
         </div>
       ) : (
-        /* Normal Canvas for Other Frames */
-        <div className={`w-full h-full md:max-w-5xl lg:max-w-6xl md:h-[90vh] md:max-h-[860px] ${currentFrame === 1 ? 'bg-[#f4f6fa]' : 'bg-white'} rounded-none md:rounded-none md:shadow-[0_25px_80px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col md:flex-row relative`}>
+        /* Normal Canvas for Other Frames - Full Screen Bleed (Left 50% Video, Right 50% Content) */
+        <div className={`w-full h-full ${currentFrame === 1 ? 'bg-[#f4f6fa]' : 'bg-white'} overflow-hidden flex flex-col md:flex-row relative`}>
 
           {/* Left Side on Desktop / Top Half on Mobile: Royal Blue Character Stage */}
           <div className={`w-full md:w-1/2 ${getVideoContainerHeightClass(currentFrame)} md:h-full relative overflow-hidden bg-[#182858] shrink-0`}>
@@ -928,7 +939,9 @@ export default function CampaignPage() {
                 currentFrame === 1
                   ? "/images/final-frames/1.mp4"
                   : currentFrame === 2
-                    ? "/images/final-frames/2.mp4"
+                    ? isDesktop
+                      ? "/images/final-frames/Bakasur-Pointing-Rightside.mp4"
+                      : "/images/final-frames/2.mp4"
                     : currentFrame === 3 || currentFrame === 4
                       ? "/images/final-frames/3.mp4"
                       : currentFrame === 6
@@ -936,7 +949,7 @@ export default function CampaignPage() {
                         : currentFrame === 8
                           ? "/images/final-frames/Acidity-and-Dakare.mp4"
                           : currentFrame === 9
-                            ? "/images/all-frames/Drinking Gastrium.mp4"
+                            ? "/images/final-frames/Bhookasur-Drinking-Gastrium.mp4"
                             : currentFrame === 10
                               ? "/images/all-frames/Thumbs Up.mp4"
                               : currentFrame === 12

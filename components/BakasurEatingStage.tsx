@@ -407,28 +407,21 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         <div className="absolute bottom-0 inset-x-0 h-36 bg-gradient-to-t from-black/75 via-black/25 to-transparent z-10 pointer-events-none" />
       </div>
 
-      {/* 2. TOP HEADER CONTROLS */}
-      <div className="relative z-30 px-4 sm:px-6 pt-4 pb-2 flex items-center justify-between text-white w-full shrink-0">
-        <div className="flex items-center gap-2">
-          {onBack && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onBack();
-              }}
-              type="button"
-              className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all cursor-pointer flex items-center justify-center border border-white/20"
-              aria-label="Back"
-            >
-              <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-            </button>
-          )}
-          <span className="font-black text-xs sm:text-sm uppercase tracking-widest text-white drop-shadow-md">
-            BHOOKASUR KA FOOD TOUR
-          </span>
-        </div>
-
-      </div>
+      {/* 2. TOP LEFT BACK BUTTON (Identical to Frame 2, 7, 8) */}
+      {onBack && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onBack();
+          }}
+          type="button"
+          className="absolute top-3 left-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white font-black text-xs backdrop-blur-md border border-white/20 shadow-lg transition-all active:scale-95 cursor-pointer"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 stroke-[3]" />
+          <span>Back</span>
+        </button>
+      )}
 
       {/* Center flex container for rapid flying food morsels */}
       <div className="relative flex-1 w-full min-h-0 pointer-events-none z-30 flex flex-col items-center justify-center">
@@ -511,6 +504,16 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       {isSideAngle ? (
         /* SIDE-ANGLE MODE: Food Plates on the RIGHT side, Bhookasur on the LEFT */
         <>
+          {/* Swipe Hint indicator positioned in clean space above plates on the right */}
+          {!draggingFood && fedCount < TOTAL_FEEDS && (
+            <div className="absolute right-3 xs:right-4 sm:right-6 top-[20%] sm:top-[22%] z-30 pointer-events-none animate-pulse">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/25 text-white font-black text-[11px] xs:text-xs sm:text-sm tracking-wide shadow-xl select-none whitespace-nowrap">
+                <ChevronLeft className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-amber-400 animate-bounce" />
+                <span>Swipe karke khilao</span>
+              </div>
+            </div>
+          )}
+
           {/* Right side floating vertical stack of 3 food plates - centered vertically on screen */}
           <div className="absolute right-3 xs:right-4 sm:right-6 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-4 xs:gap-5 select-none">
             {foodOptions.map((food, index) => {
@@ -552,9 +555,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </>
       ) : (
         /* NORMAL STAGE 1 MODE: Food Plates in bottom row */
-        <div className="relative z-30 px-4 pb-6 sm:pb-8 flex flex-col items-center justify-end w-full shrink-0 gap-3">
+        <div className="relative z-30 px-4 pb-3 sm:pb-5 flex flex-col items-center justify-end w-full shrink-0 gap-1.5">
           {/* 3 Food Item Ceramic Plates Row */}
-          <div className="flex items-center justify-center gap-2.5 xs:gap-3 sm:gap-6 w-full max-w-2xl mx-auto pt-1 pb-1">
+          <div className="flex items-center justify-center gap-2.5 xs:gap-3 sm:gap-6 w-full max-w-2xl mx-auto pt-0.5 pb-0.5">
             {foodOptions.map((food, index) => {
               const isEaten = eatenDishIds.includes(food.id);
 
@@ -586,6 +589,16 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
               );
             })}
           </div>
+
+          {/* Swipe Hint Badge BELOW the plates so it NEVER touches Bhookasur's mouth */}
+          {!draggingFood && fedCount < TOTAL_FEEDS && (
+            <div className="pointer-events-none z-30 animate-pulse pt-0.5">
+              <div className="flex items-center justify-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white font-black text-[11px] xs:text-xs sm:text-sm tracking-wide shadow-xl select-none">
+                <span>Swipe karke khilao</span>
+                <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 animate-bounce" />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
