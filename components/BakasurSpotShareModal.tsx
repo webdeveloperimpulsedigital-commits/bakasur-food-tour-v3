@@ -46,8 +46,8 @@ export const BakasurSpotShareModal: React.FC<BakasurSpotShareModalProps> = ({
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
   const shareUrl = `${baseUrl}/?ref=share&rest=${encodeURIComponent(restaurantName)}&dish=${encodeURIComponent(dishName)}&city=${encodeURIComponent(cityName)}`;
 
-  // Formatted share message with emojis
-  const shareMessage = `🔥 Mene Bhookasur ko mera favourite food spot khilaya! 😋\n\n📍 Restaurant: ${restaurantName} (${cityName})\n🍽️ Famous Dish: ${dishName}\n\n🎟️ Dekho Mera Foodie Pass:\n${baseUrl}/pass\n\nBhookasur ki bhookh abhi bhi shant nahi hui! Kya tum uski bhookh mita sakte ho? Apna favourite food spot batao aur Live Food Tour jeeto! 🏆\n\nPlay & Challenge Bhookasur here 👇\n${shareUrl}`;
+  // Formatted share message with emojis (dish and spot removed)
+  const shareMessage = `🔥 Mene Bhookasur ko mera favourite food spot khilaya! 😋\n\n🎟️ Dekho Mera Foodie Pass:\n${baseUrl}/pass\n\nBhookasur ki bhookh abhi bhi shant nahi hui! Kya tum uski bhookh mita sakte ho? Apna favourite food spot batao aur Live Food Tour jeeto! 🏆\n\nPlay & Challenge Bhookasur here 👇\n${shareUrl}`;
 
   // WhatsApp share link
   const handleShareWhatsApp = async () => {
@@ -250,7 +250,7 @@ export const BakasurSpotShareModal: React.FC<BakasurSpotShareModalProps> = ({
                 Shared Message Preview:
               </div>
               <p className="line-clamp-3 italic">
-                &ldquo;Mene Bhookasur ko mera favourite food spot khilaya! {restaurantName} ({cityName}) - {dishName}...&rdquo;
+                &ldquo;Mene Bhookasur ko mera favourite food spot khilaya! Dekho Mera Foodie Pass...&rdquo;
               </p>
             </div>
           </div>

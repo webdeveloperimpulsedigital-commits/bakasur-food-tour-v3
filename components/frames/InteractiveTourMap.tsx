@@ -74,7 +74,7 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
             ? currentUserSpots
             : (currentUserSpot && currentUserSpot.name ? [currentUserSpot] : []);
 
-          const dbSpots: CurrentUserSpotInfo[] = (json.data.currentUserSpots && Array.isArray(json.data.currentUserSpots) && json.data.currentUserSpots.length > 0)
+          const dbSpots: CurrentUserSpotInfo[] = (json.data.currentUserSpots && Array.isArray(json.data.currentUserSpots))
             ? json.data.currentUserSpots.map((s: any, idx: number) => ({
                 name: s.name,
                 city: s.city,
@@ -85,71 +85,91 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
               }))
             : [];
 
-          const activeUserSpots: CurrentUserSpotInfo[] = dbSpots.length >= propSpots.length && dbSpots.length > 0
-            ? dbSpots
-            : (propSpots.length > 0 ? propSpots : dbSpots);
+          // Prefer propSpots if provided by active interactive flow, otherwise dbSpots from database
+          const rawUserSpots = propSpots.length > 0 ? propSpots : dbSpots;
 
-          if (activeUserSpots.length > 0) {
-            const userNamesSet = new Set(activeUserSpots.map(s => (s.name || '').toLowerCase().trim()));
+          // Helper to normalize restaurant names for accurate matching
+          const normalizeKey = (name: string): string => {
+            if (!name) return '';
+            const base = name.split(/[,-]/)[0].trim().toLowerCase();
+            const clean = base
+              .replace(/\b(hotel|restaurant|pure veg|veg|cafe|stall|bhel|snacks|the|special|bar|and)\b/gi, '')
+              .replace(/[^a-z0-9]/g, '')
+              .trim();
+            return clean || base.replace(/[^a-z0-9]/g, '');
+          };
 
-            // Clear stale flags
-            list.forEach(p => {
-              if (!userNamesSet.has((p.name || '').toLowerCase().trim())) {
-                p.isCurrentUserSpot = false;
-              }
-            });
-
-            // Mark or insert each user spot
-            activeUserSpots.forEach((spot, idx) => {
-              const spotLat = spot.latitude || 18.5204;
-              const spotLng = spot.longitude || 73.8407;
-              const stopNumber = spot.stopNumber || (idx + 1);
-
-              const existingIdx = list.findIndex(
-                p => p.name && (
-                  p.name.toLowerCase().trim() === (spot.name || '').toLowerCase().trim() ||
-                  p.name.toLowerCase().includes((spot.name || '').toLowerCase().trim()) ||
-                  (spot.name || '').toLowerCase().includes(p.name.toLowerCase().trim())
-                )
-              );
-
-              if (existingIdx !== -1) {
-                list[existingIdx] = {
-                  ...list[existingIdx],
-                  name: spot.name,
-                  city: spot.city || list[existingIdx].city,
-                  featured_dish: spot.dishName || list[existingIdx].featured_dish,
-                  latitude: spotLat,
-                  longitude: spotLng,
-                  isCurrentUserSpot: true,
-                  stopNumber
-                };
-              } else {
-                list.unshift({
-                  id: 999990 + idx,
-                  name: spot.name,
-                  city: spot.city,
-                  latitude: spotLat,
-                  longitude: spotLng,
-                  rating: 4.9,
-                  total_visits: 1,
-                  featured_dish: spot.dishName,
-                  isCurrentUserSpot: true,
-                  stopNumber
-                });
-              }
-            });
-
-            if (activeUserSpots[0]?.latitude && activeUserSpots[0]?.longitude) {
-              setUserCenterCoords([activeUserSpots[0].latitude, activeUserSpots[0].longitude]);
+          // Strictly deduplicate and assign sequential stop numbers: Stop 1, Stop 2
+          const cleanUserSpots: CurrentUserSpotInfo[] = [];
+          const seenKeys = new Set<string>();
+          rawUserSpots.forEach((s) => {
+            const k = normalizeKey(s.name);
+            if (k && !seenKeys.has(k)) {
+              seenKeys.add(k);
+              cleanUserSpots.push({
+                ...s,
+                stopNumber: cleanUserSpots.length + 1
+              });
             }
+          });
+
+          // Build a map of normalized user restaurant keys to sequential stop number
+          const userKeyStopMap = new Map<string, number>();
+          cleanUserSpots.forEach(s => {
+            userKeyStopMap.set(normalizeKey(s.name), s.stopNumber!);
+          });
+
+          // Update existing points in list: mark ONLY active user spots as isCurrentUserSpot with their sequential stopNumber
+          list.forEach(p => {
+            const k = normalizeKey(p.name);
+            const userStopNum = userKeyStopMap.get(k);
+            if (userStopNum !== undefined) {
+              p.isCurrentUserSpot = true;
+              p.stopNumber = userStopNum;
+              const matchedUserSpot = cleanUserSpots.find(s => s.stopNumber === userStopNum);
+              if (matchedUserSpot?.dishName) {
+                p.featured_dish = matchedUserSpot.dishName;
+              }
+            } else {
+              p.isCurrentUserSpot = false;
+              p.stopNumber = undefined;
+            }
+          });
+
+          // If a user spot from cleanUserSpots isn't in list yet, insert it at the beginning
+          cleanUserSpots.forEach(s => {
+            const k = normalizeKey(s.name);
+            const exists = list.some(p => normalizeKey(p.name) === k);
+            if (!exists) {
+              list.unshift({
+                id: 999990 + s.stopNumber!,
+                name: s.name,
+                city: s.city,
+                latitude: s.latitude || 18.5204,
+                longitude: s.longitude || 73.8407,
+                rating: 4.8,
+                total_visits: 1,
+                featured_dish: s.dishName,
+                isCurrentUserSpot: true,
+                stopNumber: s.stopNumber
+              });
+            }
+          });
+
+          if (cleanUserSpots.length > 0 && cleanUserSpots[0].latitude && cleanUserSpots[0].longitude) {
+            setUserCenterCoords([cleanUserSpots[0].latitude, cleanUserSpots[0].longitude]);
           } else if (json.data?.currentUserPoint) {
             const cur = json.data.currentUserPoint;
             setUserCenterCoords([cur.latitude, cur.longitude]);
           }
 
-          // Sort so currentUserSpot is first
-          list.sort((a, b) => (b.isCurrentUserSpot ? 1 : 0) - (a.isCurrentUserSpot ? 1 : 0));
+          // Sort so currentUserSpots are first (ordered Stop 1, Stop 2)
+          list.sort((a, b) => {
+            if (a.isCurrentUserSpot && b.isCurrentUserSpot) {
+              return (a.stopNumber || 1) - (b.stopNumber || 1);
+            }
+            return (b.isCurrentUserSpot ? 1 : 0) - (a.isCurrentUserSpot ? 1 : 0);
+          });
 
           setPoints(list);
           const current = list.find(p => p.isCurrentUserSpot) || list[0] || null;

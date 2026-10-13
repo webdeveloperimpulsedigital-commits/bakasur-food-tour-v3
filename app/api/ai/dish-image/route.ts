@@ -6,7 +6,7 @@ import path from 'path';
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v10_punjabi_lassi_all_paneer_fixed';
+const CACHE_VERSION = 'v16_tandoor_chicken_tikka_perfect';
 const imageBufferCache = new Map<string, { buffer: Buffer; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -58,7 +58,8 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   pizza: 'pizza.jpg',
   burger: 'burger.jpg',
   butter_chicken: 'butter_chicken.jpg',
-  tandoori_chicken: 'tandoori_chicken.jpg'
+  tandoori_chicken: 'tandoori_chicken.jpg',
+  chicken_tikka: 'tandoori_chicken.jpg'
 };
 
 // Remote verified CDN fallbacks for beverages, specialties, and network redundancy
@@ -74,7 +75,7 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   jeera_rice: 'https://images.unsplash.com/photo-1789991184293-224a84e41900?w=800&auto=format&fit=crop&q=85',
   biryani: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=85',
   fried_rice: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&auto=format&fit=crop&q=85',
-  noodles: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&auto=format&fit=crop&q=85',
+  noodles: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=800&auto=format&fit=crop&q=85',
   paneer_butter_masala: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=800&auto=format&fit=crop&q=85',
   paneer_tikka: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
   palak_paneer: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=85',
@@ -101,9 +102,26 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   sandwich: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&auto=format&fit=crop&q=85',
   kathi_roll: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&auto=format&fit=crop&q=85',
   butter_chicken: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&auto=format&fit=crop&q=85',
-  tandoori_chicken: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=800&auto=format&fit=crop&q=85',
+  tandoori_chicken: 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Tandoorimumbai.jpg',
+  chicken_tikka: 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Tandoorimumbai.jpg',
   chicken_lollipop: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&auto=format&fit=crop&q=85',
   seafood: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&auto=format&fit=crop&q=85',
+  prawn_fry: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=800&auto=format&fit=crop&q=85',
+  pasta: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=800&auto=format&fit=crop&q=85',
+  waffles: 'https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=800&auto=format&fit=crop&q=85',
+  pancakes: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&auto=format&fit=crop&q=85',
+  croissant: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&auto=format&fit=crop&q=85',
+  brownie: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&auto=format&fit=crop&q=85',
+  cake: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&auto=format&fit=crop&q=85',
+  ice_cream: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&auto=format&fit=crop&q=85',
+  fruit_juice: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=800&auto=format&fit=crop&q=85',
+  smoothie: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=800&auto=format&fit=crop&q=85',
+  salad: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop&q=85',
+  soup: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&auto=format&fit=crop&q=85',
+  egg_dish: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&auto=format&fit=crop&q=85',
+  nachos: 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?w=800&auto=format&fit=crop&q=85',
+  garlic_bread: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=800&auto=format&fit=crop&q=85',
+  hot_dog: 'https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=800&auto=format&fit=crop&q=85',
   gulab_jamun: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=800&auto=format&fit=crop&q=85',
   jalebi: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=800&auto=format&fit=crop&q=85',
   mango_mastani: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&auto=format&fit=crop&q=85',
@@ -146,7 +164,7 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
 
   // Punjabi Sweet Lassi / Lassi (All variations)
   if (
-    d.includes('lassi') || d.includes('lasi') ||
+    /\blassi\b/.test(d) || /\blasi\b/.test(d) ||
     (d.includes('punjabi') && (d.includes('sweet') || d.includes('curd') || d.includes('malai') || d.includes('yogurt')))
   ) {
     return 'punjabi_lassi';
@@ -186,7 +204,10 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   // Tandoori Chicken & Non-veg Kebabs
   if (
     d.includes('tandoori chicken') || d.includes('chicken tandoori') ||
-    d.includes('chicken tikka') || d.includes('tangdi') || d.includes('reshmi') ||
+    d.includes('tandoor chicken') || d.includes('chicken tandoor') ||
+    d.includes('chicken tikka') || d.includes('tikka chicken') ||
+    (d.includes('tikka') && (hasChicken || !d.includes('paneer'))) ||
+    d.includes('tangdi') || d.includes('reshmi') ||
     d.includes('malai tikka') || d.includes('roast chicken') ||
     ((d.includes('kebab') || d.includes('kabab') || d.includes('seekh') || d.includes('boti') || d.includes('burra') || d.includes('kakori') || d.includes('galouti') || d.includes('pasinda')) && !d.includes('paneer') && !d.includes('veg') && !d.includes('soya'))
   ) {
@@ -353,27 +374,57 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
     return 'veg_kolhapuri';
   }
 
-  // === 9. SNACKS & FAST FOOD ===
-  if (d.includes('samosa') || d.includes('samose') || d.includes('kachori')) return 'samosa';
+  // === 9. SOUPS & SALADS ===
+  if (d.includes('soup') || d.includes('shorba')) return 'soup';
+  if (d.includes('salad') || d.includes('buddha bowl') || d.includes('protein bowl') || d.includes('quinoa') || d.includes('sprouts')) return 'salad';
+
+  // === 10. BREAKFAST SPECIALS & EGGS ===
+  if (d.includes('omelette') || d.includes('omelet') || d.includes('boiled egg') || d.includes('scrambled egg') || d.includes('egg curry') || d.includes('anda bhurji') || d.includes('egg bhurji') || d.includes('anda curry')) {
+    return 'egg_dish';
+  }
+  if (d.includes('upma')) return 'poha';
+  if (d.includes('waffle')) return 'waffles';
+  if (d.includes('pancake') || d.includes('french toast')) return 'pancakes';
+
+  // === 11. ITALIAN & CAFÉ MEALS ===
+  if (d.includes('pasta') || d.includes('spaghetti') || d.includes('lasagna') || d.includes('mac and cheese') || d.includes('penne') || d.includes('alfredo') || d.includes('ravioli') || d.includes('arrabbiata') || d.includes('risotto') || d.includes('pesto')) {
+    return 'pasta';
+  }
+  if (d.includes('nachos') || d.includes('quesadilla')) return 'nachos';
+  if (d.includes('garlic bread') || d.includes('bruschetta') || d.includes('garlic toast') || d.includes('open toast') || d.includes('avocado toast')) return 'garlic_bread';
+  if (d.includes('hot dog') || d.includes('hotdog')) return 'hot_dog';
+
+  // === 12. SNACKS & FAST FOOD ===
+  if (d.includes('samosa') || d.includes('samose') || d.includes('kachori') || d.includes('dhokla') || d.includes('khandvi')) return 'samosa';
   if (d.includes('pani puri') || d.includes('panipuri') || d.includes('golgappa') || d.includes('puchka') || d.includes('spdp') || d.includes('sev puri') || d.includes('dahi puri') || d.includes('bhel') || d.includes('chaat') || d.includes('papdi chaat')) return 'pani_puri';
   if (d.includes('roll') || d.includes('kathi') || d.includes('frankie') || d.includes('shawarma') || d.includes('wrap') || d.includes('baida roti')) return 'kathi_roll';
   if (d.includes('bun maska') || d.includes('maska bun') || d.includes('sandwich') || d.includes('toast') || d.includes('grilled cheese')) return 'sandwich';
   if (d.includes('momo') || d.includes('dimsum') || d.includes('dim sum') || d.includes('dumpling')) return 'momos';
-  if (d.includes('noodle') || d.includes('chowmein') || d.includes('hakka') || d.includes('chow mein')) return 'fried_rice';
+  if (d.includes('noodle') || d.includes('chowmein') || d.includes('hakka') || d.includes('chow mein') || d.includes('chopsuey')) return 'noodles';
   if (d.includes('fried rice') || d.includes('schezwan') || d.includes('manchurian') || d.includes('triple') || d.includes('chilli paneer')) return 'fried_rice';
   if (d.includes('pizza') || d.includes('margherita') || d.includes('calzone')) return 'pizza';
   if (d.includes('burger')) return 'burger';
   if (d.includes('fries') || d.includes('finger chips') || d.includes('wedges')) return 'fries';
+  if (d.includes('croissant')) return 'croissant';
 
-  // === 10. DESSERTS & OTHER BEVERAGES ===
-  if (d.includes('jalebi') || d.includes('imarti') || d.includes('rabdi')) return 'jalebi';
-  if (d.includes('gulab jamun') || d.includes('jamun') || d.includes('rasgulla') || d.includes('rasmalai') || d.includes('halwa') || d.includes('sheera') || d.includes('sweet') || d.includes('mithai') || d.includes('laddoo') || d.includes('kaju katli') || d.includes('barfi') || d.includes('peda')) return 'gulab_jamun';
+  // === 13. DESSERTS, BAKERY & SWEETS ===
+  if (d.includes('brownie')) return 'brownie';
+  if (d.includes('cake') || d.includes('cheesecake') || d.includes('tiramisu') || d.includes('cupcake') || d.includes('donut') || d.includes('doughnut') || d.includes('muffin') || d.includes('churros') || d.includes('pastry')) return 'cake';
+  if (d.includes('ice cream') || d.includes('gelato') || d.includes('sorbet') || d.includes('sundae')) return 'ice_cream';
+  if (d.includes('jalebi') || d.includes('imarti') || d.includes('rabdi') || d.includes('rabri')) return 'jalebi';
+  if (d.includes('gulab jamun') || d.includes('jamun') || d.includes('rasgulla') || d.includes('rasmalai') || d.includes('halwa') || d.includes('sheera') || d.includes('sweet') || d.includes('mithai') || d.includes('laddoo') || d.includes('laddu') || d.includes('kaju katli') || d.includes('barfi') || d.includes('peda') || d.includes('shrikhand') || d.includes('basundi')) return 'gulab_jamun';
+
+  // === 14. BEVERAGES, SHAKES, JUICES & SMOOTHIES ===
   if (d.includes('chocolate mastani')) return 'chocolate_mastani';
   if (d.includes('mastani')) return 'mango_mastani';
-  if (d.includes('falooda') || d.includes('kulfi') || d.includes('ice cream') || d.includes('sundae')) return 'falooda';
-  if (d.includes('cold coffee') || d.includes('frappe') || d.includes('thick shake') || d.includes('milkshake')) return 'cold_coffee';
-  if (d.includes('filter coffee') || d.includes('espresso') || d.includes('cappuccino') || d.includes('latte')) return 'filter_coffee';
-  if (d.includes('chai') || d.includes('tea') || d.includes('masala chai') || d.includes('irani chai')) return 'masala_chai';
+  if (d.includes('mango') && d.includes('shake')) return 'mango_mastani';
+  if (d.includes('smoothie') || d.includes('granola') || d.includes('fruit bowl') || d.includes('oats')) return 'smoothie';
+  if (d.includes('falooda') || d.includes('kulfi')) return 'falooda';
+  if (d.includes('cold coffee') || d.includes('frappe')) return 'cold_coffee';
+  if (d.includes('shake') || d.includes('thick shake') || d.includes('milkshake')) return 'chocolate_mastani';
+  if (d.includes('juice') || d.includes('fresh lime') || d.includes('nimbu pani') || d.includes('lemonade') || d.includes('iced tea') || d.includes('sharbat')) return 'fruit_juice';
+  if (d.includes('filter coffee') || d.includes('espresso') || d.includes('cappuccino') || d.includes('latte') || d.includes('americano') || d.includes('mocha') || d.includes('flat white') || d.includes('macchiato')) return 'filter_coffee';
+  if (d.includes('chai') || d.includes('tea') || d.includes('masala chai') || d.includes('green tea') || d.includes('irani chai')) return 'masala_chai';
 
   // Context Fallbacks based on restaurant name
   if (r.includes('biryani')) return 'biryani';

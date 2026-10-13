@@ -52,6 +52,8 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
           area: restaurant.area || '',
           city: restaurant.city || ''
         });
+        if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
+        if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
         const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
           signal: controller.signal
         });

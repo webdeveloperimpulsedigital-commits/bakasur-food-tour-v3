@@ -69,47 +69,48 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const baseDishes: Dish[] = [];
     let usedSource = 'curated_culinary_catalog';
 
-    // 2. Priority 1: Complete Authentic Restaurant Signature Menu & Cuisine Catalog tailored directly to this restaurant
-    const liveDishes = generateLiveMenuForRestaurant(restInfo);
-    for (const d of liveDishes) {
-      const cleanName = formatCleanDishName(d.name, restInfo.name);
-      const lower = cleanName.toLowerCase();
-      if (!seenNames.has(lower)) {
-        seenNames.add(lower);
-        baseDishes.push({
-          ...d,
-          name: cleanName,
-          image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
-        });
-      }
-    }
+    // 1. Priority 1: Real-time Live Swiggy Menu & Real Food Catalog (Direct Mobile API & Scraper)
+    try {
+      const swiggyRestId = swiggyIdParam || (restId > 0 && restId < 890000 ? String(restId) : undefined);
+      const liveSwiggyDishes = await fetchSwiggyDishesViaApify(restInfo.name, restInfo.city, {
+        restaurantId: swiggyRestId,
+        lat: restInfo.latitude,
+        lng: restInfo.longitude
+      });
 
-    // 3. Priority 2: Live Apify Swiggy Scraper ("thirdwatch/swiggy-scraper") & Swiggy Live Menu
-    if (isApifyConfigured()) {
-      try {
-        const swiggyRestId = swiggyIdParam || (restId > 0 && restId < 890000 ? String(restId) : undefined);
-        const apifyDishes = await fetchSwiggyDishesViaApify(restInfo.name, restInfo.city, {
-          restaurantId: swiggyRestId,
-          lat: restInfo.latitude,
-          lng: restInfo.longitude
-        });
-
-        if (apifyDishes && apifyDishes.length > 0) {
-          usedSource = 'apify_swiggy';
-          for (const d of apifyDishes) {
-            const cleanName = formatCleanDishName(d.name, restInfo.name);
-            const lower = cleanName.toLowerCase();
-            if (!seenNames.has(lower)) {
-              seenNames.add(lower);
-              baseDishes.push({
-                ...d,
-                name: cleanName
-              });
-            }
+      if (liveSwiggyDishes && liveSwiggyDishes.length > 0) {
+        usedSource = 'live_swiggy_menu';
+        for (const d of liveSwiggyDishes) {
+          const cleanName = formatCleanDishName(d.name, restInfo.name);
+          const lower = cleanName.toLowerCase();
+          if (!seenNames.has(lower)) {
+            seenNames.add(lower);
+            baseDishes.push({
+              ...d,
+              name: cleanName
+            });
           }
         }
-      } catch (apifyErr) {
-        console.warn('Apify Swiggy menu scraper notice:', apifyErr);
+      }
+    } catch (swiggyErr) {
+      console.warn('Live Swiggy menu fetch notice:', swiggyErr);
+    }
+
+    // 2. Priority 2: Complete Authentic Restaurant Signature Menu & Cuisine Catalog if live dishes < 20
+    if (baseDishes.length < 20) {
+      const liveDishes = generateLiveMenuForRestaurant(restInfo);
+      for (const d of liveDishes) {
+        const cleanName = formatCleanDishName(d.name, restInfo.name);
+        const lower = cleanName.toLowerCase();
+        if (!seenNames.has(lower)) {
+          seenNames.add(lower);
+          baseDishes.push({
+            ...d,
+            name: cleanName,
+            image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
+          });
+        }
+        if (baseDishes.length >= 35) break;
       }
     }
 

@@ -635,9 +635,13 @@ export default function CampaignPage() {
   // Frame 11 -> Frame 2 (Ek Aur Food Stop Jodo)
   const handleAddAnotherSpot = () => {
     playSound('click');
+    if (selectedRestaurant && !firstRoundRestaurant) {
+      setFirstRoundRestaurant(selectedRestaurant);
+      setFirstRoundDish(selectedDish);
+    }
     setSelectedRestaurant(null);
     setSelectedDish(null);
-    setFeastingStage(1);
+    setFeastingStage(2);
     setTourSpotRound(0);
     setCurrentTourSpot(null);
     triggerFrameTransition(2);
@@ -878,7 +882,7 @@ export default function CampaignPage() {
                 longitude: firstRoundRestaurant.longitude,
                 stopNumber: 1
               }] : []),
-              ...(selectedRestaurant ? [{
+              ...(selectedRestaurant && (!firstRoundRestaurant || selectedRestaurant.name !== firstRoundRestaurant.name) ? [{
                 name: selectedRestaurant.name,
                 city: selectedRestaurant.city,
                 dishName: selectedDish?.name || 'Specialty Dish',

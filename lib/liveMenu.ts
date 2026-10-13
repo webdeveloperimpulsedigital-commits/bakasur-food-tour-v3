@@ -1,5 +1,5 @@
 import type { Dish } from './db';
-import { getDishVisualAssets } from './dishAssets';
+import { getDishVisualAssets, isDishVeg } from './dishAssets';
 
 export interface DishTemplate {
   name: string;
@@ -8,6 +8,149 @@ export interface DishTemplate {
   image: string;
   popularity: number;
   rating: number;
+  category?: string;
+  is_veg?: number;
+}
+
+export function inferDishCategory(name: string, description?: string): string {
+  const nameLower = (name || '').trim().toLowerCase();
+  const descLower = (description || '').trim().toLowerCase();
+
+  // Helper for whole word or boundary match
+  const hasWord = (str: string, pattern: string) =>
+    new RegExp(`(^|[^a-z0-9])${pattern}([^a-z0-9]|$)`, 'i').test(str);
+
+  // 15. Thalis & Combos (priority check on dish name)
+  if (hasWord(nameLower, 'thali') || hasWord(nameLower, 'combo') || hasWord(nameLower, 'bhojan') || hasWord(nameLower, 'meals') || hasWord(nameLower, 'mini meal')) {
+    return 'Thalis & Combos';
+  }
+
+  // 19. Ice Cream & Frozen Desserts
+  if (hasWord(nameLower, 'ice cream') || hasWord(nameLower, 'gelato') || hasWord(nameLower, 'sorbet') || hasWord(nameLower, 'sundae') || hasWord(nameLower, 'kulfi') || hasWord(nameLower, 'matka kulfi')) {
+    return 'Ice Cream';
+  }
+
+  // 18. Cakes, Pastries & Western Desserts
+  if (hasWord(nameLower, 'brownie') || hasWord(nameLower, 'cheesecake') || hasWord(nameLower, 'cake') || hasWord(nameLower, 'pastry') || hasWord(nameLower, 'lava cake') || hasWord(nameLower, 'tiramisu') || hasWord(nameLower, 'cupcake') || hasWord(nameLower, 'donut') || hasWord(nameLower, 'doughnut') || hasWord(nameLower, 'churros') || hasWord(nameLower, 'muffin') || hasWord(nameLower, 'éclair') || hasWord(nameLower, 'eclair') || hasWord(nameLower, 'tart') || hasWord(nameLower, 'mousse') || hasWord(nameLower, 'loaf cake')) {
+    return 'Cakes & Pastries';
+  }
+
+  // 26. Bakery & Confectionery
+  if (hasWord(nameLower, 'croissant') || hasWord(nameLower, 'bun maska') || hasWord(nameLower, 'khari') || hasWord(nameLower, 'rusk') || hasWord(nameLower, 'nankhatai') || hasWord(nameLower, 'cookies') || hasWord(nameLower, 'puff') || hasWord(nameLower, 'patties') || hasWord(nameLower, 'cinnamon roll') || hasWord(nameLower, 'danish') || hasWord(nameLower, 'pinwheel')) {
+    return 'Bakery';
+  }
+
+  // 17. Indian Sweets
+  if (hasWord(nameLower, 'gulab jamun') || hasWord(nameLower, 'kala jamun') || hasWord(nameLower, 'rasgulla') || hasWord(nameLower, 'rasmalai') || hasWord(nameLower, 'jalebi') || hasWord(nameLower, 'rabri') || hasWord(nameLower, 'rabdi') || hasWord(nameLower, 'kheer') || hasWord(nameLower, 'phirni') || hasWord(nameLower, 'halwa') || hasWord(nameLower, 'sheera') || hasWord(nameLower, 'shahi tukda') || hasWord(nameLower, 'shrikhand') || hasWord(nameLower, 'basundi') || hasWord(nameLower, 'kaju katli') || hasWord(nameLower, 'ladoo') || hasWord(nameLower, 'laddu') || hasWord(nameLower, 'modak') || hasWord(nameLower, 'puran poli') || hasWord(nameLower, 'mithai') || hasWord(nameLower, 'peda') || hasWord(nameLower, 'barfi') || hasWord(nameLower, 'ghevar') || hasWord(nameLower, 'mysore pak')) {
+    return 'Indian Sweets';
+  }
+
+  // 20. Juices, Shakes & Smoothies
+  if (hasWord(nameLower, 'juice') || hasWord(nameLower, 'shake') || hasWord(nameLower, 'milkshake') || hasWord(nameLower, 'smoothie') || hasWord(nameLower, 'mastani') || hasWord(nameLower, 'lassi') || hasWord(nameLower, 'chaas') || hasWord(nameLower, 'buttermilk') || hasWord(nameLower, 'coconut water') || hasWord(nameLower, 'falooda')) {
+    return 'Juices & Shakes';
+  }
+
+  // 21. Tea & Coffee / Café Beverages
+  if (hasWord(nameLower, 'frappuccino') || hasWord(nameLower, 'frappe') || hasWord(nameLower, 'cappuccino') || hasWord(nameLower, 'espresso') || hasWord(nameLower, 'latte') || hasWord(nameLower, 'macchiato') || hasWord(nameLower, 'mocha') || hasWord(nameLower, 'cold brew') || hasWord(nameLower, 'iced americano') || hasWord(nameLower, 'americano') || hasWord(nameLower, 'flat white') || hasWord(nameLower, 'chai') || hasWord(nameLower, 'coffee') || hasWord(nameLower, 'hot chocolate') || hasWord(nameLower, 'iced tea') || hasWord(nameLower, 'mojito') || hasWord(nameLower, 'lemonade') || hasWord(nameLower, 'solkadhi') || hasWord(nameLower, 'sol kadhi') || hasWord(nameLower, 'taak') || hasWord(nameLower, 'jaljeera') || hasWord(nameLower, 'aam panna') || hasWord(nameLower, 'tea') || hasWord(nameLower, 'kadak')) {
+    return 'Tea & Coffee';
+  }
+
+  // 23. Soups
+  if (hasWord(nameLower, 'soup') || hasWord(nameLower, 'shorba') || hasWord(nameLower, 'manchow') || hasWord(nameLower, 'tom yum') || hasWord(nameLower, 'minestrone') || hasWord(nameLower, 'thukpa')) {
+    return 'Soups';
+  }
+
+  // 22. Salads & Healthy Food
+  if (hasWord(nameLower, 'salad') || hasWord(nameLower, 'buddha bowl') || hasWord(nameLower, 'quinoa') || hasWord(nameLower, 'sprouts') || hasWord(nameLower, 'avocado toast') || hasWord(nameLower, 'granola') || hasWord(nameLower, 'oats')) {
+    return 'Salads & Healthy Food';
+  }
+
+  // 25. Seafood
+  if (hasWord(nameLower, 'fish') || hasWord(nameLower, 'prawn') || hasWord(nameLower, 'prawns') || hasWord(nameLower, 'surmai') || hasWord(nameLower, 'bombil') || hasWord(nameLower, 'pomfret') || hasWord(nameLower, 'crab') || hasWord(nameLower, 'lobster') || hasWord(nameLower, 'seafood') || hasWord(nameLower, 'bangda') || hasWord(nameLower, 'kolambi') || hasWord(nameLower, 'rawas') || hasWord(nameLower, 'tisrya') || hasWord(nameLower, 'clams')) {
+    return 'Seafood';
+  }
+
+  // 14. Tandoori & Grilled
+  if ((hasWord(nameLower, 'tandoori') || hasWord(nameLower, 'tikka') || hasWord(nameLower, 'kebab') || hasWord(nameLower, 'kabab') || hasWord(nameLower, 'seekh') || hasWord(nameLower, 'tangdi') || hasWord(nameLower, 'grilled') || hasWord(nameLower, 'bbq') || hasWord(nameLower, 'roast chicken') || hasWord(nameLower, 'platter')) && !hasWord(nameLower, 'pizza') && !hasWord(nameLower, 'burger') && !hasWord(nameLower, 'sandwich') && !hasWord(nameLower, 'roll') && !hasWord(nameLower, 'wrap')) {
+    return 'Tandoori & Grilled';
+  }
+
+  // 13. Momos & Rolls
+  if (hasWord(nameLower, 'momo') || hasWord(nameLower, 'momos') || hasWord(nameLower, 'dimsum') || hasWord(nameLower, 'dumpling') || hasWord(nameLower, 'roll') || hasWord(nameLower, 'kathi') || hasWord(nameLower, 'frankie') || hasWord(nameLower, 'shawarma') || hasWord(nameLower, 'wrap') || hasWord(nameLower, 'burrito')) {
+    return 'Momos & Rolls';
+  }
+
+  // 24. Italian Food & Pasta
+  if (hasWord(nameLower, 'pasta') || hasWord(nameLower, 'spaghetti') || hasWord(nameLower, 'lasagna') || hasWord(nameLower, 'ravioli') || hasWord(nameLower, 'penne') || hasWord(nameLower, 'alfredo') || hasWord(nameLower, 'arrabiata') || hasWord(nameLower, 'mac and cheese') || hasWord(nameLower, 'risotto') || hasWord(nameLower, 'calzone') || hasWord(nameLower, 'bruschetta')) {
+    return 'Italian Food';
+  }
+
+  // 12. Chinese & Indo-Chinese
+  if (hasWord(nameLower, 'noodle') || hasWord(nameLower, 'noodles') || hasWord(nameLower, 'manchurian') || hasWord(nameLower, 'chilli paneer') || hasWord(nameLower, 'chilli chicken') || hasWord(nameLower, 'fried rice') || hasWord(nameLower, 'schezwan') || hasWord(nameLower, 'chopsuey') || hasWord(nameLower, 'lollipop') || hasWord(nameLower, 'spring roll') || hasWord(nameLower, 'hakka') || hasWord(nameLower, 'crispy corn') || hasWord(nameLower, 'honey chilli')) {
+    return 'Chinese';
+  }
+
+  // 10. Rice, Biryani & Pulao
+  if (hasWord(nameLower, 'biryani') || hasWord(nameLower, 'pulao') || hasWord(nameLower, 'pulav') || hasWord(nameLower, 'jeera rice') || hasWord(nameLower, 'steamed rice') || hasWord(nameLower, 'curd rice') || hasWord(nameLower, 'lemon rice') || hasWord(nameLower, 'khichdi') || hasWord(nameLower, 'masale bhaat') || hasWord(nameLower, 'varan bhat') || hasWord(nameLower, 'ghee rice') || hasWord(nameLower, 'rice')) {
+    return 'Rice & Biryani';
+  }
+
+  // 11. Indian Breads
+  if (hasWord(nameLower, 'naan') || hasWord(nameLower, 'roti') || hasWord(nameLower, 'bhakri') || hasWord(nameLower, 'paratha') || hasWord(nameLower, 'parotta') || hasWord(nameLower, 'kulcha') || hasWord(nameLower, 'bhatura') || hasWord(nameLower, 'rumali') || hasWord(nameLower, 'chapati') || hasWord(nameLower, 'phulka')) {
+    return 'Indian Breads';
+  }
+
+  // 4. Café Food
+  if (hasWord(nameLower, 'waffle') || hasWord(nameLower, 'waffles') || hasWord(nameLower, 'pancake') || hasWord(nameLower, 'pancakes') || hasWord(nameLower, 'quesadilla') || hasWord(nameLower, 'nachos') || hasWord(nameLower, 'french toast') || hasWord(nameLower, 'sandwich') || hasWord(nameLower, 'panini') || hasWord(nameLower, 'toast') || hasWord(nameLower, 'wedges')) {
+    return 'Café Food';
+  }
+
+  // 6. Fast Food
+  if (hasWord(nameLower, 'pizza') || hasWord(nameLower, 'burger') || hasWord(nameLower, 'whopper') || hasWord(nameLower, 'fries') || hasWord(nameLower, 'hot dog') || hasWord(nameLower, 'nuggets') || hasWord(nameLower, 'onion rings') || hasWord(nameLower, 'garlic bread') || hasWord(nameLower, 'strips') || hasWord(nameLower, 'wings')) {
+    return 'Fast Food';
+  }
+
+  // 7. South Indian Food
+  if (hasWord(nameLower, 'dosa') || hasWord(nameLower, 'idli') || hasWord(nameLower, 'uttapam') || hasWord(nameLower, 'medu vada') || hasWord(nameLower, 'sambar') || hasWord(nameLower, 'appam') || hasWord(nameLower, 'pongal') || hasWord(nameLower, 'pesarattu') || hasWord(nameLower, 'bisi bele bath')) {
+    return 'South Indian';
+  }
+
+  // 3. Maharashtrian Food
+  if (hasWord(nameLower, 'misal') || hasWord(nameLower, 'vada pav') || hasWord(nameLower, 'poha') || hasWord(nameLower, 'thalipeeth') || hasWord(nameLower, 'pithla') || hasWord(nameLower, 'zunka') || hasWord(nameLower, 'kothimbir') || hasWord(nameLower, 'alu vadi') || hasWord(nameLower, 'shev bhaji') || hasWord(nameLower, 'rassa') || hasWord(nameLower, 'sukka') || hasWord(nameLower, 'bharli vangi') || hasWord(nameLower, 'kombdi vade')) {
+    return 'Maharashtrian';
+  }
+
+  // 2. Indian Street Food
+  if (hasWord(nameLower, 'pani puri') || hasWord(nameLower, 'golgappa') || hasWord(nameLower, 'sev puri') || hasWord(nameLower, 'dahi puri') || hasWord(nameLower, 'bhel') || hasWord(nameLower, 'chaat') || hasWord(nameLower, 'samosa') || hasWord(nameLower, 'kachori') || hasWord(nameLower, 'dabeli') || hasWord(nameLower, 'pakoda') || hasWord(nameLower, 'bhajiya') || hasWord(nameLower, 'ragda') || hasWord(nameLower, 'batata vada')) {
+    return 'Street Food';
+  }
+
+  // 1. Breakfast Items
+  if (hasWord(nameLower, 'breakfast') || hasWord(nameLower, 'upma') || hasWord(nameLower, 'sabudana') || hasWord(nameLower, 'omelette') || hasWord(nameLower, 'boiled eggs') || hasWord(nameLower, 'scrambled eggs') || hasWord(nameLower, 'puri bhaji') || hasWord(nameLower, 'poori bhaji')) {
+    return 'Breakfast';
+  }
+
+  // 9. Non-Veg Main Course
+  if (hasWord(nameLower, 'chicken') || hasWord(nameLower, 'mutton') || hasWord(nameLower, 'egg curry') || hasWord(nameLower, 'keema') || hasWord(nameLower, 'kheema') || hasWord(nameLower, 'gosht') || hasWord(nameLower, 'handi') || hasWord(nameLower, 'bokud') || hasWord(nameLower, 'bolai') || hasWord(nameLower, 'ukkhar')) {
+    return 'Non-Veg Main Course';
+  }
+
+  // 8. North Indian Veg Main Course
+  if (hasWord(nameLower, 'paneer') || hasWord(nameLower, 'dal') || hasWord(nameLower, 'kofta') || hasWord(nameLower, 'aloo gobi') || hasWord(nameLower, 'chole') || hasWord(nameLower, 'rajma') || hasWord(nameLower, 'korma') || hasWord(nameLower, 'curry') || hasWord(nameLower, 'gravy') || hasWord(nameLower, 'sabzi') || hasWord(nameLower, 'bhaji') || hasWord(nameLower, 'kaju kari')) {
+    return 'North Indian Veg';
+  }
+
+  // Fallback checks on description if name had generic label
+  if (hasWord(descLower, 'thali') || hasWord(descLower, 'combo')) return 'Thalis & Combos';
+  if (hasWord(descLower, 'ice cream') || hasWord(descLower, 'sundae')) return 'Ice Cream';
+  if (hasWord(descLower, 'cake') || hasWord(descLower, 'brownie') || hasWord(descLower, 'pastry')) return 'Cakes & Pastries';
+  if (hasWord(descLower, 'coffee') || hasWord(descLower, 'chai') || hasWord(descLower, 'latte')) return 'Tea & Coffee';
+  if (hasWord(descLower, 'juice') || hasWord(descLower, 'shake') || hasWord(descLower, 'smoothie')) return 'Juices & Shakes';
+  if (hasWord(descLower, 'fish') || hasWord(descLower, 'prawn') || hasWord(descLower, 'seafood')) return 'Seafood';
+  if (hasWord(descLower, 'chicken') || hasWord(descLower, 'mutton') || hasWord(descLower, 'meat')) return 'Non-Veg Main Course';
+  if (hasWord(descLower, 'paneer') || hasWord(descLower, 'dal') || hasWord(descLower, 'curry')) return 'North Indian Veg';
+
+  return 'Recommended';
 }
 
 export interface CuisineProfile {
@@ -18,6 +161,244 @@ export interface CuisineProfile {
 
 // 1. EXACT SIGNATURE DISHES FOR ICONIC RESTAURANTS ACROSS INDIA
 export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
+  // Hotel Shree Jay Ganesh & Iconic Ganesh Hotels (Pune & Maharashtra)
+  'ganesh': [
+    {
+      name: "Special Pithla Bhakri with Thecha & Kanda",
+      description: "Steaming hot spiced besan pithla served with freshly roasted jowar bhakri, green thecha & onions.",
+      price: 180,
+      image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800&auto=format&fit=crop&q=85",
+      popularity: 100,
+      rating: 5.0,
+      category: "Main Course",
+      is_veg: 1
+    },
+    {
+      name: "Kolhapuri Special Misal Pav with Spicy Farsan",
+      description: "Fiery sprouted moth bean curry garnished with crispy spicy farsan, fresh onions, coriander & soft pav.",
+      price: 120,
+      image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85",
+      popularity: 100,
+      rating: 5.0,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Kothimbir Vadi with Green Chutney",
+      description: "Fresh coriander and chickpea flour savory diamond cakes fried crisp, served with sweet-spicy chutney.",
+      price: 90,
+      image: "/images/food/kothimbir_vadi.jpg",
+      popularity: 99,
+      rating: 4.9,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Garma Garam Poori Bhaji Platter",
+      description: "Four puffed golden pooris served with authentic mildly spiced batata bhaji and pickle.",
+      price: 130,
+      image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85",
+      popularity: 98,
+      rating: 4.9,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Maharashtrian Special Veg Thali",
+      description: "Homely feast: 2 hot chapatis, seasonal sabzi, dal varan bhat with pure ghee, usal, koshimbir & sweet.",
+      price: 220,
+      image: "https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?w=800&auto=format&fit=crop&q=85",
+      popularity: 99,
+      rating: 5.0,
+      category: "Main Course",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Sabudana Vada with Sweet Dahi (2 Pcs)",
+      description: "Crunchy golden tapioca sago patties with roasted crushed peanuts served with sweetened creamy curd.",
+      price: 95,
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada",
+      popularity: 98,
+      rating: 4.9,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Mysore Butter Masala Dosa with Sambar",
+      description: "Crispy fermented crepe with fiery red garlic spread & potato masala, served with coconut chutney & sambar.",
+      price: 140,
+      image: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=600&auto=format&fit=crop&q=80",
+      popularity: 98,
+      rating: 4.9,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Steamed Idli & Crispy Medu Vada Combo",
+      description: "Two soft steamed rice idlis and one crispy lentil vada served submerged in piping hot sambar.",
+      price: 110,
+      image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80",
+      popularity: 97,
+      rating: 4.8,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Khandeshi Spicy Shev Bhaji with Chapatis",
+      description: "Fiery black masala roasted onion gravy cooked with thick crunchy ratlami shev and two hot chapatis.",
+      price: 170,
+      image: "/images/food/shev_bhaji.jpg",
+      popularity: 97,
+      rating: 4.8,
+      category: "Main Course",
+      is_veg: 1
+    },
+    {
+      name: "Indrayani Varan Bhat with Pure Desi Ghee",
+      description: "Fragrant soft Indrayani rice topped with homestyle yellow toor dal varan, pure desi ghee and lemon.",
+      price: 130,
+      image: "https://images.unsplash.com/photo-1789991184293-224a84e41900?w=800&auto=format&fit=crop&q=85",
+      popularity: 96,
+      rating: 4.8,
+      category: "Breads & Rice",
+      is_veg: 1
+    },
+    {
+      name: "Steamed Ukdiche Modak with Saffron Ghee (2 Pcs)",
+      description: "Traditional soft steamed rice dumplings filled with fresh coconut, jaggery and green cardamom.",
+      price: 110,
+      image: "/images/food/modak.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Special Paneer Butter Masala with Butter Roti",
+      description: "Soft cottage cheese cubes simmered in rich buttery tomato cashew gravy, served with 2 tandoori rotis.",
+      price: 240,
+      image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala",
+      popularity: 97,
+      rating: 4.8,
+      category: "Main Course",
+      is_veg: 1
+    },
+    {
+      name: "Dal Tadka with Fragrant Jeera Rice",
+      description: "Double tempered yellow lentils with garlic, cumin, dried red chilies, paired with fragrant jeera rice.",
+      price: 190,
+      image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=600&auto=format&fit=crop&q=80",
+      popularity: 96,
+      rating: 4.8,
+      category: "Breads & Rice",
+      is_veg: 1
+    },
+    {
+      name: "Authentic Bhajani Thalipeeth with White Butter",
+      description: "Multigrain roasted savory pancake seasoned with onions and spices, topped with homemade white butter.",
+      price: 110,
+      image: "https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85",
+      popularity: 97,
+      rating: 4.8,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Digestive Spiced Mattha (Masala Taak)",
+      description: "Refreshing churned curd drink tempered with roasted cumin, green chillies, ginger & fresh coriander.",
+      price: 40,
+      image: "/images/food/masala_taak.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Special Masala Kadak Cutting Chai",
+      description: "Steaming hot milk tea boiled with crushed ginger, cardamom and lemongrass.",
+      price: 25,
+      image: "/api/ai/dish-image?dish=Masala%20Chai",
+      popularity: 99,
+      rating: 5.0,
+      category: "Beverages & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Hot Desi Ghee Gulab Jamun (2 Pcs)",
+      description: "Warm melt-in-mouth milk dumplings soaked in cardamom and rose sugar syrup.",
+      price: 70,
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages & Sweets",
+      is_veg: 1
+    }
+  ],
+
+  // Hotel Sai Sagar & Sai Hotels
+  'sai': [
+    {
+      name: "Mysore Butter Masala Dosa",
+      description: "Golden crispy thin rice crepe packed with spicy red chutney & potato masala.",
+      price: 130,
+      image: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=600&auto=format&fit=crop&q=80",
+      popularity: 100,
+      rating: 5.0,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Medu Vada Sambar (2 Pcs)",
+      description: "Golden fried lentil donuts in hot aromatic lentil sambar & coconut chutney.",
+      price: 90,
+      image: "https://images.unsplash.com/photo-1630383249896-424e482df921?w=600&auto=format&fit=crop&q=80",
+      popularity: 99,
+      rating: 5.0,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Special Amul Butter Pav Bhaji",
+      description: "Rich spiced mashed vegetable bhaji dripping with butter, served with soft butter-toasted pavs.",
+      price: 150,
+      image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=600&auto=format&fit=crop&q=80",
+      popularity: 98,
+      rating: 4.9,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Paneer Butter Masala with 2 Butter Naan",
+      description: "Fresh cottage cheese in creamy tomato gravy with oven-baked garlic butter naan.",
+      price: 260,
+      image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala",
+      popularity: 98,
+      rating: 4.9,
+      category: "Main Course",
+      is_veg: 1
+    },
+    {
+      name: "Dal Khichdi Tadka with Roasted Papad",
+      description: "Comforting yellow dal and rice tempered with ghee, cumin seeds, garlic, and dried red chilies.",
+      price: 180,
+      image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=600&auto=format&fit=crop&q=80",
+      popularity: 97,
+      rating: 4.8,
+      category: "Breads & Rice",
+      is_veg: 1
+    },
+    {
+      name: "Authentic South Indian Filter Coffee",
+      description: "Fresh decoction chicory coffee frothed with boiling whole milk in a traditional tumbler.",
+      price: 45,
+      image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80",
+      popularity: 99,
+      rating: 5.0,
+      category: "Beverages & Sweets",
+      is_veg: 1
+    }
+  ],
+
   // Sathe Swayampakghar (Iconic Maharashtrian Swayampakghar & Homestyle Dining in Pune)
   'sathe': [
     {
@@ -2379,7 +2760,9 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       price: 360,
       image: "/api/ai/dish-image?dish=Cold%20Coffee",
       popularity: 100,
-      rating: 5.0
+      rating: 5.0,
+      category: "Tea & Coffee",
+      is_veg: 1
     },
     {
       name: "Starbucks Caramel Macchiato",
@@ -2387,15 +2770,313 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       price: 290,
       image: "/api/ai/dish-image?dish=Coffee",
       popularity: 99,
-      rating: 5.0
+      rating: 5.0,
+      category: "Tea & Coffee",
+      is_veg: 1
+    },
+    {
+      name: "Tall Iced Caffe Latte",
+      description: "Dark, rich espresso combined with milk and served over ice.",
+      price: 280,
+      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      popularity: 98,
+      rating: 4.9,
+      category: "Tea & Coffee",
+      is_veg: 1
+    },
+    {
+      name: "Tall Cold Brew with Chocolate Protein Foam",
+      description: "Slow-steeped small-batch cold brew topped with velvety cocoa cloud foam.",
+      price: 390,
+      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      popularity: 97,
+      rating: 4.9,
+      category: "Tea & Coffee",
+      is_veg: 1
+    },
+    {
+      name: "Classic Caffe Americano",
+      description: "Espresso shots topped with hot water create a light layer of crema.",
+      price: 240,
+      image: "/api/ai/dish-image?dish=Coffee",
+      popularity: 97,
+      rating: 4.8,
+      category: "Tea & Coffee",
+      is_veg: 1
     },
     {
       name: "Flaky Butter Croissant",
       description: "Classic French golden baked pastry with rich butter laminations.",
       price: 190,
       image: "/api/ai/dish-image?dish=Croissant",
+      popularity: 98,
+      rating: 4.9,
+      category: "Bakery",
+      is_veg: 1
+    },
+    {
+      name: "Blueberry Muffin with Streusel Crumble",
+      description: "Moist bakery muffin loaded with whole juicy blueberries and sweet crumble.",
+      price: 220,
+      image: "/api/ai/dish-image?dish=Muffin",
+      popularity: 96,
+      rating: 4.8,
+      category: "Cakes & Pastries",
+      is_veg: 1
+    },
+    {
+      name: "New York Style Cheesecake Slice",
+      description: "Dense, velvety smooth cream cheese on golden graham cracker crust.",
+      price: 340,
+      image: "/api/ai/dish-image?dish=Cheesecake",
+      popularity: 99,
+      rating: 5.0,
+      category: "Cakes & Pastries",
+      is_veg: 1
+    },
+    {
+      name: "Double Chocolate Chip Cookie",
+      description: "Warm soft-baked cookie packed with bittersweet chocolate chunks.",
+      price: 160,
+      image: "/api/ai/dish-image?dish=Cookies",
+      popularity: 95,
+      rating: 4.8,
+      category: "Bakery",
+      is_veg: 1
+    },
+    {
+      name: "Warm Sizzling Chocolate Brownie",
+      description: "Fudge walnut brownie served warm with molten dark chocolate ganache.",
+      price: 240,
+      image: "/api/ai/dish-image?dish=Brownie",
+      popularity: 98,
+      rating: 4.9,
+      category: "Cakes & Pastries",
+      is_veg: 1
+    },
+    {
+      name: "Basil Tomato & Mozzarella Panini",
+      description: "Grilled sourdough stuffed with vine tomatoes, fresh mozzarella and basil pesto.",
+      price: 310,
+      image: "/api/ai/dish-image?dish=Sandwich",
       popularity: 97,
-      rating: 4.8
+      rating: 4.8,
+      category: "Café Food",
+      is_veg: 1
+    },
+    {
+      name: "Smoked Chicken & Cheese Sandwich",
+      description: "Herbed roasted chicken breast and cheddar cheese grilled in multi-grain bread.",
+      price: 340,
+      image: "/api/ai/dish-image?dish=Sandwich",
+      popularity: 98,
+      rating: 4.9,
+      category: "Café Food",
+      is_veg: 0
+    },
+    {
+      name: "Signature Hot Chocolate with Whipped Cream",
+      description: "Steamed milk with rich dark chocolate syrup topped with sweetened whipped cream.",
+      price: 270,
+      image: "/api/ai/dish-image?dish=Coffee",
+      popularity: 97,
+      rating: 4.9,
+      category: "Tea & Coffee",
+      is_veg: 1
+    },
+    {
+      name: "Nutella Belgian Waffle with Ice Cream",
+      description: "Freshly ironed golden crisp waffle smothered in warm Nutella and choco chips.",
+      price: 290,
+      image: "/api/ai/dish-image?dish=Waffle",
+      popularity: 99,
+      rating: 5.0,
+      category: "Café Food",
+      is_veg: 1
+    }
+  ],
+
+  // Hotel Sandeep (Iconic Pune & Kolhapuri Mutton/Chicken Landmark)
+  'sandeep': [
+    {
+      name: "Special Kolhapuri Mutton Thali (Tambda & Pandhra Rassa)",
+      description: "Iconic feast: fiery red rassa, soothing white coconut broth, tender mutton sukka, 2 jowar bhakris & fragrant rice.",
+      price: 435,
+      image: "/images/food/mutton_thali.jpg",
+      popularity: 100,
+      rating: 5.0,
+      category: "Thalis & Combos",
+      is_veg: 0
+    },
+    {
+      name: "Bokud Mutton Fry (Signature Specialty)",
+      description: "Prime cut goat meat slow pan-roasted dry in black onion masala and roasted coconut.",
+      price: 424,
+      image: "/images/food/mutton_curry.jpg",
+      popularity: 100,
+      rating: 5.0,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Bokud Mutton Handi Gravy",
+      description: "Tender goat meat simmered in traditional earthen handi with roasted Kolhapuri spices.",
+      price: 435,
+      image: "/images/food/mutton_curry.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Bokud Mutton Ukkhar (Clear Broth)",
+      description: "Mildly spiced comforting goat meat bone broth cooked with turmeric, ginger and fresh coriander.",
+      price: 435,
+      image: "/images/food/mutton_curry.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Bolai Mutton Handi",
+      description: "Rustic sheep meat slow-cooked in rich caramelized onion and garlic rassa.",
+      price: 435,
+      image: "/images/food/mutton_curry.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Bolai Mutton Ukkhar",
+      description: "Traditional savory bone broth soup slow simmered with whole spices.",
+      price: 435,
+      image: "/images/food/mutton_curry.jpg",
+      popularity: 97,
+      rating: 4.8,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Spicy Gavran Chicken Sukka with Bhakri",
+      description: "Free-range country chicken roasted dry in aromatic black masala, served with hot jowar bhakri.",
+      price: 386,
+      image: "/images/food/chicken_curry.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Gavran Chicken Handi",
+      description: "Country chicken simmered in rich Kolhapuri spiced red curry with fresh coriander.",
+      price: 405,
+      image: "/images/food/chicken_curry.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Chicken Tangdi Kabab (3 Pcs)",
+      description: "Charcoal clay tandoor grilled chicken drumsticks marinated in curd, ginger garlic & roasted spices.",
+      price: 488,
+      image: "/images/food/tandoori_chicken.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Tandoori & Grilled",
+      is_veg: 0
+    },
+    {
+      name: "Chicken Meat Mirch Fry",
+      description: "Spicy pan-seared chicken tossed with slit green chillies, garlic and crushed pepper.",
+      price: 419,
+      image: "/images/food/chicken_curry.jpg",
+      popularity: 97,
+      rating: 4.8,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Mutton Kheema Pav & Boiled Egg",
+      description: "Minced goat meat slow-braised with peas, mint, and toasted butter ladi pav.",
+      price: 290,
+      image: "/images/food/mutton_curry.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Non-Veg Main Course",
+      is_veg: 0
+    },
+    {
+      name: "Tambda Rassa Bowl (Extra Cut)",
+      description: "Unlimited style fiery red mutton bone broth infused with Kolhapuri lavangi chillies.",
+      price: 90,
+      image: "/images/food/mutton_curry.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Soups",
+      is_veg: 0
+    },
+    {
+      name: "Pandhra Rassa Bowl (White Broth)",
+      description: "Aromatic white bone soup slow-simmered with coconut milk, white sesame, poppy seeds & spices.",
+      price: 90,
+      image: "/images/food/mutton_curry.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Soups",
+      is_veg: 0
+    },
+    {
+      name: "Traditional Digestive Solkadhi Glass",
+      description: "Chilled pink cooler extracted from wild kokum, coconut milk, roasted cumin & garlic.",
+      price: 60,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 100,
+      rating: 5.0,
+      category: "Tea & Coffee",
+      is_veg: 1
+    },
+    {
+      name: "Fresh Hot Jowar Bhakri (2 Pcs)",
+      description: "Hand-patted roasted whole grain sorghum flatbread with charred aroma.",
+      price: 50,
+      image: "/images/food/pithla_bhakri.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Indian Breads",
+      is_veg: 1
+    },
+    {
+      name: "Steamed Indrayani Rice with Ghee",
+      description: "Soft fragrant sticky Indrayani rice, the perfect match for hot rassa.",
+      price: 110,
+      image: "/images/food/biryani.jpg",
+      popularity: 97,
+      rating: 4.8,
+      category: "Rice & Biryani",
+      is_veg: 1
+    },
+    {
+      name: "Surmai Rava Fish Fry",
+      description: "Fresh kingfish steak coated in fiery red masala and crispy semolina crust.",
+      price: 450,
+      image: "/images/food/fish_fry.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Seafood",
+      is_veg: 0
+    },
+    {
+      name: "Smoky Tandoori Chicken Tikka (6 Pcs)",
+      description: "Boneless chicken thighs marinated in red spiced hung curd and roasted in clay oven.",
+      price: 320,
+      image: "/images/food/tandoori_chicken.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Tandoori & Grilled",
+      is_veg: 0
     }
   ],
 
@@ -2698,21 +3379,29 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
 
 // 2. UNIVERSAL CUISINE CATEGORIES FOR DYNAMICALLY BRANDED PLACES
 export const CUISINE_MENUS: CuisineProfile[] = [
-  // Cafe, Cold Coffee & Breakfast Snacks
+  // Cafe, Specialty Coffee & Western Bakery
   {
-    name: "Cafe, Coffee & Breakfast Adda",
-    keywords: ['cafe', 'coffee', 'cold coffee', 'bistro', 'canteen', 'roastery', 'durga', 'vohuman', 'goodluck', 'breakfast', 'poha', 'bun maska', 'upma', 'sheera', 'sandwich', 'beverage', 'snack'],
+    name: "Cafe, Specialty Coffee & Western Bakery",
+    keywords: ['cafe', 'coffee', 'cold coffee', 'bistro', 'roastery', 'starbucks', 'barista', 'costa', 'third wave', 'blue tokai', 'latte', 'frappuccino', 'frappe', 'cappuccino', 'espresso', 'americano', 'croissant', 'waffle', 'pancake', 'cheesecake', 'brownie', 'panini'],
     dishes: [
-      { name: "Famous Thick Cold Coffee with Chocolate", description: "Rich blended creamy cold coffee crowned with chocolate syrup and thick froth.", price: 50, image: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800&auto=format&fit=crop&q=85", popularity: 100, rating: 5.0 },
-      { name: "Special Kanda Poha Plate with Sev & Lemon", description: "Fluffy flattened rice tempered with mustard seeds, curry leaves, onions, crunchy peanuts & sev.", price: 40, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=85", popularity: 99, rating: 5.0 },
-      { name: "Veg Grilled Cheese Sandwich", description: "Golden grilled sandwich with spiced potato masala, fresh veggies, green chutney & melted cheese.", price: 90, image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9 },
-      { name: "Crispy Butter Masala Dosa", description: "Golden crispy thin rice crepe packed with savory potato bhaji, served with chutney & sambar.", price: 85, image: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9 },
-      { name: "Special Butter Pav Bhaji", description: "Slow-simmered spiced mashed vegetable bhaji loaded with pure Amul butter and toasted pav.", price: 120, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9 },
-      { name: "Hot Steamed Rava Upma with Chutney", description: "Traditional spiced semolina breakfast tempered with mustard seeds, curry leaves and roasted peanuts.", price: 40, image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=85", popularity: 95, rating: 4.8 },
-      { name: "Sweet Pineapple Sheera with Dry Fruits", description: "Warm sweet semolina halwa cooked in pure desi ghee with real pineapple chunks and cashews.", price: 50, image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=85", popularity: 96, rating: 4.8 },
-      { name: "South Indian Kadak Filter Coffee", description: "Freshly brewed strong chicory coffee decoction frothed with hot milk.", price: 35, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=85", popularity: 96, rating: 4.8 },
-      { name: "Special Masala Chai Kulhad", description: "Boiled milk tea infused with ginger, cardamom and lemongrass.", price: 25, image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85", popularity: 97, rating: 4.9 },
-      { name: "Thick Cold Coffee with Vanilla Ice Cream", description: "Blended dark coffee and chilled whole milk crowned with rich vanilla ice cream.", price: 65, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&auto=format&fit=crop&q=85", popularity: 99, rating: 5.0 }
+      { name: "Famous Thick Cold Coffee with Chocolate", description: "Rich blended creamy cold coffee crowned with chocolate syrup and thick froth.", price: 90, image: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800&auto=format&fit=crop&q=85", popularity: 100, rating: 5.0, category: "Tea & Coffee", is_veg: 1 },
+      { name: "Signature Java Chip Frappuccino", description: "Blended espresso coffee, milk, chocolate chips, crowned with whipped cream and chocolate drizzle.", price: 290, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&auto=format&fit=crop&q=85", popularity: 100, rating: 5.0, category: "Tea & Coffee", is_veg: 1 },
+      { name: "Caramel Macchiato with Vanilla", description: "Steamed whole milk marked with rich espresso shots and drizzled with buttery caramel glaze.", price: 240, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=85", popularity: 99, rating: 5.0, category: "Tea & Coffee", is_veg: 1 },
+      { name: "Classic Caffe Latte with Velvety Foam", description: "Rich espresso combined with silky steamed milk and a thin layer of microfoam.", price: 210, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9, category: "Tea & Coffee", is_veg: 1 },
+      { name: "Slow Steeped Small Batch Cold Brew", description: "Smooth 18-hour cold steeped coffee served over crystal ice with subtle citrus notes.", price: 240, image: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800&auto=format&fit=crop&q=85", popularity: 97, rating: 4.9, category: "Tea & Coffee", is_veg: 1 },
+      { name: "Flaky French Butter Croissant", description: "Golden-baked layered puff pastry with rich golden European butter laminations.", price: 160, image: "/api/ai/dish-image?dish=Croissant", popularity: 99, rating: 5.0, category: "Bakery", is_veg: 1 },
+      { name: "Blueberry Crumble Muffin", description: "Moist bakery muffin bursting with fresh juicy blueberries and brown sugar streusel crumble.", price: 170, image: "/api/ai/dish-image?dish=Muffin", popularity: 96, rating: 4.8, category: "Cakes & Pastries", is_veg: 1 },
+      { name: "New York Style Baked Cheesecake", description: "Dense and velvety cream cheese filling over buttery biscuit crust.", price: 280, image: "/api/ai/dish-image?dish=Cheesecake", popularity: 99, rating: 5.0, category: "Cakes & Pastries", is_veg: 1 },
+      { name: "Warm Sizzling Chocolate Brownie with Ice Cream", description: "Gooey dark chocolate walnut brownie with hot fudge drizzle and vanilla ice cream scoop.", price: 210, image: "/api/ai/dish-image?dish=Brownie", popularity: 100, rating: 5.0, category: "Cakes & Pastries", is_veg: 1 },
+      { name: "Nutella Belgian Waffle with Choco Chips", description: "Crisp golden ironed waffle smothered in warm Nutella hazelnut spread and choco chips.", price: 230, image: "/api/ai/dish-image?dish=Waffle", popularity: 99, rating: 5.0, category: "Café Food", is_veg: 1 },
+      { name: "Fluffy American Pancakes with Maple Syrup", description: "Stack of three golden buttermilk pancakes served with melted butter and pure maple syrup.", price: 210, image: "/api/ai/dish-image?dish=Pancakes", popularity: 97, rating: 4.9, category: "Café Food", is_veg: 1 },
+      { name: "Grilled Cheese & Jalapeno Panini", description: "Toasted sourdough loaded with sharp cheddar, mozzarella, sliced pickled jalapenos & herbs.", price: 220, image: "/api/ai/dish-image?dish=Sandwich", popularity: 98, rating: 4.9, category: "Café Food", is_veg: 1 },
+      { name: "Basil Pesto & Mozzarella Sandwich", description: "Fresh Italian basil pesto, vine-ripened tomatoes and fresh mozzarella pressed in crusty ciabatta.", price: 240, image: "/api/ai/dish-image?dish=Sandwich", popularity: 97, rating: 4.8, category: "Café Food", is_veg: 1 },
+      { name: "Herbed Chicken Mayo Club Sandwich", description: "Triple decker toast with roasted shredded chicken breast, lettuce, tomato and garlic mayo.", price: 270, image: "/api/ai/dish-image?dish=Sandwich", popularity: 98, rating: 4.9, category: "Café Food", is_veg: 0 },
+      { name: "Creamy White Sauce Alfredo Penne", description: "Penne pasta tossed in rich parmesan cream sauce with sauteed garlic mushrooms and herbs.", price: 280, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9, category: "Italian Food", is_veg: 1 },
+      { name: "Loaded Peri Peri French Fries", description: "Crispy golden shoestring fries tossed in fiery African peri peri spice rub with cheese dip.", price: 140, image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0, category: "Fast Food", is_veg: 1 },
+      { name: "Cheesy Garlic Breadsticks with Herb Butter", description: "Fresh baked baguette smothered in garlic parsley butter and melted mozzarella.", price: 170, image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9, category: "Fast Food", is_veg: 1 },
+      { name: "Rich Dark Hot Chocolate with Marshmallows", description: "Decadent whole milk simmered with 70% dark Belgian cocoa and fluffy marshmallows.", price: 220, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9, category: "Tea & Coffee", is_veg: 1 }
     ]
   },
 
@@ -3032,11 +3721,24 @@ export const CUISINE_MENUS: CuisineProfile[] = [
       'jagadamb', 'dehati', 'hotel shivaji'
     ],
     dishes: [
-      { name: "Special Kolhapuri Mutton Thali (Tambda & Pandhra Rassa)", description: "Fiery red rassa, rich white coconut broth, tender mutton sukka, 2 jowar bhakris & fragrant rice.", price: 380, image: "/images/food/mutton_thali.jpg", popularity: 100, rating: 5.0 },
-      { name: "Spicy Gavran Chicken Sukka with Jowar Bhakri", description: "Country chicken pan-roasted dry in rich caramelized onions, coconut and black masala.", price: 320, image: "/images/food/chicken_curry.jpg", popularity: 99, rating: 5.0 },
-      { name: "Mutton Kheema Pav & Boiled Egg Curry", description: "Minced spiced mutton slow cooked with green peas, mint, and toasted butter ladi pav.", price: 240, image: "/images/food/mutton_curry.jpg", popularity: 98, rating: 4.9 },
-      { name: "Smoky Tandoori Chicken Tikka (6 Pcs)", description: "Clay oven roasted spiced chicken chunks with mint-coriander chutney.", price: 290, image: "/images/food/tandoori_chicken.jpg", popularity: 97, rating: 4.9 },
-      { name: "Traditional Solkadhi Glass", description: "Pink coconut milk digestive appetizer infused with fresh wild kokum.", price: 50, image: "/images/food/solkadhi.jpg", popularity: 99, rating: 5.0 }
+      { name: "Special Kolhapuri Mutton Thali (Tambda & Pandhra Rassa)", description: "Fiery red rassa, rich white coconut broth, tender mutton sukka, 2 jowar bhakris & fragrant rice.", price: 380, image: "/images/food/mutton_thali.jpg", popularity: 100, rating: 5.0, category: "Thalis & Combos", is_veg: 0 },
+      { name: "Bokud Mutton Fry (Signature Specialty)", description: "Prime cut goat meat slow pan-roasted dry in black onion masala and roasted coconut.", price: 424, image: "/images/food/mutton_curry.jpg", popularity: 100, rating: 5.0, category: "Non-Veg Main Course", is_veg: 0 },
+      { name: "Bokud Mutton Handi Gravy", description: "Tender goat meat simmered in traditional earthen handi with roasted Kolhapuri spices.", price: 435, image: "/images/food/mutton_curry.jpg", popularity: 99, rating: 5.0, category: "Non-Veg Main Course", is_veg: 0 },
+      { name: "Bokud Mutton Ukkhar (Clear Broth)", description: "Mildly spiced comforting goat meat bone broth cooked with turmeric, ginger and fresh coriander.", price: 435, image: "/images/food/mutton_curry.jpg", popularity: 98, rating: 4.9, category: "Non-Veg Main Course", is_veg: 0 },
+      { name: "Bolai Mutton Handi", description: "Rustic sheep meat slow-cooked in rich caramelized onion and garlic rassa.", price: 435, image: "/images/food/mutton_curry.jpg", popularity: 98, rating: 4.9, category: "Non-Veg Main Course", is_veg: 0 },
+      { name: "Spicy Gavran Chicken Sukka with Jowar Bhakri", description: "Country chicken pan-roasted dry in rich caramelized onions, coconut and black masala.", price: 320, image: "/images/food/chicken_curry.jpg", popularity: 99, rating: 5.0, category: "Non-Veg Main Course", is_veg: 0 },
+      { name: "Gavran Chicken Handi", description: "Country chicken simmered in rich Kolhapuri spiced red curry with fresh coriander.", price: 405, image: "/images/food/chicken_curry.jpg", popularity: 98, rating: 4.9, category: "Non-Veg Main Course", is_veg: 0 },
+      { name: "Chicken Tangdi Kabab (3 Pcs)", description: "Charcoal clay tandoor grilled chicken drumsticks marinated in curd, ginger garlic & roasted spices.", price: 488, image: "/images/food/tandoori_chicken.jpg", popularity: 99, rating: 5.0, category: "Tandoori & Grilled", is_veg: 0 },
+      { name: "Mutton Kheema Pav & Boiled Egg Curry", description: "Minced spiced mutton slow cooked with green peas, mint, and toasted butter ladi pav.", price: 240, image: "/images/food/mutton_curry.jpg", popularity: 98, rating: 4.9, category: "Non-Veg Main Course", is_veg: 0 },
+      { name: "Smoky Tandoori Chicken Tikka (6 Pcs)", description: "Clay oven roasted spiced chicken chunks with mint-coriander chutney.", price: 290, image: "/images/food/tandoori_chicken.jpg", popularity: 97, rating: 4.9, category: "Tandoori & Grilled", is_veg: 0 },
+      { name: "Tambda Rassa Bowl (Extra Cut)", description: "Unlimited style fiery red mutton bone broth infused with Kolhapuri lavangi chillies.", price: 90, image: "/images/food/mutton_curry.jpg", popularity: 99, rating: 5.0, category: "Soups", is_veg: 0 },
+      { name: "Pandhra Rassa Bowl (White Broth)", description: "Aromatic white bone soup slow-simmered with coconut milk, white sesame, poppy seeds & spices.", price: 90, image: "/images/food/mutton_curry.jpg", popularity: 99, rating: 5.0, category: "Soups", is_veg: 0 },
+      { name: "Kombdi Vade (Chicken with Puffed Vade)", description: "Malvani style spicy chicken gravy served with 4 multi-grain puffed kombdi vade.", price: 340, image: "/images/food/chicken_curry.jpg", popularity: 98, rating: 4.9, category: "Thalis & Combos", is_veg: 0 },
+      { name: "Surmai Rava Fish Fry", description: "Fresh kingfish steak coated in fiery red masala and crispy semolina crust.", price: 440, image: "/images/food/fish_fry.jpg", popularity: 99, rating: 5.0, category: "Seafood", is_veg: 0 },
+      { name: "Crispy Bombil Fry", description: "Fresh Bombay duck fillets pan-fried extra crisp with Malvani triphala spice.", price: 320, image: "/images/food/fish_fry.jpg", popularity: 98, rating: 4.9, category: "Seafood", is_veg: 0 },
+      { name: "Hot Jowar Bhakri (2 Pcs)", description: "Hand-patted roasted whole grain sorghum flatbread with charred aroma.", price: 50, image: "/images/food/pithla_bhakri.jpg", popularity: 98, rating: 4.9, category: "Indian Breads", is_veg: 1 },
+      { name: "Steamed Indrayani Rice with Ghee", description: "Soft fragrant sticky Indrayani rice, the perfect match for hot rassa.", price: 110, image: "/images/food/biryani.jpg", popularity: 97, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Traditional Solkadhi Glass", description: "Pink coconut milk digestive appetizer infused with fresh wild kokum.", price: 50, image: "/images/food/solkadhi.jpg", popularity: 99, rating: 5.0, category: "Tea & Coffee", is_veg: 1 }
     ]
   },
 
@@ -3106,16 +3808,15 @@ function getCleanSpotBrandName(rawName: string): string {
 
 export function generateLiveMenuForRestaurant(restaurant: { id: number; name: string; description?: string; area?: string; city?: string; is_veg?: number }): Dish[] {
   const restName = restaurant.name || 'Special Food Joint';
-  const restNameLower = restName.toLowerCase();
-  const descLower = (restaurant.description || '').toLowerCase();
+  const restNameLower = restName.toLowerCase().trim();
+  const descLower = (restaurant.description || '').toLowerCase().trim();
   const text = `${restNameLower} ${descLower} ${(restaurant.area || '').toLowerCase()} ${(restaurant.city || '').toLowerCase()}`;
-  const brandName = getCleanSpotBrandName(restName);
 
-  // 1. Check for EXACT ICONIC RESTAURANT MATCH in restaurant name
   const collectedDishes: DishTemplate[] = [];
   const seenDishKeys = new Set<string>();
   let isIconicMatch = false;
 
+  // 1. Check for EXACT ICONIC RESTAURANT MATCH in restaurant name
   for (const [key, iconicDishes] of Object.entries(ICONIC_RESTAURANT_DISHES)) {
     const keyLower = key.toLowerCase().trim();
     const wordRegex = new RegExp(`(^|[^a-z0-9])${keyLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'i');
@@ -3125,14 +3826,18 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
         const keyNorm = item.name.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (!seenDishKeys.has(keyNorm)) {
           seenDishKeys.add(keyNorm);
-          collectedDishes.push(item);
+          collectedDishes.push({
+            ...item,
+            category: item.category || inferDishCategory(item.name, item.description),
+            is_veg: item.is_veg !== undefined ? item.is_veg : (isDishVeg(item.name) ? 1 : 0)
+          });
         }
       }
       break;
     }
   }
 
-  // 2. Find the BEST MATCHING CUISINE PROFILE (always run to get appropriate complementary profile)
+  // 3. Find the BEST MATCHING CUISINE PROFILE (complement if collectedDishes < 25)
   let matchedProfile = CUISINE_MENUS[0];
   let maxScore = 0;
 
@@ -3141,15 +3846,14 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     for (const kw of profile.keywords) {
       const lowerKw = kw.toLowerCase().trim();
       if (!lowerKw) continue;
-      // Word boundary match in restaurant name
       const wordRegex = new RegExp(`(^|[^a-z0-9])${lowerKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'i');
       if (wordRegex.test(restNameLower)) {
         score += 60;
-      } else if (lowerKw.length >= 5 && restNameLower.includes(lowerKw)) {
+      } else if (lowerKw.length >= 4 && restNameLower.includes(lowerKw)) {
         score += 30;
       } else if (wordRegex.test(descLower)) {
         score += 25;
-      } else if (lowerKw.length >= 5 && text.includes(lowerKw)) {
+      } else if (lowerKw.length >= 4 && text.includes(lowerKw)) {
         score += 10;
       }
     }
@@ -3167,7 +3871,7 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     if (restNameLower.includes('fish') || restNameLower.includes('seafood') || restNameLower.includes('surmai') || restNameLower.includes('malvan') || restNameLower.includes('pomfret') || restNameLower.includes('prawn')) {
       const sProfile = CUISINE_MENUS.find(p => p.name.includes('Seafood') || p.name.includes('Fish'));
       if (sProfile) matchedProfile = sProfile;
-    } else if (restNameLower.includes('swayampak') || restNameLower.includes('khanawal') || restNameLower.includes('marathi') || restNameLower.includes('boarding') || restNameLower.includes('thali')) {
+    } else if (restNameLower.includes('swayampak') || restNameLower.includes('khanawal') || restNameLower.includes('marathi') || restNameLower.includes('boarding') || restNameLower.includes('thali') || restNameLower.includes('ganesh') || restNameLower.includes('jay') || restNameLower.includes('shree') || restNameLower.includes('swami') || restNameLower.includes('samarth')) {
       const mProfile = CUISINE_MENUS.find(p => p.name.includes('Swayampakghar') || p.name.includes('Maharashtrian'));
       if (mProfile) matchedProfile = mProfile;
     } else if (restNameLower.includes('military') || restNameLower.includes('gavran') || restNameLower.includes('sandeep') || restNameLower.includes('surve') || restNameLower.includes('maratha')) {
@@ -3182,7 +3886,7 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     } else if (restNameLower.includes('paratha') || restNameLower.includes('parantha')) {
       const paProfile = CUISINE_MENUS.find(p => p.name.includes('Paratha'));
       if (paProfile) matchedProfile = paProfile;
-    } else if (restNameLower.includes('dosa') || restNameLower.includes('idli') || restNameLower.includes('udupi') || restNameLower.includes('south') || restNameLower.includes('tiffin')) {
+    } else if (restNameLower.includes('dosa') || restNameLower.includes('idli') || restNameLower.includes('udupi') || restNameLower.includes('south') || restNameLower.includes('tiffin') || restNameLower.includes('sagar') || restNameLower.includes('bhavan') || restNameLower.includes('sai')) {
       const sProfile = CUISINE_MENUS.find(p => p.name.includes('South Indian'));
       if (sProfile) matchedProfile = sProfile;
     } else if (restNameLower.includes('misal') || restNameLower.includes('katta') || restNameLower.includes('bhel') || restNameLower.includes('chaat') || restNameLower.includes('pani puri') || restNameLower.includes('vadapav') || restNameLower.includes('vada pav') || restNameLower.includes('snack')) {
@@ -3203,22 +3907,33 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     } else if (restNameLower.includes('chinese') || restNameLower.includes('momo') || restNameLower.includes('noodle') || restNameLower.includes('wok') || restNameLower.includes('asian')) {
       const chProfile = CUISINE_MENUS.find(p => p.name.includes('Chinese') || p.name.includes('Momos'));
       if (chProfile) matchedProfile = chProfile;
-    } else if (restNameLower.includes('ice cream') || restNameLower.includes('mastani') || restNameLower.includes('kulfi') || restNameLower.includes('dessert') || restNameLower.includes('bakery') || restNameLower.includes('cake')) {
-      const icProfile = CUISINE_MENUS.find(p => p.name.includes('Ice Cream') || p.name.includes('Bakery'));
-      if (icProfile) matchedProfile = icProfile;
-    } else if (isVegOnly || restNameLower.includes('thali') || restNameLower.includes('dhaba') || restNameLower.includes('rasoi') || restNameLower.includes('bhojanalay') || restNameLower.includes('paneer')) {
+    } else if (restNameLower.includes('dhaba') || restNameLower.includes('punjabi')) {
       const vProfile = CUISINE_MENUS.find(p => p.name.includes('Pure Veg') || p.name.includes('Dhaba'));
       if (vProfile) matchedProfile = vProfile;
     } else {
-      const genProfile = isNonVeg
-        ? (CUISINE_MENUS.find(p => p.name.includes('Biryani')) || CUISINE_MENUS[0])
-        : (CUISINE_MENUS.find(p => p.name.includes('Pure Veg')) || CUISINE_MENUS[0]);
-      matchedProfile = genProfile;
+      // Deterministic variety: Hash the restaurant name to assign a realistic cuisine profile instead of the same profile to all!
+      const charCodeSum = restNameLower.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+      if (isNonVeg) {
+        const nonVegProfiles = [
+          CUISINE_MENUS.find(p => p.name.includes('Biryani')),
+          CUISINE_MENUS.find(p => p.name.includes('Military')),
+          CUISINE_MENUS.find(p => p.name.includes('Multi-Cuisine'))
+        ].filter(Boolean) as CuisineProfile[];
+        matchedProfile = nonVegProfiles[charCodeSum % nonVegProfiles.length] || CUISINE_MENUS[0];
+      } else {
+        const vegProfiles = [
+          CUISINE_MENUS.find(p => p.name.includes('Maharashtrian')),
+          CUISINE_MENUS.find(p => p.name.includes('South Indian')),
+          CUISINE_MENUS.find(p => p.name.includes('Pure Veg')),
+          CUISINE_MENUS.find(p => p.name.includes('Pav Bhaji'))
+        ].filter(Boolean) as CuisineProfile[];
+        matchedProfile = vegProfiles[charCodeSum % vegProfiles.length] || CUISINE_MENUS[0];
+      }
     }
   }
 
-  // 3. Fill complementary dishes from matchedProfile to provide a complete, rich menu
-  if (collectedDishes.length < 30) {
+  // 4. Complement dishes from matchedProfile to provide a rich, complete menu (20-30 items)
+  if (collectedDishes.length < 25) {
     const sortedProfileDishes = [...matchedProfile.dishes].sort((a, b) => {
       const rDiff = (b.rating || 0) - (a.rating || 0);
       if (Math.abs(rDiff) > 0.01) return rDiff;
@@ -3232,40 +3947,41 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
         return existCore.includes(coreName) || coreName.includes(existCore);
       });
       if (!alreadyHas) {
-        collectedDishes.push(item);
+        collectedDishes.push({
+          ...item,
+          category: item.category || inferDishCategory(item.name, item.description),
+          is_veg: item.is_veg !== undefined ? item.is_veg : (isDishVeg(item.name) ? 1 : 0)
+        });
       }
-      if (collectedDishes.length >= 30) break;
+      if (collectedDishes.length >= 25) break;
     }
   }
 
-  // 4. Generate dynamic branded signature dishes specifically named after THIS selected restaurant
+  // 5. Return authentic dishes with verified categories, real names, and pure food visual assets
   return collectedDishes.map((item, idx) => {
-    let brandedName = item.name;
-    if (!isIconicMatch) {
-      const baseClean = item.name.replace(/^(special|grand|royal|famous)\s+/i, '').trim();
-      if (idx === 0) {
-        brandedName = `${brandName} Special ${baseClean}`;
-      } else if (idx === 1) {
-        brandedName = `${brandName} Signature ${baseClean}`;
-      }
-    }
+    // Preserve authentic culinary dish names without forced artificial prefixes
+    const dishName = item.name.trim();
+    const cat = item.category || inferDishCategory(dishName, item.description);
+    const vegVal = item.is_veg !== undefined ? item.is_veg : (isDishVeg(dishName) ? 1 : 0);
 
     // Pass authentic scraper image URL into dynamic AI endpoint query if available
     const imgParam = item.image && (item.image.startsWith('http://') || item.image.startsWith('https://')) && (item.image.includes('swiggy.com') || item.image.includes('cloudinary.com'))
       ? `&imgUrl=${encodeURIComponent(item.image)}`
       : '';
-    const aiFoodPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(brandedName)}&restaurant=${encodeURIComponent(restaurant.name)}${imgParam}`;
+    const aiFoodPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(dishName)}&restaurant=${encodeURIComponent(restaurant.name)}${imgParam}`;
 
     return {
       id: restaurant.id * 100 + idx + 1,
       restaurant_id: restaurant.id,
-      name: brandedName,
+      name: dishName,
       description: item.description,
       price: item.price,
       image: aiFoodPngUrl,
       rating: item.rating,
       popularity: item.popularity,
       is_recommended: idx < 3 ? 1 : 0,
+      is_veg: vegVal,
+      category: cat,
       status: 'active' as const
     };
   });
