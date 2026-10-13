@@ -23,7 +23,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   const imgElementRef = useRef<HTMLImageElement>(null);
   const [downloadUrl, setDownloadUrl] = useState<string>('');
 
-  const heroImageSrc = '/images/final-frames/food-tour-img.png';
+  const heroImageSrc = '/images/final-frames/food-tour-img.jpg';
 
   const generateCard = useCallback(() => {
     const canvas = canvasRef.current;
@@ -135,7 +135,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       ctx.fillText('Fast Relief Gastrium Ke Saath', 540, 1685);
 
       try {
-        setDownloadUrl(canvas.toDataURL('image/png'));
+        setDownloadUrl(canvas.toDataURL('image/jpeg', 0.95));
       } catch (err) {
         console.warn('Canvas export note:', err);
       }
@@ -169,40 +169,19 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   const shareText = `*BHOOKASUR KA FOOD TOUR*\n\nMaine Bhookasur ke saath Food Tour kiya!\nAap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!\n\nLink:\n${currentWebUrl}`;
 
   const handleShareWhatsApp = () => {
-    // 1. Download pass image so user can easily attach it
-    generateCard();
-    const dataUrl = downloadUrl || (canvasRef.current ? canvasRef.current.toDataURL('image/png') : '');
-    if (dataUrl) {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = `Bhookasur_Foodie_Pass_${participationId}.png`;
-      a.click();
-    }
-
-    // 2. Directly open WhatsApp with pre-filled message & website link
+    // Open WhatsApp directly with prefilled message & link
     const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
     window.open(waUrl, '_blank');
   };
 
-  const handleShareInstagram = async () => {
-    // 1. Download pass image so user can easily send it in DM or story
-    generateCard();
-    const dataUrl = downloadUrl || (canvasRef.current ? canvasRef.current.toDataURL('image/png') : '');
-    if (dataUrl) {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = `Bhookasur_Foodie_Pass_${participationId}.png`;
-      a.click();
-    }
-
-    // 2. Copy share text & link to clipboard for quick paste in Insta Messenger
+  const handleShareInstagram = () => {
+    // Copy share message & link to clipboard, then open Instagram directly
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       try {
-        await navigator.clipboard.writeText(shareText);
+        navigator.clipboard.writeText(shareText);
       } catch {}
     }
 
-    // 3. Directly open Instagram Messenger (Direct Inbox)
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {
       window.location.href = 'instagram://direct';
@@ -217,6 +196,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] text-slate-900 select-none">
+
         {/* Modal Header */}
         <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">

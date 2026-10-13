@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://bhookasur.com'),
   title: "Bhookasur Ka Food Tour – Interactive Food Campaign & Contest",
   description: "Travel across iconic Indian restaurants with Bhookasur! Feed his legendary appetite, fill the food meter, experience the Gastrium moment, and participate in the grand campaign.",
   keywords: ["Bhookasur", "Food Tour", "Gastrium", "Indian Food", "Pune", "Mumbai", "Delhi", "Food Campaign"],
@@ -12,9 +13,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/final-frames/food-tour-img.png",
+        url: "/images/final-frames/food-tour-img.jpg",
         width: 1200,
-        height: 630,
+        height: 1200,
         alt: "Bhookasur Ka Food Tour"
       }
     ]
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bhookasur Ka Food Tour",
     description: "Feed Bhookasur legendary dishes, fill the food meter, and win grand contest rewards!",
-    images: ["/images/final-frames/food-tour-img.png"]
+    images: ["/images/final-frames/food-tour-img.jpg"]
   }
 };
 
