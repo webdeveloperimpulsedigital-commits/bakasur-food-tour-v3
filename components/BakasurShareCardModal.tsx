@@ -31,108 +31,70 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Standard 9:16 mobile canvas: 1080 x 1920
+    // Card Dimensions: 1080 x 1560 (Photo on top, white space below with text & CTA)
     canvas.width = 1080;
-    canvas.height = 1920;
+    canvas.height = 1560;
 
     // 1. Crisp Clean White Background
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 1080, 1920);
-
-    // Outer Border
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(30, 30, 1020, 1860);
-
-    ctx.strokeStyle = '#D4380D';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(42, 42, 996, 1836);
+    ctx.fillRect(0, 0, 1080, 1560);
 
     const drawRestOfCard = (imgSource: HTMLImageElement | null) => {
-      // 3. Hero Photo Box (920 x 920 square)
-      const imgX = 80;
-      const imgY = 90;
-      const imgSize = 920;
-      const imgRadius = 28;
-
-      ctx.save();
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(imgX, imgY, imgSize, imgSize, imgRadius);
-      } else {
-        ctx.rect(imgX, imgY, imgSize, imgSize);
-      }
-      ctx.clip();
-
+      // 2. Full-width Hero Photo at Top (0, 0, 1080, 1000)
       if (imgSource) {
         try {
-          ctx.drawImage(imgSource, imgX, imgY, imgSize, imgSize);
+          ctx.drawImage(imgSource, 0, 0, 1080, 1000);
         } catch {
-          ctx.fillStyle = '#F8FAFC';
-          ctx.fillRect(imgX, imgY, imgSize, imgSize);
+          ctx.fillStyle = '#081B4B';
+          ctx.fillRect(0, 0, 1080, 1000);
         }
-      } else {
-        ctx.fillStyle = '#F8FAFC';
-        ctx.fillRect(imgX, imgY, imgSize, imgSize);
       }
-      ctx.restore();
 
-      // Border around Photo
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(imgX, imgY, imgSize, imgSize, imgRadius);
-      } else {
-        ctx.rect(imgX, imgY, imgSize, imgSize);
-      }
-      ctx.stroke();
-
-      // 4. Simple Message (No box border, no emojis)
+      // 3. Message in the White Space below image
       ctx.textAlign = 'center';
 
       // Message Line 1
       ctx.fillStyle = '#0B1B48';
       ctx.font = '900 48px sans-serif';
-      ctx.fillText('Maine Bhookasur ke saath Food Tour kiya!', 540, 1160);
+      ctx.fillText('Maine Bhookasur ke saath Food Tour kiya!', 540, 1120);
 
       // Message Line 2
       ctx.fillStyle = '#D4380D';
       ctx.font = '800 36px sans-serif';
-      ctx.fillText('Aap bhi Bhookasur ke saath Food Tour kijiye', 540, 1250);
+      ctx.fillText('Aap bhi Bhookasur ke saath Food Tour kijiye', 540, 1195);
 
       // Message Line 3
-      ctx.fillStyle = '#D4380D';
-      ctx.font = '800 36px sans-serif';
-      ctx.fillText('aur apna food spot share kijiye!', 540, 1325);
+      ctx.fillText('aur apna food spot share kijiye!', 540, 1255);
 
-      // 5. Website Link Pill (Brand Blue background, White text)
+      // 4. Website Link CTA Button (Brand Blue Pill with white text)
       const siteDomain = typeof window !== 'undefined' && window.location.host ? window.location.host : 'bhookasur.com';
 
       const pillX = 140;
-      const pillY = 1440;
+      const pillY = 1320;
       const pillW = 800;
-      const pillH = 100;
+      const pillH = 105;
 
       ctx.fillStyle = '#0B1B48';
       if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(pillX, pillY, pillW, pillH, 50);
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillW, pillH, 52);
+        ctx.fill();
       } else {
         ctx.fillRect(pillX, pillY, pillW, pillH);
       }
-      ctx.fill();
 
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 40px sans-serif';
-      ctx.fillText(siteDomain, 540, 1505);
+      ctx.font = '900 42px sans-serif';
+      ctx.fillText(siteDomain, 540, 1388);
 
-      ctx.fillStyle = '#64748B';
-      ctx.font = '700 28px sans-serif';
-      ctx.fillText('Link par click karke aap bhi food tour shuru karein', 540, 1615);
-
+      // 5. Footer Branding
       ctx.fillStyle = '#0B1B48';
       ctx.font = '800 28px sans-serif';
-      ctx.fillText('Fast Relief Gastrium Ke Saath', 540, 1685);
+      ctx.fillText('Powered by Gastrium', 540, 1468);
+
+      ctx.fillStyle = '#64748B';
+      ctx.font = '700 24px sans-serif';
+      ctx.fillText('Acidity ko bolo good night', 540, 1512);
 
       try {
         setDownloadUrl(canvas.toDataURL('image/jpeg', 0.95));
@@ -189,58 +151,21 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
         }
       });
 
-      // 2. Exact Compact Card Dimensions (1080 x 1480)
+      // 2. Exact Card Dimensions (1080 x 1560)
       canvas.width = 1080;
-      canvas.height = 1480;
+      canvas.height = 1560;
 
       // 3. Crisp White Background
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, 1080, 1480);
+      ctx.fillRect(0, 0, 1080, 1560);
 
-      // Card outer border
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 8;
-      if (typeof ctx.roundRect === 'function') {
-        ctx.beginPath();
-        ctx.roundRect(16, 16, 1048, 1448, 36);
-        ctx.stroke();
-      } else {
-        ctx.strokeRect(16, 16, 1048, 1448);
-      }
-
-      // 4. Hero Photo at Top (960 x 960)
-      const imgX = 60;
-      const imgY = 60;
-      const imgSize = 960;
-      const imgRadius = 28;
-
-      ctx.save();
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(imgX, imgY, imgSize, imgSize, imgRadius);
-      } else {
-        ctx.rect(imgX, imgY, imgSize, imgSize);
-      }
-      ctx.clip();
-
+      // 4. Hero Photo at Top (Full width 1080 x 1000)
       try {
-        ctx.drawImage(img, imgX, imgY, imgSize, imgSize);
+        ctx.drawImage(img, 0, 0, 1080, 1000);
       } catch {
-        ctx.fillStyle = '#F8FAFC';
-        ctx.fillRect(imgX, imgY, imgSize, imgSize);
+        ctx.fillStyle = '#081B4B';
+        ctx.fillRect(0, 0, 1080, 1000);
       }
-      ctx.restore();
-
-      // Border around photo
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(imgX, imgY, imgSize, imgSize, imgRadius);
-      } else {
-        ctx.rect(imgX, imgY, imgSize, imgSize);
-      }
-      ctx.stroke();
 
       // 5. White space message below image
       ctx.textAlign = 'center';
@@ -248,38 +173,52 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       // Line 1
       ctx.fillStyle = '#0B1B48';
       ctx.font = '900 48px sans-serif';
-      ctx.fillText('Maine Bhookasur ke saath Food Tour kiya!', 540, 1100);
+      ctx.fillText('Maine Bhookasur ke saath Food Tour kiya!', 540, 1120);
 
       // Line 2 & 3
       ctx.fillStyle = '#D4380D';
       ctx.font = '800 36px sans-serif';
-      ctx.fillText('Aap bhi Bhookasur ke saath Food Tour kijiye', 540, 1170);
-      ctx.fillText('aur apna food spot share kijiye!', 540, 1228);
+      ctx.fillText('Aap bhi Bhookasur ke saath Food Tour kijiye', 540, 1195);
+      ctx.fillText('aur apna food spot share kijiye!', 540, 1255);
 
       // 6. Website Link Pill (Brand Blue Button)
       const siteDomain = typeof window !== 'undefined' && window.location.host ? window.location.host : 'bhookasur.com';
       const pillX = 140;
-      const pillY = 1300;
+      const pillY = 1320;
       const pillW = 800;
-      const pillH = 100;
+      const pillH = 105;
 
       ctx.fillStyle = '#0B1B48';
-      ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(pillX, pillY, pillW, pillH, 50);
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillW, pillH, 52);
+        ctx.fill();
       } else {
         ctx.fillRect(pillX, pillY, pillW, pillH);
       }
-      ctx.fill();
 
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '900 42px sans-serif';
-      ctx.fillText(siteDomain, 540, 1365);
+      ctx.fillText(siteDomain, 540, 1388);
+
+      // 7. Footer Branding
+      ctx.fillStyle = '#0B1B48';
+      ctx.font = '800 28px sans-serif';
+      ctx.fillText('Powered by Gastrium', 540, 1468);
+
+      ctx.fillStyle = '#64748B';
+      ctx.font = '700 24px sans-serif';
+      ctx.fillText('Acidity ko bolo good night', 540, 1512);
 
       // 7. Convert to real JPG Blob
-      const blob = await new Promise<Blob | null>((resolve) => {
+      let blob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob(resolve, 'image/jpeg', 0.95);
       });
+
+      if (!blob) {
+        const res = await fetch('/images/final-frames/food-tour-pass-preview.jpg');
+        blob = await res.blob();
+      }
 
       if (blob) {
         return new File([blob], 'bhookasur-food-tour-pass.jpg', { type: 'image/jpeg' });
