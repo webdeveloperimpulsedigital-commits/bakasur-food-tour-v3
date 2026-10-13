@@ -168,29 +168,176 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
 
   const shareText = `*BHOOKASUR KA FOOD TOUR*\n\nMaine Bhookasur ke saath Food Tour kiya!\nAap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!\n\nLink:\n${currentWebUrl}`;
 
-  const handleShareWhatsApp = () => {
-    // Open WhatsApp directly with prefilled message & link
+  const createPassImageFile = async (): Promise<File | null> => {
+    try {
+      const canvas = canvasRef.current;
+      if (!canvas) return null;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      // 1. Ensure image is loaded
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      await new Promise<void>((resolve) => {
+        if (imgElementRef.current && imgElementRef.current.complete && imgElementRef.current.naturalWidth > 0) {
+          img.src = imgElementRef.current.src;
+          resolve();
+        } else {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = heroImageSrc;
+        }
+      });
+
+      // 2. Exact Compact Card Dimensions (1080 x 1480)
+      canvas.width = 1080;
+      canvas.height = 1480;
+
+      // 3. Crisp White Background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, 1080, 1480);
+
+      // Card outer border
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 8;
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(16, 16, 1048, 1448, 36);
+        ctx.stroke();
+      } else {
+        ctx.strokeRect(16, 16, 1048, 1448);
+      }
+
+      // 4. Hero Photo at Top (960 x 960)
+      const imgX = 60;
+      const imgY = 60;
+      const imgSize = 960;
+      const imgRadius = 28;
+
+      ctx.save();
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(imgX, imgY, imgSize, imgSize, imgRadius);
+      } else {
+        ctx.rect(imgX, imgY, imgSize, imgSize);
+      }
+      ctx.clip();
+
+      try {
+        ctx.drawImage(img, imgX, imgY, imgSize, imgSize);
+      } catch {
+        ctx.fillStyle = '#F8FAFC';
+        ctx.fillRect(imgX, imgY, imgSize, imgSize);
+      }
+      ctx.restore();
+
+      // Border around photo
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(imgX, imgY, imgSize, imgSize, imgRadius);
+      } else {
+        ctx.rect(imgX, imgY, imgSize, imgSize);
+      }
+      ctx.stroke();
+
+      // 5. White space message below image
+      ctx.textAlign = 'center';
+
+      // Line 1
+      ctx.fillStyle = '#0B1B48';
+      ctx.font = '900 48px sans-serif';
+      ctx.fillText('Maine Bhookasur ke saath Food Tour kiya!', 540, 1100);
+
+      // Line 2 & 3
+      ctx.fillStyle = '#D4380D';
+      ctx.font = '800 36px sans-serif';
+      ctx.fillText('Aap bhi Bhookasur ke saath Food Tour kijiye', 540, 1170);
+      ctx.fillText('aur apna food spot share kijiye!', 540, 1228);
+
+      // 6. Website Link Pill (Brand Blue Button)
+      const siteDomain = typeof window !== 'undefined' && window.location.host ? window.location.host : 'bhookasur.com';
+      const pillX = 140;
+      const pillY = 1300;
+      const pillW = 800;
+      const pillH = 100;
+
+      ctx.fillStyle = '#0B1B48';
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(pillX, pillY, pillW, pillH, 50);
+      } else {
+        ctx.fillRect(pillX, pillY, pillW, pillH);
+      }
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '900 42px sans-serif';
+      ctx.fillText(siteDomain, 540, 1365);
+
+      // 7. Convert to real JPG Blob
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', 0.95);
+      });
+
+      if (blob) {
+        return new File([blob], 'bhookasur-food-tour-pass.jpg', { type: 'image/jpeg' });
+      }
+    } catch (e) {
+      console.warn('Error generating pass image:', e);
+    }
+    return null;
+  };
+
+  const handleShareWhatsApp = async () => {
+    // 1. Create the complete pass JPG image (Photo at top + message + website link on white card)
+    const file = await createPassImageFile();
+
+    // 2. Share image file directly to WhatsApp on mobile
+    if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          text: shareText
+        });
+        return;
+      } catch (err) {
+        console.warn('Share sheet cancelled or closed:', err);
+        return;
+      }
+    }
+
+    // 3. Fallback for desktop: open WhatsApp link
     const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
     window.open(waUrl, '_blank');
   };
 
-  const handleShareInstagram = () => {
-    // Copy share message & link to clipboard, then open Instagram directly
+  const handleShareInstagram = async () => {
+    // 1. Create the complete pass JPG image
+    const file = await createPassImageFile();
+
+    // 2. Share image file directly to Instagram on mobile
+    if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          text: shareText
+        });
+        return;
+      } catch (err) {
+        console.warn('Share sheet cancelled or closed:', err);
+        return;
+      }
+    }
+
+    // 3. Fallback for desktop: copy text & open Instagram
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       try {
         navigator.clipboard.writeText(shareText);
       } catch {}
     }
-
-    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.location.href = 'instagram://direct';
-      setTimeout(() => {
-        window.open('https://www.instagram.com/direct/inbox/', '_blank');
-      }, 700);
-    } else {
-      window.open('https://www.instagram.com/direct/inbox/', '_blank');
-    }
+    window.open('https://www.instagram.com/direct/inbox/', '_blank');
   };
 
   return (
