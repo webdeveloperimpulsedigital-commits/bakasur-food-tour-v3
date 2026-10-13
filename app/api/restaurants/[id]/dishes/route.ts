@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { Dish, Restaurant } from '@/lib/db';
+import { db, INITIAL_RESTAURANTS, INITIAL_DISHES, type Dish, type Restaurant } from '@/lib/db';
 import { generateLiveMenuForRestaurant } from '@/lib/liveMenu';
 import { searchDishesSwiggyZomato } from '@/lib/foodSearchEngine';
 import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
@@ -29,24 +29,39 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     // 1. Live Restaurant Identity derived from Live API selection
     const resolvedName = restName || 'Iconic Food Joint';
     const visual = getDishVisualAssets(resolvedName);
+    
+    // Check if the restaurant is a recognized spot in INITIAL_RESTAURANTS
+    const knownRest = INITIAL_RESTAURANTS.find(
+      r => r.name.toLowerCase() === resolvedName.toLowerCase() ||
+           resolvedName.toLowerCase().includes(r.name.toLowerCase()) ||
+           r.name.toLowerCase().includes(resolvedName.toLowerCase())
+    );
+
     const isVeg = isVegParam === 'true' || isVegParam === '1' ||
+      (knownRest && knownRest.is_veg === 1) ||
       resolvedName.toLowerCase().includes('pure veg') ||
-      (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non-veg'));
+      (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non-veg')) ||
+      resolvedName.toLowerCase().includes('mithai') ||
+      resolvedName.toLowerCase().includes('sweets') ||
+      resolvedName.toLowerCase().includes('bhel') ||
+      resolvedName.toLowerCase().includes('dosa') ||
+      resolvedName.toLowerCase().includes('idli') ||
+      resolvedName.toLowerCase().includes('udupi');
     
     const restInfo: Restaurant = {
       id: restId,
-      name: resolvedName,
-      area: restArea || 'Local Area',
-      city: restCity || 'Pune',
-      description: `Authentic culinary specialty & live menu at ${resolvedName}`,
-      address: `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
-      latitude: !isNaN(latParam) ? latParam : 18.5204,
-      longitude: !isNaN(lngParam) ? lngParam : 73.8407,
-      rating: 4.8,
+      name: knownRest ? knownRest.name : resolvedName,
+      area: restArea || knownRest?.area || 'Local Area',
+      city: restCity || knownRest?.city || 'Pune',
+      description: knownRest ? knownRest.description : `Authentic culinary specialty & live menu at ${resolvedName}`,
+      address: knownRest ? knownRest.address : `${restArea ? restArea + ', ' : ''}${restCity || 'Pune'}`,
+      latitude: !isNaN(latParam) ? latParam : (knownRest?.latitude || 18.5204),
+      longitude: !isNaN(lngParam) ? lngParam : (knownRest?.longitude || 73.8407),
+      rating: knownRest?.rating || 4.8,
       is_veg: isVeg ? 1 : 0,
-      image: visual.plateImage || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+      image: knownRest?.image || visual.plateImage || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
       is_campaign_active: 1,
-      total_visits: 1200,
+      total_visits: knownRest?.total_visits || 1200,
       status: 'active'
     };
 
@@ -54,7 +69,22 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const baseDishes: Dish[] = [];
     let usedSource = 'curated_culinary_catalog';
 
-    // 2. Priority 1: Live Apify Swiggy Scraper ("thirdwatch/swiggy-scraper") & Swiggy Live Menu
+    // 2. Priority 1: Complete Authentic Restaurant Signature Menu & Cuisine Catalog tailored directly to this restaurant
+    const liveDishes = generateLiveMenuForRestaurant(restInfo);
+    for (const d of liveDishes) {
+      const cleanName = formatCleanDishName(d.name, restInfo.name);
+      const lower = cleanName.toLowerCase();
+      if (!seenNames.has(lower)) {
+        seenNames.add(lower);
+        baseDishes.push({
+          ...d,
+          name: cleanName,
+          image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
+        });
+      }
+    }
+
+    // 3. Priority 2: Live Apify Swiggy Scraper ("thirdwatch/swiggy-scraper") & Swiggy Live Menu
     if (isApifyConfigured()) {
       try {
         const swiggyRestId = swiggyIdParam || (restId > 0 && restId < 890000 ? String(restId) : undefined);
@@ -83,41 +113,28 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       }
     }
 
-    // 3. Priority 2: Google Cloud Places API live extraction from customer reviews
-    if (baseDishes.length < 8) {
-      const googlePlace = await fetchGooglePlaceDetails(restInfo.name, restInfo.city);
-      const googleDishes = googlePlace ? extractDishesFromGoogleDetails(googlePlace, restInfo) : [];
-      if (googleDishes.length > 0 && baseDishes.length === 0) {
-        usedSource = 'google_places_reviews';
-      }
-      for (const d of googleDishes) {
-        const cleanName = formatCleanDishName(d.name, restInfo.name);
-        const lower = cleanName.toLowerCase();
-        if (!seenNames.has(lower)) {
-          seenNames.add(lower);
-          baseDishes.push({
-            ...d,
-            name: cleanName,
-            image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
-          });
+    // 4. Priority 3: Google Cloud Places API live extraction from customer reviews
+    if (baseDishes.length < 25) {
+      try {
+        const googlePlace = await fetchGooglePlaceDetails(restInfo.name, restInfo.city);
+        const googleDishes = googlePlace ? extractDishesFromGoogleDetails(googlePlace, restInfo) : [];
+        if (googleDishes.length > 0 && baseDishes.length === 0) {
+          usedSource = 'google_places_reviews';
         }
-      }
-    }
-
-    // 4. Priority 3: Authentic Restaurant Signature Menu & Cuisine Catalog
-    if (baseDishes.length < 8) {
-      const liveDishes = generateLiveMenuForRestaurant(restInfo);
-      for (const d of liveDishes) {
-        const cleanName = formatCleanDishName(d.name, restInfo.name);
-        const lower = cleanName.toLowerCase();
-        if (!seenNames.has(lower)) {
-          seenNames.add(lower);
-          baseDishes.push({
-            ...d,
-            name: cleanName,
-            image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
-          });
+        for (const d of googleDishes) {
+          const cleanName = formatCleanDishName(d.name, restInfo.name);
+          const lower = cleanName.toLowerCase();
+          if (!seenNames.has(lower)) {
+            seenNames.add(lower);
+            baseDishes.push({
+              ...d,
+              name: cleanName,
+              image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
+            });
+          }
         }
+      } catch (gErr) {
+        console.warn('Google Places live review dishes notice:', gErr);
       }
     }
 
@@ -169,6 +186,12 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       },
       categories,
       data: finalDishes
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to fetch dishes';

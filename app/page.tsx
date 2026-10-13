@@ -184,8 +184,12 @@ export default function CampaignPage() {
   };
 
   // Frame 2 -> Frame 3 (Restaurant Chosen -> 3 Dish Options)
-  const handleRestaurantConfirmed = async () => {
+  const handleRestaurantConfirmed = async (confirmedSpot?: Restaurant) => {
     playSound('click');
+    const effectiveSpot = confirmedSpot || selectedRestaurant;
+    if (confirmedSpot) {
+      setSelectedRestaurant(confirmedSpot);
+    }
     setSelectedDish(null);
     triggerFrameTransition(3);
 
@@ -198,10 +202,10 @@ export default function CampaignPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: activeSession,
-          user_location: selectedRestaurant?.city || selectedCity,
-          latitude: selectedRestaurant?.latitude || userCoords?.lat,
-          longitude: selectedRestaurant?.longitude || userCoords?.lng,
-          restaurant_id: selectedRestaurant?.id,
+          user_location: effectiveSpot?.city || selectedCity,
+          latitude: effectiveSpot?.latitude || userCoords?.lat,
+          longitude: effectiveSpot?.longitude || userCoords?.lng,
+          restaurant_id: effectiveSpot?.id,
           current_stage: 'frame_3_dish_selection',
           current_step: 'dish_selection'
         })
@@ -213,18 +217,18 @@ export default function CampaignPage() {
     trackUserStep({
       sessionId: activeSession,
       stepName: 'frame_3_dish_selection',
-      stepTitle: `Frame 3: Dish Options Opened for ${selectedRestaurant?.name || 'Restaurant'}`,
+      stepTitle: `Frame 3: Dish Options Opened for ${effectiveSpot?.name || 'Restaurant'}`,
       stepNumber: 3,
-      restaurantId: selectedRestaurant?.id,
-      userLocation: selectedRestaurant?.city || selectedCity,
-      latitude: selectedRestaurant?.latitude || userCoords?.lat,
-      longitude: selectedRestaurant?.longitude || userCoords?.lng,
+      restaurantId: effectiveSpot?.id,
+      userLocation: effectiveSpot?.city || selectedCity,
+      latitude: effectiveSpot?.latitude || userCoords?.lat,
+      longitude: effectiveSpot?.longitude || userCoords?.lng,
       metadata: {
-        restaurant_name: selectedRestaurant?.name,
-        restaurant_id: selectedRestaurant?.id,
-        city: selectedRestaurant?.city || selectedCity,
-        latitude: selectedRestaurant?.latitude,
-        longitude: selectedRestaurant?.longitude
+        restaurant_name: effectiveSpot?.name,
+        restaurant_id: effectiveSpot?.id,
+        city: effectiveSpot?.city || selectedCity,
+        latitude: effectiveSpot?.latitude,
+        longitude: effectiveSpot?.longitude
       }
     });
   };

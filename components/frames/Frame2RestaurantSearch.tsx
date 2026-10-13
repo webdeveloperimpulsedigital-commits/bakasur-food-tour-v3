@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-react';
-import { Restaurant } from '@/lib/db';
+import type { Restaurant } from '@/lib/db';
 import { parseRestaurantQuery } from '@/lib/locationParser';
 
 interface Frame2RestaurantSearchProps {
@@ -11,7 +11,7 @@ interface Frame2RestaurantSearchProps {
   userCoords?: { lat: number; lng: number } | null;
   isSecondRound?: boolean;
   onSelectRestaurant: (restaurant: Restaurant) => void;
-  onNext: () => void;
+  onNext: (restaurant?: Restaurant) => void;
   onBack: () => void;
   onWatchVideo?: () => void;
 }
@@ -28,6 +28,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>(() => {
     return selectedRestaurant ? selectedRestaurant.name : '';
   });
+  const [chosenSpot, setChosenSpot] = useState<Restaurant | null>(selectedRestaurant);
   const [searchResults, setSearchResults] = useState<Restaurant[]>([]);
   const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(userCoords || null);
@@ -144,9 +145,10 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     setSelectedIndex(-1);
   }, [searchResults]);
 
-  // Sync searchQuery if selectedRestaurant is explicitly updated
+  // Sync searchQuery & chosenSpot if selectedRestaurant is explicitly updated
   useEffect(() => {
     if (selectedRestaurant) {
+      setChosenSpot(selectedRestaurant);
       setSearchQuery(
         selectedRestaurant.name +
         (selectedRestaurant.area && !selectedRestaurant.name.includes(selectedRestaurant.area)
@@ -270,6 +272,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   }, []);
 
   const handleSelectSpot = (spot: Restaurant) => {
+    setChosenSpot(spot);
     onSelectRestaurant(spot);
     setSearchQuery(
       spot.area && !spot.name.toLowerCase().includes(spot.area.toLowerCase())
@@ -281,37 +284,66 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
 
   const ensureRestaurantSelected = () => {
     const query = searchQuery.trim();
-    let confirmed = selectedRestaurant;
-    if (!confirmed && query) {
-      confirmed = {
-        id: Math.floor(Math.random() * 80000) + 10000,
-        name: query,
-        description: 'Selected restaurant',
-        address: `${query}, ${selectedCity || 'Pune'}`,
-        area: selectedCity || 'Pune',
-        city: selectedCity || 'Pune',
-        latitude: coords?.lat || 18.5204,
-        longitude: coords?.lng || 73.8407,
-        rating: 4.8,
-        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
-        is_campaign_active: 1,
-        total_visits: 100,
-        status: 'active'
-      };
-      onSelectRestaurant(confirmed);
-    } else if (confirmed && query && confirmed.name !== query && !query.startsWith(confirmed.name)) {
-      confirmed = {
-        ...confirmed,
-        name: query
-      };
-      onSelectRestaurant(confirmed);
+    if (!query) {
+      return chosenSpot || selectedRestaurant;
     }
-    return confirmed;
+
+    const qLower = query.toLowerCase();
+
+    // 1. If user already picked a spot and the query is for that spot
+    if (chosenSpot) {
+      const cNameLower = chosenSpot.name.toLowerCase();
+      if (
+        cNameLower === qLower ||
+        qLower.startsWith(cNameLower) ||
+        cNameLower.startsWith(qLower) ||
+        (chosenSpot.area && `${cNameLower}, ${chosenSpot.area.toLowerCase()}` === qLower)
+      ) {
+        return chosenSpot;
+      }
+    }
+
+    // 2. Check if query matches any item in live searchResults
+    const searchMatch = searchResults.find(r => {
+      const rNameLower = r.name.toLowerCase();
+      return (
+        rNameLower === qLower ||
+        qLower.includes(rNameLower) ||
+        rNameLower.includes(qLower) ||
+        (r.area && `${rNameLower}, ${r.area.toLowerCase()}` === qLower)
+      );
+    });
+    if (searchMatch) {
+      setChosenSpot(searchMatch);
+      onSelectRestaurant(searchMatch);
+      return searchMatch;
+    }
+
+    // 3. Generate clean parsed restaurant with zero pollution from previous restaurant
+    const parsed = parseRestaurantQuery(query, selectedCity, coords);
+    const customSpot: Restaurant = {
+      id: Math.floor(Math.random() * 80000) + 10000,
+      name: parsed.cleanName,
+      description: `Popular dining destination in ${parsed.area}, ${parsed.city}`,
+      address: parsed.address,
+      area: parsed.area,
+      city: parsed.city,
+      latitude: parsed.latitude,
+      longitude: parsed.longitude,
+      rating: 4.8,
+      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
+      is_campaign_active: 1,
+      total_visits: 100,
+      status: 'active'
+    };
+    setChosenSpot(customSpot);
+    onSelectRestaurant(customSpot);
+    return customSpot;
   };
 
   const handleConfirm = () => {
-    ensureRestaurantSelected();
-    onNext();
+    const confirmed = ensureRestaurantSelected();
+    onNext(confirmed || undefined);
   };
 
   return (
