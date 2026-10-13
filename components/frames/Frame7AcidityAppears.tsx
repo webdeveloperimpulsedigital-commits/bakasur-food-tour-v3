@@ -84,11 +84,11 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
             : 'translate-y-full md:translate-x-full opacity-0 pointer-events-none'
         }`}
       >
-        <div className="space-y-3 xs:space-y-4 sm:space-y-5 max-w-2xl my-auto mx-auto flex flex-col items-center justify-center text-center">
-          <p className="text-[17px] xs:text-[19px] sm:text-[24px] md:text-[28px] font-black text-[#0B1B48] leading-tight tracking-tight whitespace-nowrap text-center">
+        <div className="space-y-2.5 xs:space-y-3 sm:space-y-4 max-w-xl my-auto mx-auto flex flex-col items-center justify-center text-center px-1">
+          <p className="text-[15px] xs:text-[17px] sm:text-[22px] md:text-[26px] font-black text-[#0B1B48] leading-snug tracking-tight text-center">
             Plot twist: Pet ne emergency brake laga di.
           </p>
-          <h2 className="text-[30px] xs:text-[36px] sm:text-[46px] md:text-[54px] font-black tracking-tight leading-[1.08] text-center">
+          <h2 className="text-[28px] xs:text-[34px] sm:text-[44px] md:text-[52px] font-black tracking-tight leading-[1.1] text-center">
             <span className="text-[#D4380D]">Acidity</span>{' '}
             <span className="text-black">aur</span><br />
             <span className="text-[#D4380D]">khatti dakaarein.</span>

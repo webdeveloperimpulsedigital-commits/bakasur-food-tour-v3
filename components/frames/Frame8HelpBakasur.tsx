@@ -8,17 +8,17 @@ interface Frame8HelpBakasurProps {
 
 export const Frame8HelpBakasur: React.FC<Frame8HelpBakasurProps> = ({ onHelpBakasur }) => {
   return (
-    <div className="w-full h-full flex flex-col justify-between items-start text-left animate-in fade-in duration-300 py-3.5 xs:py-4 sm:py-6 px-4 xs:px-5 sm:px-8 gap-2 bg-white overflow-hidden">
-      {/* Headline with enlarged impact font */}
-      <div className="w-full my-auto space-y-1">
-        <h1 className="text-[25px] xs:text-[29px] sm:text-[38px] md:text-[46px] font-black text-[#0B1B48] tracking-tight leading-[1.15]">
-          Ab Bhookasur ko khaana nahi,<br />
-          tumhari <span className="text-[#D4380D]">help</span> chahiye.
+    <div className="w-full h-full flex flex-col justify-between items-center text-center animate-in fade-in duration-300 py-3.5 xs:py-4 sm:py-6 px-3 xs:px-4 sm:px-8 gap-2 bg-white overflow-hidden">
+      {/* Headline centered in two lines */}
+      <div className="w-full max-w-lg mx-auto my-auto flex flex-col items-center text-center">
+        <h1 className="text-[19px] xs:text-[22px] sm:text-[30px] md:text-[38px] lg:text-[44px] font-black text-[#0B1B48] tracking-tight leading-[1.2] text-center">
+          <span className="whitespace-nowrap">Ab Bhookasur ko khaana nahi,</span><br />
+          <span className="whitespace-nowrap">tumhari <span className="text-[#D4380D]">help</span> chahiye.</span>
         </h1>
       </div>
 
       {/* Primary CTA: HELP BHOOKASUR */}
-      <div className="shrink-0 w-full pt-1 pb-1">
+      <div className="shrink-0 w-full max-w-sm sm:max-w-md mx-auto pt-1 pb-1">
         <button
           onClick={onHelpBakasur}
           type="button"
