@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BakasurVideoPlayer } from '@/components/BakasurVideoPlayer';
 import { BakasurEatingStage } from '@/components/BakasurEatingStage';
-import { BakasurTransitionLoader } from '@/components/BakasurTransitionLoader';
 import { Frame1Welcome } from '@/components/frames/Frame1Welcome';
 import { Frame2RestaurantSearch } from '@/components/frames/Frame2RestaurantSearch';
 import { Frame3DishSelection } from '@/components/frames/Frame3DishSelection';
@@ -50,14 +49,12 @@ export default function CampaignPage() {
   // Full-width Video Interstitial Transition State
   const [activeTransitionVideo, setActiveTransitionVideo] = useState<{
     videoUrl: string;
+    desktopVideoUrl?: string;
     buttonText: string;
     nextFrame: FrameNumber;
     onVideoComplete?: () => void;
   } | null>(null);
 
-  const [isLoaderOpen, setIsLoaderOpen] = useState<boolean>(false);
-  const [targetLoaderFrame, setTargetLoaderFrame] = useState<number>(2);
-  const [loaderMessage, setLoaderMessage] = useState<string>('');
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
 
   useEffect(() => {
@@ -807,6 +804,7 @@ export default function CampaignPage() {
               onWatchVideo={() => {
                 setActiveTransitionVideo({
                   videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
+                  desktopVideoUrl: '/images/final-frames/Bhookasur-Food-Eating-dekstop.mp4',
                   buttonText: 'Aage Badho ➡️',
                   nextFrame: 7
                 });
@@ -831,6 +829,7 @@ export default function CampaignPage() {
               onWatchVideo={() => {
                 setActiveTransitionVideo({
                   videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
+                  desktopVideoUrl: '/images/final-frames/Bhookasur-Food-Eating-dekstop.mp4',
                   buttonText: 'Aage Badho ➡️',
                   nextFrame: 7
                 });
@@ -842,6 +841,7 @@ export default function CampaignPage() {
               onWatchVideo={() => {
                 setActiveTransitionVideo({
                   videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
+                  desktopVideoUrl: '/images/final-frames/Bhookasur-Food-Eating-dekstop.mp4',
                   buttonText: 'Aage Badho ➡️',
                   nextFrame: 7
                 });
@@ -1006,6 +1006,7 @@ export default function CampaignPage() {
                   onWatchVideo={() => {
                     setActiveTransitionVideo({
                       videoUrl: '/images/final-frames/Bhookasur-Food-Eating-final.mp4',
+                      desktopVideoUrl: '/images/final-frames/Bhookasur-Food-Eating-dekstop.mp4',
                       buttonText: 'Aage Badho ➡️',
                       nextFrame: 2
                     });
@@ -1095,8 +1096,9 @@ export default function CampaignPage() {
       {/* Full-width Story Video Transition Overlay between frames */}
       {activeTransitionVideo && (
         <VideoTransitionOverlay
-          key={activeTransitionVideo.videoUrl}
+          key={`${activeTransitionVideo.videoUrl}-${activeTransitionVideo.desktopVideoUrl || ''}`}
           videoUrl={activeTransitionVideo.videoUrl}
+          desktopVideoUrl={activeTransitionVideo.desktopVideoUrl}
           buttonText={activeTransitionVideo.buttonText}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled(!soundEnabled)}
@@ -1114,16 +1116,6 @@ export default function CampaignPage() {
           }}
         />
       )}
-
-      {/* Bakasur Universal Walking Preloader Overlay */}
-      <BakasurTransitionLoader
-        isOpen={isLoaderOpen}
-        targetFrame={targetLoaderFrame}
-        customMessage={loaderMessage}
-        onFinish={() => {
-          setIsLoaderOpen(false);
-        }}
-      />
     </div>
   );
 }

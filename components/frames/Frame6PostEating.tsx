@@ -29,7 +29,7 @@ export const Frame6PostEating: React.FC<Frame6PostEatingProps> = ({
       {/* Video Section: Left on Desktop (lg:w-1/2 lg:h-full), Top on Mobile/Tablet */}
       <div className="relative w-full lg:w-1/2 h-[62%] xs:h-[64%] sm:h-[60%] lg:h-full bg-[#081B4B] flex items-center justify-center overflow-hidden shrink-0">
         <video
-          src="/images/final-frames/5.mp4"
+          src="/images/final-frames/Bhookasur-Imagining-About-Food.mp4"
           autoPlay
           loop
           muted
