@@ -21,7 +21,9 @@ const nextConfig = {
       }
     ],
   },
-  allowedDevOrigins: ['192.168.31.211', 'localhost:3000', '192.168.31.211:3000', '127.0.0.1:3000'],
+  experimental: {
+    allowedDevOrigins: ['192.168.31.211', 'localhost:3000', '192.168.31.211:3000', '127.0.0.1:3000'],
+  },
 };
 
 export default nextConfig;
