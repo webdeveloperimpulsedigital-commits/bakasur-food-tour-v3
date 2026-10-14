@@ -131,7 +131,7 @@ async function reverseGeocodeCoords(lat: number, lng: number): Promise<{ subloca
   // 1. Try OSM Nominatim First (High granularity residential, suburb, neighbourhood)
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1800);
+    const timeout = setTimeout(() => controller.abort(), 600);
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
       {
@@ -162,7 +162,7 @@ async function reverseGeocodeCoords(lat: number, lng: number): Promise<{ subloca
   // 2. Fallback to BigDataCloud Client Reverse Geocode
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1500);
+    const timeout = setTimeout(() => controller.abort(), 500);
     const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`;
     const res = await fetch(bdcUrl, { signal: controller.signal });
     clearTimeout(timeout);
@@ -237,14 +237,9 @@ export async function GET(request: Request) {
   let preciseSublocality: string | null = null;
   let detectedCity: typeof POPULAR_CITIES[0] | null = null;
 
-  // 2. Reverse-geocode and match metropolitan center
+  // 2. Match metropolitan center & sublocality
   if (hasCoords) {
-    const geoInfo = await reverseGeocodeCoords(effectiveLat, effectiveLng);
-    if (geoInfo?.sublocality) {
-      preciseSublocality = geoInfo.sublocality;
-    }
-
-    // Step A: Check Proximity to known metropolitan centers
+    // Step A: Check Proximity to known metropolitan centers (Instant 0.01ms memory check)
     const PROXIMITY_RADIUS_KM: Record<string, number> = {
       'Pune': 45,
       'Mumbai': 50,
@@ -269,6 +264,29 @@ export async function GET(request: Request) {
       if (dist <= maxRadius) {
         detectedCity = city;
         break;
+      }
+    }
+
+    if (detectedCity?.name === 'Pune') {
+      let closestArea: string | null = null;
+      let minAreaDist = 6; // within 6km
+      for (const a of PUNE_AREAS) {
+        const d = calculateDistanceKm(effectiveLat, effectiveLng, a.latitude, a.longitude);
+        if (d < minAreaDist) {
+          minAreaDist = d;
+          closestArea = a.name;
+        }
+      }
+      if (closestArea) {
+        preciseSublocality = closestArea;
+      }
+    }
+
+    let geoInfo: { sublocality?: string; city?: string; state?: string } | null = null;
+    if (!preciseSublocality || !detectedCity) {
+      geoInfo = await reverseGeocodeCoords(effectiveLat, effectiveLng);
+      if (geoInfo?.sublocality && !preciseSublocality) {
+        preciseSublocality = geoInfo.sublocality;
       }
     }
 

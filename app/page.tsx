@@ -1116,6 +1116,37 @@ export default function CampaignPage() {
           }}
         />
       )}
+
+      {/* Invisible background preloader to pre-buffer upcoming frame videos */}
+      <div className="hidden pointer-events-none" aria-hidden="true">
+        {currentFrame === 1 && (
+          <>
+            <video src="/images/final-frames/2.mp4" preload="auto" muted />
+            <video src="/images/final-frames/Bakasur-Pointing-Rightside.mp4" preload="auto" muted />
+          </>
+        )}
+        {currentFrame === 2 && (
+          <video src="/images/final-frames/3.mp4" preload="auto" muted />
+        )}
+        {(currentFrame === 3 || currentFrame === 4) && (
+          <>
+            <video src="/images/final-frames/front-eat-video.mp4" preload="auto" muted />
+            <video src="/images/final-frames/side-view-final.mp4?v=2" preload="auto" muted />
+          </>
+        )}
+        {currentFrame === 5 && (
+          <>
+            <video src="/images/final-frames/5.mp4" preload="auto" muted />
+            <video src="/images/final-frames/Bhookasur-Food-Eating-final.mp4" preload="auto" muted />
+          </>
+        )}
+        {currentFrame === 6 && (
+          <video src="/images/final-frames/Acidity-and-Dakare.mp4" preload="auto" muted />
+        )}
+        {currentFrame === 8 && (
+          <video src="/images/final-frames/Bhookasur-Drinking-Gastrium.mp4" preload="auto" muted />
+        )}
+      </div>
     </div>
   );
 }

@@ -141,7 +141,7 @@ export async function fetchLiveNearbyPlaces(lat: number, lng: number, cityFallba
   const fetchNominatim = async () => {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 1500);
+      const timeout = setTimeout(() => controller.abort(), 700);
       const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=restaurant&bounded=1&viewbox=${viewbox}&limit=20&addressdetails=1`;
       const res = await fetch(nominatimUrl, {
         headers: { 'User-Agent': 'BakasurFoodTourApp/3.0' },
@@ -200,7 +200,7 @@ export async function fetchLiveNearbyPlaces(lat: number, lng: number, cityFallba
   const fetchPhoton = async () => {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 1500);
+      const timeout = setTimeout(() => controller.abort(), 700);
       const url = `https://photon.komoot.io/api/?q=restaurant&lat=${lat}&lon=${lng}&limit=25`;
       const res = await fetch(url, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },

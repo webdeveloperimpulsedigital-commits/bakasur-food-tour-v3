@@ -82,7 +82,29 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     async function initLocationAndNearby() {
       let activeCoords = coords;
 
-      // If coordinates not passed yet, fetch via IP location immediately
+      const fetchNearby = async (latToUse: number, lngToUse: number) => {
+        setIsLoadingNearby(true);
+        try {
+          const res = await fetch(`/api/restaurants/search?city=${encodeURIComponent(selectedCity || 'Pune')}&lat=${latToUse}&lng=${lngToUse}`);
+          const data = await res.json();
+          if (!isCancelled && data.success && Array.isArray(data.data)) {
+            const limitedSpots = data.data.slice(0, 5);
+            setNearbyRestaurants(limitedSpots);
+            setSearchResults((prev) => (!searchQuery.trim() ? limitedSpots : prev));
+          }
+        } catch (err) {
+          console.warn('Nearby restaurants fetch notice:', err);
+        } finally {
+          if (!isCancelled) setIsLoadingNearby(false);
+        }
+      };
+
+      // 1. Fire nearby restaurants fetch immediately using available or default coordinates
+      const initialLat = activeCoords?.lat || 18.5204;
+      const initialLng = activeCoords?.lng || 73.8407;
+      fetchNearby(initialLat, initialLng);
+
+      // 2. Concurrently resolve IP location if active coordinates are not yet set
       if (!activeCoords) {
         setIsDetectingLocation(true);
         try {
@@ -94,6 +116,10 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
             setCoords(detected);
             const label = locData.locationDisplay || (locData.detectedCity?.name ? `${locData.detectedCity.name}` : selectedCity);
             setLocationLabel(label);
+            // Refresh nearby if detected coordinates significantly differ from initial
+            if (Math.abs(detected.lat - initialLat) > 0.1 || Math.abs(detected.lng - initialLng) > 0.1) {
+              fetchNearby(detected.lat, detected.lng);
+            }
           }
         } catch (err) {
           console.warn('IP location fetch error:', err);
@@ -102,26 +128,6 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         }
       } else if (!locationLabel) {
         setLocationLabel(selectedCity || 'Your Location');
-      }
-
-      const effectiveLat = activeCoords?.lat || 18.5204;
-      const effectiveLng = activeCoords?.lng || 73.8407;
-
-      // Fetch LIVE nearby restaurants around detected IP coordinates (Zero local static fallback)
-      setIsLoadingNearby(true);
-      try {
-        const res = await fetch(`/api/restaurants/search?city=${encodeURIComponent(selectedCity || 'Pune')}&lat=${effectiveLat}&lng=${effectiveLng}`);
-        const data = await res.json();
-        if (!isCancelled && data.success && Array.isArray(data.data)) {
-          const limitedSpots = data.data.slice(0, 5);
-          setNearbyRestaurants(limitedSpots);
-          // If search query is currently empty, populate search results with strictly the 4-5 closest nearby spots
-          setSearchResults((prev) => (!searchQuery.trim() ? limitedSpots : prev));
-        }
-      } catch (err) {
-        console.warn('Nearby restaurants fetch notice:', err);
-      } finally {
-        if (!isCancelled) setIsLoadingNearby(false);
       }
     }
 

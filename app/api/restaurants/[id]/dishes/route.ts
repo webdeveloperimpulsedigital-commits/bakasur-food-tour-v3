@@ -69,48 +69,52 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const baseDishes: Dish[] = [];
     let usedSource = 'curated_culinary_catalog';
 
-    // 1. Priority 1: Real-time Live Swiggy Menu & Real Food Catalog (Direct Mobile API & Scraper)
-    try {
-      const swiggyRestId = swiggyIdParam || (restId > 0 && restId < 890000 ? String(restId) : undefined);
-      const liveSwiggyDishes = await fetchSwiggyDishesViaApify(restInfo.name, restInfo.city, {
-        restaurantId: swiggyRestId,
-        lat: restInfo.latitude,
-        lng: restInfo.longitude
-      });
-
-      if (liveSwiggyDishes && liveSwiggyDishes.length > 0) {
-        usedSource = 'live_swiggy_menu';
-        for (const d of liveSwiggyDishes) {
-          const cleanName = formatCleanDishName(d.name, restInfo.name);
-          const lower = cleanName.toLowerCase();
-          if (!seenNames.has(lower)) {
-            seenNames.add(lower);
-            baseDishes.push({
-              ...d,
-              name: cleanName
-            });
-          }
-        }
+    // 1. Priority 1: Complete Authentic Restaurant Signature Menu & Cuisine Catalog (Instant 0ms in-memory delivery)
+    const liveDishes = generateLiveMenuForRestaurant(restInfo);
+    for (const d of liveDishes) {
+      const cleanName = formatCleanDishName(d.name, restInfo.name);
+      const lower = cleanName.toLowerCase();
+      if (!seenNames.has(lower)) {
+        seenNames.add(lower);
+        baseDishes.push({
+          ...d,
+          name: cleanName,
+          image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
+        });
       }
-    } catch (swiggyErr) {
-      console.warn('Live Swiggy menu fetch notice:', swiggyErr);
+      if (baseDishes.length >= 35) break;
     }
 
-    // 2. Priority 2: Complete Authentic Restaurant Signature Menu & Cuisine Catalog if live dishes < 20
-    if (baseDishes.length < 20) {
-      const liveDishes = generateLiveMenuForRestaurant(restInfo);
-      for (const d of liveDishes) {
-        const cleanName = formatCleanDishName(d.name, restInfo.name);
-        const lower = cleanName.toLowerCase();
-        if (!seenNames.has(lower)) {
-          seenNames.add(lower);
-          baseDishes.push({
-            ...d,
-            name: cleanName,
-            image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
-          });
+    // 2. Priority 2: Real-time Live Swiggy Menu via Apify if configured (Non-blocking with strict fast timeout)
+    if (isApifyConfigured() || swiggyIdParam) {
+      try {
+        const swiggyRestId = swiggyIdParam || (restId > 0 && restId < 890000 ? String(restId) : undefined);
+        const liveSwiggyPromise = fetchSwiggyDishesViaApify(restInfo.name, restInfo.city, {
+          restaurantId: swiggyRestId,
+          lat: restInfo.latitude,
+          lng: restInfo.longitude
+        });
+        
+        // Strict 600ms timeout race so user NEVER waits
+        const timeoutPromise = new Promise<Dish[]>((resolve) => setTimeout(() => resolve([]), 600));
+        const liveSwiggyDishes = await Promise.race([liveSwiggyPromise, timeoutPromise]);
+
+        if (liveSwiggyDishes && liveSwiggyDishes.length > 0) {
+          usedSource = 'live_swiggy_menu';
+          for (const d of liveSwiggyDishes) {
+            const cleanName = formatCleanDishName(d.name, restInfo.name);
+            const lower = cleanName.toLowerCase();
+            if (!seenNames.has(lower)) {
+              seenNames.add(lower);
+              baseDishes.unshift({
+                ...d,
+                name: cleanName
+              });
+            }
+          }
         }
-        if (baseDishes.length >= 35) break;
+      } catch (swiggyErr) {
+        console.warn('Live Swiggy menu fetch notice:', swiggyErr);
       }
     }
 

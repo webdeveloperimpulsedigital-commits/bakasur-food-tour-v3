@@ -13,7 +13,16 @@ export interface IpLocationResult {
   queryIp?: string;
 }
 
+const ipLocationCache = new Map<string, { timestamp: number; data: IpLocationResult }>();
+const IP_CACHE_TTL = 3600000; // 1 hour
+
 export async function fetchLocationFromIP(clientIp?: string): Promise<IpLocationResult | null> {
+  const cacheKey = clientIp || 'default_ip';
+  const cached = ipLocationCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < IP_CACHE_TTL) {
+    return cached.data;
+  }
+
   try {
     const isPublic = clientIp && 
       !clientIp.startsWith('127.') && 
@@ -28,14 +37,14 @@ export async function fetchLocationFromIP(clientIp?: string): Promise<IpLocation
       : `http://ip-api.com/json/?fields=status,country,regionName,city,lat,lon,zip,query`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500);
+    const timeout = setTimeout(() => controller.abort(), 700);
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
     
     if (res.ok) {
       const data = await res.json();
       if (data.status === 'success' && typeof data.lat === 'number' && typeof data.lon === 'number') {
-        return {
+        const result: IpLocationResult = {
           lat: data.lat,
           lng: data.lon,
           city: data.city || 'Pune',
@@ -43,6 +52,8 @@ export async function fetchLocationFromIP(clientIp?: string): Promise<IpLocation
           country: data.country || 'India',
           queryIp: data.query
         };
+        ipLocationCache.set(cacheKey, { timestamp: Date.now(), data: result });
+        return result;
       }
     }
   } catch (err) {

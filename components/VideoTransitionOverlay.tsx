@@ -72,20 +72,38 @@ export const VideoTransitionOverlay: React.FC<VideoTransitionOverlayProps> = ({
     >
       {/* Full-width / Full-screen Video Player */}
       <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black">
+        {!isVideoLoaded && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white/70 z-0 gap-3">
+            <div className="w-10 h-10 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-bold uppercase tracking-wider text-orange-400">Loading scene...</span>
+          </div>
+        )}
         <video
           key={currentSrc}
           ref={videoRef}
           src={currentSrc}
           playsInline
           autoPlay
+          preload="auto"
           muted={!soundEnabled}
           onEnded={handleAction}
           onLoadedData={() => setIsVideoLoaded(true)}
           onCanPlay={() => setIsVideoLoaded(true)}
-          className={`w-full h-full object-contain object-center relative z-10 transition-opacity duration-300 ${
+          className={`w-full h-full object-contain object-center relative z-10 transition-opacity duration-200 ${
             isVideoLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         />
+        {/* Skip button in top right */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAction();
+          }}
+          type="button"
+          className="absolute top-4 right-4 z-30 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white font-bold text-xs backdrop-blur-md border border-white/20 shadow-lg cursor-pointer"
+        >
+          Skip ✕
+        </button>
       </div>
     </div>
   );

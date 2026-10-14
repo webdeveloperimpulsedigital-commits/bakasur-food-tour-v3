@@ -557,6 +557,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted
+            preload="auto"
             className="w-full h-full object-cover object-top relative z-10"
           />
         </div>
@@ -569,6 +570,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted
+            preload="auto"
             className="w-full h-full object-cover object-top relative z-10"
           />
         </div>
@@ -581,6 +583,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted
+            preload="auto"
             className="w-full h-full object-cover object-top relative z-10"
           />
         </div>
@@ -593,6 +596,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted
+            preload="auto"
             className="w-full h-full object-cover object-top relative z-10"
           />
         </div>
@@ -605,6 +609,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted
+            preload="auto"
             className="w-full h-full object-cover object-top relative z-10"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
@@ -618,6 +623,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted
+            preload="auto"
             onTimeUpdate={(e) => {
               const video = e.currentTarget;
               if (video.currentTime >= 3.8) {
@@ -644,6 +650,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             autoPlay
             loop
             muted
+            preload="auto"
             className="w-full h-full object-cover object-center relative z-10"
           />
         </div>
