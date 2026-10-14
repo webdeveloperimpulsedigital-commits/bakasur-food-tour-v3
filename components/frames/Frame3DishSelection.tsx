@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Check, Search, Sparkles, X, Utensils } from 'lucide-react';
+import { Check, Search, Utensils, X, Sparkles, BookOpen } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
-import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
-import { generateLiveMenuForRestaurant } from '@/lib/liveMenu';
+import { getDishVisualAssets, formatCleanDishName, isDishVeg } from '@/lib/dishAssets';
+import { generateLiveMenuForRestaurant, inferDishCategory } from '@/lib/liveMenu';
 
 interface Frame3DishSelectionProps {
   restaurant: Restaurant;
@@ -38,6 +38,8 @@ function getInitialDishes(restaurant: Restaurant): Dish[] {
       rating: 5.0,
       popularity: 100,
       is_recommended: 1,
+      category: 'Main Course',
+      is_veg: 1,
       status: 'active'
     },
     {
@@ -50,6 +52,8 @@ function getInitialDishes(restaurant: Restaurant): Dish[] {
       rating: 4.9,
       popularity: 98,
       is_recommended: 1,
+      category: 'Snacks & Starters',
+      is_veg: 1,
       status: 'active'
     },
     {
@@ -62,6 +66,8 @@ function getInitialDishes(restaurant: Restaurant): Dish[] {
       rating: 4.8,
       popularity: 95,
       is_recommended: 1,
+      category: 'Snacks & Starters',
+      is_veg: 1,
       status: 'active'
     }
   ];
@@ -74,19 +80,14 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   onConfirmDish
 }) => {
   const [rawDishes, setRawDishes] = useState<Dish[]>([]);
-  const [customDishInput, setCustomDishInput] = useState<string>('');
+  const [menuSearchQuery, setMenuSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [suggestions, setSuggestions] = useState<Dish[]>([]);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch Live Menu from API for selected restaurant
   useEffect(() => {
     let isCancelled = false;
     setRawDishes([]);
-    setCustomDishInput('');
-    setSuggestions([]);
+    setMenuSearchQuery('');
     setIsLoading(true);
 
     async function loadDishes() {
@@ -97,6 +98,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           city: restaurant.city || '',
           is_veg: restaurant.is_veg ? '1' : '0'
         });
+        if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
+        if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
         const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
           cache: 'no-store',
           headers: {
@@ -122,101 +125,25 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     };
   }, [restaurant.id, restaurant.name]);
 
-  // Live in-restaurant dish search (Swiggy / Zomato style)
-  useEffect(() => {
-    const q = customDishInput.trim();
-    if (!q) {
-      setSuggestions([]);
-      setIsSearching(false);
-      return;
-    }
+  // All available dishes for this restaurant
+  const allRestaurantDishes: Dish[] = useMemo(() => {
+    return rawDishes.length > 0 ? rawDishes : getInitialDishes(restaurant);
+  }, [rawDishes, restaurant]);
 
-    setIsSearching(true);
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const queryParams = new URLSearchParams({
-          q: q,
-          name: restaurant.name || '',
-          area: restaurant.area || '',
-          city: restaurant.city || '',
-          is_veg: restaurant.is_veg ? '1' : '0'
-        });
-        const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
-          signal: controller.signal,
-          cache: 'no-store'
-        });
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          setSuggestions(json.data);
-          setShowDropdown(true);
-        }
-      } catch (err: unknown) {
-        if ((err as Error)?.name !== 'AbortError') {
-          console.error('Search error:', err);
-        }
-      } finally {
-        setIsSearching(false);
-      }
-    }, 150);
-
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [customDishInput, restaurant.id, restaurant.name]);
-
-  // Click outside listener to dismiss suggestions dropdown
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Extract top best reviewed & recommended dishes
+  // Extract top 3 signature dishes for quick 1-tap picks at top
   const threeDishes: Dish[] = useMemo(() => {
-    const list = rawDishes.length > 0 ? rawDishes : getInitialDishes(restaurant);
-
-    // Sort strictly by best reviews: highest rating first, then popularity
-    const sorted = [...list].sort((a, b) => {
-      const ratingDiff = (b.rating || 0) - (a.rating || 0);
-      if (Math.abs(ratingDiff) > 0.01) return ratingDiff;
+    const sorted = [...allRestaurantDishes].sort((a, b) => {
+      const rDiff = (b.rating || 0) - (a.rating || 0);
+      if (Math.abs(rDiff) > 0.01) return rDiff;
       if ((b.is_recommended || 0) !== (a.is_recommended || 0)) {
         return (b.is_recommended || 0) - (a.is_recommended || 0);
       }
       return (b.popularity || 0) - (a.popularity || 0);
     });
+    return sorted.slice(0, 3);
+  }, [allRestaurantDishes]);
 
-    const topDishes = sorted.slice(0, 3);
-    if (topDishes.length < 3) {
-      const fallback = getInitialDishes(restaurant);
-      for (const item of fallback) {
-        if (topDishes.length >= 3) break;
-        if (!topDishes.some(t => t.name.toLowerCase() === item.name.toLowerCase())) {
-          topDishes.push(item);
-        }
-      }
-    }
-    return topDishes.slice(0, 3);
-  }, [rawDishes, restaurant]);
-
-  // Dynamic restaurant-tailored placeholder
-  const dynamicPlaceholder = useMemo(() => {
-    const sampleDishes = threeDishes
-      .map(d => formatCleanDishName(d.name, restaurant.name))
-      .slice(0, 2)
-      .join(', ');
-    if (sampleDishes) {
-      return `Search in ${restaurant.name} (e.g. ${sampleDishes})...`;
-    }
-    return `Search dishes in ${restaurant.name}...`;
-  }, [threeDishes, restaurant.name]);
-
-  // Auto-select first dish by default whenever restaurant changes or if current dish doesn't belong to this restaurant
+  // Auto-select first recommended dish when restaurant changes
   const hasAutoSelectedRef = useRef<boolean>(false);
   useEffect(() => {
     hasAutoSelectedRef.current = false;
@@ -224,9 +151,9 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
   useEffect(() => {
     if (threeDishes.length > 0) {
-      const isDishInCurrentMenu = selectedDish && (
-        threeDishes.some(d => formatCleanDishName(d.name, restaurant.name).toLowerCase() === selectedDish.name.toLowerCase()) ||
-        rawDishes.some(d => formatCleanDishName(d.name, restaurant.name).toLowerCase() === selectedDish.name.toLowerCase())
+      const isDishInCurrentMenu = selectedDish && allRestaurantDishes.some(
+        d => formatCleanDishName(d.name, restaurant.name).toLowerCase() === selectedDish.name.toLowerCase() ||
+             d.name.toLowerCase() === selectedDish.name.toLowerCase()
       );
 
       if (!selectedDish || !isDishInCurrentMenu) {
@@ -241,109 +168,34 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         });
       }
     }
-  }, [threeDishes, rawDishes, selectedDish, restaurant.name, onSelectDish]);
+  }, [threeDishes, allRestaurantDishes, selectedDish, restaurant.name, onSelectDish]);
 
-  // Complete list of dishes to display in the existing menu dropdown:
-  // Shows all available menu options for this restaurant (from DB + Live catalog)
-  // And live-filters in real-time if the user types in the search box
-  const dropdownDishes = useMemo(() => {
-    const allDishes = rawDishes.length > 0 ? rawDishes : threeDishes;
-    const q = customDishInput.trim().toLowerCase();
-    if (!q) {
-      return allDishes;
-    }
-    // If the input matches the currently selected dish, still show all dishes
-    if (selectedDish?.name && selectedDish.name.toLowerCase() === q) {
-      return allDishes;
-    }
-    const directMatches = allDishes.filter(d => {
-      const clean = formatCleanDishName(d.name, restaurant.name).toLowerCase();
-      return clean.includes(q) || (d.description || '').toLowerCase().includes(q) || d.name.toLowerCase().includes(q);
+  // All restaurant dishes in one unified menu card list (with search filtering)
+  const filteredMenuDishes = useMemo(() => {
+    const q = menuSearchQuery.trim().toLowerCase();
+    if (!q) return allRestaurantDishes;
+    return allRestaurantDishes.filter(dish => {
+      const cleanName = formatCleanDishName(dish.name, restaurant.name).toLowerCase();
+      const desc = (dish.description || '').toLowerCase();
+      return cleanName.includes(q) || desc.includes(q) || dish.name.toLowerCase().includes(q);
     });
+  }, [allRestaurantDishes, menuSearchQuery, restaurant.name]);
 
-    const seen = new Set(directMatches.map(d => formatCleanDishName(d.name, restaurant.name).toLowerCase()));
-    const result = [...directMatches];
-    for (const s of suggestions) {
-      const sClean = formatCleanDishName(s.name, restaurant.name).toLowerCase();
-      if (!seen.has(sClean)) {
-        seen.add(sClean);
-        result.push(s);
-      }
-    }
-    return result;
-  }, [customDishInput, rawDishes, suggestions, threeDishes, restaurant.name, selectedDish]);
-
-  const handleSelectPill = (dish: Dish) => {
+  const handleSelectDishItem = (dish: Dish) => {
     const cleanName = formatCleanDishName(dish.name, restaurant.name);
-    setCustomDishInput(cleanName);
-    setShowDropdown(false);
-    const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
-    onSelectDish({
-      ...dish,
-      name: cleanName,
-      image: visual.plateImage
-    });
-  };
-
-  const handleCustomInputChange = (val: string) => {
-    setCustomDishInput(val);
-  };
-
-  const handleSelectSuggestion = (dish: Dish) => {
-    const cleanName = formatCleanDishName(dish.name, restaurant.name);
-    setCustomDishInput(cleanName);
     const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
     onSelectDish({
       ...dish,
       name: cleanName,
       image: visual.flyingImage || visual.plateImage
     });
-    setShowDropdown(false);
-  };
-
-  const handleClearCustomInput = () => {
-    setCustomDishInput('');
-    setSuggestions([]);
-    setShowDropdown(false);
   };
 
   const handleConfirm = () => {
     let finalName = '';
     let finalImg = '';
 
-    const trimmedInput = customDishInput.trim();
-    // If user has typed in search input AND it differs from the selectedDish, find matching or use custom input
-    if (trimmedInput && (!selectedDish?.name || selectedDish.name.toLowerCase() !== trimmedInput.toLowerCase())) {
-      const allAvailable = [...rawDishes, ...suggestions, ...threeDishes];
-      const match = allAvailable.find(d => {
-        const clean = formatCleanDishName(d.name, restaurant.name).toLowerCase();
-        return clean === trimmedInput.toLowerCase() || d.name.toLowerCase() === trimmedInput.toLowerCase();
-      }) || allAvailable.find(d => {
-        const clean = formatCleanDishName(d.name, restaurant.name).toLowerCase();
-        return clean.includes(trimmedInput.toLowerCase()) || trimmedInput.toLowerCase().includes(clean);
-      });
-
-      if (match) {
-        const cleanName = formatCleanDishName(match.name, restaurant.name);
-        const visual = getDishVisualAssets(cleanName, match.image, restaurant.name);
-        finalName = cleanName;
-        finalImg = visual.flyingImage || visual.plateImage;
-        onSelectDish({
-          ...match,
-          name: cleanName,
-          image: finalImg
-        });
-      } else {
-        const cleanName = formatCleanDishName(trimmedInput, restaurant.name);
-        const visual = getDishVisualAssets(cleanName, undefined, restaurant.name);
-        finalName = cleanName;
-        finalImg = visual.flyingImage || visual.plateImage;
-        onSelectDish({
-          name: cleanName,
-          image: finalImg
-        });
-      }
-    } else if (selectedDish?.name) {
+    if (selectedDish?.name) {
       finalName = formatCleanDishName(selectedDish.name, restaurant.name);
       const visual = getDishVisualAssets(finalName, selectedDish.image, restaurant.name);
       finalImg = visual.flyingImage || selectedDish.image || visual.plateImage;
@@ -361,25 +213,37 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     onConfirmDish(finalName, finalImg);
   };
 
+  const isPureVegRestaurant = restaurant.is_veg === 1 || 
+    restaurant.name.toLowerCase().includes('pure veg') || 
+    (restaurant.name.toLowerCase().includes('veg') && !restaurant.name.toLowerCase().includes('non'));
+
   return (
-    <div className="w-full h-full min-h-0 flex flex-col justify-start items-start text-left animate-in fade-in duration-300 p-3.5 sm:p-5 gap-3 bg-white overflow-y-auto scrollbar-thin relative pb-10 sm:pb-14">
+    <div className="w-full h-full min-h-0 flex flex-col justify-start items-start text-left animate-in fade-in duration-300 p-3 sm:p-4 gap-2.5 bg-white overflow-y-auto scrollbar-thin relative pb-8">
       {/* 1. Headline */}
       <div className="text-left shrink-0">
-        <h2 className="text-[20px] xs:text-[22px] sm:text-[28px] font-black text-[#0B1B48] leading-[1.12] tracking-tight">
+        <h2 className="text-[19px] xs:text-[21px] sm:text-[26px] font-black text-[#0B1B48] leading-[1.15] tracking-tight">
           Favourite food stop mil gaya<br />Ab plate decide karo.
         </h2>
       </div>
 
-      {/* 2. Top 3 Signature Dish Cards with Pure Food PNGs */}
+      {/* 2. Top 3 Signature Quick-Pick Cards */}
       <div className="shrink-0 w-full">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-[#D4380D]" />
+            Quick Pick Best Dishes
+          </span>
+          <span className="text-[10px] text-slate-400 font-medium">1-Tap Select</span>
+        </div>
+
         {isLoading && rawDishes.length === 0 ? (
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full animate-pulse">
-            <div className="h-20 w-full bg-slate-200 rounded-xl" />
-            <div className="h-20 w-full bg-slate-200 rounded-xl" />
-            <div className="h-20 w-full bg-slate-200 rounded-xl" />
+          <div className="grid grid-cols-3 gap-2 w-full animate-pulse">
+            <div className="h-20 w-full bg-slate-100 rounded-xl" />
+            <div className="h-20 w-full bg-slate-100 rounded-xl" />
+            <div className="h-20 w-full bg-slate-100 rounded-xl" />
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full">
+          <div className="grid grid-cols-3 gap-2 w-full">
             {threeDishes.map((dish) => {
               const cleanDishName = formatCleanDishName(dish.name, restaurant.name);
               const isSelected = selectedDish?.name?.toLowerCase() === cleanDishName.toLowerCase() ||
@@ -388,23 +252,24 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
               return (
                 <button
-                  key={`${dish.id}-${dish.name}`}
+                  key={`quick-${dish.id}-${dish.name}`}
                   type="button"
-                  onClick={() => handleSelectPill(dish)}
-                  className={`w-full py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-xl transition-all flex flex-col items-center justify-center text-center relative cursor-pointer shadow-xs border-2 min-h-[74px] sm:min-h-[82px] ${isSelected
-                      ? 'bg-orange-50 border-[#D4380D] text-[#D4380D] shadow-md shadow-[#D4380D]/15 scale-[1.02]'
+                  onClick={() => handleSelectDishItem(dish)}
+                  className={`w-full py-2 px-1.5 rounded-xl transition-all flex flex-col items-center justify-center text-center relative cursor-pointer border-2 min-h-[76px] sm:min-h-[82px] ${
+                    isSelected
+                      ? 'bg-orange-50 border-[#D4380D] text-[#D4380D] shadow-sm shadow-[#D4380D]/15 scale-[1.02]'
                       : 'bg-white hover:bg-slate-50 border-slate-200/90 text-[#0B1B48]'
-                    }`}
+                  }`}
                 >
                   {/* Floating Checkmark for Selected State */}
                   {isSelected && (
-                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#D4380D] text-white flex items-center justify-center shadow-xs z-10">
-                      <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
+                    <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#D4380D] text-white flex items-center justify-center shadow-xs z-10">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </div>
                   )}
 
-                  {/* Pure Food PNG Image (Zero background) */}
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 mb-1 flex items-center justify-center shrink-0">
+                  {/* Pure Food PNG Image */}
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 mb-0.5 flex items-center justify-center shrink-0">
                     <img
                       src={visual.flyingImage || visual.plateImage}
                       alt={cleanDishName}
@@ -418,8 +283,9 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                     />
                   </div>
 
-                  <span className={`font-black text-[11px] sm:text-xs leading-tight line-clamp-2 ${isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
-                    }`}>
+                  <span className={`font-black text-[11px] sm:text-xs leading-tight line-clamp-2 ${
+                    isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
+                  }`}>
                     {cleanDishName}
                   </span>
                 </button>
@@ -429,178 +295,153 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         )}
       </div>
 
-      {/* 3. In-Restaurant Menu Search Bar with Live Suggestions Dropdown */}
-      <div ref={dropdownRef} className="relative w-full space-y-1 shrink-0 mt-1">
-        <label className="text-xs font-bold text-[#0B1B48] flex items-center">
-          <span>🔍 {restaurant.name} Menu Search</span>
-        </label>
-        <div className="relative flex items-center w-full px-3 py-2 rounded-xl bg-white border-2 border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 shadow-xs transition-all">
-          <Utensils className="w-4 h-4 text-[#0047BA] shrink-0 mr-2" />
-          <input
-            type="text"
-            value={customDishInput}
-            onFocus={() => setShowDropdown(true)}
-            onChange={(e) => {
-              handleCustomInputChange(e.target.value);
-              setShowDropdown(true);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                const q = customDishInput.trim();
-                if (!q) return;
-                const allAvailable = [...rawDishes, ...suggestions, ...threeDishes];
-                const match = allAvailable.find(d => {
-                  const clean = formatCleanDishName(d.name, restaurant.name).toLowerCase();
-                  return clean === q.toLowerCase() || clean.includes(q.toLowerCase());
-                });
-                if (match) {
-                  handleSelectSuggestion(match);
-                } else {
-                  const cleanName = formatCleanDishName(q, restaurant.name);
-                  const visual = getDishVisualAssets(cleanName, undefined, restaurant.name);
-                  onSelectDish({
-                    name: cleanName,
-                    image: visual.flyingImage || visual.plateImage
-                  });
-                  setShowDropdown(false);
-                }
-              }
-            }}
-            placeholder={dynamicPlaceholder}
-            className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 placeholder-[#94A3B8] focus:outline-none"
-          />
-
-          <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
-            {isSearching ? (
-              <div className="w-4 h-4 border-2 border-[#1D4ED8] border-t-transparent rounded-full animate-spin shrink-0" />
-            ) : customDishInput ? (
+      {/* 3. HOTEL MENU CARD - Simple, Elegant, Real Food Items */}
+      <div className="w-full shrink-0 flex flex-col rounded-2xl border-2 border-slate-200/90 bg-white overflow-hidden shadow-sm mt-0.5">
+        {/* Menu Search Bar */}
+        <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+          <div className="relative flex items-center w-full px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 focus-within:border-[#D4380D] focus-within:ring-1 focus-within:ring-[#D4380D]/20 transition-all">
+            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 mr-1.5" />
+            <input
+              type="text"
+              value={menuSearchQuery}
+              onChange={(e) => setMenuSearchQuery(e.target.value)}
+              placeholder={`Search in ${restaurant.name} menu (e.g. Misal, Dosa, Thali)...`}
+              className="w-full bg-transparent text-xs font-semibold text-slate-900 placeholder-slate-400 focus:outline-none"
+            />
+            {menuSearchQuery && (
               <button
                 type="button"
-                onClick={handleClearCustomInput}
-                className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
-                title="Clear"
+                onClick={() => setMenuSearchQuery('')}
+                className="p-0.5 text-slate-400 hover:text-slate-600"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
-            ) : (
-              <Search className="w-4 h-4 text-[#0047BA] stroke-[2.5]" />
             )}
           </div>
         </div>
 
-        {/* Live Search Suggestions Dropdown */}
-        {showDropdown && (
-          <div className="absolute top-[105%] inset-x-0 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-[240px] sm:max-h-[280px] overflow-y-auto p-1.5 scrollbar-thin">
-            {/* Header info */}
-            <div className="px-2.5 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between border-b border-slate-100 mb-1">
-              <span>{customDishInput.trim() ? `Search Results in ${restaurant.name}` : `${restaurant.name} Menu`}</span>
-              <span className="text-[10px] text-emerald-600 font-semibold">100% Authentic Food</span>
+        {/* Scrollable Hotel Menu Dishes List - All Dishes in One List */}
+        <div className="max-h-[260px] xs:max-h-[300px] sm:max-h-[340px] overflow-y-auto divide-y divide-slate-100 scrollbar-thin p-1 bg-white">
+          {filteredMenuDishes.length === 0 ? (
+            <div className="p-4 text-center space-y-1">
+              <p className="text-xs font-bold text-slate-700">No dishes found matching &ldquo;{menuSearchQuery}&rdquo;</p>
+              <p className="text-[11px] text-slate-400">Try searching for other authentic specialties from {restaurant.name}</p>
             </div>
-
-            {/* If user searched and no results were found in this restaurant */}
-            {customDishInput.trim().length > 0 && dropdownDishes.length === 0 && !isSearching && (
-              <div className="p-3 text-center space-y-1.5">
-                <p className="text-xs font-bold text-slate-700">
-                  No dishes matching &ldquo;{customDishInput.trim()}&rdquo; on {restaurant.name}&rsquo;s menu.
-                </p>
-                <p className="text-[11px] text-slate-500">
-                  Select from {restaurant.name}&rsquo;s available signature dishes:
-                </p>
-                <div className="pt-1 space-y-1">
-                  {(rawDishes.length > 0 ? rawDishes.slice(0, 5) : threeDishes).map((dish) => {
-                    const visual = getDishVisualAssets(dish.name, dish.image, restaurant.name);
-                    const cleanName = formatCleanDishName(dish.name, restaurant.name);
-                    return (
-                      <button
-                        key={`fallback-${dish.id}-${dish.name}`}
-                        type="button"
-                        onClick={() => handleSelectSuggestion(dish)}
-                        className="w-full px-2.5 py-1.5 text-left rounded-lg transition-colors flex items-center justify-between gap-2.5 cursor-pointer hover:bg-slate-50 text-slate-800 border border-slate-100"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <img
-                            src={visual.flyingImage || visual.plateImage}
-                            alt={cleanName}
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              if (!target.src.includes('default_feast')) {
-                                target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Dish')}&restaurant=Indian`;
-                              }
-                            }}
-                            className="w-7 h-7 rounded-full object-contain p-0.5 bg-slate-50 border border-slate-200 shrink-0"
-                          />
-                          <span className="text-xs font-bold truncate">{cleanName}</span>
-                        </div>
-                        <span className="text-[10px] font-bold text-[#D4380D] bg-orange-50 px-2 py-0.5 rounded border border-orange-200 shrink-0">
-                          Choose
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* List of matching or catalog dishes strictly from this restaurant */}
-            {dropdownDishes.map((dish) => {
-              const visual = getDishVisualAssets(dish.name, dish.image, restaurant.name);
+          ) : (
+            filteredMenuDishes.map((dish) => {
               const cleanName = formatCleanDishName(dish.name, restaurant.name);
-              const isSelected = !!selectedDish?.name && (
-                selectedDish.name.toLowerCase() === cleanName.toLowerCase() ||
-                selectedDish.name.toLowerCase() === dish.name.toLowerCase()
-              );
+              const isSelected = selectedDish?.name?.toLowerCase() === cleanName.toLowerCase() ||
+                selectedDish?.name?.toLowerCase() === dish.name.toLowerCase();
+              const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
+              const isVeg = dish.is_veg !== undefined ? dish.is_veg === 1 : isDishVeg(dish.name);
 
               return (
-                <button
-                  key={`${dish.id}-${dish.name}`}
-                  type="button"
-                  onClick={() => handleSelectSuggestion(dish)}
-                  className={`w-full px-2.5 py-2 text-left rounded-lg transition-colors flex items-center justify-between gap-2.5 cursor-pointer border-b border-slate-100 last:border-b-0 ${isSelected ? 'bg-orange-50 text-[#D4380D]' : 'hover:bg-slate-50 text-slate-800'
-                    }`}
+                <div
+                  key={`item-${dish.id}-${dish.name}`}
+                  onClick={() => handleSelectDishItem(dish)}
+                  className={`w-full p-2 rounded-xl transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left ${
+                    isSelected ? 'bg-orange-50/80 border border-orange-200' : 'hover:bg-slate-50/80 border border-transparent'
+                  }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  {/* Left: Food Image Thumbnail */}
+                  <div className="w-11 h-11 rounded-lg p-0.5 bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0 overflow-hidden">
                     <img
                       src={visual.flyingImage || visual.plateImage}
-                      alt={dish.name}
+                      alt={cleanName}
                       onError={(e) => {
                         const target = e.currentTarget;
                         if (!target.src.includes('default_feast')) {
-                          target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Dish')}&restaurant=Indian`;
+                          target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Feast')}&restaurant=Indian`;
                         }
                       }}
-                      className="w-8 h-8 rounded-full object-contain p-0.5 bg-slate-50 border border-slate-200 shrink-0"
+                      className="w-full h-full object-contain filter drop-shadow-xs"
                     />
-                    <div className="min-w-0">
-                      <div className="text-xs font-black truncate">{cleanName}</div>
+                  </div>
+
+                  {/* Middle: Veg/Non-Veg dot + Clean Name + Top Pick badge + Description (NO PRICE) */}
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                    {/* Indian Food Standard Veg/Non-Veg Symbol */}
+                    <div className="mt-0.5 shrink-0">
+                      {isVeg ? (
+                        <span className="inline-flex items-center justify-center w-3.5 h-3.5 border border-emerald-600 rounded-xs p-0.5" title="Pure Veg">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center justify-center w-3.5 h-3.5 border border-red-600 rounded-xs p-0.5" title="Non-Veg">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-xs font-black truncate ${isSelected ? 'text-[#D4380D]' : 'text-slate-900'}`}>
+                          {cleanName}
+                        </span>
+                        {dish.is_recommended === 1 && (
+                          <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded shrink-0">
+                            ★ Top Pick
+                          </span>
+                        )}
+                      </div>
+
                       {dish.description && (
-                        <div className="text-[10px] text-slate-500 truncate">{dish.description}</div>
+                        <div className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                          {dish.description}
+                        </div>
                       )}
                     </div>
                   </div>
-                  <div className="shrink-0 flex items-center gap-1.5">
-                    {isSelected ? (
-                      <div className="w-5 h-5 rounded-full bg-[#D4380D] text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    ) : (
-                      <span className="text-[10px] font-bold text-[#D4380D] bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
-                        Choose
-                      </span>
-                    )}
+
+                  {/* Right: SELECT / CHOSEN Button */}
+                  <div className="flex items-center shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectDishItem(dish);
+                      }}
+                      className={`px-2.5 py-1 rounded-md text-[10px] font-black transition-all cursor-pointer shrink-0 ${
+                        isSelected
+                          ? 'bg-[#D4380D] text-white shadow-xs'
+                          : 'bg-orange-50 hover:bg-orange-100 text-[#D4380D] border border-orange-200'
+                      }`}
+                    >
+                      {isSelected ? (
+                        <span className="flex items-center gap-0.5">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                          CHOSEN
+                        </span>
+                      ) : (
+                        'SELECT'
+                      )}
+                    </button>
                   </div>
-                </button>
+                </div>
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
       </div>
 
-      {/* 4. Primary CTA Button */}
-      <div className="shrink-0 w-full pt-1">
+      {/* 4. Active Selected Plate Summary Bar */}
+      {selectedDish && (
+        <div className="w-full shrink-0 px-3 py-2 rounded-xl bg-orange-50/90 border border-orange-200/80 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-slate-500 font-semibold shrink-0">Selected:</span>
+            <span className="font-black text-[#D4380D] truncate">
+              {formatCleanDishName(selectedDish.name, restaurant.name)}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Primary CTA Button */}
+      <div className="shrink-0 w-full pt-0.5">
         <button
           onClick={handleConfirm}
           type="button"
-          className="w-full py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
+          className="w-full py-3 sm:py-3.5 px-6 rounded-xl sm:rounded-2xl bg-[#D4380D] hover:bg-[#ba300a] text-white font-black text-sm sm:text-base uppercase tracking-wider shadow-lg shadow-[#D4380D]/30 active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer border-0"
         >
           YEH WALA PAKKA
         </button>

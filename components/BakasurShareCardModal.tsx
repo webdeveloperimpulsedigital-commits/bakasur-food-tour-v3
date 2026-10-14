@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { X, Instagram, MessageCircle, Ticket, Download, Check, Copy } from 'lucide-react';
+import { X, Instagram, MessageCircle, Ticket, Download, Check, Copy, FileText } from 'lucide-react';
 
 interface BakasurShareCardModalProps {
   isOpen: boolean;
@@ -20,6 +20,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   restaurantName,
   cityName,
   dishName,
+  dishImage,
   participationId = 'BKT-' + Math.floor(100000 + Math.random() * 900000)
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -28,9 +29,9 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const heroImageSrc = '/images/final-frames/food-tour-img.jpg';
-  const foodTourImageSrc = '/images/final-frames/food-tour-img.jpg';
+  const activeImageSrc = dishImage || heroImageSrc;
 
-  // In-memory preloaded assets for instant, synchronous zero-latency user-gesture execution
+  // In-memory preloaded clean photo assets (No message baked into image)
   const preloadedFileRef = useRef<File | null>(null);
   const preloadedBlobRef = useRef<Blob | null>(null);
   const preloadedPngBlobRef = useRef<Blob | null>(null);
@@ -40,144 +41,48 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     setTimeout(() => setToastMessage(null), 4500);
   };
 
-  // Helper for drawing rounded rectangles on canvas across all browser versions
-  const drawRoundRect = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    r: number
-  ) => {
-    if (typeof ctx.roundRect === 'function') {
-      ctx.beginPath();
-      ctx.roundRect(x, y, w, h, r);
-    } else {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-    }
-  };
+  // Preload clean image file directly from source for zero-latency instant mobile sharing
+  useEffect(() => {
+    let isMounted = true;
+    fetch(activeImageSrc)
+      .then((res) => res.blob())
+      .then((blob) => {
+        if (isMounted && blob && blob.size > 1000) {
+          preloadedBlobRef.current = blob;
+          preloadedFileRef.current = new File([blob], 'bhookasur-food-tour.jpg', { type: 'image/jpeg' });
+        }
+      })
+      .catch((err) => console.warn('Preload clean photo error:', err));
+    return () => {
+      isMounted = false;
+    };
+  }, [activeImageSrc]);
 
-  const generateCard = useCallback(() => {
+  // Generate clean image in canvas (PURE PHOTO ONLY - ALL MESSAGE TEXT REMOVED FROM IMAGE)
+  const generateCleanImage = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Card dimensions: 1080 x 1560 (Image on top, message below)
+    // Standard square photo dimensions: 1080 x 1080
     canvas.width = 1080;
-    canvas.height = 1560;
+    canvas.height = 1080;
 
-    const siteDomain = typeof window !== 'undefined' && window.location.host ? window.location.host : 'bhookasur.com';
-
-    const drawCompositeCard = (imgSource: HTMLImageElement | null) => {
-      // 1. Crisp White Background
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, 1080, 1560);
-
-      // Card outer subtle border
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 8;
-      drawRoundRect(ctx, 16, 16, 1048, 1528, 40);
-      ctx.stroke();
-
-      // 2. Hero Photo at Top (Image on Top: 980 x 860)
-      const imgX = 50;
-      const imgY = 50;
-      const imgW = 980;
-      const imgH = 860;
-      const imgRadius = 28;
-
-      ctx.save();
-      drawRoundRect(ctx, imgX, imgY, imgW, imgH, imgRadius);
-      ctx.clip();
+    const drawPhoto = (imgSource: HTMLImageElement | null) => {
+      ctx.fillStyle = '#081B4B';
+      ctx.fillRect(0, 0, 1080, 1080);
 
       if (imgSource) {
         try {
-          ctx.drawImage(imgSource, imgX, imgY, imgW, imgH);
+          ctx.drawImage(imgSource, 0, 0, 1080, 1080);
         } catch {
           ctx.fillStyle = '#081B4B';
-          ctx.fillRect(imgX, imgY, imgW, imgH);
+          ctx.fillRect(0, 0, 1080, 1080);
         }
-      } else {
-        ctx.fillStyle = '#081B4B';
-        ctx.fillRect(imgX, imgY, imgW, imgH);
-      }
-      ctx.restore();
-
-      // Border around photo
-      ctx.strokeStyle = '#CBD5E1';
-      ctx.lineWidth = 3;
-      drawRoundRect(ctx, imgX, imgY, imgW, imgH, imgRadius);
-      ctx.stroke();
-
-      // 3. Message section directly underneath image
-      ctx.textAlign = 'center';
-
-      // Title: BHOOKASUR KA FOOD TOUR 🍔🔥
-      ctx.fillStyle = '#0B1B48';
-      ctx.font = '900 46px system-ui, -apple-system, sans-serif';
-      ctx.fillText('BHOOKASUR KA FOOD TOUR 🍔🔥', 540, 975);
-
-      // Subheading: Maine Bhookasur ke saath Food Tour kiya!
-      ctx.fillStyle = '#0B1B48';
-      ctx.font = '700 34px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Maine Bhookasur ke saath Food Tour kiya!', 540, 1030);
-
-      // Dynamic Dish Line (if dishName)
-      let currentY = 1085;
-      if (dishName) {
-        ctx.fillStyle = '#D4380D';
-        ctx.font = '800 36px system-ui, -apple-system, sans-serif';
-        ctx.fillText(`🍽️ Dish: ${dishName}`, 540, currentY);
-        currentY += 52;
       }
 
-      // Dynamic Spot Line (if restaurantName)
-      if (restaurantName) {
-        ctx.fillStyle = '#0B1B48';
-        ctx.font = '800 32px system-ui, -apple-system, sans-serif';
-        ctx.fillText(`📍 Spot: ${restaurantName} (${cityName || 'Pune'})`, 540, currentY);
-        currentY += 52;
-      }
-
-      // Invitation
-      ctx.fillStyle = '#D4380D';
-      ctx.font = '700 28px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Aap bhi Bhookasur ke saath Food Tour kijiye', 540, currentY);
-      currentY += 40;
-      ctx.fillText('aur apna food spot share kijiye!', 540, currentY);
-      currentY += 60;
-
-      // Website Link Pill Button (Navy Blue with white text)
-      const pillX = 140;
-      const pillY = currentY;
-      const pillW = 800;
-      const pillH = 92;
-
-      ctx.fillStyle = '#0B1B48';
-      drawRoundRect(ctx, pillX, pillY, pillW, pillH, 46);
-      ctx.fill();
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 32px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`👉 Join the Food Tour: ${siteDomain}`, 540, pillY + 58);
-
-      // Gastrium Branding Footer
-      ctx.fillStyle = '#0B1B48';
-      ctx.font = '800 24px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Powered by Gastrium', 540, 1475);
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '700 20px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Acidity ko bolo good night', 540, 1510);
-
-      // 4. Export to Blobs & DataURL
+      // Export clean photo to Blobs & DataURL (NO text message baked in!)
       try {
         const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
         setDownloadUrl(dataUrl);
@@ -185,7 +90,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
         canvas.toBlob((blob) => {
           if (blob) {
             preloadedBlobRef.current = blob;
-            preloadedFileRef.current = new File([blob], 'bhookasur-food-tour-pass.jpg', { type: 'image/jpeg' });
+            preloadedFileRef.current = new File([blob], 'bhookasur-food-tour.jpg', { type: 'image/jpeg' });
           }
         }, 'image/jpeg', 0.95);
 
@@ -200,53 +105,49 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     };
 
     if (imgElementRef.current && imgElementRef.current.complete && imgElementRef.current.naturalWidth > 0) {
-      drawCompositeCard(imgElementRef.current);
+      drawPhoto(imgElementRef.current);
     } else {
       const img = new Image();
-      img.onload = () => drawCompositeCard(img);
-      img.onerror = () => drawCompositeCard(null);
-      img.src = heroImageSrc;
+      img.crossOrigin = 'anonymous';
+      img.onload = () => drawPhoto(img);
+      img.onerror = () => drawPhoto(null);
+      img.src = activeImageSrc;
       if (img.complete) {
-        drawCompositeCard(img);
+        drawPhoto(img);
       }
     }
-  }, [heroImageSrc, dishName, restaurantName, cityName]);
+  }, [activeImageSrc]);
 
   useEffect(() => {
     if (isOpen) {
-      const timer = setTimeout(generateCard, 100);
+      const timer = setTimeout(generateCleanImage, 100);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, generateCard]);
+  }, [isOpen, generateCleanImage]);
 
   if (!isOpen) return null;
 
   const currentWebUrl = typeof window !== 'undefined' ? window.location.origin : 'https://bhookasur.com';
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const previewDomain = isLocal ? 'https://bhookasur.com' : currentWebUrl;
 
-  const dishLine = dishName ? `🍽️ Dish: ${dishName}\n` : '';
-  const restLine = restaurantName ? `📍 Spot: ${restaurantName} (${cityName || 'Pune'})\n` : '';
+  // Message in text format (used as caption for WhatsApp and Instagram share - dish & spot removed)
+  const shareText = `*BHOOKASUR KA FOOD TOUR* 🍔🔥\n\nMaine Bhookasur ke saath Food Tour kiya!\nAap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!\n\n👉 Join the Food Tour:\n${currentWebUrl}`;
 
-  // Message in text format (used as caption for WhatsApp and Instagram share)
-  const shareText = `*BHOOKASUR KA FOOD TOUR* 🍔🔥\n\nMaine Bhookasur ke saath Food Tour kiya!\n${dishLine}${restLine}Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!\n\n👉 Join the Food Tour:\n${currentWebUrl}`;
-
-  // Trigger browser download of unified food tour pass card
+  // Trigger browser download of clean photo (pure image without baked text)
   const handleDownloadPass = () => {
     try {
       const link = document.createElement('a');
-      link.href = downloadUrl || foodTourImageSrc;
-      link.download = 'bhookasur-food-tour-pass.jpg';
+      link.href = downloadUrl || activeImageSrc;
+      link.download = 'bhookasur-food-tour.jpg';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast('📸 Pass card downloaded to your device!');
+      showToast('📸 Food Tour photo downloaded!');
     } catch (err) {
       console.warn('Download error:', err);
     }
   };
 
-  // Copy pass image to system clipboard
+  // Copy pure image to system clipboard
   const handleCopyImage = async () => {
     const pngBlob = preloadedPngBlobRef.current;
     if (pngBlob && typeof navigator !== 'undefined' && navigator.clipboard && typeof ClipboardItem !== 'undefined') {
@@ -254,7 +155,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': pngBlob })
         ]);
-        showToast('✅ Pass card copied! Paste (Ctrl+V) directly in your chat.');
+        showToast('✅ Photo copied! Paste (Ctrl+V) directly into WhatsApp or Instagram.');
         return;
       } catch (e) {
         console.warn('Clipboard write failed:', e);
@@ -263,10 +164,24 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     handleDownloadPass();
   };
 
-  // WhatsApp Share Handler
+  // Copy caption text message to system clipboard
+  const handleCopyText = async () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        showToast('📋 Caption text copied to clipboard!');
+        return;
+      } catch (e) {
+        console.warn('Clipboard write text failed:', e);
+      }
+    }
+  };
+
+  // WhatsApp Share Handler: Sends as ONE single message with Image on top and Caption below
   const handleShareWhatsApp = async () => {
-    // 1. Mobile Web Share API: Synchronous call with preloaded image file
     const file = preloadedFileRef.current;
+
+    // 1. Mobile Web Share API: Sends clean image + text caption together in a single WhatsApp message
     if (file && typeof navigator !== 'undefined' && navigator.canShare) {
       const shareData = {
         title: 'Bhookasur Ka Food Tour',
@@ -296,7 +211,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     }
 
     // 2. Desktop Fallback:
-    // A. Copy unified pass card image to clipboard
+    // Copy clean photo to clipboard so user can paste (Ctrl+V) into WhatsApp Web
     const pngBlob = preloadedPngBlobRef.current;
     if (pngBlob && typeof navigator !== 'undefined' && navigator.clipboard && typeof ClipboardItem !== 'undefined') {
       try {
@@ -308,13 +223,13 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       }
     }
 
-    // B. Trigger automatic pass download
+    // Auto-download clean image for easy attach
     handleDownloadPass();
 
-    // C. Show toast banner
-    showToast('📸 Pass copied & downloaded! Open WhatsApp chat and paste (Ctrl+V) to send as one message.');
+    // Show toast banner
+    showToast('📸 Photo copied & downloaded! Paste (Ctrl+V) in WhatsApp to send photo + caption as 1 message.');
 
-    // D. Open WhatsApp Web directly (user pastes to send as one unified message)
+    // Open WhatsApp Web
     setTimeout(() => {
       window.open('https://web.whatsapp.com', '_blank');
     }, 400);
@@ -322,7 +237,6 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
 
   // Instagram Share Handler
   const handleShareInstagram = async () => {
-    // 1. Mobile Web Share API: Synchronous call with preloaded image file
     const file = preloadedFileRef.current;
     if (file && typeof navigator !== 'undefined' && navigator.canShare) {
       const shareData = {
@@ -352,8 +266,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       }
     }
 
-    // 2. Desktop Fallback:
-    // A. Copy pass image to system clipboard
+    // Desktop Fallback
     const pngBlob = preloadedPngBlobRef.current;
     if (pngBlob && typeof navigator !== 'undefined' && navigator.clipboard && typeof ClipboardItem !== 'undefined') {
       try {
@@ -365,13 +278,9 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       }
     }
 
-    // B. Download image
     handleDownloadPass();
+    showToast('📸 Photo copied & downloaded! Paste (Ctrl+V) into Instagram Direct message.');
 
-    // C. Show toast banner
-    showToast('📸 Pass copied & downloaded! Paste (Ctrl+V) into Instagram Direct message.');
-
-    // D. Open Instagram direct
     setTimeout(() => {
       window.open('https://www.instagram.com/direct/inbox/', '_blank');
     }, 400);
@@ -386,7 +295,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
           <div className="flex items-center gap-2">
             <Ticket className="w-5 h-5 text-[#D4380D]" />
             <span className="font-black text-sm uppercase tracking-wider text-[#0B1B48]">
-              Official Foodie Pass
+              Share Food Tour Pass
             </span>
           </div>
           <button
@@ -401,64 +310,65 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
         {/* Hidden Canvas Element */}
         <canvas ref={canvasRef} className="hidden" />
 
-        {/* Unified Pass Card Preview (Image on Top, Message Directly Below) */}
-        <div className="p-3 sm:p-5 flex-1 overflow-y-auto flex flex-col items-center justify-start bg-slate-100/70">
+        {/* Unified Single Message Preview (First Image on Top, Then Text Below in One Bubble) */}
+        <div className="p-3 sm:p-5 flex-1 overflow-y-auto flex flex-col items-center justify-start bg-slate-900/95">
+          {/* Badge: Single Message Preview */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black tracking-wide uppercase mb-3 border border-emerald-500/30">
+            <MessageCircle className="w-3.5 h-3.5 fill-emerald-300 stroke-none" />
+            <span>Single WhatsApp Message Preview</span>
+          </div>
+
+          {/* WhatsApp Outgoing Message Bubble */}
           <div
-            id="bhookasur-foodie-pass-card"
-            className="w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[380px] bg-white rounded-3xl p-3.5 sm:p-4 shadow-xl border-2 border-slate-200 flex flex-col items-center text-center gap-2.5 relative select-none"
+            id="bhookasur-single-message-preview"
+            className="w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[380px] bg-[#005C4B] rounded-2xl p-2.5 shadow-xl border border-emerald-600/30 flex flex-col text-left relative select-none"
           >
-            {/* 1. Hero Image on Top */}
-            <div className="w-full aspect-[4/3.3] rounded-2xl overflow-hidden border-2 border-slate-200 shadow-sm bg-slate-100 relative">
+            {/* 1. Hero Image on Top (Pure Photo - No Baked-In Message) */}
+            <div className="w-full aspect-square rounded-xl overflow-hidden shadow-sm bg-black/30 relative mb-2">
               <img
                 ref={imgElementRef}
-                src={heroImageSrc}
+                src={activeImageSrc}
                 alt="Bhookasur Food Tour Feast"
-                onLoad={() => generateCard()}
-                className="w-full h-full object-cover"
+                onLoad={() => generateCleanImage()}
+                className="w-full h-full object-cover block"
               />
             </div>
 
-            {/* 2. Message directly underneath */}
-            <div className="w-full py-0.5 flex flex-col items-center text-center gap-1">
-              <span className="text-xs xs:text-sm font-black text-[#0B1B48] uppercase tracking-wide">
+            {/* 2. Text Message Directly Underneath in the Same Message */}
+            <div className="text-left text-[#E9EDEF] space-y-1.5 text-xs sm:text-sm leading-relaxed px-1">
+              <p className="font-black text-white tracking-wide text-xs sm:text-sm">
                 BHOOKASUR KA FOOD TOUR 🍔🔥
-              </span>
-              <p className="text-xs xs:text-sm font-bold text-[#0B1B48] leading-tight">
+              </p>
+              <p className="font-semibold text-white/95">
                 Maine Bhookasur ke saath Food Tour kiya!
               </p>
-              {dishName && (
-                <p className="text-xs xs:text-sm font-black text-[#D4380D] leading-tight">
-                  🍽️ Dish: {dishName}
-                </p>
-              )}
-              {restaurantName && (
-                <p className="text-[11px] xs:text-xs font-bold text-[#0B1B48] leading-tight">
-                  📍 Spot: {restaurantName} ({cityName || 'Pune'})
-                </p>
-              )}
-              <p className="text-[11px] xs:text-xs font-semibold text-[#D4380D] leading-tight mt-0.5">
+              <p className="text-white/90 text-[11px] sm:text-xs">
                 Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!
               </p>
+
+              <div className="pt-1 text-[11px] sm:text-xs">
+                <span className="font-bold text-white">👉 Join the Food Tour:</span>
+                <br />
+                <a
+                  href={currentWebUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-300 hover:text-cyan-200 underline font-semibold break-all"
+                >
+                  {currentWebUrl}
+                </a>
+              </div>
             </div>
 
-            {/* 3. Clickable Website Link CTA */}
-            <a
-              href={currentWebUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-2.5 px-4 rounded-full bg-[#0B1B48] hover:bg-[#152a68] active:scale-[0.98] text-white font-black text-xs xs:text-sm flex items-center justify-center shadow-md transition-all cursor-pointer no-underline tracking-wide"
-            >
-              <span className="truncate">👉 Join the Food Tour: {typeof window !== 'undefined' ? window.location.host : 'bhookasur.com'}</span>
-            </a>
-
-            {/* 4. Gastrium Branding Footer */}
-            <div className="text-[10px] text-slate-400 font-semibold tracking-wide">
-              Powered by Gastrium • Acidity ko bolo good night
+            {/* Message Delivery Meta (Timestamp & Checkmarks) */}
+            <div className="flex items-center justify-end gap-1 mt-1.5 px-1 text-[10px] text-emerald-200/80">
+              <span>{typeof window !== 'undefined' ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '5:40 pm'}</span>
+              <span className="text-[#53bdeb] font-black">✓✓</span>
             </div>
           </div>
 
-          <p className="text-[11px] text-slate-500 text-center max-w-xs font-semibold mt-2.5">
-            Share this pass with friends &amp; family so they can join the tour!
+          <p className="text-[11px] text-slate-400 text-center max-w-xs font-medium mt-3">
+            Shared as a single message: photo on top, formatted caption text directly below.
           </p>
         </div>
 
@@ -472,13 +382,13 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
             </div>
           )}
 
-          {/* Social Share Buttons: WhatsApp Chat & Instagram DM */}
+          {/* Primary Social Share Buttons: WhatsApp Chat & Instagram DM */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {/* WhatsApp */}
             <button
               onClick={handleShareWhatsApp}
               type="button"
-              className="py-3 px-3 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+              className="py-3 px-3 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-[#25D366]/30"
             >
               <MessageCircle className="w-4 h-4 fill-white stroke-none shrink-0" />
               <span>WhatsApp Chat</span>
@@ -495,23 +405,31 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
             </button>
           </div>
 
-          {/* Direct Utilities: Download & Copy Image */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Secondary Quick Actions: Download Photo, Copy Photo, Copy Caption */}
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={handleDownloadPass}
               type="button"
-              className="py-2 px-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-[#0B1B48] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-[0.98] border border-slate-200"
+              className="py-2 px-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-[#0B1B48] font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-[0.98] border border-slate-200"
             >
-              <Download className="w-3.5 h-3.5 text-[#D4380D]" />
-              <span>Download Image</span>
+              <Download className="w-3.5 h-3.5 text-[#D4380D] shrink-0" />
+              <span className="truncate">Download Photo</span>
             </button>
             <button
               onClick={handleCopyImage}
               type="button"
-              className="py-2 px-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-[#0B1B48] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-[0.98] border border-slate-200"
+              className="py-2 px-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-[#0B1B48] font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-[0.98] border border-slate-200"
             >
-              <Copy className="w-3.5 h-3.5 text-[#0B1B48]" />
-              <span>Copy Image</span>
+              <Copy className="w-3.5 h-3.5 text-[#0B1B48] shrink-0" />
+              <span className="truncate">Copy Photo</span>
+            </button>
+            <button
+              onClick={handleCopyText}
+              type="button"
+              className="py-2 px-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-[#0B1B48] font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-[0.98] border border-slate-200"
+            >
+              <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">Copy Caption</span>
             </button>
           </div>
         </div>

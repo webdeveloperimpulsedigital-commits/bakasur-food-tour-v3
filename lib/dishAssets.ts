@@ -46,10 +46,10 @@ export function isDishVeg(dishName?: string): boolean {
   const n = dishName.toLowerCase();
   if (n.includes('paneer') || n.includes('veg') || n.includes('soya')) return true;
   const nonVegKeywords = [
-    'chicken', 'mutton', 'egg', 'anda', 'keema', 'fish', 'prawn', 'crab',
-    'bombil', 'surmai', 'pomfret', 'galouti', 'seekh', 'meat', 'gosht',
-    'lamb', 'non veg', 'non-veg', 'nihari', 'paya', 'bhurji', 'seafood',
-    'tandoori chicken', 'kebab', 'kabab', 'shawarma', 'sukka', 'gavran'
+    'chicken', 'mutton', 'egg', 'anda', 'keema', 'kheema', 'fish', 'prawn', 'crab',
+    'bombil', 'surmai', 'pomfret', 'galouti', 'seekh', 'meat', 'gosht', 'bokud', 'bolai',
+    'tangdi', 'lamb', 'non veg', 'non-veg', 'nihari', 'paya', 'bhurji', 'seafood',
+    'tandoori chicken', 'kebab', 'kabab', 'shawarma', 'sukka', 'gavran', 'tambda', 'pandhra'
   ];
   return !nonVegKeywords.some(kw => n.includes(kw));
 }

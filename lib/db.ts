@@ -44,6 +44,7 @@ export interface Dish {
   restaurant_id: number;
   menu_id?: number;
   category_id?: number;
+  category?: string;
   name: string;
   description: string;
   price: number;
@@ -1784,16 +1785,21 @@ export const db = {
 
         // 4. Save/Update visit in campaign_visits with round_number
         const [existing] = await pool.query<mysql.RowDataPacket[]>(
-          'SELECT id FROM campaign_visits WHERE session_id = ? AND round_number = ? LIMIT 1',
+          'SELECT id FROM campaign_visits WHERE session_id = ? AND round_number = ? ORDER BY id DESC',
           [data.session_id, roundNumber]
         );
         if (existing && existing.length > 0) {
+          const keepId = existing[0].id;
           await pool.query(
             `UPDATE campaign_visits 
              SET restaurant_id = ?, dish_id = ?, dish_name = ?, restaurant_name = ?, city = ?, latitude = ?, longitude = ?, visited_at = CURRENT_TIMESTAMP
              WHERE id = ?`,
-            [targetRestaurantId, data.dish_id ?? null, finalDishName, finalRestName, data.city, data.latitude, data.longitude, existing[0].id]
+            [targetRestaurantId, data.dish_id ?? null, finalDishName, finalRestName, data.city, data.latitude, data.longitude, keepId]
           );
+          if (existing.length > 1) {
+            const extraIds = existing.slice(1).map(r => r.id);
+            await pool.query('DELETE FROM campaign_visits WHERE id IN (?)', [extraIds]).catch(() => {});
+          }
         } else {
           await pool.query(
             `INSERT INTO campaign_visits (session_id, restaurant_id, dish_id, city, latitude, longitude, restaurant_name, dish_name, round_number)
@@ -1824,6 +1830,7 @@ export const db = {
     let dbFoodSpots = 0;
     let dbDishes = 0;
     let dbCities = 0;
+    let currentUserSpots: any[] = [];
 
     try {
       const pool = getMySQLPool();
@@ -1842,7 +1849,7 @@ export const db = {
            LEFT JOIN restaurants r ON cv.restaurant_id = r.id
            LEFT JOIN dishes d ON cv.dish_id = d.id
            WHERE cv.restaurant_name IS NOT NULL AND cv.restaurant_name != ''
-           ORDER BY cv.id DESC`
+           ORDER BY cv.visited_at ASC, cv.id ASC`
         );
 
         // Helper to normalize restaurant names for accurate visit grouping
@@ -1856,7 +1863,41 @@ export const db = {
           return clean || baseName.toLowerCase().replace(/[^a-z0-9]/g, '');
         };
 
-        // Calculate actual visit counts per hotel/restaurant from MySQL campaign_visits
+        // Determine current user's visited spots strictly for this session_id
+        if (sessionId) {
+          const userVisits = visitRows.filter(v => v.session_id === sessionId);
+          // Group by round_number: for each round, take the latest visit
+          const roundMap = new Map<number, any>();
+          userVisits.forEach(v => {
+            const roundNum = Number(v.round_number) || 1;
+            // Later rows (higher id or visited_at) take precedence
+            roundMap.set(roundNum, v);
+          });
+
+          // Sort rounds: round 1 -> Stop 1, round 2 -> Stop 2, etc.
+          const sortedRounds = Array.from(roundMap.entries()).sort((a, b) => a[0] - b[0]);
+          currentUserSpots = sortedRounds.map(([roundNum, v], idx) => ({
+            id: Number(v.id),
+            session_id: String(v.session_id || ''),
+            restaurant_id: Number(v.restaurant_id || 0),
+            name: String(v.restaurant_name),
+            city: String(v.city || 'Pune'),
+            latitude: Number(v.latitude),
+            longitude: Number(v.longitude),
+            rating: Number(v.rating || 4.8),
+            image: String(v.image || ''),
+            featured_dish: String(v.dish_name || 'Specialty Dish'),
+            isCurrentUserSpot: true,
+            stopNumber: idx + 1
+          }));
+        }
+
+        const currentUserKeysMap = new Map<string, number>();
+        currentUserSpots.forEach(s => {
+          currentUserKeysMap.set(getRestaurantKey(s.name), s.stopNumber);
+        });
+
+        // Calculate actual visit counts per restaurant key from MySQL campaign_visits
         const visitCountMap = new Map<string, number>();
         visitRows.forEach(v => {
           const restName = String(v.restaurant_name || '');
@@ -1865,7 +1906,7 @@ export const db = {
           visitCountMap.set(key, (visitCountMap.get(key) || 0) + 1);
         });
 
-        // Group spots into unique map pins with their verified database visit counts
+        // Group into unique map pins with verified database visit counts
         const groupedSpots = new Map<string, any>();
 
         visitRows.forEach(v => {
@@ -1874,7 +1915,8 @@ export const db = {
 
           const key = getRestaurantKey(restName);
           const totalVisits = visitCountMap.get(key) || 1;
-          const isCurrent = Boolean(sessionId && v.session_id === sessionId);
+          const stopNumber = currentUserKeysMap.get(key);
+          const isCurrentUserSpot = stopNumber !== undefined;
 
           if (!groupedSpots.has(key)) {
             groupedSpots.set(key, {
@@ -1889,19 +1931,21 @@ export const db = {
               image: String(v.image || ''),
               total_visits: totalVisits,
               featured_dish: String(v.dish_name || 'Specialty Dish'),
-              isCurrentUserSpot: isCurrent,
-              stopNumber: v.round_number ? Number(v.round_number) : undefined
+              isCurrentUserSpot,
+              stopNumber
             });
-          } else if (isCurrent) {
-            // Prioritize current user's session marker
+          } else {
             const existing = groupedSpots.get(key);
-            groupedSpots.set(key, {
-              ...existing,
-              session_id: String(v.session_id || ''),
-              featured_dish: String(v.dish_name || existing.featured_dish),
-              isCurrentUserSpot: true,
-              stopNumber: v.round_number ? Number(v.round_number) : existing.stopNumber
-            });
+            // If this is a current user spot, ensure its latest details and stop number are preserved
+            if (isCurrentUserSpot) {
+              groupedSpots.set(key, {
+                ...existing,
+                session_id: String(v.session_id || existing.session_id),
+                featured_dish: String(v.dish_name || existing.featured_dish),
+                isCurrentUserSpot: true,
+                stopNumber
+              });
+            }
           }
         });
 
@@ -1927,58 +1971,25 @@ export const db = {
         `);
 
         dbFoodSpots = visitedPoints.length || Number(rCount?.c || 0);
-        dbDishes = Number(dCount?.c || 0);
-        dbCities = Number(cCount?.c || 0);
+        dbDishes = Number(dCount?.c || 0) || visitedPoints.length;
+        dbCities = Number(cCount?.c || 0) || new Set(visitedPoints.map(p => p.city)).size;
       }
     } catch (err) {
       console.warn('MySQL getMapData query warning:', err);
     }
 
-    // Ensure rich pan-India spots are present so map displays a nationwide tour
-    const DEFAULT_INDIA_TOUR_SPOTS = [
-      { id: 101, name: "Karim's, Jama Masjid", city: 'Delhi', latitude: 28.6507, longitude: 77.2334, rating: 4.9, total_visits: 3420, featured_dish: 'Mutton Burra Kebab' },
-      { id: 102, name: 'Kayani Bakery, Camp', city: 'Pune', latitude: 18.5146, longitude: 73.8789, rating: 5.0, total_visits: 2890, featured_dish: 'Shrewsbury Biscuits' },
-      { id: 103, name: 'Sardar Refreshments, Tardeo', city: 'Mumbai', latitude: 18.9723, longitude: 72.8166, rating: 4.8, total_visits: 2540, featured_dish: 'Extra Butter Pav Bhaji' },
-      { id: 104, name: 'Vidyarthi Bhavan, Gandhi Bazaar', city: 'Bengaluru', latitude: 12.9438, longitude: 77.5702, rating: 4.9, total_visits: 3100, featured_dish: 'Crispy Benne Masala Dosa' },
-      { id: 105, name: 'Paradise Biryani, Secunderabad', city: 'Hyderabad', latitude: 17.4416, longitude: 78.4873, rating: 4.8, total_visits: 4200, featured_dish: 'Hyderabadi Dum Biryani' },
-      { id: 106, name: 'Tunday Kababi, Aminabad', city: 'Lucknow', latitude: 26.8467, longitude: 80.9256, rating: 4.9, total_visits: 2750, featured_dish: 'Galouti Kebab' },
-      { id: 107, name: 'Flurys, Park Street', city: 'Kolkata', latitude: 22.5535, longitude: 88.3524, rating: 4.8, total_visits: 2150, featured_dish: 'Heritage Rum Ball' },
-      { id: 108, name: 'Manek Chowk Night Food Market', city: 'Ahmedabad', latitude: 23.0258, longitude: 72.5873, rating: 4.7, total_visits: 3300, featured_dish: 'Gwalior Butter Dosa' },
-      { id: 109, name: 'Rawat Mishthan Bhandar', city: 'Jaipur', latitude: 26.9208, longitude: 75.7958, rating: 4.9, total_visits: 2680, featured_dish: 'Pyaaz Kachori' },
-      { id: 110, name: 'Murugan Idli Shop, T Nagar', city: 'Chennai', latitude: 13.0418, longitude: 80.2337, rating: 4.8, total_visits: 2280, featured_dish: 'Podi Ghee Idli' }
-    ];
-
-    const existingNames = new Set(visitedPoints.map(p => (p.name || '').toLowerCase()));
-    DEFAULT_INDIA_TOUR_SPOTS.forEach(spot => {
-      if (!existingNames.has(spot.name.toLowerCase())) {
-        visitedPoints.push({
-          ...spot,
-          session_id: '',
-          restaurant_id: spot.id,
-          image: '',
-          isCurrentUserSpot: false
-        });
-      }
-    });
-
-    // Sort to keep current user's spot at index 0 for focus
+    // Sort to keep current user's spot at front for focus
     visitedPoints.sort((a, b) => (b.isCurrentUserSpot ? 1 : 0) - (a.isCurrentUserSpot ? 1 : 0));
 
-    const totalFoodSpots = visitedPoints.length;
-    const totalDishes = visitedPoints.length;
-    const totalCities = new Set(visitedPoints.map(p => p.city)).size;
-
-    const userSpots = visitedPoints.filter(p => p.isCurrentUserSpot);
-    userSpots.sort((a, b) => (a.stopNumber || 1) - (b.stopNumber || 1));
     return {
       points: visitedPoints,
       stats: {
-        foodSpots: totalFoodSpots,
-        mustTryDishes: totalDishes,
-        citiesCount: totalCities
+        foodSpots: dbFoodSpots,
+        mustTryDishes: dbDishes,
+        citiesCount: dbCities
       },
-      currentUserPoint: userSpots[0] || null,
-      currentUserSpots: userSpots
+      currentUserPoint: currentUserSpots[0] || null,
+      currentUserSpots
     };
   },
 

@@ -293,7 +293,102 @@ export const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
 };
 
 /**
- * 1. Search for live restaurants on Swiggy via Apify actor (thirdwatch/swiggy-scraper)
+ * Direct Swiggy Search: Searches Swiggy's public mobile API directly
+ * Provides instant (<2s) restaurant discovery with 0 external quota limits
+ */
+export async function searchSwiggyDirectRestaurant(
+  query: string,
+  city = 'bangalore',
+  options?: { lat?: number; lng?: number }
+): Promise<SwiggyRestaurantData[]> {
+  const cityKey = (city || 'bangalore').toLowerCase();
+  const cityCoords = CITY_COORDINATES[cityKey] || { lat: 18.5204, lng: 73.8567 };
+  const lat = options?.lat || cityCoords.lat;
+  const lng = options?.lng || cityCoords.lng;
+  const rawClean = query.trim();
+
+  // Try raw query first, then cleanRestaurantQuery if needed
+  const queriesToTry = [rawClean];
+  const cleaned = cleanRestaurantQuery(rawClean);
+  if (cleaned && cleaned.toLowerCase() !== rawClean.toLowerCase()) {
+    queriesToTry.push(cleaned);
+  }
+
+  for (const q of queriesToTry) {
+    if (!q) continue;
+    try {
+      const url = `https://www.swiggy.com/dapi/restaurants/search/v3?lat=${lat}&lng=${lng}&str=${encodeURIComponent(q)}&trackingId=undefined&submitAction=ENTER&queryUniqueId=undefined`;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept: 'application/json, text/plain, */*',
+          Referer: 'https://www.swiggy.com/'
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+
+      if (!res.ok) continue;
+      const json = await res.json();
+      const cards = json?.data?.cards || [];
+      const groupedCard = cards.find((c: any) => c.groupedCard)?.groupedCard?.cardGroupMap?.RESTAURANT?.cards || [];
+
+      const results: SwiggyRestaurantData[] = [];
+      for (const rc of groupedCard) {
+        const info = rc?.card?.card?.info;
+        if (info && info.id) {
+          const imgUrl = info.cloudinaryImageId
+            ? buildSwiggyImageUrl(info.cloudinaryImageId)
+            : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80';
+          results.push({
+            restaurant_id: String(info.id),
+            name: info.name,
+            cuisine: info.cuisines || ['Multi-Cuisine'],
+            rating: parseFloat(info.avgRating) || 4.5,
+            rating_count: info.totalRatingsString || '1K+',
+            cost_for_two: info.costForTwoMessage || '₹400 for two',
+            cost_for_two_rupees: parseSwiggyPrice(info.costForTwoMessage || 400),
+            delivery_time: info.sla?.slaString || '30 MINS',
+            delivery_time_minutes: info.sla?.deliveryTime || 30,
+            address: `${info.locality || ''}, ${info.areaName || ''}, ${city}`,
+            city: cityKey,
+            is_open: info.isOpen !== false,
+            veg_only: Boolean(info.veg),
+            offers: [],
+            badges: [],
+            image_url: imgUrl,
+            proxy_image_url: getSwiggyProxyUrl(imgUrl),
+            url: `https://www.swiggy.com/city/${cityKey}/${encodeURIComponent(info.name)}`
+          });
+        }
+      }
+
+      if (results.length > 0) {
+        // Smart Scoring: Prioritize exact matches and close matches
+        const qLower = rawClean.toLowerCase();
+        results.sort((a, b) => {
+          const aName = a.name.toLowerCase();
+          const bName = b.name.toLowerCase();
+          const aScore = aName === qLower ? 1000 : aName.startsWith(qLower) ? 500 : aName.includes(qLower) ? 200 : 0;
+          const bScore = bName === qLower ? 1000 : bName.startsWith(qLower) ? 500 : bName.includes(qLower) ? 200 : 0;
+          return bScore - aScore;
+        });
+        return results;
+      }
+    } catch {
+      // Continue to next query attempt
+    }
+  }
+
+  return [];
+}
+
+/**
+ * 1. Search for live restaurants on Swiggy via direct search or Apify actor fallback
  * Incorporates smart ranking so exact matches come before promoted ads
  */
 export async function fetchSwiggyRestaurantViaApify(
@@ -314,6 +409,21 @@ export async function fetchSwiggyRestaurantViaApify(
   const cached = swiggyRestaurantCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.data;
+  }
+
+  const cityCoords = CITY_COORDINATES[cityKey] || { lat: 18.5204, lng: 73.8567 };
+  const lat = options?.lat || cityCoords.lat;
+  const lng = options?.lng || cityCoords.lng;
+
+  // 1. Try Direct High-Speed Swiggy Search First (zero latency, zero quota)
+  try {
+    const directResults = await searchSwiggyDirectRestaurant(query, cityKey, { lat, lng });
+    if (directResults.length > 0) {
+      swiggyRestaurantCache.set(cacheKey, { timestamp: Date.now(), data: directResults.slice(0, maxResults) });
+      return directResults.slice(0, maxResults);
+    }
+  } catch (directErr) {
+    console.warn('Direct Swiggy search attempt notice:', directErr);
   }
 
   if (!isApifyConfigured()) {
@@ -348,10 +458,6 @@ export async function fetchSwiggyRestaurantViaApify(
   const actorId = getApifyActor();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 35000);
-
-  const cityCoords = CITY_COORDINATES[cityKey] || { lat: 12.9716, lng: 77.5946 };
-  const lat = options?.lat || cityCoords.lat;
-  const lng = options?.lng || cityCoords.lng;
 
   try {
     const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${token}&timeout=30`;
@@ -652,7 +758,19 @@ export async function fetchSwiggyDishesViaApify(
     directDishes = await fetchSwiggyRestaurantMenu(targetId, lat, lng);
   }
 
-  // B. If not found or no ID provided, search restaurant on Swiggy via Apify thirdwatch actor
+  // B. Direct Swiggy Search First: Search restaurant directly on Swiggy & fetch authentic live menu
+  if (directDishes.length === 0) {
+    try {
+      const liveMatches = await searchSwiggyDirectRestaurant(restaurantName, cityKey, { lat, lng });
+      if (liveMatches.length > 0 && liveMatches[0].restaurant_id) {
+        directDishes = await fetchSwiggyRestaurantMenu(liveMatches[0].restaurant_id, lat, lng);
+      }
+    } catch (directErr) {
+      console.warn('Direct Swiggy search notice:', directErr);
+    }
+  }
+
+  // C. Fallback: Search via Apify thirdwatch actor if configured and direct search yielded no dishes
   if (directDishes.length === 0 && isApifyConfigured()) {
     try {
       const scrapedRestaurants = await fetchSwiggyRestaurantViaApify(cleanName, cityKey, {

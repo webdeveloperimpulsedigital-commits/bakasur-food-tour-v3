@@ -53,6 +53,8 @@ export const StepDish: React.FC<StepDishProps> = ({
         area: restaurant.area || '',
         city: restaurant.city || ''
       });
+      if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
+      if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
       const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
