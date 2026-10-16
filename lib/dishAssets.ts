@@ -44,14 +44,28 @@ export function formatCleanDishName(dishName?: string, restaurantName?: string):
 export function isDishVeg(dishName?: string): boolean {
   if (!dishName) return true;
   const n = dishName.toLowerCase();
-  if (n.includes('paneer') || n.includes('veg') || n.includes('soya')) return true;
-  const nonVegKeywords = [
-    'chicken', 'mutton', 'egg', 'anda', 'keema', 'kheema', 'fish', 'prawn', 'crab',
-    'bombil', 'surmai', 'pomfret', 'galouti', 'seekh', 'meat', 'gosht', 'bokud', 'bolai',
-    'tangdi', 'lamb', 'non veg', 'non-veg', 'nihari', 'paya', 'bhurji', 'seafood',
-    'tandoori chicken', 'kebab', 'kabab', 'shawarma', 'sukka', 'gavran', 'tambda', 'pandhra'
+
+  // Non-veg meats and poultry ALWAYS make a dish non-veg
+  const meatKeywords = [
+    'chicken', 'mutton', 'egg', 'anda', 'fish', 'prawn', 'prawns', 'crab',
+    'bombil', 'surmai', 'pomfret', 'meat', 'gosht', 'bokud', 'bolai',
+    'tangdi', 'lamb', 'beef', 'pork', 'bacon', 'nihari', 'paya',
+    'seafood', 'duck', 'turkey', 'rawas', 'kolambi', 'clams', 'lobster'
   ];
-  return !nonVegKeywords.some(kw => n.includes(kw));
+  if (meatKeywords.some(kw => new RegExp(`(^|[^a-z0-9])${kw}([^a-z0-9]|$)`, 'i').test(n))) {
+    return false;
+  }
+
+  // Explicit vegetarian identifiers
+  if (n.includes('paneer') || n.includes('pure veg') || n.includes('veg thali') || n.includes('soya') || n.includes('dal') || n.includes('aloo') || n.includes('gobi') || n.includes('dosa') || n.includes('idli') || n.includes('sambar') || n.includes('vada pav') || n.includes('misal') || n.includes('pav bhaji')) {
+    return true;
+  }
+
+  const otherNonVegKeywords = [
+    'keema', 'kheema', 'galouti', 'seekh', 'non veg', 'non-veg', 'nonveg',
+    'tandoori chicken', 'kebab', 'kabab', 'shawarma', 'sukka', 'gavran', 'tambda', 'pandhra', 'rassa'
+  ];
+  return !otherNonVegKeywords.some(kw => n.includes(kw));
 }
 
 /**

@@ -44,19 +44,33 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       resolvedName.toLowerCase().includes('chicken') ||
       resolvedName.toLowerCase().includes('fish') ||
       resolvedName.toLowerCase().includes('seafood') ||
-      resolvedName.toLowerCase().includes('military');
+      resolvedName.toLowerCase().includes('prawn') ||
+      resolvedName.toLowerCase().includes('crab') ||
+      resolvedName.toLowerCase().includes('meat') ||
+      resolvedName.toLowerCase().includes('military') ||
+      resolvedName.toLowerCase().includes('biryani') ||
+      resolvedName.toLowerCase().includes('kebab') ||
+      resolvedName.toLowerCase().includes('kabab') ||
+      resolvedName.toLowerCase().includes('bar') ||
+      resolvedName.toLowerCase().includes('pub') ||
+      resolvedName.toLowerCase().includes('permit room');
 
     const isVeg = !isExplicitNonVeg && (
       isVegParam === 'true' || isVegParam === '1' ||
       (knownRest && knownRest.is_veg === 1) ||
       resolvedName.toLowerCase().includes('pure veg') ||
       (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non')) ||
+      resolvedName.toLowerCase().includes('bhojanalay') ||
+      resolvedName.toLowerCase().includes('shakahari') ||
+      resolvedName.toLowerCase().includes('swayampak') ||
+      resolvedName.toLowerCase().includes('bhavan') ||
+      resolvedName.toLowerCase().includes('udupi') ||
+      resolvedName.toLowerCase().includes('dosa') ||
+      resolvedName.toLowerCase().includes('idli') ||
       resolvedName.toLowerCase().includes('mithai') ||
       resolvedName.toLowerCase().includes('sweets') ||
       resolvedName.toLowerCase().includes('bhel') ||
-      resolvedName.toLowerCase().includes('dosa') ||
-      resolvedName.toLowerCase().includes('idli') ||
-      resolvedName.toLowerCase().includes('udupi')
+      resolvedName.toLowerCase().includes('jain')
     );
     
     const restInfo: Restaurant = {
@@ -83,6 +97,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     // 1. Priority 1: Complete Authentic Restaurant Signature Menu & Cuisine Catalog (Instant 0ms in-memory delivery)
     const liveDishes = generateLiveMenuForRestaurant(restInfo);
     for (const d of liveDishes) {
+      if (isVeg && (!isDishVeg(d.name) || d.is_veg === 0)) continue;
       const cleanName = formatCleanDishName(d.name, restInfo.name);
       const lower = cleanName.toLowerCase();
       if (!seenNames.has(lower)) {
@@ -159,8 +174,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       ? searchDishesSwiggyZomato(restInfo, searchQuery, baseDishes)
       : baseDishes;
 
+    const safeDishes = isVeg ? filteredDishes.filter(d => isDishVeg(d.name) && d.is_veg !== 0) : filteredDishes;
+
     // Guarantee pure food visuals with authentic culinary photography
-    const finalDishes = filteredDishes.map(d => {
+    const finalDishes = safeDishes.map(d => {
       const isAiEndpoint = typeof d.image === 'string' && d.image.startsWith('/api/ai/dish-image');
       const hasRealPhoto = Boolean(
         d.image &&

@@ -190,7 +190,15 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       rName.includes('meat') ||
       rName.includes('fish') ||
       rName.includes('seafood') ||
-      rName.includes('military');
+      rName.includes('prawn') ||
+      rName.includes('crab') ||
+      rName.includes('military') ||
+      rName.includes('biryani') ||
+      rName.includes('kebab') ||
+      rName.includes('kabab') ||
+      rName.includes('bar') ||
+      rName.includes('pub') ||
+      rName.includes('permit room');
   }, [restaurant.name]);
 
   const isPureVegRestaurant = useMemo(() => {
@@ -199,11 +207,16 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     return restaurant.is_veg === 1 || 
       rName.includes('pure veg') || 
       (rName.includes('veg') && !rName.includes('non')) ||
-      rName.includes('mithai') ||
-      rName.includes('sweets') ||
+      rName.includes('bhojanalay') ||
+      rName.includes('shakahari') ||
+      rName.includes('swayampak') ||
+      rName.includes('bhavan') ||
+      rName.includes('udupi') ||
       rName.includes('dosa') ||
       rName.includes('idli') ||
-      rName.includes('udupi');
+      rName.includes('mithai') ||
+      rName.includes('sweets') ||
+      rName.includes('jain');
   }, [restaurant.name, restaurant.is_veg, isNonVegRestaurant]);
 
   // All authentic available dishes for this restaurant (strictly verified to match restaurant identity)
@@ -213,12 +226,29 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       // Guarantee zero non-veg items for pure veg restaurants
       return list.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
     }
+    if (!isNonVegRestaurant) {
+      // Prioritize pure vegetarian dishes so non-veg never invades the top menu of family restaurants
+      const vegDishes = list.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
+      const nonVegDishes = list.filter(d => !isDishVeg(d.name) || d.is_veg === 0);
+      return [...vegDishes, ...nonVegDishes];
+    }
     return list;
-  }, [rawDishes, restaurant, isPureVegRestaurant]);
+  }, [rawDishes, restaurant, isPureVegRestaurant, isNonVegRestaurant]);
 
   // Extract top 3 signature dishes for quick 1-tap picks at top
   const threeDishes: Dish[] = useMemo(() => {
-    const sorted = [...allRestaurantDishes].sort((a, b) => {
+    let candidates = allRestaurantDishes;
+    // CRITICAL: Unless the restaurant is explicitly a non-veg specialty joint,
+    // the top 3 quick-pick featured cards MUST ALWAYS BE 100% PURE VEGETARIAN!
+    // This guarantees that vegetarian diners NEVER see Chicken/Mutton on top cards,
+    // while non-veg users can still pick any dish via live menu or search.
+    if (!isNonVegRestaurant) {
+      const vegCandidates = candidates.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
+      if (vegCandidates.length >= 3) {
+        candidates = vegCandidates;
+      }
+    }
+    const sorted = [...candidates].sort((a, b) => {
       const rDiff = (b.rating || 0) - (a.rating || 0);
       if (Math.abs(rDiff) > 0.01) return rDiff;
       if ((b.is_recommended || 0) !== (a.is_recommended || 0)) {
@@ -227,7 +257,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       return (b.popularity || 0) - (a.popularity || 0);
     });
     return sorted.slice(0, 3);
-  }, [allRestaurantDishes]);
+  }, [allRestaurantDishes, isNonVegRestaurant]);
 
   // Contextual, authentic search placeholder matching this restaurant's real food
   const dynamicPlaceholder = useMemo(() => {
@@ -339,11 +369,9 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         const lower = cleanName.toLowerCase();
         if (seenNames.has(lower)) continue;
 
-        // Skip non-veg ONLY if this restaurant is strictly pure-veg AND the user didn't explicitly search for non-veg
+        // Skip non-veg if this restaurant is strictly pure-veg
         const isDishNonVeg = !isDishVeg(cleanName) || t.is_veg === 0;
-        const userExplicitlyWantedNonVeg = ['chicken', 'mutton', 'fish', 'prawn', 'egg', 'kebab', 'meat', 'wings', 'lollipop'].some(kw => q.includes(kw) || normalizedQ.includes(kw));
-
-        if (isPureVegRestaurant && isDishNonVeg && !userExplicitlyWantedNonVeg) {
+        if (isPureVegRestaurant && isDishNonVeg) {
           continue;
         }
 

@@ -3609,7 +3609,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
   // Bar & Restaurant / Multi-Cuisine Dining / Permit Room
   {
     name: "Bar & Multi-Cuisine Restaurant",
-    keywords: ['hotel', 'temptation', 'restaurant', 'dining', 'kitchen', 'bar', 'permit room', 'lounge', 'resto', 'beer', 'pub', 'club', 'dining bar', 'family restaurant', 'city point', 'barometer', 'hidden place'],
+    keywords: ['temptation', 'bar', 'permit room', 'lounge', 'beer', 'pub', 'club', 'dining bar', 'restobar', 'resto bar', 'brewery', 'barometer', 'hidden place', 'wine', 'liquor'],
     dishes: [
       { name: "Special Tandoori Chicken Tikka (6 Pcs)", description: "Smoky boneless chicken chunks marinated in hung curd, ginger garlic & roasted spices.", price: 320, image: "/api/ai/dish-image?dish=Tandoori%20Chicken", popularity: 100, rating: 5.0 },
       { name: "Famous Butter Chicken with Garlic Naan", description: "Charcoal grilled chicken in rich creamy tomato cashew gravy with hot garlic butter naan.", price: 360, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
@@ -3891,7 +3891,7 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     } else if (restNameLower.includes('military') || restNameLower.includes('gavran') || restNameLower.includes('sandeep') || restNameLower.includes('surve') || restNameLower.includes('maratha')) {
       const milProfile = CUISINE_MENUS.find(p => p.name.includes('Military'));
       if (milProfile) matchedProfile = milProfile;
-    } else if (restNameLower.includes('temptation') || (!isVegOnly && (restNameLower.includes('hotel') || restNameLower.includes('restaurant') || restNameLower.includes('dining') || restNameLower.includes('kitchen')))) {
+    } else if (restNameLower.includes('temptation') || restNameLower.includes('permit room') || restNameLower.includes('dining bar') || (isNonVeg && (restNameLower.includes('bar') || restNameLower.includes('pub') || restNameLower.includes('lounge') || restNameLower.includes('brewery')))) {
       const barProfile = CUISINE_MENUS.find(p => p.name.includes('Multi-Cuisine') || p.name.includes('Bar'));
       if (barProfile) matchedProfile = barProfile;
     } else if (isNonVeg || restNameLower.includes('biryani') || restNameLower.includes('kebab') || restNameLower.includes('darbar') || restNameLower.includes('mughlai') || restNameLower.includes('handi')) {
@@ -3924,8 +3924,9 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     } else if (restNameLower.includes('chinese') || restNameLower.includes('momo') || restNameLower.includes('noodle') || restNameLower.includes('wok') || restNameLower.includes('asian')) {
       const chProfile = CUISINE_MENUS.find(p => p.name.includes('Chinese') || p.name.includes('Momos'));
       if (chProfile) matchedProfile = chProfile;
-    } else if (restNameLower.includes('dhaba') || restNameLower.includes('punjabi')) {
-      const vProfile = CUISINE_MENUS.find(p => p.name.includes('Pure Veg') || p.name.includes('Dhaba'));
+    } else if (restNameLower.includes('dhaba') || restNameLower.includes('punjabi') || restNameLower.includes('hotel') || restNameLower.includes('restaurant') || restNameLower.includes('dining') || restNameLower.includes('kitchen') || restNameLower.includes('bhojanalay') || restNameLower.includes('rasoi')) {
+      // General Indian restaurant / hotel / dining with no explicit non-veg branding defaults to authentic vegetarian specialties
+      const vProfile = CUISINE_MENUS.find(p => p.name.includes('Pure Veg') || p.name.includes('Punjabi') || p.name.includes('Dhaba'));
       if (vProfile) matchedProfile = vProfile;
     } else {
       // Deterministic variety: Hash the restaurant name to assign a realistic cuisine profile instead of the same profile to all!
@@ -3939,9 +3940,9 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
         matchedProfile = nonVegProfiles[charCodeSum % nonVegProfiles.length] || CUISINE_MENUS[0];
       } else {
         const vegProfiles = [
+          CUISINE_MENUS.find(p => p.name.includes('Pure Veg')),
           CUISINE_MENUS.find(p => p.name.includes('Maharashtrian')),
           CUISINE_MENUS.find(p => p.name.includes('South Indian')),
-          CUISINE_MENUS.find(p => p.name.includes('Pure Veg')),
           CUISINE_MENUS.find(p => p.name.includes('Pav Bhaji'))
         ].filter(Boolean) as CuisineProfile[];
         matchedProfile = vegProfiles[charCodeSum % vegProfiles.length] || CUISINE_MENUS[0];
@@ -3974,8 +3975,54 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     }
   }
 
+  // 4b. Strict Veg vs Non-Veg Alignment:
+  const isExplicitNonVegJoint = restNameLower.includes('non-veg') ||
+    restNameLower.includes('non veg') ||
+    restNameLower.includes('nonveg') ||
+    restNameLower.includes('mutton') ||
+    restNameLower.includes('chicken') ||
+    restNameLower.includes('meat') ||
+    restNameLower.includes('fish') ||
+    restNameLower.includes('seafood') ||
+    restNameLower.includes('prawn') ||
+    restNameLower.includes('crab') ||
+    restNameLower.includes('military') ||
+    restNameLower.includes('biryani') ||
+    restNameLower.includes('kebab') ||
+    restNameLower.includes('kabab') ||
+    restNameLower.includes('bar') ||
+    restNameLower.includes('pub') ||
+    restNameLower.includes('permit room');
+
+  const isStrictVegRestaurant = !isExplicitNonVegJoint && (
+    restNameLower.includes('pure veg') ||
+    (restNameLower.includes('veg') && !restNameLower.includes('non')) ||
+    restNameLower.includes('bhojanalay') ||
+    restNameLower.includes('shakahari') ||
+    restNameLower.includes('swayampak') ||
+    restNameLower.includes('bhavan') ||
+    restNameLower.includes('udupi') ||
+    restNameLower.includes('dosa') ||
+    restNameLower.includes('idli') ||
+    restNameLower.includes('mithai') ||
+    restNameLower.includes('sweets') ||
+    restNameLower.includes('jain') ||
+    restaurant.is_veg === 1
+  );
+
+  let finalDishes = collectedDishes;
+  if (isStrictVegRestaurant || restaurant.is_veg === 1) {
+    // Pure veg restaurants must strictly contain ZERO non-veg dishes
+    finalDishes = finalDishes.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
+  } else if (!isExplicitNonVegJoint) {
+    // General family restaurants/hotels without non-veg branding must place all delicious vegetarian favorites first
+    const vegItems = finalDishes.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
+    const nonVegItems = finalDishes.filter(d => !isDishVeg(d.name) || d.is_veg === 0);
+    finalDishes = [...vegItems, ...nonVegItems];
+  }
+
   // 5. Return authentic dishes with verified categories, real names, and pure food visual assets
-  return collectedDishes.map((item, idx) => {
+  return finalDishes.map((item, idx) => {
     // Preserve authentic culinary dish names without forced artificial prefixes
     const dishName = item.name.trim();
     const cat = item.category || inferDishCategory(dishName, item.description);
