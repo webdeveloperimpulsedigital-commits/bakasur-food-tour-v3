@@ -231,7 +231,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
               {stats.mustTryDishes !== null ? stats.mustTryDishes : '...'}
             </div>
             <div className="text-[10px] sm:text-[11px] font-black text-[#0B1B48] mt-0.5 tracking-tight">
-              Must-try dishes
+              No of dishes
             </div>
           </div>
         </div>
@@ -327,7 +327,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
                 {stats.mustTryDishes !== null ? stats.mustTryDishes : '...'}
               </div>
               <div className="text-xs lg:text-sm font-black text-[#0B1B48] mt-1 tracking-tight">
-                Must-try dishes
+                No of dishes
               </div>
             </div>
           </div>

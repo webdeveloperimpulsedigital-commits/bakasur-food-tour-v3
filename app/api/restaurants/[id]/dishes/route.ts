@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, INITIAL_RESTAURANTS, INITIAL_DISHES, type Dish, type Restaurant } from '@/lib/db';
 import { generateLiveMenuForRestaurant } from '@/lib/liveMenu';
 import { searchDishesSwiggyZomato } from '@/lib/foodSearchEngine';
-import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
+import { getDishVisualAssets, formatCleanDishName, isDishVeg } from '@/lib/dishAssets';
 import { fetchGooglePlaceDetails, extractDishesFromGoogleDetails } from '@/lib/googlePlaces';
 import { isApifyConfigured, fetchSwiggyDishesViaApify } from '@/lib/apifySwiggy';
 

@@ -8,12 +8,14 @@ export const metadata: Metadata = {
   description: "Travel across iconic Indian restaurants with Bhookasur! Feed his legendary appetite, fill the food meter, experience the Gastrium moment, and participate in the grand campaign.",
   keywords: ["Bhookasur", "Food Tour", "Gastrium", "Indian Food", "Pune", "Mumbai", "Delhi", "Food Campaign"],
   openGraph: {
-    title: "Bhookasur Ka Food Tour – Interactive Food Campaign",
-    description: "Feed Bhookasur legendary dishes, fill the food meter, and win grand contest rewards!",
+    title: "Bhookasur Ka Food Tour 🍔🔥",
+    description: "Maine Bhookasur ke saath Food Tour kiya! Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!",
     type: "website",
+    url: "https://bhookasur.com",
+    siteName: "Bhookasur Food Tour",
     images: [
       {
-        url: "/images/final-frames/food-tour-img.jpg",
+        url: "https://bhookasur.com/images/final-frames/food-tour-img.jpg",
         width: 1080,
         height: 1080,
         alt: "Bhookasur Ka Food Tour"
@@ -22,9 +24,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bhookasur Ka Food Tour",
-    description: "Feed Bhookasur legendary dishes, fill the food meter, and win grand contest rewards!",
-    images: ["/images/final-frames/food-tour-img.jpg"]
+    title: "Bhookasur Ka Food Tour 🍔🔥",
+    description: "Maine Bhookasur ke saath Food Tour kiya! Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!",
+    images: ["https://bhookasur.com/images/final-frames/food-tour-img.jpg"]
   }
 };
 

@@ -387,6 +387,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             popularity: t.popularity || 98,
             category: t.category || inferDishCategory(cleanName, t.description),
             is_veg: t.is_veg !== undefined ? t.is_veg : (isDishVeg(cleanName) ? 1 : 0),
+            is_recommended: 1,
+            status: 'active',
             restaurant_id: restaurant.id
           });
         }
@@ -414,6 +416,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           popularity: 100,
           category: inferDishCategory(userCleanTypedName),
           is_veg: isTypedVeg ? 1 : 0,
+          is_recommended: 1,
+          status: 'active',
           restaurant_id: restaurant.id
         });
       }
