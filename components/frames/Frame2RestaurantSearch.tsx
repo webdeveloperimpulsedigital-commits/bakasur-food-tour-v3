@@ -431,13 +431,11 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
           <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#0047BA] shrink-0 stroke-[2.5]" />
         </div>
 
-        <div className="text-[10px] sm:text-xs text-[#64748B] font-medium mt-1 ml-1 text-left flex items-center justify-between">
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Live Place & Dining Search
-          </span>
-          {searchQuery && <span className="text-[#0047BA] font-semibold">Press Enter to select</span>}
-        </div>
+        {searchQuery ? (
+          <div className="text-[10px] sm:text-xs text-[#0047BA] font-semibold mt-1 ml-1 text-right">
+            Press Enter to select
+          </div>
+        ) : null}
 
         {/* Live Search Autocomplete Dropdown */}
         {showDropdown && (

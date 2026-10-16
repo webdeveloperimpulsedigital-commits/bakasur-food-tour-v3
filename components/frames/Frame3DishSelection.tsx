@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, Search, Utensils, X, Sparkles, BookOpen } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName, isDishVeg } from '@/lib/dishAssets';
-import { generateLiveMenuForRestaurant, inferDishCategory } from '@/lib/liveMenu';
+import { generateLiveMenuForRestaurant, inferDishCategory, CUISINE_MENUS } from '@/lib/liveMenu';
 
 interface Frame3DishSelectionProps {
   restaurant: Restaurant;
@@ -250,17 +250,146 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     return `Search dishes in ${restaurant.name} (e.g. Thali, Paneer, Dal)...`;
   }, [restaurant.name, isNonVegRestaurant]);
 
-  // Dynamic Auto-Suggestions: ONLY compute when user actually types in search bar
+  // Common typo dictionary & phonetic normalizer
+  const DISH_TYPO_MAP: Record<string, string> = {
+    lolipo: 'lollipop',
+    lolipop: 'lollipop',
+    lollypop: 'lollipop',
+    lollipo: 'lollipop',
+    chiken: 'chicken',
+    chikken: 'chicken',
+    chikn: 'chicken',
+    panner: 'paneer',
+    panir: 'paneer',
+    briyani: 'biryani',
+    biriyani: 'biryani',
+    biryany: 'biryani',
+    tikka: 'tikka',
+    tika: 'tikka',
+    kabab: 'kebab',
+    kebob: 'kebab',
+    manchurian: 'manchurian',
+    manchuran: 'manchurian',
+    shezwan: 'schezwan',
+    sezwan: 'schezwan',
+    schezwan: 'schezwan',
+    noodles: 'noodles',
+    noodle: 'noodles',
+    nudles: 'noodles',
+    nodles: 'noodles',
+    shawarma: 'shawarma',
+    shwarma: 'shawarma',
+    dosha: 'dosa',
+    dosaa: 'dosa',
+    idly: 'idli',
+    vadapav: 'vada pav',
+    wadapav: 'vada pav',
+    pavbhaji: 'pav bhaji',
+    paobhaji: 'pav bhaji',
+  };
+
+  // Dynamic Auto-Suggestions: compute when user actually types in search bar with full typo tolerance & catalog search
   const matchingSuggestions = useMemo(() => {
-    const q = menuSearchQuery.trim().toLowerCase();
-    if (!q) return [];
-    return allRestaurantDishes.filter(dish => {
-      const cleanName = formatCleanDishName(dish.name, restaurant.name).toLowerCase();
-      const desc = (dish.description || '').toLowerCase();
-      const cat = (dish.category || '').toLowerCase();
-      return cleanName.includes(q) || desc.includes(q) || cat.includes(q) || dish.name.toLowerCase().includes(q);
-    });
-  }, [allRestaurantDishes, menuSearchQuery, restaurant.name]);
+    const rawQ = menuSearchQuery.trim();
+    if (!rawQ) return [];
+
+    const q = rawQ.toLowerCase();
+    const words = q.split(/\s+/);
+    const normalizedWords = words.map(w => DISH_TYPO_MAP[w] || w);
+    const normalizedQ = normalizedWords.join(' ');
+    const tokens = Array.from(new Set([...words, ...normalizedWords])).filter(t => t.length >= 2);
+
+    const matches: Dish[] = [];
+    const seenNames = new Set<string>();
+
+    const matchesQuery = (dName: string, dDesc: string = '', dCat: string = '') => {
+      const lowerName = dName.toLowerCase();
+      const lowerDesc = dDesc.toLowerCase();
+      const lowerCat = dCat.toLowerCase();
+      const text = `${lowerName} ${lowerDesc} ${lowerCat}`;
+
+      // 1. Direct or normalized full match
+      if (text.includes(q) || text.includes(normalizedQ)) return true;
+
+      // 2. Token / word prefix match (all tokens match or match prefix)
+      const allTokensMatch = tokens.every(token => {
+        if (text.includes(token)) return true;
+        if (token.length >= 4 && lowerName.split(/\s+/).some(w => w.startsWith(token.slice(0, 4)))) return true;
+        return false;
+      });
+      if (allTokensMatch) return true;
+
+      return false;
+    };
+
+    // 1. Search Within Restaurant's Active Menu First
+    for (const dish of allRestaurantDishes) {
+      const cleanName = formatCleanDishName(dish.name, restaurant.name);
+      if (matchesQuery(cleanName, dish.description, dish.category)) {
+        seenNames.add(cleanName.toLowerCase());
+        matches.push(dish);
+      }
+    }
+
+    // 2. Cross-Search across all curated dishes in CUISINE_MENUS
+    // Allows finding authentic items (e.g. Chicken Lollipop, Biryani, Schezwan, Momos, Dosa, Paneer, etc.)
+    for (const profile of CUISINE_MENUS) {
+      for (const t of profile.dishes) {
+        const cleanName = formatCleanDishName(t.name, restaurant.name);
+        const lower = cleanName.toLowerCase();
+        if (seenNames.has(lower)) continue;
+
+        // Skip non-veg ONLY if this restaurant is strictly pure-veg AND the user didn't explicitly search for non-veg
+        const isDishNonVeg = !isDishVeg(cleanName) || t.is_veg === 0;
+        const userExplicitlyWantedNonVeg = ['chicken', 'mutton', 'fish', 'prawn', 'egg', 'kebab', 'meat', 'wings', 'lollipop'].some(kw => q.includes(kw) || normalizedQ.includes(kw));
+
+        if (isPureVegRestaurant && isDishNonVeg && !userExplicitlyWantedNonVeg) {
+          continue;
+        }
+
+        if (matchesQuery(cleanName, t.description, t.category || profile.name)) {
+          seenNames.add(lower);
+          matches.push({
+            id: Math.floor(Math.random() * 80000) + 10000,
+            name: cleanName,
+            description: t.description || `Specialty served at ${restaurant.name}`,
+            price: t.price || 240,
+            image: t.image || `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurant.name)}`,
+            rating: t.rating || 4.9,
+            popularity: t.popularity || 98,
+            category: t.category || inferDishCategory(cleanName, t.description),
+            is_veg: t.is_veg !== undefined ? t.is_veg : (isDishVeg(cleanName) ? 1 : 0),
+            restaurant_id: restaurant.id
+          });
+        }
+      }
+    }
+
+    // 3. Fallback: If user typed something specific, ALWAYS provide an instant custom dish card
+    const userCleanTypedName = formatCleanDishName(
+      normalizedWords.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      restaurant.name
+    );
+    const hasExactMatch = seenNames.has(userCleanTypedName.toLowerCase()) || seenNames.has(q);
+
+    if (!hasExactMatch && rawQ.length >= 2) {
+      const isTypedVeg = isDishVeg(userCleanTypedName);
+      matches.unshift({
+        id: 999901,
+        name: userCleanTypedName,
+        description: `Freshly prepared specialty at ${restaurant.name}`,
+        price: 260,
+        image: `/api/ai/dish-image?dish=${encodeURIComponent(userCleanTypedName)}&restaurant=${encodeURIComponent(restaurant.name)}`,
+        rating: 5.0,
+        popularity: 100,
+        category: inferDishCategory(userCleanTypedName),
+        is_veg: isTypedVeg ? 1 : 0,
+        restaurant_id: restaurant.id
+      });
+    }
+
+    return matches;
+  }, [allRestaurantDishes, menuSearchQuery, restaurant.name, isPureVegRestaurant, restaurant.id]);
 
   // Auto-select first recommended dish when restaurant changes
   const hasAutoSelectedRef = useRef<boolean>(false);
@@ -269,25 +398,18 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   }, [restaurant.id, restaurant.name]);
 
   useEffect(() => {
-    if (threeDishes.length > 0) {
-      const isDishInCurrentMenu = selectedDish && allRestaurantDishes.some(
-        d => formatCleanDishName(d.name, restaurant.name).toLowerCase() === selectedDish.name.toLowerCase() ||
-             d.name.toLowerCase() === selectedDish.name.toLowerCase()
-      );
-
-      if (!selectedDish || !isDishInCurrentMenu) {
-        hasAutoSelectedRef.current = true;
-        const first = threeDishes[0];
-        const cleanDishName = formatCleanDishName(first.name, restaurant.name);
-        const visual = getDishVisualAssets(first.name, first.image, restaurant.name);
-        onSelectDish({
-          ...first,
-          name: cleanDishName,
-          image: visual.plateImage
-        });
-      }
+    if (threeDishes.length > 0 && !selectedDish && !hasAutoSelectedRef.current) {
+      hasAutoSelectedRef.current = true;
+      const first = threeDishes[0];
+      const cleanDishName = formatCleanDishName(first.name, restaurant.name);
+      const visual = getDishVisualAssets(first.name, first.image, restaurant.name);
+      onSelectDish({
+        ...first,
+        name: cleanDishName,
+        image: visual.flyingImage || visual.plateImage
+      });
     }
-  }, [threeDishes, allRestaurantDishes, selectedDish, restaurant.name, onSelectDish]);
+  }, [threeDishes, selectedDish, restaurant.name, onSelectDish]);
 
   const handleSelectDishItem = (dish: Dish) => {
     const cleanName = formatCleanDishName(dish.name, restaurant.name);
@@ -332,13 +454,6 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
       {/* 2. Top 3 Signature Quick-Pick Cards */}
       <div className="shrink-0 w-full">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-[#D4380D]" />
-            Quick Pick Best Dishes
-          </span>
-          <span className="text-[10px] text-slate-400 font-medium">1-Tap Select</span>
-        </div>
 
         {isLoading && rawDishes.length === 0 ? (
           <div className="grid grid-cols-3 gap-2 w-full animate-pulse">
@@ -425,24 +540,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           </div>
         </div>
 
-        {/* When NOT typing: Do NOT display all menu items (eliminates excessive scrolling) */}
-        {!menuSearchQuery.trim() ? (
-          <div className="py-2.5 px-3 bg-white border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-            <span className="flex items-center gap-1.5 font-medium">
-              <Search className="w-3 h-3 text-[#D4380D]/70" />
-              Type dish name above to search live menu
-            </span>
-            {onManualEntry && (
-              <button
-                type="button"
-                onClick={onManualEntry}
-                className="text-[10px] font-bold text-[#D4380D] hover:underline cursor-pointer"
-              >
-                + Custom dish
-              </button>
-            )}
-          </div>
-        ) : (
+        {!menuSearchQuery.trim() ? null : (
           /* When typing: Display Live Dynamic Auto-Suggestions */
           <div className="border-t border-slate-100 bg-white animate-in fade-in duration-200">
             <div className="px-3 py-1.5 bg-orange-50/70 border-b border-orange-100/80 flex items-center justify-between text-[11px] font-bold text-slate-600">
@@ -584,17 +682,6 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         )}
       </div>
 
-      {/* 4. Active Selected Plate Summary Bar */}
-      {selectedDish && (
-        <div className="w-full shrink-0 px-3 py-2 rounded-xl bg-orange-50/90 border border-orange-200/80 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-slate-500 font-semibold shrink-0">Selected:</span>
-            <span className="font-black text-[#D4380D] truncate">
-              {formatCleanDishName(selectedDish.name, restaurant.name)}
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* 5. Primary CTA Button */}
       <div className="shrink-0 w-full pt-0.5">

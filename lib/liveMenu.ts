@@ -3609,7 +3609,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
   // Bar & Restaurant / Multi-Cuisine Dining / Permit Room
   {
     name: "Bar & Multi-Cuisine Restaurant",
-    keywords: ['bar', 'permit room', 'lounge', 'resto', 'beer', 'pub', 'club', 'dining bar', 'family restaurant', 'city point', 'barometer', 'hidden place'],
+    keywords: ['hotel', 'temptation', 'restaurant', 'dining', 'kitchen', 'bar', 'permit room', 'lounge', 'resto', 'beer', 'pub', 'club', 'dining bar', 'family restaurant', 'city point', 'barometer', 'hidden place'],
     dishes: [
       { name: "Special Tandoori Chicken Tikka (6 Pcs)", description: "Smoky boneless chicken chunks marinated in hung curd, ginger garlic & roasted spices.", price: 320, image: "/api/ai/dish-image?dish=Tandoori%20Chicken", popularity: 100, rating: 5.0 },
       { name: "Famous Butter Chicken with Garlic Naan", description: "Charcoal grilled chicken in rich creamy tomato cashew gravy with hot garlic butter naan.", price: 360, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
@@ -3891,6 +3891,9 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     } else if (restNameLower.includes('military') || restNameLower.includes('gavran') || restNameLower.includes('sandeep') || restNameLower.includes('surve') || restNameLower.includes('maratha')) {
       const milProfile = CUISINE_MENUS.find(p => p.name.includes('Military'));
       if (milProfile) matchedProfile = milProfile;
+    } else if (restNameLower.includes('temptation') || (!isVegOnly && (restNameLower.includes('hotel') || restNameLower.includes('restaurant') || restNameLower.includes('dining') || restNameLower.includes('kitchen')))) {
+      const barProfile = CUISINE_MENUS.find(p => p.name.includes('Multi-Cuisine') || p.name.includes('Bar'));
+      if (barProfile) matchedProfile = barProfile;
     } else if (isNonVeg || restNameLower.includes('biryani') || restNameLower.includes('kebab') || restNameLower.includes('darbar') || restNameLower.includes('mughlai') || restNameLower.includes('handi')) {
       const bProfile = CUISINE_MENUS.find(p => p.name.includes('Biryani'));
       if (bProfile) matchedProfile = bProfile;
