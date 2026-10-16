@@ -402,18 +402,21 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
     if (!hasExactMatch && rawQ.length >= 2) {
       const isTypedVeg = isDishVeg(userCleanTypedName);
-      matches.unshift({
-        id: 999901,
-        name: userCleanTypedName,
-        description: `Freshly prepared specialty at ${restaurant.name}`,
-        price: 260,
-        image: `/api/ai/dish-image?dish=${encodeURIComponent(userCleanTypedName)}&restaurant=${encodeURIComponent(restaurant.name)}`,
-        rating: 5.0,
-        popularity: 100,
-        category: inferDishCategory(userCleanTypedName),
-        is_veg: isTypedVeg ? 1 : 0,
-        restaurant_id: restaurant.id
-      });
+      // Strictly prevent non-veg dishes if this is a pure veg restaurant
+      if (!(isPureVegRestaurant && !isTypedVeg)) {
+        matches.unshift({
+          id: 999901,
+          name: userCleanTypedName,
+          description: `Freshly prepared specialty at ${restaurant.name}`,
+          price: 260,
+          image: `/api/ai/dish-image?dish=${encodeURIComponent(userCleanTypedName)}&restaurant=${encodeURIComponent(restaurant.name)}`,
+          rating: 5.0,
+          popularity: 100,
+          category: inferDishCategory(userCleanTypedName),
+          is_veg: isTypedVeg ? 1 : 0,
+          restaurant_id: restaurant.id
+        });
+      }
     }
 
     return matches;
