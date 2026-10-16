@@ -23,9 +23,20 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
     const resolvedName = restName || 'Selected Food Joint';
     const visual = getDishVisualAssets(resolvedName);
-    const isVeg = isVegParam === 'true' || isVegParam === '1' ||
+    const isExplicitNonVeg = resolvedName.toLowerCase().includes('non-veg') ||
+      resolvedName.toLowerCase().includes('non veg') ||
+      resolvedName.toLowerCase().includes('nonveg') ||
+      resolvedName.toLowerCase().includes('mutton') ||
+      resolvedName.toLowerCase().includes('chicken') ||
+      resolvedName.toLowerCase().includes('fish') ||
+      resolvedName.toLowerCase().includes('seafood') ||
+      resolvedName.toLowerCase().includes('military');
+
+    const isVeg = !isExplicitNonVeg && (
+      isVegParam === 'true' || isVegParam === '1' ||
       resolvedName.toLowerCase().includes('pure veg') ||
-      (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non-veg'));
+      (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non'))
+    );
 
     const restaurant: Restaurant = {
       id: restId,

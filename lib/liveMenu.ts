@@ -3865,8 +3865,22 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
 
   // If no specific profile matched with positive score, use smart semantic heuristics
   if (maxScore === 0) {
-    const isVegOnly = restNameLower.includes('pure veg') || (restNameLower.includes('veg') && !restNameLower.includes('non-veg') && !restNameLower.includes('nonveg')) || restaurant.is_veg === 1;
-    const isNonVeg = restNameLower.includes('non-veg') || restNameLower.includes('nonveg') || restNameLower.includes('mutton') || restNameLower.includes('chicken') || restNameLower.includes('meat') || restNameLower.includes('fish') || restNameLower.includes('rassa') || restNameLower.includes('seafood');
+    const isNonVeg = restNameLower.includes('non-veg') ||
+      restNameLower.includes('non veg') ||
+      restNameLower.includes('nonveg') ||
+      restNameLower.includes('mutton') ||
+      restNameLower.includes('chicken') ||
+      restNameLower.includes('meat') ||
+      restNameLower.includes('fish') ||
+      restNameLower.includes('rassa') ||
+      restNameLower.includes('seafood') ||
+      restNameLower.includes('military');
+
+    const isVegOnly = !isNonVeg && (
+      restNameLower.includes('pure veg') ||
+      (restNameLower.includes('veg') && !restNameLower.includes('non')) ||
+      restaurant.is_veg === 1
+    );
 
     if (restNameLower.includes('fish') || restNameLower.includes('seafood') || restNameLower.includes('surmai') || restNameLower.includes('malvan') || restNameLower.includes('pomfret') || restNameLower.includes('prawn')) {
       const sProfile = CUISINE_MENUS.find(p => p.name.includes('Seafood') || p.name.includes('Fish'));

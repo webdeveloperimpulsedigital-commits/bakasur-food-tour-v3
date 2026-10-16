@@ -37,16 +37,27 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
            r.name.toLowerCase().includes(resolvedName.toLowerCase())
     );
 
-    const isVeg = isVegParam === 'true' || isVegParam === '1' ||
+    const isExplicitNonVeg = resolvedName.toLowerCase().includes('non-veg') ||
+      resolvedName.toLowerCase().includes('non veg') ||
+      resolvedName.toLowerCase().includes('nonveg') ||
+      resolvedName.toLowerCase().includes('mutton') ||
+      resolvedName.toLowerCase().includes('chicken') ||
+      resolvedName.toLowerCase().includes('fish') ||
+      resolvedName.toLowerCase().includes('seafood') ||
+      resolvedName.toLowerCase().includes('military');
+
+    const isVeg = !isExplicitNonVeg && (
+      isVegParam === 'true' || isVegParam === '1' ||
       (knownRest && knownRest.is_veg === 1) ||
       resolvedName.toLowerCase().includes('pure veg') ||
-      (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non-veg')) ||
+      (resolvedName.toLowerCase().includes('veg') && !resolvedName.toLowerCase().includes('non')) ||
       resolvedName.toLowerCase().includes('mithai') ||
       resolvedName.toLowerCase().includes('sweets') ||
       resolvedName.toLowerCase().includes('bhel') ||
       resolvedName.toLowerCase().includes('dosa') ||
       resolvedName.toLowerCase().includes('idli') ||
-      resolvedName.toLowerCase().includes('udupi');
+      resolvedName.toLowerCase().includes('udupi')
+    );
     
     const restInfo: Restaurant = {
       id: restId,

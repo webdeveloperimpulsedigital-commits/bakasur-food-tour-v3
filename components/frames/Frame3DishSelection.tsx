@@ -26,47 +26,100 @@ function getInitialDishes(restaurant: Restaurant): Dish[] {
     console.warn('Initial dishes generation notice:', err);
   }
 
-  const cleanName = restaurant.name.split(',')[0].trim();
+  const isNonVeg = restaurant.name.toLowerCase().includes('non veg') ||
+    restaurant.name.toLowerCase().includes('non-veg') ||
+    restaurant.name.toLowerCase().includes('mutton') ||
+    restaurant.name.toLowerCase().includes('chicken') ||
+    restaurant.name.toLowerCase().includes('fish') ||
+    restaurant.name.toLowerCase().includes('military');
+
+  if (isNonVeg) {
+    return [
+      {
+        id: restaurant.id * 100 + 1,
+        restaurant_id: restaurant.id,
+        name: 'Special Dum Mutton Biryani',
+        description: 'Aromatic Basmati rice slow cooked on dum with tender mutton chunks & saffron ghee',
+        price: 390,
+        image: `/api/ai/dish-image?dish=${encodeURIComponent('Special Dum Mutton Biryani')}&restaurant=${encodeURIComponent(restaurant.name)}`,
+        rating: 5.0,
+        popularity: 100,
+        is_recommended: 1,
+        category: 'Rice & Biryani',
+        is_veg: 0,
+        status: 'active'
+      },
+      {
+        id: restaurant.id * 100 + 2,
+        restaurant_id: restaurant.id,
+        name: 'Hyderabadi Chicken Dum Biryani',
+        description: 'Fragrant spiced long grain rice layered with succulent marinated chicken & mint',
+        price: 320,
+        image: `/api/ai/dish-image?dish=${encodeURIComponent('Hyderabadi Chicken Dum Biryani')}&restaurant=${encodeURIComponent(restaurant.name)}`,
+        rating: 4.9,
+        popularity: 98,
+        is_recommended: 1,
+        category: 'Rice & Biryani',
+        is_veg: 0,
+        status: 'active'
+      },
+      {
+        id: restaurant.id * 100 + 3,
+        restaurant_id: restaurant.id,
+        name: 'Old Delhi Style Butter Chicken',
+        description: 'Tender roasted chicken tikka simmered in rich creamy tomato cashew makhani gravy',
+        price: 360,
+        image: `/api/ai/dish-image?dish=${encodeURIComponent('Old Delhi Style Butter Chicken')}&restaurant=${encodeURIComponent(restaurant.name)}`,
+        rating: 4.8,
+        popularity: 95,
+        is_recommended: 1,
+        category: 'Non-Veg Main Course',
+        is_veg: 0,
+        status: 'active'
+      }
+    ];
+  }
+
   return [
     {
       id: restaurant.id * 100 + 1,
       restaurant_id: restaurant.id,
-      name: `${cleanName} Special`,
-      description: 'Signature culinary specialty plate',
-      price: 180,
-      image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName + ' Special')}&restaurant=${encodeURIComponent(restaurant.name)}`,
+      name: 'Paneer Butter Masala',
+      description: 'Cottage cheese cubes simmered in velvety tomato cashew butter gravy',
+      price: 240,
+      image: `/api/ai/dish-image?dish=${encodeURIComponent('Paneer Butter Masala')}&restaurant=${encodeURIComponent(restaurant.name)}`,
       rating: 5.0,
       popularity: 100,
       is_recommended: 1,
-      category: 'Main Course',
+      category: 'North Indian Veg',
       is_veg: 1,
       status: 'active'
     },
     {
       id: restaurant.id * 100 + 2,
       restaurant_id: restaurant.id,
-      name: 'Special Platter',
-      description: 'Authentic chef special preparation',
-      price: 160,
-      image: `/api/ai/dish-image?dish=${encodeURIComponent('Special Platter')}&restaurant=${encodeURIComponent(restaurant.name)}`,
+      name: 'Dal Makhani Charcoal Simmered',
+      description: 'Slow-simmered whole black lentils with fresh cream and butter',
+      price: 210,
+      image: `/api/ai/dish-image?dish=${encodeURIComponent('Dal Makhani')}&restaurant=${encodeURIComponent(restaurant.name)}`,
       rating: 4.9,
       popularity: 98,
       is_recommended: 1,
-      category: 'Snacks & Starters',
+      category: 'North Indian Veg',
       is_veg: 1,
       status: 'active'
     },
     {
       id: restaurant.id * 100 + 3,
       restaurant_id: restaurant.id,
-      name: 'Crispy Snack Platter',
-      description: 'Hot crispy delight served with signature chutneys',
-      price: 120,
-      image: `/api/ai/dish-image?dish=${encodeURIComponent('Crispy Snack Platter')}&restaurant=${encodeURIComponent(restaurant.name)}`,
+      name: 'Special Maharaja Veg Thali',
+      description: 'Grand vegetarian platter with seasonal subzi, dal, rice, rotis & sweet',
+      price: 260,
+      image: `/api/ai/dish-image?dish=${encodeURIComponent('Veg Thali')}&restaurant=${encodeURIComponent(restaurant.name)}`,
       rating: 4.8,
       popularity: 95,
       is_recommended: 1,
-      category: 'Snacks & Starters',
+      category: 'Thalis & Combos',
       is_veg: 1,
       status: 'active'
     }
@@ -77,7 +130,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   restaurant,
   selectedDish,
   onSelectDish,
-  onConfirmDish
+  onConfirmDish,
+  onManualEntry
 }) => {
   const [rawDishes, setRawDishes] = useState<Dish[]>([]);
   const [menuSearchQuery, setMenuSearchQuery] = useState<string>('');
@@ -125,10 +179,42 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     };
   }, [restaurant.id, restaurant.name]);
 
-  // All available dishes for this restaurant
+  // Precise restaurant cuisine categorization
+  const isNonVegRestaurant = useMemo(() => {
+    const rName = restaurant.name.toLowerCase();
+    return rName.includes('non-veg') ||
+      rName.includes('non veg') ||
+      rName.includes('nonveg') ||
+      rName.includes('mutton') ||
+      rName.includes('chicken') ||
+      rName.includes('meat') ||
+      rName.includes('fish') ||
+      rName.includes('seafood') ||
+      rName.includes('military');
+  }, [restaurant.name]);
+
+  const isPureVegRestaurant = useMemo(() => {
+    if (isNonVegRestaurant) return false;
+    const rName = restaurant.name.toLowerCase();
+    return restaurant.is_veg === 1 || 
+      rName.includes('pure veg') || 
+      (rName.includes('veg') && !rName.includes('non')) ||
+      rName.includes('mithai') ||
+      rName.includes('sweets') ||
+      rName.includes('dosa') ||
+      rName.includes('idli') ||
+      rName.includes('udupi');
+  }, [restaurant.name, restaurant.is_veg, isNonVegRestaurant]);
+
+  // All authentic available dishes for this restaurant (strictly verified to match restaurant identity)
   const allRestaurantDishes: Dish[] = useMemo(() => {
-    return rawDishes.length > 0 ? rawDishes : getInitialDishes(restaurant);
-  }, [rawDishes, restaurant]);
+    const list = rawDishes.length > 0 ? rawDishes : getInitialDishes(restaurant);
+    if (isPureVegRestaurant) {
+      // Guarantee zero non-veg items for pure veg restaurants
+      return list.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
+    }
+    return list;
+  }, [rawDishes, restaurant, isPureVegRestaurant]);
 
   // Extract top 3 signature dishes for quick 1-tap picks at top
   const threeDishes: Dish[] = useMemo(() => {
@@ -142,6 +228,39 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     });
     return sorted.slice(0, 3);
   }, [allRestaurantDishes]);
+
+  // Contextual, authentic search placeholder matching this restaurant's real food
+  const dynamicPlaceholder = useMemo(() => {
+    const rName = restaurant.name.toLowerCase();
+    if (isNonVegRestaurant) {
+      return `Search in ${restaurant.name} (e.g. Biryani, Chicken, Kebab, Mutton)...`;
+    }
+    if (rName.includes('dosa') || rName.includes('idli') || rName.includes('south') || rName.includes('udupi')) {
+      return `Search in ${restaurant.name} (e.g. Masala Dosa, Idli, Medu Vada)...`;
+    }
+    if (rName.includes('cafe') || rName.includes('coffee') || rName.includes('bakery')) {
+      return `Search in ${restaurant.name} (e.g. Bun Maska, Cold Coffee, Sandwich)...`;
+    }
+    if (rName.includes('sweet') || rName.includes('mithai') || rName.includes('chaat') || rName.includes('bhel')) {
+      return `Search in ${restaurant.name} (e.g. Gulab Jamun, Samosa, SPDP, Jalebi)...`;
+    }
+    if (rName.includes('misal') || rName.includes('katta')) {
+      return `Search in ${restaurant.name} (e.g. Misal Pav, Usal, Vada Pav)...`;
+    }
+    return `Search dishes in ${restaurant.name} (e.g. Thali, Paneer, Dal)...`;
+  }, [restaurant.name, isNonVegRestaurant]);
+
+  // Dynamic Auto-Suggestions: ONLY compute when user actually types in search bar
+  const matchingSuggestions = useMemo(() => {
+    const q = menuSearchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return allRestaurantDishes.filter(dish => {
+      const cleanName = formatCleanDishName(dish.name, restaurant.name).toLowerCase();
+      const desc = (dish.description || '').toLowerCase();
+      const cat = (dish.category || '').toLowerCase();
+      return cleanName.includes(q) || desc.includes(q) || cat.includes(q) || dish.name.toLowerCase().includes(q);
+    });
+  }, [allRestaurantDishes, menuSearchQuery, restaurant.name]);
 
   // Auto-select first recommended dish when restaurant changes
   const hasAutoSelectedRef = useRef<boolean>(false);
@@ -169,17 +288,6 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       }
     }
   }, [threeDishes, allRestaurantDishes, selectedDish, restaurant.name, onSelectDish]);
-
-  // All restaurant dishes in one unified menu card list (with search filtering)
-  const filteredMenuDishes = useMemo(() => {
-    const q = menuSearchQuery.trim().toLowerCase();
-    if (!q) return allRestaurantDishes;
-    return allRestaurantDishes.filter(dish => {
-      const cleanName = formatCleanDishName(dish.name, restaurant.name).toLowerCase();
-      const desc = (dish.description || '').toLowerCase();
-      return cleanName.includes(q) || desc.includes(q) || dish.name.toLowerCase().includes(q);
-    });
-  }, [allRestaurantDishes, menuSearchQuery, restaurant.name]);
 
   const handleSelectDishItem = (dish: Dish) => {
     const cleanName = formatCleanDishName(dish.name, restaurant.name);
@@ -212,10 +320,6 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
     onConfirmDish(finalName, finalImg);
   };
-
-  const isPureVegRestaurant = restaurant.is_veg === 1 || 
-    restaurant.name.toLowerCase().includes('pure veg') || 
-    (restaurant.name.toLowerCase().includes('veg') && !restaurant.name.toLowerCase().includes('non'));
 
   return (
     <div className="w-full h-full min-h-0 flex flex-col justify-start items-start text-left animate-in fade-in duration-300 p-3 sm:p-4 gap-2.5 bg-white overflow-y-auto scrollbar-thin relative pb-8">
@@ -295,24 +399,25 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         )}
       </div>
 
-      {/* 3. HOTEL MENU CARD - Simple, Elegant, Real Food Items */}
+      {/* 3. MENU SEARCH BAR & REAL-TIME AUTO-SUGGESTIONS (No full menu scroll) */}
       <div className="w-full shrink-0 flex flex-col rounded-2xl border-2 border-slate-200/90 bg-white overflow-hidden shadow-sm mt-0.5">
-        {/* Menu Search Bar */}
-        <div className="p-2 border-b border-slate-100 bg-slate-50/50">
-          <div className="relative flex items-center w-full px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 focus-within:border-[#D4380D] focus-within:ring-1 focus-within:ring-[#D4380D]/20 transition-all">
-            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 mr-1.5" />
+        {/* Search Input Bar */}
+        <div className="p-2 bg-slate-50/50">
+          <div className="relative flex items-center w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 focus-within:border-[#D4380D] focus-within:ring-1 focus-within:ring-[#D4380D]/20 transition-all">
+            <Search className="w-4 h-4 text-slate-400 shrink-0 mr-2" />
             <input
               type="text"
               value={menuSearchQuery}
               onChange={(e) => setMenuSearchQuery(e.target.value)}
-              placeholder={`Search in ${restaurant.name} menu (e.g. Misal, Dosa, Thali)...`}
+              placeholder={dynamicPlaceholder}
               className="w-full bg-transparent text-xs font-semibold text-slate-900 placeholder-slate-400 focus:outline-none"
             />
             {menuSearchQuery && (
               <button
                 type="button"
                 onClick={() => setMenuSearchQuery('')}
-                className="p-0.5 text-slate-400 hover:text-slate-600"
+                className="p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -320,108 +425,163 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           </div>
         </div>
 
-        {/* Scrollable Hotel Menu Dishes List - All Dishes in One List */}
-        <div className="max-h-[260px] xs:max-h-[300px] sm:max-h-[340px] overflow-y-auto divide-y divide-slate-100 scrollbar-thin p-1 bg-white">
-          {filteredMenuDishes.length === 0 ? (
-            <div className="p-4 text-center space-y-1">
-              <p className="text-xs font-bold text-slate-700">No dishes found matching &ldquo;{menuSearchQuery}&rdquo;</p>
-              <p className="text-[11px] text-slate-400">Try searching for other authentic specialties from {restaurant.name}</p>
+        {/* When NOT typing: Do NOT display all menu items (eliminates excessive scrolling) */}
+        {!menuSearchQuery.trim() ? (
+          <div className="py-2.5 px-3 bg-white border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Search className="w-3 h-3 text-[#D4380D]/70" />
+              Type dish name above to search live menu
+            </span>
+            {onManualEntry && (
+              <button
+                type="button"
+                onClick={onManualEntry}
+                className="text-[10px] font-bold text-[#D4380D] hover:underline cursor-pointer"
+              >
+                + Custom dish
+              </button>
+            )}
+          </div>
+        ) : (
+          /* When typing: Display Live Dynamic Auto-Suggestions */
+          <div className="border-t border-slate-100 bg-white animate-in fade-in duration-200">
+            <div className="px-3 py-1.5 bg-orange-50/70 border-b border-orange-100/80 flex items-center justify-between text-[11px] font-bold text-slate-600">
+              <span className="flex items-center gap-1.5 text-[#D4380D]">
+                <Sparkles className="w-3 h-3 text-[#D4380D]" />
+                Auto-Suggestions ({matchingSuggestions.length})
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[150px]">
+                Authentic from {restaurant.name}
+              </span>
             </div>
-          ) : (
-            filteredMenuDishes.map((dish) => {
-              const cleanName = formatCleanDishName(dish.name, restaurant.name);
-              const isSelected = selectedDish?.name?.toLowerCase() === cleanName.toLowerCase() ||
-                selectedDish?.name?.toLowerCase() === dish.name.toLowerCase();
-              const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
-              const isVeg = dish.is_veg !== undefined ? dish.is_veg === 1 : isDishVeg(dish.name);
 
-              return (
-                <div
-                  key={`item-${dish.id}-${dish.name}`}
-                  onClick={() => handleSelectDishItem(dish)}
-                  className={`w-full p-2 rounded-xl transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left ${
-                    isSelected ? 'bg-orange-50/80 border border-orange-200' : 'hover:bg-slate-50/80 border border-transparent'
-                  }`}
-                >
-                  {/* Left: Food Image Thumbnail */}
-                  <div className="w-11 h-11 rounded-lg p-0.5 bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0 overflow-hidden">
-                    <img
-                      src={visual.flyingImage || visual.plateImage}
-                      alt={cleanName}
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        if (!target.src.includes('default_feast')) {
-                          target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Feast')}&restaurant=Indian`;
-                        }
-                      }}
-                      className="w-full h-full object-contain filter drop-shadow-xs"
-                    />
-                  </div>
-
-                  {/* Middle: Veg/Non-Veg dot + Clean Name + Top Pick badge + Description (NO PRICE) */}
-                  <div className="flex items-start gap-2 min-w-0 flex-1">
-                    {/* Indian Food Standard Veg/Non-Veg Symbol */}
-                    <div className="mt-0.5 shrink-0">
-                      {isVeg ? (
-                        <span className="inline-flex items-center justify-center w-3.5 h-3.5 border border-emerald-600 rounded-xs p-0.5" title="Pure Veg">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center justify-center w-3.5 h-3.5 border border-red-600 rounded-xs p-0.5" title="Non-Veg">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-xs font-black truncate ${isSelected ? 'text-[#D4380D]' : 'text-slate-900'}`}>
-                          {cleanName}
-                        </span>
-                        {dish.is_recommended === 1 && (
-                          <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded shrink-0">
-                            ★ Top Pick
-                          </span>
-                        )}
-                      </div>
-
-                      {dish.description && (
-                        <div className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
-                          {dish.description}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right: SELECT / CHOSEN Button */}
-                  <div className="flex items-center shrink-0">
+            <div className="max-h-[220px] xs:max-h-[260px] overflow-y-auto divide-y divide-slate-100 scrollbar-thin p-1 bg-white">
+              {matchingSuggestions.length === 0 ? (
+                <div className="p-4 text-center space-y-1.5 bg-white">
+                  <p className="text-xs font-bold text-slate-700">
+                    No dishes found matching &ldquo;{menuSearchQuery}&rdquo;
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Only authentic dishes actually served by {restaurant.name} are shown.
+                  </p>
+                  {onManualEntry && (
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectDishItem(dish);
-                      }}
-                      className={`px-2.5 py-1 rounded-md text-[10px] font-black transition-all cursor-pointer shrink-0 ${
+                      onClick={onManualEntry}
+                      className="mt-1 text-xs font-bold text-[#D4380D] hover:underline cursor-pointer inline-flex items-center gap-1"
+                    >
+                      + Enter custom dish name instead
+                    </button>
+                  )}
+                </div>
+              ) : (
+                matchingSuggestions.map((dish) => {
+                  const cleanName = formatCleanDishName(dish.name, restaurant.name);
+                  const isSelected =
+                    selectedDish?.name?.toLowerCase() === cleanName.toLowerCase() ||
+                    selectedDish?.name?.toLowerCase() === dish.name.toLowerCase();
+                  const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
+                  const isVeg = dish.is_veg !== undefined ? dish.is_veg === 1 : isDishVeg(dish.name);
+
+                  return (
+                    <div
+                      key={`suggest-${dish.id}-${dish.name}`}
+                      onClick={() => handleSelectDishItem(dish)}
+                      className={`w-full p-2 rounded-xl transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left ${
                         isSelected
-                          ? 'bg-[#D4380D] text-white shadow-xs'
-                          : 'bg-orange-50 hover:bg-orange-100 text-[#D4380D] border border-orange-200'
+                          ? 'bg-orange-50/90 border border-orange-200'
+                          : 'hover:bg-slate-50 border border-transparent'
                       }`}
                     >
-                      {isSelected ? (
-                        <span className="flex items-center gap-0.5">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                          CHOSEN
-                        </span>
-                      ) : (
-                        'SELECT'
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+                      {/* Thumbnail */}
+                      <div className="w-10 h-10 rounded-lg p-0.5 bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0 overflow-hidden">
+                        <img
+                          src={visual.flyingImage || visual.plateImage}
+                          alt={cleanName}
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.src.includes('default_feast')) {
+                              target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Feast')}&restaurant=Indian`;
+                            }
+                          }}
+                          className="w-full h-full object-contain filter drop-shadow-xs"
+                        />
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex items-start gap-2 min-w-0 flex-1">
+                        <div className="mt-0.5 shrink-0">
+                          {isVeg ? (
+                            <span
+                              className="inline-flex items-center justify-center w-3.5 h-3.5 border border-emerald-600 rounded-xs p-0.5"
+                              title="Pure Veg"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center justify-center w-3.5 h-3.5 border border-red-600 rounded-xs p-0.5"
+                              title="Non-Veg"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`text-xs font-black truncate ${
+                                isSelected ? 'text-[#D4380D]' : 'text-slate-900'
+                              }`}
+                            >
+                              {cleanName}
+                            </span>
+                            {dish.is_recommended === 1 && (
+                              <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded shrink-0">
+                                ★ Top Pick
+                              </span>
+                            )}
+                          </div>
+                          {dish.description && (
+                            <div className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                              {dish.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Select Button */}
+                      <div className="flex items-center shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectDishItem(dish);
+                          }}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-black transition-all cursor-pointer shrink-0 ${
+                            isSelected
+                              ? 'bg-[#D4380D] text-white shadow-xs'
+                              : 'bg-orange-50 hover:bg-orange-100 text-[#D4380D] border border-orange-200'
+                          }`}
+                        >
+                          {isSelected ? (
+                            <span className="flex items-center gap-0.5">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                              CHOSEN
+                            </span>
+                          ) : (
+                            'SELECT'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 4. Active Selected Plate Summary Bar */}
