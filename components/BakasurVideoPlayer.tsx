@@ -473,7 +473,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
     if (frameNumber === 13) return '/images/all-frames/Thumbs Up.mp4';
 
     return videoUrl || '/images/final-frames/1.mp4';
-  }, [frameNumber, isHeartburn, videoUrl]);
+  }, [frameNumber, isHeartburn, videoUrl, isDesktop]);
 
   // Autoplay video smoothly on source change
   useEffect(() => {
@@ -548,92 +548,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
       </div>
 
       {/* Main Stage Media Render */}
-      {frameNumber === 1 ? (
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/final-frames/1.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted
-            preload="auto"
-            className="w-full h-full object-cover object-top relative z-10"
-          />
-        </div>
-      ) : frameNumber === 2 ? (
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src={isDesktop ? "/images/final-frames/Bakasur-Pointing-Rightside.mp4" : "/images/final-frames/2.mp4"}
-            playsInline
-            autoPlay
-            loop
-            muted
-            preload="auto"
-            className="w-full h-full object-cover object-top relative z-10"
-          />
-        </div>
-      ) : frameNumber === 3 || frameNumber === 4 ? (
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/final-frames/3.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted
-            preload="auto"
-            className="w-full h-full object-cover object-top relative z-10"
-          />
-        </div>
-      ) : frameNumber === 6 ? (
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/final-frames/5.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted
-            preload="auto"
-            className="w-full h-full object-cover object-top relative z-10"
-          />
-        </div>
-      ) : frameNumber === 7 || frameNumber === 8 ? (
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/final-frames/Acidity-and-Dakare.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted
-            preload="auto"
-            className="w-full h-full object-cover object-top relative z-10"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
-        </div>
-      ) : frameNumber === 9 ? (
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
-          <video
-            ref={videoRef}
-            src="/images/final-frames/Bhookasur-Drinking-Gastrium.mp4"
-            playsInline
-            autoPlay
-            loop
-            muted
-            preload="auto"
-            onTimeUpdate={(e) => {
-              const video = e.currentTarget;
-              if (video.currentTime >= 3.8) {
-                window.dispatchEvent(new CustomEvent('gastrium-stomach-revealed'));
-              }
-            }}
-            className="w-full h-full object-cover object-center relative z-10"
-          />
-        </div>
-      ) : frameNumber === 10 ? (
+      {frameNumber === 10 ? (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#062c97]">
           <img
             src="/images/final-frames/thank-you-frame.jpg"
@@ -645,14 +560,43 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#182858]">
           <video
             ref={videoRef}
+            key={activeVideoSrc}
             src={activeVideoSrc}
             playsInline
             autoPlay
             loop
-            muted
+            muted={!soundEnabled}
             preload="auto"
-            className="w-full h-full object-cover object-center relative z-10"
+            onLoadedData={() => {
+              if (videoRef.current) {
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            onCanPlay={() => {
+              if (videoRef.current) {
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            onError={() => {
+              if (videoRef.current && !videoRef.current.src.includes('1.mp4')) {
+                videoRef.current.src = '/images/final-frames/1.mp4';
+                videoRef.current.load();
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            onTimeUpdate={(e) => {
+              if (frameNumber === 9) {
+                const video = e.currentTarget;
+                if (video.currentTime >= 3.8) {
+                  window.dispatchEvent(new CustomEvent('gastrium-stomach-revealed'));
+                }
+              }
+            }}
+            className="w-full h-full object-cover object-top relative z-10"
           />
+          {(frameNumber === 7 || frameNumber === 8 || isHeartburn) && (
+            <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-orange-600/20 to-transparent pointer-events-none z-20 animate-flame-volcano" />
+          )}
         </div>
       )}
     </div>

@@ -24,28 +24,36 @@ export const Frame6PostEating: React.FC<Frame6PostEatingProps> = ({
     video.playsInline = true;
 
     const tryPlay = () => {
+      setIsVideoLoaded(true);
       video.play().catch(() => {
         video.muted = true;
         video.play().catch(() => {});
       });
     };
 
-    if (video.readyState >= 3) {
-      setIsVideoLoaded(true);
+    if (video.readyState >= 1) {
       tryPlay();
     }
 
-    video.addEventListener('loadeddata', () => {
+    // Safety timeout: Never trap user on loading spinner
+    const timer = setTimeout(() => {
       setIsVideoLoaded(true);
       tryPlay();
-    });
-    video.addEventListener('canplay', tryPlay);
+    }, 400);
 
-    video.load();
+    video.addEventListener('loadedmetadata', tryPlay);
+    video.addEventListener('loadeddata', tryPlay);
+    video.addEventListener('canplay', tryPlay);
+    video.addEventListener('playing', tryPlay);
+
     tryPlay();
 
     return () => {
+      clearTimeout(timer);
+      video.removeEventListener('loadedmetadata', tryPlay);
+      video.removeEventListener('loadeddata', tryPlay);
       video.removeEventListener('canplay', tryPlay);
+      video.removeEventListener('playing', tryPlay);
     };
   }, []);
 
@@ -79,11 +87,11 @@ export const Frame6PostEating: React.FC<Frame6PostEatingProps> = ({
           muted
           playsInline
           preload="auto"
+          onLoadedMetadata={() => setIsVideoLoaded(true)}
           onLoadedData={() => setIsVideoLoaded(true)}
           onCanPlay={() => setIsVideoLoaded(true)}
-          className={`w-full h-full object-cover object-top relative z-10 transition-opacity duration-300 ${
-            isVideoLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+          onPlaying={() => setIsVideoLoaded(true)}
+          className="w-full h-full object-cover object-top relative z-10 transition-opacity duration-200 opacity-100"
         />
         <div className="absolute bottom-0 inset-x-0 h-10 lg:hidden bg-gradient-to-t from-black/25 to-transparent pointer-events-none z-20" />
       </div>
