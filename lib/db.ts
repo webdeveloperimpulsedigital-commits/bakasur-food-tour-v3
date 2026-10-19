@@ -668,8 +668,8 @@ class MemoryStore {
     this.nextVideoId = 1;
     this.nextJourneyId = 1;
     this.journeySteps = [];
-    this.restaurants = [];
-    this.dishes = [];
+    this.restaurants = INITIAL_RESTAURANTS.map((r) => ({ ...r, id: this.nextRestId++ } as Restaurant));
+    this.dishes = INITIAL_DISHES.map((d) => ({ ...d, id: this.nextDishId++ } as Dish));
     this.videos = INITIAL_VIDEOS.map(v => ({ ...v, id: this.nextVideoId++ }));
 
     // Real live storage only: No fake visits or participants seeded
@@ -2025,9 +2025,14 @@ export const db = {
       console.warn('MySQL getMapData query warning:', err);
     }
 
-    // Fallback if MySQL pool was unavailable or returned empty
-    if (visitedPoints.length === 0 && memoryStore.restaurants.length > 0) {
-      visitedPoints = memoryStore.restaurants.map((r, idx) => ({
+    // Bulletproof Fallback: If MySQL returned no food spots or was unavailable/empty
+    const nonUserPoints = visitedPoints.filter(p => !p.isCurrentUserSpot);
+    if (nonUserPoints.length === 0) {
+      const sourceRestaurants = (memoryStore.restaurants && memoryStore.restaurants.length > 0)
+        ? memoryStore.restaurants
+        : INITIAL_RESTAURANTS.map((r, idx) => ({ ...r, id: idx + 1 } as Restaurant));
+
+      const fallbackList = sourceRestaurants.map((r) => ({
         id: r.id,
         name: r.name,
         address: r.address || '',
@@ -2041,9 +2046,18 @@ export const db = {
         isCurrentUserSpot: false,
         stopNumber: undefined
       }));
-      dbFoodSpots = memoryStore.restaurants.length;
-      dbDishes = memoryStore.dishes?.length || 94;
-      dbCities = new Set(memoryStore.restaurants.map(r => r.city)).size;
+
+      // Preserve current user's spots at top, and append all curated food tour spots
+      visitedPoints = [...visitedPoints.filter(p => p.isCurrentUserSpot), ...fallbackList];
+      if (!dbFoodSpots || dbFoodSpots === 0) {
+        dbFoodSpots = fallbackList.length;
+      }
+      if (!dbDishes || dbDishes === 0) {
+        dbDishes = (memoryStore.dishes?.length > 0 ? memoryStore.dishes.length : INITIAL_DISHES.length) || 100;
+      }
+      if (!dbCities || dbCities === 0) {
+        dbCities = new Set(fallbackList.map(p => p.city)).size;
+      }
     }
 
     // Sort: Current user's spots first (Stop 1, Stop 2), followed by highest visits
