@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, INITIAL_RESTAURANTS, INITIAL_DISHES, type Dish, type Restaurant } from '@/lib/db';
 import { generateLiveMenuForRestaurant } from '@/lib/liveMenu';
 import { searchDishesSwiggyZomato } from '@/lib/foodSearchEngine';
-import { getDishVisualAssets, formatCleanDishName, isDishVeg } from '@/lib/dishAssets';
+import { getDishVisualAssets, formatCleanDishName, isDishVeg, isPureVegRestaurantName } from '@/lib/dishAssets';
 import { fetchGooglePlaceDetails, extractDishesFromGoogleDetails } from '@/lib/googlePlaces';
 import { isApifyConfigured, fetchSwiggyDishesViaApify } from '@/lib/apifySwiggy';
 
@@ -37,7 +37,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
            r.name.toLowerCase().includes(resolvedName.toLowerCase())
     );
 
-    const isExplicitNonVeg = resolvedName.toLowerCase().includes('non-veg') ||
+    const isHeritagePureVeg = isPureVegRestaurantName(resolvedName) || (knownRest ? isPureVegRestaurantName(knownRest.name) : false);
+
+    const isExplicitNonVeg = !isHeritagePureVeg && (
+      resolvedName.toLowerCase().includes('non-veg') ||
       resolvedName.toLowerCase().includes('non veg') ||
       resolvedName.toLowerCase().includes('nonveg') ||
       resolvedName.toLowerCase().includes('mutton') ||
@@ -53,9 +56,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       resolvedName.toLowerCase().includes('kabab') ||
       resolvedName.toLowerCase().includes('bar') ||
       resolvedName.toLowerCase().includes('pub') ||
-      resolvedName.toLowerCase().includes('permit room');
+      resolvedName.toLowerCase().includes('permit room')
+    );
 
-    const isVeg = !isExplicitNonVeg && (
+    const isVeg = isHeritagePureVeg || (!isExplicitNonVeg && (
       isVegParam === 'true' || isVegParam === '1' ||
       (knownRest && knownRest.is_veg === 1) ||
       resolvedName.toLowerCase().includes('pure veg') ||
@@ -71,7 +75,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       resolvedName.toLowerCase().includes('sweets') ||
       resolvedName.toLowerCase().includes('bhel') ||
       resolvedName.toLowerCase().includes('jain')
-    );
+    ));
     
     const restInfo: Restaurant = {
       id: restId,
@@ -105,16 +109,42 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         baseDishes.push({
           ...d,
           name: cleanName,
-          image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
+          image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}&v=v30`
         });
       }
-      if (baseDishes.length >= 35) break;
+      if (!searchQuery && baseDishes.length >= 40) break;
+    }
+
+    // 2. Priority 2: Database Signature Dishes (only if extra dishes needed and restaurant ID matches)
+    if (baseDishes.length < 5) {
+      try {
+        const dbDishes = await db.getDishesByRestaurant(restId, searchQuery ? { search: searchQuery } : undefined);
+        if (dbDishes && dbDishes.length > 0) {
+          usedSource = 'database_signature_menu';
+          for (const d of dbDishes) {
+            if (isVeg && (!isDishVeg(d.name) || d.is_veg === 0)) continue;
+            const cleanName = formatCleanDishName(d.name, restInfo.name);
+            const lower = cleanName.toLowerCase();
+            if (!seenNames.has(lower)) {
+              seenNames.add(lower);
+              baseDishes.push({
+                ...d,
+                name: cleanName,
+                image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}&v=v30`
+              });
+            }
+          }
+        }
+      } catch (dbErr) {
+        console.warn('DB dish lookup notice:', dbErr);
+      }
     }
 
     // 2. Priority 2: Real-time Live Swiggy Menu via Apify if configured (Non-blocking with strict fast timeout)
-    if (isApifyConfigured() || swiggyIdParam) {
+    if (swiggyIdParam || isApifyConfigured()) {
       try {
-        const swiggyRestId = swiggyIdParam || (restId > 0 && restId < 890000 ? String(restId) : undefined);
+        // Only use an explicit swiggyIdParam, never infer from internal restId
+        const swiggyRestId = swiggyIdParam ? String(swiggyIdParam) : undefined;
         const liveSwiggyPromise = fetchSwiggyDishesViaApify(restInfo.name, restInfo.city, {
           restaurantId: swiggyRestId,
           lat: restInfo.latitude,
@@ -128,11 +158,12 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         if (liveSwiggyDishes && liveSwiggyDishes.length > 0) {
           usedSource = 'live_swiggy_menu';
           for (const d of liveSwiggyDishes) {
+            if (isVeg && (!isDishVeg(d.name) || d.is_veg === 0)) continue;
             const cleanName = formatCleanDishName(d.name, restInfo.name);
             const lower = cleanName.toLowerCase();
             if (!seenNames.has(lower)) {
               seenNames.add(lower);
-              baseDishes.unshift({
+              baseDishes.push({
                 ...d,
                 name: cleanName
               });
@@ -153,6 +184,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
           usedSource = 'google_places_reviews';
         }
         for (const d of googleDishes) {
+          if (isVeg && (!isDishVeg(d.name) || d.is_veg === 0)) continue;
           const cleanName = formatCleanDishName(d.name, restInfo.name);
           const lower = cleanName.toLowerCase();
           if (!seenNames.has(lower)) {
@@ -160,7 +192,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
             baseDishes.push({
               ...d,
               name: cleanName,
-              image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}`
+              image: `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restInfo.name)}&v=v30`
             });
           }
         }
@@ -188,10 +220,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       );
 
       const resolvedImage = isAiEndpoint
-        ? d.image
+        ? (d.image.includes('v=') ? d.image.replace(/v=v\d+/, 'v=v30') : `${d.image}&v=v30`)
         : hasRealPhoto
-          ? `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}&imgUrl=${encodeURIComponent(d.image)}`
-          : `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}`;
+          ? `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}&imgUrl=${encodeURIComponent(d.image)}&v=v30`
+          : `/api/ai/dish-image?dish=${encodeURIComponent(d.name)}&restaurant=${encodeURIComponent(restInfo.name)}&v=v30`;
 
       return {
         ...d,
@@ -221,9 +253,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       data: finalDishes
     }, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
         'Pragma': 'no-cache',
-        'Expires': '0'
+        'Expires': '0',
+        'Clear-Site-Data': '"cache"'
       }
     });
   } catch (error: unknown) {

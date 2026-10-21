@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, Search, Utensils, X, Sparkles, BookOpen } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
-import { getDishVisualAssets, formatCleanDishName, isDishVeg } from '@/lib/dishAssets';
+import { getDishVisualAssets, formatCleanDishName, isDishVeg, isPureVegRestaurantName } from '@/lib/dishAssets';
 import { generateLiveMenuForRestaurant, inferDishCategory, CUISINE_MENUS } from '@/lib/liveMenu';
 
 interface Frame3DishSelectionProps {
@@ -17,21 +17,28 @@ interface Frame3DishSelectionProps {
 }
 
 function getInitialDishes(restaurant: Restaurant): Dish[] {
+  const isStrictVeg = isPureVegRestaurantName(restaurant.name) || restaurant.is_veg === 1;
+  const safeRest = {
+    ...restaurant,
+    is_veg: isStrictVeg ? 1 : restaurant.is_veg
+  };
   try {
-    const live = generateLiveMenuForRestaurant(restaurant);
+    const live = generateLiveMenuForRestaurant(safeRest);
     if (live && live.length >= 3) {
-      return live;
+      return isStrictVeg ? live.filter(d => isDishVeg(d.name) && d.is_veg !== 0) : live;
     }
   } catch (err) {
     console.warn('Initial dishes generation notice:', err);
   }
 
-  const isNonVeg = restaurant.name.toLowerCase().includes('non veg') ||
+  const isNonVeg = !isStrictVeg && (
+    restaurant.name.toLowerCase().includes('non veg') ||
     restaurant.name.toLowerCase().includes('non-veg') ||
     restaurant.name.toLowerCase().includes('mutton') ||
     restaurant.name.toLowerCase().includes('chicken') ||
     restaurant.name.toLowerCase().includes('fish') ||
-    restaurant.name.toLowerCase().includes('military');
+    restaurant.name.toLowerCase().includes('military')
+  );
 
   if (isNonVeg) {
     return [
@@ -146,11 +153,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
     async function loadDishes() {
       try {
+        const isStrictVeg = isPureVegRestaurantName(restaurant.name) || restaurant.is_veg === 1;
         const queryParams = new URLSearchParams({
           name: restaurant.name || '',
           area: restaurant.area || '',
           city: restaurant.city || '',
-          is_veg: restaurant.is_veg ? '1' : '0'
+          is_veg: isStrictVeg ? '1' : (restaurant.is_veg ? '1' : '0')
         });
         if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
         if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
@@ -179,8 +187,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     };
   }, [restaurant.id, restaurant.name]);
 
+  const isHeritageVeg = isPureVegRestaurantName(restaurant.name);
+
   // Precise restaurant cuisine categorization
   const isNonVegRestaurant = useMemo(() => {
+    if (isHeritageVeg || restaurant.is_veg === 1) return false;
     const rName = restaurant.name.toLowerCase();
     return rName.includes('non-veg') ||
       rName.includes('non veg') ||
@@ -199,12 +210,13 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       rName.includes('bar') ||
       rName.includes('pub') ||
       rName.includes('permit room');
-  }, [restaurant.name]);
+  }, [restaurant.name, restaurant.is_veg, isHeritageVeg]);
 
   const isPureVegRestaurant = useMemo(() => {
     if (isNonVegRestaurant) return false;
     const rName = restaurant.name.toLowerCase();
-    return restaurant.is_veg === 1 || 
+    return isHeritageVeg ||
+      restaurant.is_veg === 1 || 
       rName.includes('pure veg') || 
       (rName.includes('veg') && !rName.includes('non')) ||
       rName.includes('bhojanalay') ||
@@ -217,7 +229,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       rName.includes('mithai') ||
       rName.includes('sweets') ||
       rName.includes('jain');
-  }, [restaurant.name, restaurant.is_veg, isNonVegRestaurant]);
+  }, [restaurant.name, restaurant.is_veg, isNonVegRestaurant, isHeritageVeg]);
 
   // All authentic available dishes for this restaurant (strictly verified to match restaurant identity)
   const allRestaurantDishes: Dish[] = useMemo(() => {
@@ -282,6 +294,13 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
   // Common typo dictionary & phonetic normalizer
   const DISH_TYPO_MAP: Record<string, string> = {
+    pulav: 'pulao',
+    pulavv: 'pulao',
+    pulao: 'pulao',
+    pilaf: 'pulao',
+    pilau: 'pulao',
+    geera: 'jeera',
+    zeera: 'jeera',
     lolipo: 'lollipop',
     lolipop: 'lollipop',
     lollypop: 'lollipop',
@@ -289,6 +308,9 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     chiken: 'chicken',
     chikken: 'chicken',
     chikn: 'chicken',
+    mutton: 'mutton',
+    muton: 'mutton',
+    gosht: 'mutton',
     panner: 'paneer',
     panir: 'paneer',
     briyani: 'biryani',
@@ -316,6 +338,27 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     wadapav: 'vada pav',
     pavbhaji: 'pav bhaji',
     paobhaji: 'pav bhaji',
+    bhakarwadi: 'bhakarwadi',
+    bhakrwadi: 'bhakarwadi',
+    bakarwadi: 'bhakarwadi',
+    ladoo: 'ladoo',
+    laddu: 'ladoo',
+    laddoo: 'ladoo',
+    barfi: 'barfi',
+    burfi: 'barfi',
+    katli: 'barfi',
+    cofy: 'coffee',
+    coffe: 'coffee',
+    cofee: 'coffee',
+    chay: 'chai',
+    chaai: 'chai',
+    chaha: 'chai',
+    tea: 'chai',
+    piza: 'pizza',
+    burgar: 'burger',
+    burgur: 'burger',
+    sandwhich: 'sandwich',
+    sandwitch: 'sandwich'
   };
 
   // Dynamic Auto-Suggestions: compute when user actually types in search bar with full typo tolerance & catalog search
@@ -340,6 +383,29 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
       // 1. Direct or normalized full match
       if (text.includes(q) || text.includes(normalizedQ)) return true;
+
+      // Cross-alias matching for common Indian food pairs
+      if ((q.includes('pulao') || q.includes('pulav') || normalizedQ.includes('pulao')) && (text.includes('pulao') || text.includes('pulav'))) return true;
+      if ((q.includes('biryani') || normalizedQ.includes('biryani')) && text.includes('biryani')) return true;
+      if ((q.includes('barfi') || q.includes('katli') || normalizedQ.includes('barfi')) && (text.includes('barfi') || text.includes('katli') || text.includes('peda'))) return true;
+      if ((q.includes('ladoo') || q.includes('laddu')) && (text.includes('ladoo') || text.includes('laddu'))) return true;
+      if ((q.includes('chai') || q.includes('tea') || q.includes('chaha')) && (text.includes('chai') || text.includes('tea') || text.includes('chaha'))) return true;
+      if (q.includes('coffee') && (text.includes('coffee') || text.includes('cappuccino') || text.includes('latte') || text.includes('espresso') || text.includes('frappe'))) return true;
+      if (q.includes('dosa') && text.includes('dosa')) return true;
+      if (q.includes('idli') && text.includes('idli')) return true;
+      if ((q.includes('vada pav') || q.includes('vadapav')) && (text.includes('vada pav') || text.includes('vadapav'))) return true;
+      if ((q.includes('pav bhaji') || q.includes('pavbhaji')) && (text.includes('pav bhaji') || text.includes('pavbhaji'))) return true;
+      if (q.includes('misal') && text.includes('misal')) return true;
+      if (q.includes('paneer') && text.includes('paneer')) return true;
+      if (q.includes('chicken') && text.includes('chicken')) return true;
+      if (q.includes('mutton') && text.includes('mutton')) return true;
+      if ((q.includes('fish') || q.includes('seafood') || q.includes('prawn')) && (text.includes('fish') || text.includes('seafood') || text.includes('prawn') || text.includes('surmai') || text.includes('pomfret'))) return true;
+      if (q.includes('pizza') && text.includes('pizza')) return true;
+      if (q.includes('burger') && text.includes('burger')) return true;
+      if (q.includes('sandwich') && text.includes('sandwich')) return true;
+      if (q.includes('pasta') && (text.includes('pasta') || text.includes('penne') || text.includes('alfredo') || text.includes('arrabbiata') || text.includes('lasagna'))) return true;
+      if (q.includes('salad') && text.includes('salad')) return true;
+      if ((q.includes('momos') || q.includes('momo')) && (text.includes('momo') || text.includes('dimsum'))) return true;
 
       // 2. Token / word prefix match (all tokens match or match prefix)
       const allTokensMatch = tokens.every(token => {

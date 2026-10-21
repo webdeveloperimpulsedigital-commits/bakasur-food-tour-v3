@@ -10,7 +10,7 @@
  */
 
 import { Restaurant, Dish } from './db';
-import { getDishVisualAssets, formatCleanDishName } from './dishAssets';
+import { getDishVisualAssets, formatCleanDishName, isDishVeg } from './dishAssets';
 import { generateLiveMenuForRestaurant, CUISINE_MENUS, ICONIC_RESTAURANT_DISHES } from './liveMenu';
 import { parseRestaurantQuery } from './locationParser';
 import { getDeterministicPlaceId } from './livePlaces';
@@ -656,18 +656,56 @@ export function searchDishesSwiggyZomato(
     }
   }
 
-  // Swiggy & Zomato In-Restaurant Menu Search:
-  // Strictly return matching dishes within this restaurant's own catalog only.
-  // Never leak dishes from other restaurants or synthesize unauthentic items.
+  // 2. Also search compatible dishes in CUISINE_MENUS so users find all authentic varieties
   const isPureVegRest = (restaurant.is_veg === 1) ||
     restaurant.name.toLowerCase().includes('pure veg') ||
     (restaurant.name.toLowerCase().includes('veg') && !restaurant.name.toLowerCase().includes('non-veg') && !restaurant.name.toLowerCase().includes('non veg'));
 
+  for (const profile of CUISINE_MENUS) {
+    for (const d of profile.dishes) {
+      const cleanName = formatCleanDishName(d.name, restaurant.name);
+      const lower = cleanName.toLowerCase();
+      if (seenDishNames.has(lower)) continue;
+
+      const isNonVeg = !isDishVeg(cleanName) || d.is_veg === 0;
+      if (isPureVegRest && isNonVeg) continue;
+
+      const dDesc = (d.description || '').toLowerCase();
+      const text = `${lower} ${dDesc}`;
+
+      let score = 0;
+      if (lower === qLower || lower === intent.rawQuery.toLowerCase()) score += 2000;
+      else if (lower.startsWith(qLower)) score += 1600;
+      else if (lower.includes(qLower)) score += 1200;
+      else if (intent.canonicalDishName && text.includes(intent.canonicalDishName)) score += 1000;
+      else if (tokens.some(t => t.length >= 3 && lower.includes(t))) score += 700;
+
+      if (score > 0) {
+        seenDishNames.add(lower);
+        const visual = getDishVisualAssets(cleanName, d.image);
+        scored.push({
+          dish: {
+            id: Math.floor(Math.random() * 80000) + 10000,
+            restaurant_id: restaurant.id,
+            name: cleanName,
+            description: d.description,
+            price: d.price,
+            image: visual.flyingImage || visual.plateImage,
+            rating: d.rating || 4.8,
+            popularity: d.popularity || 95,
+            is_recommended: 1,
+            is_veg: isNonVeg ? 0 : 1,
+            category: d.category,
+            status: 'active'
+          },
+          score
+        });
+      }
+    }
+  }
+
   const filtered = isPureVegRest
-    ? scored.filter(s => {
-        const lower = s.dish.name.toLowerCase();
-        return !['chicken', 'mutton', 'fish', 'prawn', 'egg', 'anda', 'meat', 'pork', 'beef', 'seafood', 'crab'].some(kw => lower.includes(kw));
-      })
+    ? scored.filter(s => isDishVeg(s.dish.name) && s.dish.is_veg !== 0)
     : scored;
 
   filtered.sort((a, b) => b.score - a.score);

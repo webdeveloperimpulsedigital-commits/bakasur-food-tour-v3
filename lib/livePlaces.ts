@@ -46,8 +46,20 @@ export function pickCuisineImage(name: string): string {
   if (n.includes('cafe') || n.includes('bakery') || n.includes('coffee') || n.includes('chai') || n.includes('tea') || n.includes('irani') || n.includes('goodluck') || n.includes('durga') || n.includes('katta')) {
     return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80';
   }
-  if (n.includes('mastani') || n.includes('shake') || n.includes('kulfi') || n.includes('falooda') || n.includes('sujata') || n.includes('ice cream')) {
-    return 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&auto=format&fit=crop&q=80';
+  if (n.includes('kfc') || n.includes('fried chicken') || n.includes('kentucky')) {
+    return '/images/food/kfc_fried_chicken.jpg';
+  }
+  if (n.includes('pizza') || n.includes('pizzeria') || n.includes('domino') || n.includes('fire')) {
+    return '/images/food/wood_fired_pizza.jpg';
+  }
+  if (n.includes('burger')) {
+    return '/images/food/zinger_burger.jpg';
+  }
+  if (n.includes('mastani') || n.includes('sujata')) {
+    return '/images/food/mango_mastani.jpg';
+  }
+  if (n.includes('ice cream') || n.includes('icecream') || n.includes('kulfi') || n.includes('falooda') || n.includes('naturals')) {
+    return '/images/food/vanilla_ice_cream.jpg';
   }
   if (n.includes('fish') || n.includes('seafood') || n.includes('malvan') || n.includes('surmai') || n.includes('prawns') || n.includes('nisarg') || n.includes('crab')) {
     return 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop&q=80';

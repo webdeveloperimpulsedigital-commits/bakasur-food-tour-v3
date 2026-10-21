@@ -3,7 +3,7 @@ import type { Restaurant } from '@/lib/db';
 import { searchLivePlaces, fetchLiveNearbyPlaces, getDeterministicPlaceId, isDishOrFoodQuery, pickCuisineImage } from '@/lib/livePlaces';
 import { parseRestaurantQuery } from '@/lib/locationParser';
 import { searchRestaurantsSwiggyZomato } from '@/lib/foodSearchEngine';
-import { getDishVisualAssets } from '@/lib/dishAssets';
+import { getDishVisualAssets, isPureVegRestaurantName } from '@/lib/dishAssets';
 import { fetchLocationFromIP } from '@/lib/ipLocation';
 import { isApifyConfigured, fetchSwiggyRestaurantViaApify, parseSwiggyRestaurantUrl, CITY_COORDINATES } from '@/lib/apifySwiggy';
 
@@ -206,14 +206,16 @@ export async function GET(request: Request) {
       combinedSpots.unshift(customSpot);
     }
 
-    // 3. Attach Live GPS Distance
+    // 3. Attach Live GPS Distance & Validate Strict Pure Veg
     const distanceEnriched = combinedSpots.map(r => {
       let distanceKm: number | null = null;
       if (hasUserCoords && r.latitude && r.longitude) {
         distanceKm = calculateDistance(lat, lng, r.latitude, r.longitude);
       }
+      const isPureVeg = isPureVegRestaurantName(r.name) || r.is_veg === 1;
       return {
         ...r,
+        is_veg: isPureVeg ? 1 : (r.is_veg ?? 0),
         distanceKm: distanceKm ?? 1.5
       };
     });

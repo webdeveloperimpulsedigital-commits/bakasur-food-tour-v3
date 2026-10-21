@@ -1,5 +1,5 @@
 import type { Dish } from './db';
-import { getDishVisualAssets, isDishVeg } from './dishAssets';
+import { getDishVisualAssets, isDishVeg, isPureVegRestaurantName } from './dishAssets';
 
 export interface DishTemplate {
   name: string;
@@ -161,6 +161,130 @@ export interface CuisineProfile {
 
 // 1. EXACT SIGNATURE DISHES FOR ICONIC RESTAURANTS ACROSS INDIA
 export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
+  // Relax Pure Veg & Fast Food (Sinhagad Road / Pune Landmark)
+  'relax': [
+    {
+      name: "Mumbai Street Style Tawa Pulao",
+      description: "Fragrant long-grain basmati rice tossed on giant tawa with fresh bell peppers, peas, paneer cubes, tomatoes, and spicy pav bhaji butter masala.",
+      price: 210,
+      image: "/images/food/tawa_pulao.jpg",
+      popularity: 100,
+      rating: 5.0,
+      category: "Rice & Biryani",
+      is_veg: 1
+    },
+    {
+      name: "Special Amul Butter Pav Bhaji",
+      description: "Rich spiced mashed vegetable bhaji drenched in pure Amul butter, served with sizzling butter-toasted soft ladi pavs.",
+      price: 160,
+      image: "/images/food/pav_bhaji.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Mysore Butter Masala Dosa with Sambar",
+      description: "Crisp golden fermented crepe smeared with spicy red garlic chutney, potato masala, and pure butter.",
+      price: 150,
+      image: "/images/food/dosa.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Special Veg Pulao with Raita",
+      description: "Fragrant basmati rice tossed with fresh green peas, carrot cubes, paneer and browned onions.",
+      price: 210,
+      image: "/images/food/pulao.jpg",
+      popularity: 97,
+      rating: 4.9,
+      category: "Rice & Biryani",
+      is_veg: 1
+    },
+    {
+      name: "Fresh Green Peas (Matar) Pulao",
+      description: "Delicate long-grain rice tempered with sweet green peas, whole cumin, cardamom and pure ghee.",
+      price: 190,
+      image: "/images/food/pulao.jpg",
+      popularity: 96,
+      rating: 4.8,
+      category: "Rice & Biryani",
+      is_veg: 1
+    },
+    {
+      name: "Shahi Kashmiri Pulao with Dry Fruits & Pomegranate",
+      description: "Aromatic saffron-infused basmati rice tossed with roasted cashews, almonds, raisins, and fresh pomegranate.",
+      price: 240,
+      image: "/images/food/pulao.jpg",
+      popularity: 96,
+      rating: 4.8,
+      category: "Rice & Biryani",
+      is_veg: 1
+    },
+    {
+      name: "Tandoori Paneer Tikka Pulao",
+      description: "Smoky clay-oven roasted paneer tikka cubes folded into spiced biryani rice with caramelized onions.",
+      price: 230,
+      image: "/images/food/pulao.jpg",
+      popularity: 97,
+      rating: 4.9,
+      category: "Rice & Biryani",
+      is_veg: 1
+    },
+    {
+      name: "Special Paneer Butter Masala",
+      description: "Fresh malai paneer cubes simmered in rich creamy butter tomato cashew gravy.",
+      price: 260,
+      image: "/images/food/paneer_butter_masala.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Main Course",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Butter Garlic Naan (2 Pcs)",
+      description: "Clay oven tandoor baked leavened bread slathered with roasted garlic butter.",
+      price: 90,
+      image: "/images/food/garlic_naan.jpg",
+      popularity: 97,
+      rating: 4.8,
+      category: "Indian Breads",
+      is_veg: 1
+    },
+    {
+      name: "Special SPDP (Sev Potato Dahi Puri)",
+      description: "Crispy puris layered with spiced potatoes, sweet chilled dahi, date chutney and crunchy sev.",
+      price: 110,
+      image: "/images/food/pani_puri.jpg",
+      popularity: 95,
+      rating: 4.8,
+      category: "Snacks & Starters",
+      is_veg: 1
+    },
+    {
+      name: "Heritage South Indian Filter Coffee",
+      description: "Aromatic chicory decoction frothed with boiling whole milk in traditional brass tumbler.",
+      price: 60,
+      image: "/images/food/coffee.jpg",
+      popularity: 96,
+      rating: 4.8,
+      category: "Tea & Coffee",
+      is_veg: 1
+    },
+    {
+      name: "Punjabi Sweet Lassi Malai Mar Ke",
+      description: "Thick hand-churned sweet creamy yogurt drink in a tall glass crowned with fresh malai.",
+      price: 90,
+      image: "/images/food/punjabi_lassi.jpg",
+      popularity: 95,
+      rating: 4.8,
+      category: "Juices & Shakes",
+      is_veg: 1
+    }
+  ],
+
   // Hotel Shree Jay Ganesh & Iconic Ganesh Hotels (Pune & Maharashtra)
   'ganesh': [
     {
@@ -217,7 +341,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Sabudana Vada with Sweet Dahi (2 Pcs)",
       description: "Crunchy golden tapioca sago patties with roasted crushed peanuts served with sweetened creamy curd.",
       price: 95,
-      image: "/api/ai/dish-image?dish=Sabudana%20Vada",
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v28",
       popularity: 98,
       rating: 4.9,
       category: "Snacks & Starters",
@@ -277,7 +401,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Paneer Butter Masala with Butter Roti",
       description: "Soft cottage cheese cubes simmered in rich buttery tomato cashew gravy, served with 2 tandoori rotis.",
       price: 240,
-      image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala",
+      image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala&v=v28",
       popularity: 97,
       rating: 4.8,
       category: "Main Course",
@@ -317,7 +441,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Masala Kadak Cutting Chai",
       description: "Steaming hot milk tea boiled with crushed ginger, cardamom and lemongrass.",
       price: 25,
-      image: "/api/ai/dish-image?dish=Masala%20Chai",
+      image: "/api/ai/dish-image?dish=Masala%20Chai&v=v28",
       popularity: 99,
       rating: 5.0,
       category: "Beverages & Sweets",
@@ -327,7 +451,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Hot Desi Ghee Gulab Jamun (2 Pcs)",
       description: "Warm melt-in-mouth milk dumplings soaked in cardamom and rose sugar syrup.",
       price: 70,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 98,
       rating: 4.9,
       category: "Beverages & Sweets",
@@ -371,7 +495,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Paneer Butter Masala with 2 Butter Naan",
       description: "Fresh cottage cheese in creamy tomato gravy with oven-baked garlic butter naan.",
       price: 260,
-      image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala",
+      image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala&v=v28",
       popularity: 98,
       rating: 4.9,
       category: "Main Course",
@@ -645,7 +769,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Thick Cold Coffee with Vanilla Ice Cream",
       description: "Cult-classic thick chocolate cold coffee crowned with a luscious scoop of rich vanilla ice cream.",
       price: 65,
-      image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&auto=format&fit=crop&q=85",
+      image: "/api/ai/dish-image?dish=Thick%20Cold%20Coffee%20with%20Vanilla%20Ice%20Cream&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -837,7 +961,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Sujata Famous Pure Mango Mastani",
       description: "Pune's legendary dessert: thick rich Alphonso mango shake topped with a generous scoop of mango ice cream, diced mangoes, slivered dry fruits, and glazed cherries.",
       price: 130,
-      image: "/api/ai/dish-image?dish=Mango%20Mastani",
+      image: "/images/food/mango_mastani.jpg",
       popularity: 100,
       rating: 5.0
     },
@@ -845,7 +969,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Royal Kesar Pista Dryfruit Mastani",
       description: "Thick saffron pistachio thick shake loaded with rich kulfi ice cream, roasted cashews, and almonds.",
       price: 150,
-      image: "/api/ai/dish-image?dish=Mango%20Mastani",
+      image: "/images/food/kesar_pista_mastani.jpg",
       popularity: 98,
       rating: 4.9
     },
@@ -853,7 +977,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Chocolate Fudge Brownie Mastani",
       description: "Decadent Dutch chocolate shake topped with dark chocolate ice cream, brownie chunks & hot fudge sauce.",
       price: 140,
-      image: "/api/ai/dish-image?dish=Chocolate%20Mastani",
+      image: "/images/food/chocolate_mastani.jpg",
       popularity: 97,
       rating: 4.9
     },
@@ -861,7 +985,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Anjir Badam Mastani Glass",
       description: "Creamy Turkish fig milkshake crowned with vanilla ice cream and roasted sliced badam.",
       price: 150,
-      image: "/api/ai/dish-image?dish=Mango%20Mastani",
+      image: "/images/food/dryfruit_mastani.jpg",
       popularity: 96,
       rating: 4.8
     },
@@ -869,7 +993,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Heritage Rose Falooda with Rabdi & Kulfi",
       description: "Chilled rose milk layered with basil seeds, falooda sev, rich rabdi and malai kulfi.",
       price: 120,
-      image: "/api/ai/dish-image?dish=Falooda",
+      image: "/images/food/falooda.jpg",
       popularity: 99,
       rating: 5.0
     }
@@ -879,7 +1003,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Pune Special Famous Mango Mastani",
       description: "Authentic Puneri delicacy: luscious mango shake topped with velvet mango ice cream, diced mango chunks, and crunchy dry fruits.",
       price: 130,
-      image: "/api/ai/dish-image?dish=Mango%20Mastani",
+      image: "/api/ai/dish-image?dish=Mango%20Mastani&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -887,7 +1011,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Royal Kesar Pista Dryfruit Mastani",
       description: "Thick saffron pistachio thick shake loaded with rich kulfi ice cream, roasted cashews, and almonds.",
       price: 150,
-      image: "/api/ai/dish-image?dish=Mango%20Mastani",
+      image: "/api/ai/dish-image?dish=Kesar%20Pista%20Mastani&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -895,7 +1019,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Heritage Rose Falooda with Rabdi & Kulfi",
       description: "Chilled rose milk layered with basil seeds, falooda sev, rich rabdi and malai kulfi.",
       price: 120,
-      image: "/api/ai/dish-image?dish=Falooda",
+      image: "/api/ai/dish-image?dish=Falooda&v=v28",
       popularity: 99,
       rating: 5.0
     }
@@ -930,7 +1054,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Panchali Special Paneer Butter Masala Handi",
       description: "Soft cottage cheese cubes simmered in rich creamy butter tomato gravy.",
       price: 230,
-      image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala",
+      image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala&v=v28",
       popularity: 96,
       rating: 4.8
     }
@@ -942,7 +1066,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Gajanan Special Yellow Chutney Vada Pav (2 Pcs)",
       description: "Thane's iconic golden potato vada stuffed in soft ladi pav, drenched in legendary spicy-tangy yellow besan chutney.",
       price: 50,
-      image: "/api/ai/dish-image?dish=Vada%20Pav",
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -958,7 +1082,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Sabudana Vada with Sweet Dahi",
       description: "Golden fried tapioca pearl patties with roasted crushed peanuts and spiced sweet curd.",
       price: 90,
-      image: "/api/ai/dish-image?dish=Sabudana%20Vada",
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v28",
       popularity: 97,
       rating: 4.8
     },
@@ -1242,7 +1366,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Goodluck Bun Maska & Special Irani Chai",
       description: "Deccan's 1935 classic: crusty bun slathered with salted whipped butter and steaming hot cardamom Irani tea.",
       price: 75,
-      image: "/api/ai/dish-image?dish=Bun%20Maska",
+      image: "/api/ai/dish-image?dish=Bun%20Maska&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1286,7 +1410,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Sujata Special Alphonso Mango Mastani",
       description: "Pune's original thick Alphonso mango milkshake topped with rich vanilla ice cream, dry fruits, and cherry.",
       price: 150,
-      image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80",
+      image: "/images/food/mango_mastani.jpg",
       popularity: 100,
       rating: 5.0
     },
@@ -1294,7 +1418,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Royal Kaju Draksh Sitaphal Mastani",
       description: "Custard apple pulp blended thick with whole roasted cashews, black raisins, and creamy ice cream.",
       price: 170,
-      image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80",
+      image: "/images/food/sitaphal_mastani.jpg",
       popularity: 99,
       rating: 5.0
     },
@@ -1302,7 +1426,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Kesar Pista Special Dryfruit Shake",
       description: "Aromatic Kashmiri saffron thick milk blend topped with generous crushed green pistachios.",
       price: 160,
-      image: "https://images.unsplash.com/photo-1553787499-6f9133860278?w=600&auto=format&fit=crop&q=80",
+      image: "/images/food/kesar_pista_mastani.jpg",
       popularity: 97,
       rating: 4.8
     },
@@ -1310,7 +1434,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Chocolate Brownie Mastani",
       description: "Rich dark chocolate shake topped with brownie chunks, fudge sauce and chocolate ice cream.",
       price: 180,
-      image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&auto=format&fit=crop&q=80",
+      image: "/images/food/chocolate_mastani.jpg",
       popularity: 98,
       rating: 4.9
     }
@@ -1322,7 +1446,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Girija Special SPDP (Sev Potato Dahi Puri)",
       description: "Crispy puris layered with spiced potatoes, sweetened curd, tangy tamarind and crunchy sev.",
       price: 110,
-      image: "/api/ai/dish-image?dish=SPDP",
+      image: "/api/ai/dish-image?dish=SPDP&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1330,7 +1454,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Girija Famous Matki Bhel",
       description: "Sprouted matki, puffed rice, tangy tamarind glaze, roasted peanuts and fresh coriander.",
       price: 90,
-      image: "/api/ai/dish-image?dish=Bhel%20Puri",
+      image: "/api/ai/dish-image?dish=Bhel%20Puri&v=v28",
       popularity: 99,
       rating: 4.9
     },
@@ -1338,7 +1462,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Girija Special Butter Pav Bhaji",
       description: "Mashed spiced vegetables cooked on flat tawa topped with pure Amul butter & warm ladi pav.",
       price: 160,
-      image: "/api/ai/dish-image?dish=Pav%20Bhaji",
+      image: "/api/ai/dish-image?dish=Pav%20Bhaji&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -1346,7 +1470,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Girija Authentic Maharashtrian Thali",
       description: "Authentic family thali: Puran poli, spiced amti, jowar bhakri, subzi, rice & sweets.",
       price: 240,
-      image: "/api/ai/dish-image?dish=Veg%20Thali",
+      image: "/api/ai/dish-image?dish=Veg%20Thali&v=v28",
       popularity: 96,
       rating: 4.8
     }
@@ -1358,7 +1482,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Katakirr Kolhapuri Tikhat Tarri Misal Pav",
       description: "Fiery spicy sprouted moth bean misal drowned in red cut rassa, crunchy farsan and lemon.",
       price: 130,
-      image: "/api/ai/dish-image?dish=Misal%20Pav",
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1366,7 +1490,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Katakirr Medium Spiced Matki Misal Pav",
       description: "Balanced spiced aromatic misal served with extra crunchy farsan bowl and toasted pav.",
       price: 120,
-      image: "/api/ai/dish-image?dish=Misal%20Pav",
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v28",
       popularity: 99,
       rating: 4.9
     },
@@ -1374,7 +1498,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Chilled Dahi Vati & Extra Pav Duo",
       description: "Sweetened chilled dahi bowl to balance the fiery Kolhapuri rassa with fresh butter pav.",
       price: 60,
-      image: "/api/ai/dish-image?dish=Masala%20Dosa",
+      image: "/api/ai/dish-image?dish=Masala%20Dosa&v=v28",
       popularity: 97,
       rating: 4.9
     }
@@ -1386,7 +1510,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Jagdamb Special Gavran Mutton Thali",
       description: "Legendary spicy Gavran mutton thali with mutton sukka, Tambda rassa, Pandhra rassa & hot jowar bhakri.",
       price: 420,
-      image: "/api/ai/dish-image?dish=Mutton%20Thali",
+      image: "/api/ai/dish-image?dish=Mutton%20Thali&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1422,7 +1546,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Shivraj World Famous Raavan Mutton Thali",
       description: "Giant non-veg feast platter with mutton chops, kheema, chicken handi, 5 rassas, bhakri & biryani.",
       price: 990,
-      image: "/api/ai/dish-image?dish=Mutton%20Thali",
+      image: "/api/ai/dish-image?dish=Mutton%20Thali&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1562,7 +1686,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Tunday Original Galouti Kebab (4 Pcs)",
       description: "Lucknow's 1905 Aminabad legend: 160-spice minced mutton kebabs that literally melt in your mouth.",
       price: 280,
-      image: "/api/ai/dish-image?dish=Tandoori%20Chicken",
+      image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1590,7 +1714,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Karim's Royal Mutton Burra Kebab",
       description: "Charcoal-tandoor smoked juicy mutton chops marinated in secret royal Mughal spices.",
       price: 520,
-      image: "/api/ai/dish-image?dish=Tandoori%20Chicken",
+      image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1626,7 +1750,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Seekh Kebab Butter Bath",
       description: "Charcoal grilled mutton seekh kebabs dipped in melted butter and spiced yogurt.",
       price: 360,
-      image: "/api/ai/dish-image?dish=Tandoori%20Chicken",
+      image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -1730,7 +1854,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Behrouz Royal Dum Gosht Mutton Biryani",
       description: "Tender boneless mutton marinated in secret royal spices, layered with fragrant saffron basmati rice.",
       price: 395,
-      image: "/api/ai/dish-image?dish=Biryani",
+      image: "/api/ai/dish-image?dish=Biryani&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1738,7 +1862,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Behrouz Murgh Makhani Dum Biryani",
       description: "Charcoal grilled spiced chicken pieces layered with long-grain saffron rice and browned onions.",
       price: 345,
-      image: "/api/ai/dish-image?dish=Biryani",
+      image: "/api/ai/dish-image?dish=Biryani&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -1746,7 +1870,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Behrouz Subz-e-Biryani Handi",
       description: "Assorted seasonal garden vegetables, paneer cubes, and aromatic dry fruits slow-cooked on dum.",
       price: 295,
-      image: "/api/ai/dish-image?dish=Biryani",
+      image: "/api/ai/dish-image?dish=Biryani&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -1754,7 +1878,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Royal Gulab Jamun with Saffron Dip (2 Pcs)",
       description: "Warm melt-in-mouth milk dumplings soaked in royal cardamom & rose syrup.",
       price: 85,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 97,
       rating: 4.9
     }
@@ -1766,7 +1890,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Domino's Farmhouse Cheese Burst Pizza",
       description: "Delightful combination of onion, crisp capsicum, grilled mushroom & fresh tomato with molten cheese crust.",
       price: 399,
-      image: "/api/ai/dish-image?dish=Pizza",
+      image: "/api/ai/dish-image?dish=Pizza&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1774,7 +1898,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Domino's Peppy Paneer / Chicken Pepper Pizza",
       description: "Flavorful chunks of spiced paneer or chicken, crisp capsicum and fiery red paprika.",
       price: 369,
-      image: "/api/ai/dish-image?dish=Pizza",
+      image: "/api/ai/dish-image?dish=Pizza&v=v28",
       popularity: 99,
       rating: 4.9
     },
@@ -1782,7 +1906,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Domino's Stuffed Cheesy Garlic Bread",
       description: "Freshly baked garlic breadsticks overflowing with mozzarella cheese and sweet corn kernels.",
       price: 169,
-      image: "/api/ai/dish-image?dish=Pizza",
+      image: "/api/ai/dish-image?dish=Pizza&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -1790,7 +1914,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Domino's Choco Lava Cake",
       description: "Warm chocolate cake with gooey, flowing melted chocolate fudge center.",
       price: 119,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -1802,7 +1926,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Burger King Crispy Veg / Chicken Whopper",
       description: "Flame-grilled signature patty layered with crunchy lettuce, creamy mayo, sliced pickles and sesame seed bun.",
       price: 199,
-      image: "/api/ai/dish-image?dish=Burger",
+      image: "/api/ai/dish-image?dish=Burger&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1810,7 +1934,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Burger King Fiery Peri Peri Crispy Fries",
       description: "Golden fried crispy potato fries seasoned with fiery African peri peri spice sprinkle.",
       price: 129,
-      image: "/api/ai/dish-image?dish=Burger",
+      image: "/api/ai/dish-image?dish=Burger&v=v28",
       popularity: 99,
       rating: 4.9
     },
@@ -1818,7 +1942,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Burger King Crispy Veg / Chicken Crunch Bites",
       description: "Crunchy golden fried bite-sized treats served with rich cheesy dipping sauce.",
       price: 159,
-      image: "/api/ai/dish-image?dish=Burger",
+      image: "/api/ai/dish-image?dish=Burger&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -1826,7 +1950,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Burger King Chocolate Thick Shake",
       description: "Decadent blended ice cream milkshake with rich chocolate syrup and cocoa swirl.",
       price: 169,
-      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28",
       popularity: 97,
       rating: 4.8
     }
@@ -1838,7 +1962,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "McDonald's McAloo Tikki / McChicken Burger",
       description: "Iconic spiced potato patty with special tomato-mayo sauce in toasted bun.",
       price: 139,
-      image: "/api/ai/dish-image?dish=Burger",
+      image: "/api/ai/dish-image?dish=Burger&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1846,7 +1970,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "McDonald's World Famous French Fries (Large)",
       description: "Golden, crispy outside and fluffy inside premium salted potato fries.",
       price: 129,
-      image: "/api/ai/dish-image?dish=Burger",
+      image: "/api/ai/dish-image?dish=Burger&v=v28",
       popularity: 99,
       rating: 4.9
     },
@@ -1854,7 +1978,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "McDonald's McSpicy Paneer / Chicken Burger",
       description: "Fiery crunchy crumb-coated patty with shredded lettuce and creamy spicy sauce.",
       price: 199,
-      image: "/api/ai/dish-image?dish=Burger",
+      image: "/api/ai/dish-image?dish=Burger&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -1862,7 +1986,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "McDonald's Soft Serve McFlurry",
       description: "Creamy vanilla dairy soft serve blended with chocolate crunch.",
       price: 99,
-      image: "/api/ai/dish-image?dish=Falooda",
+      image: "/api/ai/dish-image?dish=Falooda&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -1874,7 +1998,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Wow! Momo Steamed Darjeeling Veg / Chicken Momos (6 Pcs)",
       description: "Authentic thin-wrapper steamed Himalayan dumplings served with fiery red chili garlic sauce.",
       price: 149,
-      image: "/api/ai/dish-image?dish=Momos",
+      image: "/api/ai/dish-image?dish=Momos&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1882,7 +2006,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Wow! Momo Crispy Fried Cheese Corn Momos (6 Pcs)",
       description: "Golden fried crunchy momos loaded with melted mozzarella, sweet corn & herbs with spicy dip.",
       price: 179,
-      image: "/api/ai/dish-image?dish=Momos",
+      image: "/api/ai/dish-image?dish=Momos&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -1890,7 +2014,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Wow! Momo Sizzling Schezwan Gravy Momos",
       description: "Steamed momos wok-tossed in rich red sizzling garlic schezwan pepper gravy.",
       price: 199,
-      image: "/api/ai/dish-image?dish=Momos",
+      image: "/api/ai/dish-image?dish=Momos&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -1898,7 +2022,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Wow! Momo Butter Garlic Pan-Fried Momos",
       description: "Crispy bottom pan-seared dumplings drizzled in sizzling aromatic chili garlic butter.",
       price: 189,
-      image: "/api/ai/dish-image?dish=Momos",
+      image: "/api/ai/dish-image?dish=Momos&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -1910,7 +2034,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Haldiram's Special Raj Kachori Chaat",
       description: "Crispy giant kachori shell stuffed with bhallas, sprouts, sweet curd, mint & date chutneys.",
       price: 145,
-      image: "/api/ai/dish-image?dish=SPDP",
+      image: "/api/ai/dish-image?dish=SPDP&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1918,7 +2042,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Haldiram's Famous Chole Bhature Platter",
       description: "Twin fluffy golden bhaturas served with spicy Amritsari chole, pickled carrots and onions.",
       price: 185,
-      image: "/api/ai/dish-image?dish=Chole%20Bhature",
+      image: "/api/ai/dish-image?dish=Chole%20Bhature&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -1926,7 +2050,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Haldiram's Special Butter Pav Bhaji",
       description: "Mashed vegetable spiced gravy topped with a dollop of pure Amul butter & toasted pavs.",
       price: 165,
-      image: "/api/ai/dish-image?dish=Pav%20Bhaji",
+      image: "/api/ai/dish-image?dish=Pav%20Bhaji&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -1934,7 +2058,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Haldiram's Royal Kaju Katli (250g)",
       description: "Finest silver vark coated diamond cashew fudge made from pure premium Goan cashews.",
       price: 260,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -1946,7 +2070,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Bikanervala Special Crispy Pyaaz Kachori (2 Pcs)",
       description: "Flaky golden crust packed with spicy caramelized onion masala and sweet-tangy chutney.",
       price: 95,
-      image: "/api/ai/dish-image?dish=Samosa",
+      image: "/api/ai/dish-image?dish=Samosa&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1954,7 +2078,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Bikanervala Famous Chole Bhature",
       description: "Twin crispy inflated bhaturas with rich spiced pindi chole and special raw mango pickle.",
       price: 190,
-      image: "/api/ai/dish-image?dish=Chole%20Bhature",
+      image: "/api/ai/dish-image?dish=Chole%20Bhature&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -1962,7 +2086,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Hot Crunchy Desi Ghee Jalebi (100g)",
       description: "Freshly piped golden spirals fried in pure desi ghee and immersed in saffron sugar syrup.",
       price: 120,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -1974,7 +2098,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Wadeshwar Special Ghee Pudi Idli (2 Pcs)",
       description: "Soft steamed thatte idlis drenched in pure desi cow ghee and fiery gun powder spice mix.",
       price: 120,
-      image: "/api/ai/dish-image?dish=Idli",
+      image: "/api/ai/dish-image?dish=Idli&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -1982,7 +2106,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Wadeshwar Butter Mysore Masala Dosa",
       description: "Crispy red-paste coated crepe stuffed with spiced mashed potato filling and white coconut chutney.",
       price: 155,
-      image: "/api/ai/dish-image?dish=Masala%20Dosa",
+      image: "/api/ai/dish-image?dish=Masala%20Dosa&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -1990,7 +2114,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Wadeshwar Signature Filter Coffee",
       description: "South Indian chicory-decoction frothed with whole boiling milk in traditional brass tumbler.",
       price: 55,
-      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -2002,7 +2126,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Durvankur Authentic Puneri Unlimited Thali",
       description: "Sadashiv Peth legend: Puran Poli, Modak, Matki Usal, Kadhi, Amti, Bhakri, and Aamras.",
       price: 320,
-      image: "/api/ai/dish-image?dish=Veg%20Thali",
+      image: "/api/ai/dish-image?dish=Veg%20Thali&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2010,7 +2134,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Durvankur Traditional Puran Poli with Desi Ghee",
       description: "Sweet chana dal and jaggery stuffed wholewheat flatbread served piping hot with pure ghee.",
       price: 110,
-      image: "/api/ai/dish-image?dish=Puran%20Poli",
+      image: "/api/ai/dish-image?dish=Puran%20Poli&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2018,7 +2142,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Durvankur Steamed Ukdiche Modak (2 Pcs)",
       description: "Tender steamed rice dumplings filled with freshly grated coconut, organic jaggery & nutmeg.",
       price: 120,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -2030,7 +2154,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Kayani Legendary Shrewsbury Biscuits (250g)",
       description: "East Street iconic British-heritage rich butter cookies made fresh daily in vintage ovens.",
       price: 180,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2038,7 +2162,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Kayani Rich Mawa Cake Slice",
       description: "Dense, moist cardamom-spiced milk solid sponge cake baked with slivered cashews.",
       price: 90,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2046,7 +2170,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Kayani Crispy Butter Cheese Straws",
       description: "Flaky puff pastry twists baked crisp with aged cheddar cheese and black pepper.",
       price: 110,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 97,
       rating: 4.8
     }
@@ -2058,7 +2182,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Irani Cafe Special Bun Maska & Irani Chai",
       description: "Parsi cafe signature warm sweet crust bun laden with whipped butter & rich aromatic tea.",
       price: 85,
-      image: "/api/ai/dish-image?dish=Bun%20Maska",
+      image: "/api/ai/dish-image?dish=Bun%20Maska&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2066,7 +2190,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Irani Cafe Mutton Keema Ghotala Pav",
       description: "Minced mutton slow-cooked with fresh mint, scrambled egg and butter-toasted ladi pav.",
       price: 260,
-      image: "/api/ai/dish-image?dish=Keema%20Pav",
+      image: "/api/ai/dish-image?dish=Keema%20Pav&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2074,7 +2198,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Irani Cafe Chicken Baida Roti",
       description: "Crispy shallow-fried parcel stuffed with spiced chicken mince, beaten egg and herbs.",
       price: 210,
-      image: "/api/ai/dish-image?dish=Keema%20Pav",
+      image: "/api/ai/dish-image?dish=Keema%20Pav&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -2086,7 +2210,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Shabree Special Maharashtrian Veg Thali",
       description: "Homestyle authentic spread: 2 hot chapatis, 2 vegetable bhajis, dal varan bhat with ghee, koshimbir, papad, pickle & sweet.",
       price: 240,
-      image: "/api/ai/dish-image?dish=Maharashtrian%20Thali",
+      image: "/api/ai/dish-image?dish=Maharashtrian%20Thali&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2094,7 +2218,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Authentic Pithla Bhakri with Thecha & Kanda",
       description: "Freshly roasted jowar bhakri paired with steaming hot spiced besan pithla, spicy green mirchi thecha & raw onion.",
       price: 180,
-      image: "/api/ai/dish-image?dish=Pithla%20Bhakri",
+      image: "/api/ai/dish-image?dish=Pithla%20Bhakri&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2102,7 +2226,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Bharli Vangi with Jowar Bhakri",
       description: "Tender baby eggplants stuffed with peanut and goda masala gravy, served with hot bhakri.",
       price: 210,
-      image: "/api/ai/dish-image?dish=Bharli%20Vangi",
+      image: "/api/ai/dish-image?dish=Bharli%20Vangi&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -2138,7 +2262,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Shreyas Heritage Maharashtrian Cultural Thali",
       description: "Apte Road's legendary cultural feast: Kothimbir Vadi, 2 bhajis, delicate Kadhi, Puri Bhaji, Varan Bhat with Toop & sweet.",
       price: 260,
-      image: "/api/ai/dish-image?dish=Maharashtrian%20Thali",
+      image: "/api/ai/dish-image?dish=Maharashtrian%20Thali&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2146,7 +2270,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Pure Desi Ghee Puran Poli Thali with Katachi Amti",
       description: "Two handmade golden Puran Polis drenched in hot pure desi ghee, served with spicy Katachi Amti & batata bhaji.",
       price: 240,
-      image: "/api/ai/dish-image?dish=Puran%20Poli",
+      image: "/api/ai/dish-image?dish=Puran%20Poli&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2154,7 +2278,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Alphonso Mango Aamras Bowl (Unlimited)",
       description: "Rich chilled pure Alphonso mango pulp served with hot puffed puris and white butter.",
       price: 180,
-      image: "/api/ai/dish-image?dish=Mango%20Aamras",
+      image: "/api/ai/dish-image?dish=Mango%20Aamras&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2182,7 +2306,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Sukanta Royal Unlimited Rajasthani & Gujarati Thali",
       description: "Deccan landmark royal feast: 25+ items including Dal Baati Churma, Paneer Makhani, Gatte Ki Sabzi, Phulkas, Dhokla & sweets.",
       price: 350,
-      image: "/api/ai/dish-image?dish=Rajasthani%20Thali",
+      image: "/api/ai/dish-image?dish=Rajasthani%20Thali&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2190,7 +2314,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Traditional Dal Baati Churma with Pure Desi Ghee",
       description: "Clay-baked wheat baatis crushed and drenched in pure desi ghee, served with panchmel dal & sweet churma.",
       price: 240,
-      image: "/api/ai/dish-image?dish=Dal%20Baati",
+      image: "/api/ai/dish-image?dish=Dal%20Baati&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2206,7 +2330,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Hot Malpua with Creamy Rabdi (2 Pcs)",
       description: "Crispy golden sweet pancakes soaked in saffron syrup crowned with thickened milk rabdi.",
       price: 120,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 99,
       rating: 5.0
     }
@@ -2262,7 +2386,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Chitale Bandhu World-Famous Crunchy Bakarwadi (500g)",
       description: "Pune's historic 1950 institution: spiral crispy fried pastry rolls stuffed with secret spicy-tangy roasted coconut masala.",
       price: 180,
-      image: "/api/ai/dish-image?dish=Bakarwadi",
+      image: "/api/ai/dish-image?dish=Bakarwadi&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2270,7 +2394,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Chitale Bandhu Signature Mango Barfi (Amba Barfi)",
       description: "Iconic double-layered fudge made with Alphonso mango pulp and condensed milk solids.",
       price: 220,
-      image: "/api/ai/dish-image?dish=Mango%20Barfi",
+      image: "/api/ai/dish-image?dish=Mango%20Barfi&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2278,7 +2402,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Kesari Shrikhand Tub",
       description: "Thick strained creamy yoghurt dessert infused with Kashmiri saffron threads and green cardamom.",
       price: 140,
-      image: "/api/ai/dish-image?dish=Shrikhand",
+      image: "/api/ai/dish-image?dish=Shrikhand&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -2286,7 +2410,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Pyaaz Kachori with Chutney (2 Pcs)",
       description: "Flaky golden fried pastry stuffed with spicy caramelized onion masala.",
       price: 80,
-      image: "/api/ai/dish-image?dish=Samosa",
+      image: "/api/ai/dish-image?dish=Samosa&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2306,7 +2430,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Shredded Chicken Sandwich",
       description: "MG Road 1965 bakery legend: soft white bread packed with creamy shredded spiced chicken and secret mayo.",
       price: 110,
-      image: "/api/ai/dish-image?dish=Chicken%20Sandwich",
+      image: "/api/ai/dish-image?dish=Chicken%20Sandwich&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2314,7 +2438,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Baked Macaroni with Cheese & Tomato",
       description: "Classic European comfort bake with tender elbow macaroni, rich cheddar cheese, and tangy tomato glaze.",
       price: 160,
-      image: "/api/ai/dish-image?dish=Pasta",
+      image: "/api/ai/dish-image?dish=Pasta&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -2322,7 +2446,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Fresh Chilled Rich Apple Juice",
       description: "Camp heritage freshly pressed unfiltered apple juice served ice-cold.",
       price: 90,
-      image: "/api/ai/dish-image?dish=Apple%20Juice",
+      image: "/api/ai/dish-image?dish=Apple%20Juice&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2330,53 +2454,555 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Classic Veg Chutney Sandwich",
       description: "Triple-layered triangular sandwich with cucumber, tomato, potato, and fiery green mint chutney.",
       price: 70,
-      image: "/api/ai/dish-image?dish=Veg%20Sandwich",
+      image: "/api/ai/dish-image?dish=Veg%20Sandwich&v=v28",
       popularity: 97,
       rating: 4.8
     }
   ],
 
-  // Poona Guest House (Sadashiv Peth, Laxmi Road, Pune)
+  // Poona Guest House (Sadashiv Peth, Laxmi Road, Pune) - Historic 1935 Pure Veg Maharashtrian Cultural Institution
   'poona guest': [
     {
       name: "Traditional Puneri Maharashtrian Thali",
-      description: "Sadashiv Peth 1935 heritage: 2 chapatis, 2 seasonal bhajis, Katachi Amti, Koshimbir, Varan Bhat with Toop & sweet.",
+      description: "Sadashiv Peth 1935 heritage: 2 fresh chapatis, 2 seasonal bhajis, spicy Katachi Amti, Koshimbir, Indrayani Varan Bhat with sajuk toop & sweet.",
       price: 260,
-      image: "/api/ai/dish-image?dish=Maharashtrian%20Thali",
+      image: "/api/ai/dish-image?dish=Maharashtrian%20Thali&v=v28",
       popularity: 100,
-      rating: 5.0
+      rating: 5.0,
+      category: "Thalis & Combos",
+      is_veg: 1
+    },
+    {
+      name: "Special Puran Poli Thali with Pure Desi Ghee",
+      description: "Traditional feast with unlimited Katachi Amti, 2 handmade Puran Polis drenched in warm sajuk toop, batata bhaji, koshimbir & varan bhat.",
+      price: 280,
+      image: "https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85",
+      popularity: 100,
+      rating: 5.0,
+      category: "Thalis & Combos",
+      is_veg: 1
     },
     {
       name: "Steamed Ukdiche Modak with Pure Ghee (2 Pcs)",
-      description: "Hot steamed rice-flour dumplings filled with freshly grated coconut and organic jaggery.",
+      description: "Sadashiv Peth's legendary steamed fragrant rice-flour dumplings filled with freshly grated coconut and organic jaggery.",
       price: 120,
       image: "/images/food/modak.jpg",
       popularity: 100,
-      rating: 5.0
+      rating: 5.0,
+      category: "Desserts & Sweets",
+      is_veg: 1
     },
     {
-      name: "Puran Poli with Katachi Amti & Pure Ghee",
-      description: "Handmade sweet flatbreads stuffed with cardamom chana dal jaggery paste, with hot ghee.",
+      name: "Puran Poli with Katachi Amti & Pure Ghee (2 Pcs)",
+      description: "Handmade sweet flatbreads stuffed with cardamom chana dal jaggery paste, served with spicy amti & hot desi ghee.",
       price: 140,
-      image: "/api/ai/dish-image?dish=Puran%20Poli",
+      image: "/api/ai/dish-image?dish=Puran%20Poli&v=v28",
       popularity: 98,
-      rating: 4.9
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Garma Garam Pithla Bhakri with Thecha & Kanda",
+      description: "Hot comforting besan pithla served with piping hot roasted jowar/bajra bhakri, spicy green mirchi thecha and fresh sliced onions.",
+      price: 160,
+      image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800&auto=format&fit=crop&q=85",
+      popularity: 100,
+      rating: 5.0,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Authentic Bhajani Thalipeeth with White Loni Butter",
+      description: "Crispy multigrain roasted flatbread prepared from traditional bhajani flour, served with fresh white butter and homemade pickle.",
+      price: 120,
+      image: "https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85",
+      popularity: 99,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
     },
     {
       name: "Crispy Kothimbir Vadi Platter",
-      description: "Steamed and shallow-fried coriander diamond cakes served with green chutney.",
+      description: "Steamed and shallow-fried coriander and spiced gram flour diamond cakes served with spicy green chutney.",
       price: 90,
       image: "/images/food/kothimbir_vadi.jpg",
       popularity: 97,
-      rating: 4.8
+      rating: 4.8,
+      category: "Starters & Snacks",
+      is_veg: 1
     },
     {
-      name: "Chilled Masala Taak Glass",
-      description: "Traditional spiced buttermilk tempered with ginger, green chillies, coriander & cumin.",
+      name: "Steamed & Fried Alu Vadi Plate (Patra)",
+      description: "Tender colocasia leaf pinwheels seasoned with tamarind-jaggery paste, garnished with white sesame & fresh coconut.",
+      price: 90,
+      image: "/images/food/alu_vadi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Starters & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Authentic Bharli Vangi with Jowar Bhakri",
+      description: "Baby brinjals slow-simmered in roasted peanut, sesame, coconut and goda masala gravy, served with 2 jowar bhakris.",
+      price: 190,
+      image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85",
+      popularity: 97,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Indrayani Varan Bhat with Pure Desi Ghee & Nimbu",
+      description: "Steaming aromatic soft Indrayani rice topped with slow-cooked yellow lentil varan, sajuk toop & fresh lemon.",
+      price: 130,
+      image: "https://images.unsplash.com/photo-1789991184293-224a84e41900?w=800&auto=format&fit=crop&q=85",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Traditional Masala Bhaat with Ghee",
+      description: "Puneri festive spiced rice cooked with ivy gourd, green peas, whole cloves, cinnamon, cashews and freshly grated coconut.",
+      price: 150,
+      image: "/api/ai/dish-image?dish=Masala%20Bhaat&v=v28",
+      popularity: 97,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Aluche Fadfade with Chapati",
+      description: "Festive sweet, sour and spicy colocasia stem and leaf stew cooked with roasted peanuts and chana dal.",
+      price: 160,
+      image: "/api/ai/dish-image?dish=Aluche%20Fadfade&v=v28",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Spiced Matki Usal Plate with Chapati",
+      description: "Tender sprouted moth beans tempered with mustard, curry leaves, hing, and fresh grated coconut.",
+      price: 140,
+      image: "/api/ai/dish-image?dish=Matki%20Usal&v=v28",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Khandeshi Shev Bhaji with Hot Chapatis",
+      description: "Spicy roasted red masala gravy topped with thick crunchy Ratlami shev, served with 2 chapatis.",
+      price: 170,
+      image: "/images/food/shev_bhaji.jpg",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Batata Sukhi Bhaji with 2 Chapatis",
+      description: "Puneri yellow tempered potato sabzi tossed with green chillies, mustard seeds, curry leaves & fresh coriander.",
+      price: 120,
+      image: "/api/ai/dish-image?dish=Batata%20Bhaji&v=v28",
+      popularity: 95,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Fresh Shrikhand Puri Plate (4 Pcs)",
+      description: "Creamy saffron and cardamom-infused hung curd shrikhand served with 4 puffed golden wheat puris.",
+      price: 160,
+      image: "/api/ai/dish-image?dish=Shrikhand%20Puri&v=v28",
+      popularity: 98,
+      rating: 4.9,
+      category: "Desserts & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Pure Alphonso Aamras Puri Platter",
+      description: "Seasonal heritage special: pure Alphonso mango pulp served with 4 fluffy hot puris.",
+      price: 210,
+      image: "/api/ai/dish-image?dish=Aamras%20Puri&v=v28",
+      popularity: 99,
+      rating: 5.0,
+      category: "Desserts & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Puneri Khamang Kakdi (Salad)",
+      description: "Crisp cucumber salad tossed with roasted crushed peanuts, green chillies, fresh lemon juice, and mustard curry leaf tadka.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Khamang%20Kakdi&v=v28",
+      popularity: 95,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Chilled Masala Taak (Puneri Mattha)",
+      description: "Traditional spiced buttermilk tempered with crushed ginger, green chillies, fresh mint, coriander, and roasted cumin.",
       price: 40,
       image: "/images/food/masala_taak.jpg",
       popularity: 98,
-      rating: 4.9
+      rating: 4.9,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Digestive Pink Kokum Solkadhi",
+      description: "Refreshing natural coastal cooler extracted from fresh coconut milk and wild kokum with crushed green chilies and garlic.",
+      price: 50,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Authentic Dadpe Pohe",
+      description: "Traditional uncooked flattened rice tossed with freshly grated coconut, raw onion, crushed peanuts, green chillies and lemon.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Dadpe%20Pohe&v=v28",
+      popularity: 96,
+      rating: 4.8,
+      category: "Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Sabudana Khichdi with Sweet Dahi",
+      description: "Tender sago pearls sauteed in pure ghee with roasted peanuts, cumin, and green chillies, served with fresh curd.",
+      price: 90,
+      image: "/api/ai/dish-image?dish=Sabudana%20Khichdi&v=v28",
+      popularity: 98,
+      rating: 4.9,
+      category: "Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Sabudana Vada (2 Pcs)",
+      description: "Golden-crisp sago and potato patties served with sweet-tangy peanut yogurt chutney.",
+      price: 90,
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v28",
+      popularity: 97,
+      rating: 4.9,
+      category: "Starters & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Hot Gulab Jamun in Saffron Syrup (2 Pcs)",
+      description: "Warm melt-in-mouth mawa dumplings soaked in cardamom sugar syrup.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
+      popularity: 97,
+      rating: 4.8,
+      category: "Desserts & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Extra Hot Katachi Amti Bowl",
+      description: "Spicy, tangy thin chana dal broth flavored with goda masala, coconut, and mustard tempering.",
+      price: 60,
+      image: "/api/ai/dish-image?dish=Katachi%20Amti&v=v28",
+      popularity: 97,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Fresh Jowar Bhakri (2 Pcs)",
+      description: "Traditional hand-patted roasted sorghum flatbreads with charred aroma.",
+      price: 50,
+      image: "/images/food/pithla_bhakri.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Indian Breads",
+      is_veg: 1
+    },
+    {
+      name: "Hot Phulka Chapati Plate (3 Pcs)",
+      description: "Soft whole wheat rotis lightly brushed with pure ghee.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Roti&v=v28",
+      popularity: 97,
+      rating: 4.8,
+      category: "Indian Breads",
+      is_veg: 1
+    }
+  ],
+  'poona guest house': [
+    {
+      name: "Traditional Puneri Maharashtrian Thali",
+      description: "Sadashiv Peth 1935 heritage: 2 fresh chapatis, 2 seasonal bhajis, spicy Katachi Amti, Koshimbir, Indrayani Varan Bhat with sajuk toop & sweet.",
+      price: 260,
+      image: "/api/ai/dish-image?dish=Maharashtrian%20Thali&v=v28",
+      popularity: 100,
+      rating: 5.0,
+      category: "Thalis & Combos",
+      is_veg: 1
+    },
+    {
+      name: "Special Puran Poli Thali with Pure Desi Ghee",
+      description: "Traditional feast with unlimited Katachi Amti, 2 handmade Puran Polis drenched in warm sajuk toop, batata bhaji, koshimbir & varan bhat.",
+      price: 280,
+      image: "https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85",
+      popularity: 100,
+      rating: 5.0,
+      category: "Thalis & Combos",
+      is_veg: 1
+    },
+    {
+      name: "Steamed Ukdiche Modak with Pure Ghee (2 Pcs)",
+      description: "Sadashiv Peth's legendary steamed fragrant rice-flour dumplings filled with freshly grated coconut and organic jaggery.",
+      price: 120,
+      image: "/images/food/modak.jpg",
+      popularity: 100,
+      rating: 5.0,
+      category: "Desserts & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Puran Poli with Katachi Amti & Pure Ghee (2 Pcs)",
+      description: "Handmade sweet flatbreads stuffed with cardamom chana dal jaggery paste, served with spicy amti & hot desi ghee.",
+      price: 140,
+      image: "/api/ai/dish-image?dish=Puran%20Poli&v=v28",
+      popularity: 98,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Garma Garam Pithla Bhakri with Thecha & Kanda",
+      description: "Hot comforting besan pithla served with piping hot roasted jowar/bajra bhakri, spicy green mirchi thecha and fresh sliced onions.",
+      price: 160,
+      image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800&auto=format&fit=crop&q=85",
+      popularity: 100,
+      rating: 5.0,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Authentic Bhajani Thalipeeth with White Loni Butter",
+      description: "Crispy multigrain roasted flatbread prepared from traditional bhajani flour, served with fresh white butter and homemade pickle.",
+      price: 120,
+      image: "https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85",
+      popularity: 99,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Kothimbir Vadi Platter",
+      description: "Steamed and shallow-fried coriander and spiced gram flour diamond cakes served with spicy green chutney.",
+      price: 90,
+      image: "/images/food/kothimbir_vadi.jpg",
+      popularity: 97,
+      rating: 4.8,
+      category: "Starters & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Steamed & Fried Alu Vadi Plate (Patra)",
+      description: "Tender colocasia leaf pinwheels seasoned with tamarind-jaggery paste, garnished with white sesame & fresh coconut.",
+      price: 90,
+      image: "/images/food/alu_vadi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Starters & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Authentic Bharli Vangi with Jowar Bhakri",
+      description: "Baby brinjals slow-simmered in roasted peanut, sesame, coconut and goda masala gravy, served with 2 jowar bhakris.",
+      price: 190,
+      image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85",
+      popularity: 97,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Indrayani Varan Bhat with Pure Desi Ghee & Nimbu",
+      description: "Steaming aromatic soft Indrayani rice topped with slow-cooked yellow lentil varan, sajuk toop & fresh lemon.",
+      price: 130,
+      image: "https://images.unsplash.com/photo-1789991184293-224a84e41900?w=800&auto=format&fit=crop&q=85",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Traditional Masala Bhaat with Ghee",
+      description: "Puneri festive spiced rice cooked with ivy gourd, green peas, whole cloves, cinnamon, cashews and freshly grated coconut.",
+      price: 150,
+      image: "/api/ai/dish-image?dish=Masala%20Bhaat&v=v28",
+      popularity: 97,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Aluche Fadfade with Chapati",
+      description: "Festive sweet, sour and spicy colocasia stem and leaf stew cooked with roasted peanuts and chana dal.",
+      price: 160,
+      image: "/api/ai/dish-image?dish=Aluche%20Fadfade&v=v28",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Spiced Matki Usal Plate with Chapati",
+      description: "Tender sprouted moth beans tempered with mustard, curry leaves, hing, and fresh grated coconut.",
+      price: 140,
+      image: "/api/ai/dish-image?dish=Matki%20Usal&v=v28",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Khandeshi Shev Bhaji with Hot Chapatis",
+      description: "Spicy roasted red masala gravy topped with thick crunchy Ratlami shev, served with 2 chapatis.",
+      price: 170,
+      image: "/images/food/shev_bhaji.jpg",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Batata Sukhi Bhaji with 2 Chapatis",
+      description: "Puneri yellow tempered potato sabzi tossed with green chillies, mustard seeds, curry leaves & fresh coriander.",
+      price: 120,
+      image: "/api/ai/dish-image?dish=Batata%20Bhaji&v=v28",
+      popularity: 95,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Fresh Shrikhand Puri Plate (4 Pcs)",
+      description: "Creamy saffron and cardamom-infused hung curd shrikhand served with 4 puffed golden wheat puris.",
+      price: 160,
+      image: "/api/ai/dish-image?dish=Shrikhand%20Puri&v=v28",
+      popularity: 98,
+      rating: 4.9,
+      category: "Desserts & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Pure Alphonso Aamras Puri Platter",
+      description: "Seasonal heritage special: pure Alphonso mango pulp served with 4 fluffy hot puris.",
+      price: 210,
+      image: "/api/ai/dish-image?dish=Aamras%20Puri&v=v28",
+      popularity: 99,
+      rating: 5.0,
+      category: "Desserts & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Puneri Khamang Kakdi (Salad)",
+      description: "Crisp cucumber salad tossed with roasted crushed peanuts, green chillies, fresh lemon juice, and mustard curry leaf tadka.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Khamang%20Kakdi&v=v28",
+      popularity: 95,
+      rating: 4.8,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Chilled Masala Taak (Puneri Mattha)",
+      description: "Traditional spiced buttermilk tempered with crushed ginger, green chillies, fresh mint, coriander, and roasted cumin.",
+      price: 40,
+      image: "/images/food/masala_taak.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Digestive Pink Kokum Solkadhi",
+      description: "Refreshing natural coastal cooler extracted from fresh coconut milk and wild kokum with crushed green chilies and garlic.",
+      price: 50,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Authentic Dadpe Pohe",
+      description: "Traditional uncooked flattened rice tossed with freshly grated coconut, raw onion, crushed peanuts, green chillies and lemon.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Dadpe%20Pohe&v=v28",
+      popularity: 96,
+      rating: 4.8,
+      category: "Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Sabudana Khichdi with Sweet Dahi",
+      description: "Tender sago pearls sauteed in pure ghee with roasted peanuts, cumin, and green chillies, served with fresh curd.",
+      price: 90,
+      image: "/api/ai/dish-image?dish=Sabudana%20Khichdi&v=v28",
+      popularity: 98,
+      rating: 4.9,
+      category: "Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Sabudana Vada (2 Pcs)",
+      description: "Golden-crisp sago and potato patties served with sweet-tangy peanut yogurt chutney.",
+      price: 90,
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v28",
+      popularity: 97,
+      rating: 4.9,
+      category: "Starters & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Hot Gulab Jamun in Saffron Syrup (2 Pcs)",
+      description: "Warm melt-in-mouth mawa dumplings soaked in cardamom sugar syrup.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
+      popularity: 97,
+      rating: 4.8,
+      category: "Desserts & Sweets",
+      is_veg: 1
+    },
+    {
+      name: "Extra Hot Katachi Amti Bowl",
+      description: "Spicy, tangy thin chana dal broth flavored with goda masala, coconut, and mustard tempering.",
+      price: 60,
+      image: "/api/ai/dish-image?dish=Katachi%20Amti&v=v28",
+      popularity: 97,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Fresh Jowar Bhakri (2 Pcs)",
+      description: "Traditional hand-patted roasted sorghum flatbreads with charred aroma.",
+      price: 50,
+      image: "/images/food/pithla_bhakri.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Indian Breads",
+      is_veg: 1
+    },
+    {
+      name: "Hot Phulka Chapati Plate (3 Pcs)",
+      description: "Soft whole wheat rotis lightly brushed with pure ghee.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Roti&v=v28",
+      popularity: 97,
+      rating: 4.8,
+      category: "Indian Breads",
+      is_veg: 1
     }
   ],
 
@@ -2386,7 +3012,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Traditional Thalipeeth with White Loni Butter",
       description: "Kothrud morning legend: multi-grain roasted flatbread spiced with onion and coriander, topped with fresh white loni.",
       price: 110,
-      image: "/api/ai/dish-image?dish=Thalipeeth",
+      image: "/api/ai/dish-image?dish=Thalipeeth&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2394,7 +3020,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Sabudana Vada with Sweet Dahi (2 Pcs)",
       description: "Golden fried crispy sago and roasted peanut patties served with sweet curd chutney.",
       price: 80,
-      image: "/api/ai/dish-image?dish=Sabudana%20Vada",
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2410,7 +3036,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Puneri Kanda Poha Supreme with Sev & Coconut",
       description: "Fluffy flattened rice tempered with mustard seeds, turmeric, peanuts, and freshly grated coconut.",
       price: 50,
-      image: "/api/ai/dish-image?dish=Kanda%20Poha",
+      image: "/api/ai/dish-image?dish=Kanda%20Poha&v=v28",
       popularity: 97,
       rating: 4.8
     }
@@ -2422,7 +3048,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Fiery Kolhapuri Rassa Misal with Toasted Pav",
       description: "Extra spicy sprouted bean misal drenched in blazing red spicy tarri gravy, served with toasted pav & lemon.",
       price: 120,
-      image: "/api/ai/dish-image?dish=Misal%20Pav",
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2430,7 +3056,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Puneri Matki Misal Pav with Extra Tarri",
       description: "Authentic Puneri style misal with poha base, spicy sprouted matki, mixed farsan, and extra rassa cup.",
       price: 110,
-      image: "/api/ai/dish-image?dish=Misal%20Pav",
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -2458,7 +3084,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Famous Katta Special Thick Cold Coffee",
       description: "Kothrud youth favorite: thick creamy frothed cold coffee topped with rich chocolate drizzle.",
       price: 70,
-      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2466,7 +3092,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Cheese Corn Grill Sandwich",
       description: "Golden toasted jumbo sandwich stuffed with sweet corn, capsicum, and molten cheese blend.",
       price: 140,
-      image: "/api/ai/dish-image?dish=Veg%20Sandwich",
+      image: "/api/ai/dish-image?dish=Veg%20Sandwich&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -2474,7 +3100,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Schezwan Double Masala Maggi",
       description: "Wok-tossed spicy noodles loaded with vegetables, Schezwan chili paste, and extra cheese.",
       price: 100,
-      image: "/api/ai/dish-image?dish=Maggi",
+      image: "/api/ai/dish-image?dish=Maggi&v=v28",
       popularity: 97,
       rating: 4.8
     },
@@ -2482,7 +3108,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Peri Peri French Fries Large",
       description: "Crispy golden potato fries seasoned with fiery African peri peri spice rub.",
       price: 110,
-      image: "/api/ai/dish-image?dish=French%20Fries",
+      image: "/api/ai/dish-image?dish=French%20Fries&v=v28",
       popularity: 96,
       rating: 4.8
     }
@@ -2494,7 +3120,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Tilak Road Special Misal Pav",
       description: "Classic spicy Shukrawar Peth misal with crunchy farsan, diced onions, and buttery toasted pav.",
       price: 110,
-      image: "/api/ai/dish-image?dish=Misal%20Pav",
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2510,7 +3136,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Kanda Bhajji (Pakoda) Plate",
       description: "Crispy sliced onion fritters deep fried in seasoned gram flour batter, served with spicy chutney.",
       price: 70,
-      image: "/api/ai/dish-image?dish=Bhajji",
+      image: "/api/ai/dish-image?dish=Bhajji&v=v28",
       popularity: 97,
       rating: 4.8
     },
@@ -2518,7 +3144,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Adrak Wali Chai",
       description: "Strong boiled milk tea infused with freshly crushed ginger root.",
       price: 25,
-      image: "/api/ai/dish-image?dish=Masala%20Chai",
+      image: "/api/ai/dish-image?dish=Masala%20Chai&v=v28",
       popularity: 99,
       rating: 5.0
     }
@@ -2538,7 +3164,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Medu Vada Sambar (2 Pcs)",
       description: "Crisp golden lentil fritters served with hot spiced sambar and thick coconut chutney.",
       price: 65,
-      image: "/api/ai/dish-image?dish=Medu%20Vada",
+      image: "/api/ai/dish-image?dish=Medu%20Vada&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -2546,7 +3172,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Heritage South Indian Filter Coffee",
       description: "Aromatic chicory coffee decoction frothed in traditional stainless steel tumbler.",
       price: 40,
-      image: "/api/ai/dish-image?dish=Filter%20Coffee",
+      image: "/api/ai/dish-image?dish=Filter%20Coffee&v=v28",
       popularity: 99,
       rating: 5.0
     }
@@ -2574,7 +3200,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "MTR Filter Coffee Supreme",
       description: "Freshly frothed chicory coffee served hot in authentic silver tumbler.",
       price: 45,
-      image: "/api/ai/dish-image?dish=Filter%20Coffee",
+      image: "/api/ai/dish-image?dish=Filter%20Coffee&v=v28",
       popularity: 99,
       rating: 5.0
     }
@@ -2594,7 +3220,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Fluffy Poori Sagu (3 Pcs)",
       description: "Hot puffed golden wheat pooris served with spiced vegetable saagu and coconut chutney.",
       price: 85,
-      image: "/api/ai/dish-image?dish=Poori%20Bhaji",
+      image: "/api/ai/dish-image?dish=Poori%20Bhaji&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -2606,7 +3232,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Nagarjuna Royal Andhra Banana Leaf Meal",
       description: "Residency Road spice bastion: unlimited aromatic rice, pappu dal, gun powder with ghee, sambar, rasam, curd & payasam.",
       price: 280,
-      image: "/api/ai/dish-image?dish=Andhra%20Meals",
+      image: "/api/ai/dish-image?dish=Andhra%20Meals&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2634,7 +3260,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Bawarchi Original Double Masala Mutton Biryani",
       description: "RTC X Roads cult legend: fragrant saffron Basmati rice slow dum-cooked with double-spiced succulent lamb and dark roasted spices.",
       price: 360,
-      image: "/api/ai/dish-image?dish=Mutton%20Biryani",
+      image: "/api/ai/dish-image?dish=Mutton%20Biryani&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2650,7 +3276,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Tangy Mirchi Ka Salan Bowl",
       description: "Traditional Hyderabadi peanut, sesame and green chili accompaniment curry.",
       price: 60,
-      image: "/api/ai/dish-image?dish=Biryani",
+      image: "/api/ai/dish-image?dish=Biryani&v=v28",
       popularity: 97,
       rating: 4.8
     }
@@ -2662,7 +3288,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Paradise World-Famous Special Mutton Dum Biryani",
       description: "Secunderabad 1953 institution: Royal Nizami dum biryani cooked in sealed copper handi with tender spiced mutton & fragrant saffron.",
       price: 380,
-      image: "/api/ai/dish-image?dish=Mutton%20Biryani",
+      image: "/api/ai/dish-image?dish=Mutton%20Biryani&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2690,7 +3316,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "KFC Hot & Crispy Fried Chicken (4 Pcs)",
       description: "Signature 11 herbs & spices battered chicken fried to golden extra crunchy perfection.",
       price: 399,
-      image: "/api/ai/dish-image?dish=Fried%20Chicken",
+      image: "/images/food/kfc_fried_chicken.jpg",
       popularity: 100,
       rating: 5.0
     },
@@ -2698,7 +3324,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "KFC Classic Zinger Burger",
       description: "Thick crispy chicken fillet with fresh lettuce and signature creamy mayo in sesame bun.",
       price: 199,
-      image: "/images/food/burger.jpg",
+      image: "/images/food/zinger_burger.jpg",
       popularity: 99,
       rating: 5.0
     },
@@ -2706,9 +3332,25 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Crispy Chicken Popcorn Large",
       description: "Bite-sized crispy tender chicken morsels seasoned with savory spice dust.",
       price: 219,
-      image: "/images/food/chicken_lollipop.jpg",
+      image: "/images/food/chicken_popcorn.jpg",
       popularity: 98,
       rating: 4.9
+    },
+    {
+      name: "KFC Crispy Boneless Chicken Strips (3 Pcs)",
+      description: "Extra crunchy boneless chicken tenders coated in seasoned batter with honey mustard dip.",
+      price: 249,
+      image: "/images/food/chicken_strips.jpg",
+      popularity: 97,
+      rating: 4.8
+    },
+    {
+      name: "KFC Peri Peri Crispy Fries",
+      description: "Golden crispy fries tossed with fiery spicy peri peri herb seasoning.",
+      price: 129,
+      image: "/images/food/peri_peri_fries.jpg",
+      popularity: 96,
+      rating: 4.8
     }
   ],
 
@@ -2726,9 +3368,105 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Cheesy Garlic Breadsticks",
       description: "Oven-baked leavened bread slathered with roasted garlic butter and molten mozzarella cheese.",
       price: 159,
-      image: "/images/food/pizza.jpg",
+      image: "/images/food/garlic_bread.jpg",
       popularity: 99,
       rating: 5.0
+    }
+  ],
+
+  // Pizza Fire & Wood-Fired Pizzerias
+  'pizza fire': [
+    {
+      name: "Wood-Fired Pizza Fire Special",
+      description: "Authentic brick-oven blistered crust topped with smoky tomato reduction, fresh fior di latte mozzarella, and basil.",
+      price: 420,
+      image: "/images/food/wood_fired_pizza.jpg",
+      popularity: 100,
+      rating: 5.0
+    },
+    {
+      name: "Artisanal Margherita Supreme Pizza",
+      description: "San Marzano tomato base, fresh buffalo mozzarella pearls, fragrant basil leaves and extra virgin olive oil.",
+      price: 340,
+      image: "/images/food/margherita_pizza.jpg",
+      popularity: 98,
+      rating: 4.9
+    },
+    {
+      name: "Fire Roasted Peppy Paneer Pizza",
+      description: "Wood-fired crust with chargrilled marinated paneer cubes, red paprika, and bubbling mozzarella.",
+      price: 380,
+      image: "/images/food/paneer_pizza.jpg",
+      popularity: 97,
+      rating: 4.8
+    },
+    {
+      name: "Cheesy Stuffed Garlic Breadsticks",
+      description: "Freshly pulled from the oven, loaded with roasted garlic herb butter and stringy molten mozzarella.",
+      price: 180,
+      image: "/images/food/garlic_bread.jpg",
+      popularity: 99,
+      rating: 5.0
+    },
+    {
+      name: "Peri Peri Crinkle Fries",
+      description: "Crunchy potato fries tossed with hot peri peri spice mix and creamy mayo dip.",
+      price: 140,
+      image: "/images/food/peri_peri_fries.jpg",
+      popularity: 96,
+      rating: 4.8
+    }
+  ],
+  'fire pizza': [
+    {
+      name: "Wood-Fired Pizza Fire Special",
+      description: "Authentic brick-oven blistered crust topped with smoky tomato reduction, fresh fior di latte mozzarella, and basil.",
+      price: 420,
+      image: "/images/food/wood_fired_pizza.jpg",
+      popularity: 100,
+      rating: 5.0
+    },
+    {
+      name: "Artisanal Margherita Supreme Pizza",
+      description: "San Marzano tomato base, fresh buffalo mozzarella pearls, fragrant basil leaves and extra virgin olive oil.",
+      price: 340,
+      image: "/images/food/margherita_pizza.jpg",
+      popularity: 98,
+      rating: 4.9
+    },
+    {
+      name: "Cheesy Stuffed Garlic Breadsticks",
+      description: "Freshly pulled from the oven, loaded with roasted garlic herb butter and stringy molten mozzarella.",
+      price: 180,
+      image: "/images/food/garlic_bread.jpg",
+      popularity: 99,
+      rating: 5.0
+    }
+  ],
+  'wood fired pizza': [
+    {
+      name: "Wood-Fired Pizza Fire Special",
+      description: "Authentic brick-oven blistered crust topped with smoky tomato reduction, fresh fior di latte mozzarella, and basil.",
+      price: 420,
+      image: "/images/food/wood_fired_pizza.jpg",
+      popularity: 100,
+      rating: 5.0
+    },
+    {
+      name: "Artisanal Margherita Supreme Pizza",
+      description: "San Marzano tomato base, fresh buffalo mozzarella pearls, fragrant basil leaves and extra virgin olive oil.",
+      price: 340,
+      image: "/images/food/margherita_pizza.jpg",
+      popularity: 98,
+      rating: 4.9
+    },
+    {
+      name: "Farmhouse Fire Baked Pizza",
+      description: "Hand-tossed crust with mozzarella, sweet corn, bell peppers, black olives, and caramelized onions.",
+      price: 390,
+      image: "/images/food/farmhouse_pizza.jpg",
+      popularity: 97,
+      rating: 4.9
     }
   ],
 
@@ -2738,7 +3476,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Subway Paneer Tikka Sub (6 Inch)",
       description: "Freshly baked multigrain bread filled with spiced tandoori paneer, crisp veggies and signature southwest sauce.",
       price: 219,
-      image: "/api/ai/dish-image?dish=Sandwich",
+      image: "/api/ai/dish-image?dish=Sandwich&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -2746,7 +3484,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Subway Roasted Chicken Breast Sub",
       description: "Tender herb-roasted chicken breast fillet with crisp lettuce, olives and mint mayo.",
       price: 249,
-      image: "/api/ai/dish-image?dish=Sandwich",
+      image: "/api/ai/dish-image?dish=Sandwich&v=v28",
       popularity: 99,
       rating: 5.0
     }
@@ -2758,7 +3496,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Starbucks Java Chip Frappuccino",
       description: "Blended coffee, milk, chocolate chips, and ice, crowned with sweetened whipped cream & chocolate drizzle.",
       price: 360,
-      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28",
       popularity: 100,
       rating: 5.0,
       category: "Tea & Coffee",
@@ -2768,7 +3506,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Starbucks Caramel Macchiato",
       description: "Freshly steamed milk with vanilla-flavored syrup, marked with espresso and finished with caramel drizzle.",
       price: 290,
-      image: "/api/ai/dish-image?dish=Coffee",
+      image: "/api/ai/dish-image?dish=Coffee&v=v28",
       popularity: 99,
       rating: 5.0,
       category: "Tea & Coffee",
@@ -2778,7 +3516,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Tall Iced Caffe Latte",
       description: "Dark, rich espresso combined with milk and served over ice.",
       price: 280,
-      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28",
       popularity: 98,
       rating: 4.9,
       category: "Tea & Coffee",
@@ -2788,7 +3526,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Tall Cold Brew with Chocolate Protein Foam",
       description: "Slow-steeped small-batch cold brew topped with velvety cocoa cloud foam.",
       price: 390,
-      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28",
       popularity: 97,
       rating: 4.9,
       category: "Tea & Coffee",
@@ -2798,7 +3536,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Classic Caffe Americano",
       description: "Espresso shots topped with hot water create a light layer of crema.",
       price: 240,
-      image: "/api/ai/dish-image?dish=Coffee",
+      image: "/api/ai/dish-image?dish=Coffee&v=v28",
       popularity: 97,
       rating: 4.8,
       category: "Tea & Coffee",
@@ -2808,7 +3546,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Flaky Butter Croissant",
       description: "Classic French golden baked pastry with rich butter laminations.",
       price: 190,
-      image: "/api/ai/dish-image?dish=Croissant",
+      image: "/api/ai/dish-image?dish=Croissant&v=v28",
       popularity: 98,
       rating: 4.9,
       category: "Bakery",
@@ -2818,7 +3556,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Blueberry Muffin with Streusel Crumble",
       description: "Moist bakery muffin loaded with whole juicy blueberries and sweet crumble.",
       price: 220,
-      image: "/api/ai/dish-image?dish=Muffin",
+      image: "/api/ai/dish-image?dish=Muffin&v=v28",
       popularity: 96,
       rating: 4.8,
       category: "Cakes & Pastries",
@@ -2828,7 +3566,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "New York Style Cheesecake Slice",
       description: "Dense, velvety smooth cream cheese on golden graham cracker crust.",
       price: 340,
-      image: "/api/ai/dish-image?dish=Cheesecake",
+      image: "/api/ai/dish-image?dish=Cheesecake&v=v28",
       popularity: 99,
       rating: 5.0,
       category: "Cakes & Pastries",
@@ -2838,7 +3576,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Double Chocolate Chip Cookie",
       description: "Warm soft-baked cookie packed with bittersweet chocolate chunks.",
       price: 160,
-      image: "/api/ai/dish-image?dish=Cookies",
+      image: "/api/ai/dish-image?dish=Cookies&v=v28",
       popularity: 95,
       rating: 4.8,
       category: "Bakery",
@@ -2848,7 +3586,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Warm Sizzling Chocolate Brownie",
       description: "Fudge walnut brownie served warm with molten dark chocolate ganache.",
       price: 240,
-      image: "/api/ai/dish-image?dish=Brownie",
+      image: "/api/ai/dish-image?dish=Brownie&v=v28",
       popularity: 98,
       rating: 4.9,
       category: "Cakes & Pastries",
@@ -2858,7 +3596,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Basil Tomato & Mozzarella Panini",
       description: "Grilled sourdough stuffed with vine tomatoes, fresh mozzarella and basil pesto.",
       price: 310,
-      image: "/api/ai/dish-image?dish=Sandwich",
+      image: "/api/ai/dish-image?dish=Sandwich&v=v28",
       popularity: 97,
       rating: 4.8,
       category: "Café Food",
@@ -2868,7 +3606,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Smoked Chicken & Cheese Sandwich",
       description: "Herbed roasted chicken breast and cheddar cheese grilled in multi-grain bread.",
       price: 340,
-      image: "/api/ai/dish-image?dish=Sandwich",
+      image: "/api/ai/dish-image?dish=Sandwich&v=v28",
       popularity: 98,
       rating: 4.9,
       category: "Café Food",
@@ -2878,7 +3616,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Signature Hot Chocolate with Whipped Cream",
       description: "Steamed milk with rich dark chocolate syrup topped with sweetened whipped cream.",
       price: 270,
-      image: "/api/ai/dish-image?dish=Coffee",
+      image: "/api/ai/dish-image?dish=Coffee&v=v28",
       popularity: 97,
       rating: 4.9,
       category: "Tea & Coffee",
@@ -2888,7 +3626,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Nutella Belgian Waffle with Ice Cream",
       description: "Freshly ironed golden crisp waffle smothered in warm Nutella and choco chips.",
       price: 290,
-      image: "/api/ai/dish-image?dish=Waffle",
+      image: "/api/ai/dish-image?dish=Waffle&v=v28",
       popularity: 99,
       rating: 5.0,
       category: "Café Food",
@@ -3202,7 +3940,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Signature Chocolate Cheese Pineapple Toast",
       description: "Triple-decker sandwich packed with Nutella chocolate spread, pineapple slices, and a mountain of grated cheese.",
       price: 160,
-      image: "/api/ai/dish-image?dish=Sandwich",
+      image: "/api/ai/dish-image?dish=Sandwich&v=v28",
       popularity: 98,
       rating: 4.9
     },
@@ -3222,7 +3960,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Bademiya Legendary Mutton Seekh Kebab (4 Pcs)",
       description: "Colaba behind-Taj heritage: charcoal-grilled spiced mutton mince skewers served with mint chutney and onion rings.",
       price: 320,
-      image: "/api/ai/dish-image?dish=Tandoori%20Chicken",
+      image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -3238,7 +3976,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Charcoal Chicken Tikka Roll",
       description: "Smoky tandoori chicken tikka rolled in hot flaky paratha with mint chutney and sliced onions.",
       price: 210,
-      image: "/api/ai/dish-image?dish=Kathi%20Roll",
+      image: "/api/ai/dish-image?dish=Kathi%20Roll&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -3250,7 +3988,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Leopold Special Cold Coffee with Chocolate",
       description: "Historic 1871 Colaba icon: thick creamy cold coffee topped with dark chocolate syrup.",
       price: 180,
-      image: "/api/ai/dish-image?dish=Cold%20Coffee",
+      image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -3258,7 +3996,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Leopold Famous Chicken Chilli & Hakka Noodles",
       description: "Wok-fried spicy Indo-Chinese chicken chunks with bell peppers, green chilies and egg noodles.",
       price: 360,
-      image: "/api/ai/dish-image?dish=Fried%20Rice",
+      image: "/api/ai/dish-image?dish=Fried%20Rice&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -3298,7 +4036,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Kyani & Co. Heritage Bun Maska & Irani Chai",
       description: "1904 Marine Lines legend: soft bun with generous crust of butter dipped in sweet cardamom Irani chai.",
       price: 80,
-      image: "/api/ai/dish-image?dish=Bun%20Maska",
+      image: "/api/ai/dish-image?dish=Bun%20Maska&v=v28",
       popularity: 100,
       rating: 5.0
     },
@@ -3314,7 +4052,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Parsi Bakery Special Mawa Cake Slice",
       description: "Rich buttery sponge cake flavored with pure mawa, green cardamom and nutmeg.",
       price: 45,
-      image: "/api/ai/dish-image?dish=Gulab%20Jamun",
+      image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 97,
       rating: 4.8
     }
@@ -3342,7 +4080,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Charcoal Mutton Seekh Kebab (4 Pcs)",
       description: "Juicy minced mutton skewers roasted on open coals with roomali roti and mint yogurt dip.",
       price: 280,
-      image: "/api/ai/dish-image?dish=Tandoori%20Chicken",
+      image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28",
       popularity: 98,
       rating: 4.9
     }
@@ -3362,7 +4100,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Melt-in-Mouth Galouti Kebab with Roomali Roti",
       description: "Finely minced lamb patty blended with 32 spices, pan-seared to melt on the palate.",
       price: 420,
-      image: "/api/ai/dish-image?dish=Tandoori%20Chicken",
+      image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28",
       popularity: 99,
       rating: 5.0
     },
@@ -3389,15 +4127,15 @@ export const CUISINE_MENUS: CuisineProfile[] = [
       { name: "Caramel Macchiato with Vanilla", description: "Steamed whole milk marked with rich espresso shots and drizzled with buttery caramel glaze.", price: 240, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=85", popularity: 99, rating: 5.0, category: "Tea & Coffee", is_veg: 1 },
       { name: "Classic Caffe Latte with Velvety Foam", description: "Rich espresso combined with silky steamed milk and a thin layer of microfoam.", price: 210, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9, category: "Tea & Coffee", is_veg: 1 },
       { name: "Slow Steeped Small Batch Cold Brew", description: "Smooth 18-hour cold steeped coffee served over crystal ice with subtle citrus notes.", price: 240, image: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800&auto=format&fit=crop&q=85", popularity: 97, rating: 4.9, category: "Tea & Coffee", is_veg: 1 },
-      { name: "Flaky French Butter Croissant", description: "Golden-baked layered puff pastry with rich golden European butter laminations.", price: 160, image: "/api/ai/dish-image?dish=Croissant", popularity: 99, rating: 5.0, category: "Bakery", is_veg: 1 },
-      { name: "Blueberry Crumble Muffin", description: "Moist bakery muffin bursting with fresh juicy blueberries and brown sugar streusel crumble.", price: 170, image: "/api/ai/dish-image?dish=Muffin", popularity: 96, rating: 4.8, category: "Cakes & Pastries", is_veg: 1 },
-      { name: "New York Style Baked Cheesecake", description: "Dense and velvety cream cheese filling over buttery biscuit crust.", price: 280, image: "/api/ai/dish-image?dish=Cheesecake", popularity: 99, rating: 5.0, category: "Cakes & Pastries", is_veg: 1 },
-      { name: "Warm Sizzling Chocolate Brownie with Ice Cream", description: "Gooey dark chocolate walnut brownie with hot fudge drizzle and vanilla ice cream scoop.", price: 210, image: "/api/ai/dish-image?dish=Brownie", popularity: 100, rating: 5.0, category: "Cakes & Pastries", is_veg: 1 },
-      { name: "Nutella Belgian Waffle with Choco Chips", description: "Crisp golden ironed waffle smothered in warm Nutella hazelnut spread and choco chips.", price: 230, image: "/api/ai/dish-image?dish=Waffle", popularity: 99, rating: 5.0, category: "Café Food", is_veg: 1 },
-      { name: "Fluffy American Pancakes with Maple Syrup", description: "Stack of three golden buttermilk pancakes served with melted butter and pure maple syrup.", price: 210, image: "/api/ai/dish-image?dish=Pancakes", popularity: 97, rating: 4.9, category: "Café Food", is_veg: 1 },
-      { name: "Grilled Cheese & Jalapeno Panini", description: "Toasted sourdough loaded with sharp cheddar, mozzarella, sliced pickled jalapenos & herbs.", price: 220, image: "/api/ai/dish-image?dish=Sandwich", popularity: 98, rating: 4.9, category: "Café Food", is_veg: 1 },
-      { name: "Basil Pesto & Mozzarella Sandwich", description: "Fresh Italian basil pesto, vine-ripened tomatoes and fresh mozzarella pressed in crusty ciabatta.", price: 240, image: "/api/ai/dish-image?dish=Sandwich", popularity: 97, rating: 4.8, category: "Café Food", is_veg: 1 },
-      { name: "Herbed Chicken Mayo Club Sandwich", description: "Triple decker toast with roasted shredded chicken breast, lettuce, tomato and garlic mayo.", price: 270, image: "/api/ai/dish-image?dish=Sandwich", popularity: 98, rating: 4.9, category: "Café Food", is_veg: 0 },
+      { name: "Flaky French Butter Croissant", description: "Golden-baked layered puff pastry with rich golden European butter laminations.", price: 160, image: "/api/ai/dish-image?dish=Croissant&v=v28", popularity: 99, rating: 5.0, category: "Bakery", is_veg: 1 },
+      { name: "Blueberry Crumble Muffin", description: "Moist bakery muffin bursting with fresh juicy blueberries and brown sugar streusel crumble.", price: 170, image: "/api/ai/dish-image?dish=Muffin&v=v28", popularity: 96, rating: 4.8, category: "Cakes & Pastries", is_veg: 1 },
+      { name: "New York Style Baked Cheesecake", description: "Dense and velvety cream cheese filling over buttery biscuit crust.", price: 280, image: "/api/ai/dish-image?dish=Cheesecake&v=v28", popularity: 99, rating: 5.0, category: "Cakes & Pastries", is_veg: 1 },
+      { name: "Warm Sizzling Chocolate Brownie with Ice Cream", description: "Gooey dark chocolate walnut brownie with hot fudge drizzle and vanilla ice cream scoop.", price: 210, image: "/api/ai/dish-image?dish=Warm%20Sizzling%20Chocolate%20Brownie%20with%20Ice%20Cream&v=v28", popularity: 100, rating: 5.0, category: "Cakes & Pastries", is_veg: 1 },
+      { name: "Nutella Belgian Waffle with Choco Chips", description: "Crisp golden ironed waffle smothered in warm Nutella hazelnut spread and choco chips.", price: 230, image: "/api/ai/dish-image?dish=Waffle&v=v28", popularity: 99, rating: 5.0, category: "Café Food", is_veg: 1 },
+      { name: "Fluffy American Pancakes with Maple Syrup", description: "Stack of three golden buttermilk pancakes served with melted butter and pure maple syrup.", price: 210, image: "/api/ai/dish-image?dish=Pancakes&v=v28", popularity: 97, rating: 4.9, category: "Café Food", is_veg: 1 },
+      { name: "Grilled Cheese & Jalapeno Panini", description: "Toasted sourdough loaded with sharp cheddar, mozzarella, sliced pickled jalapenos & herbs.", price: 220, image: "/api/ai/dish-image?dish=Sandwich&v=v28", popularity: 98, rating: 4.9, category: "Café Food", is_veg: 1 },
+      { name: "Basil Pesto & Mozzarella Sandwich", description: "Fresh Italian basil pesto, vine-ripened tomatoes and fresh mozzarella pressed in crusty ciabatta.", price: 240, image: "/api/ai/dish-image?dish=Sandwich&v=v28", popularity: 97, rating: 4.8, category: "Café Food", is_veg: 1 },
+      { name: "Herbed Chicken Mayo Club Sandwich", description: "Triple decker toast with roasted shredded chicken breast, lettuce, tomato and garlic mayo.", price: 270, image: "/api/ai/dish-image?dish=Sandwich&v=v28", popularity: 98, rating: 4.9, category: "Café Food", is_veg: 0 },
       { name: "Creamy White Sauce Alfredo Penne", description: "Penne pasta tossed in rich parmesan cream sauce with sauteed garlic mushrooms and herbs.", price: 280, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9, category: "Italian Food", is_veg: 1 },
       { name: "Loaded Peri Peri French Fries", description: "Crispy golden shoestring fries tossed in fiery African peri peri spice rub with cheese dip.", price: 140, image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0, category: "Fast Food", is_veg: 1 },
       { name: "Cheesy Garlic Breadsticks with Herb Butter", description: "Fresh baked baguette smothered in garlic parsley butter and melted mozzarella.", price: 170, image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9, category: "Fast Food", is_veg: 1 },
@@ -3408,40 +4146,40 @@ export const CUISINE_MENUS: CuisineProfile[] = [
   // Kachori & Samosa Sweets
   {
     name: "Kachori, Samosa & Sweets",
-    keywords: ['kachori', 'pyaaz kachori', 'mawa kachori', 'samosa', 'bikanervala', 'haldiram', 'mithai', 'sweet', 'bhandar', 'mishthan', 'jalebi', 'ghevar', 'laddu', 'laddoo', 'gulab jamun'],
+    keywords: ['kachori', 'pyaaz kachori', 'mawa kachori', 'samosa', 'bikanervala', 'haldiram', 'mithai', 'sweet', 'sweets', 'bhandar', 'mishthan', 'jalebi', 'ghevar', 'laddu', 'laddoo', 'gulab jamun', 'chitale', 'kaka halwai', 'barfi', 'peda'],
     dishes: [
-      { name: "Special Crispy Pyaaz Kachori (2 Pcs)", description: "Crispy flaky golden pastry stuffed with spicy caramelized onion masala, served with tamarind chutney.", price: 80, image: "/api/ai/dish-image?dish=Samosa", popularity: 100, rating: 5.0 },
-      { name: "Hot Samosa with Sweet-Spicy Chutney (2 Pcs)", description: "Crispy pastry cones filled with spiced potatoes, green peas, and cashews, served with mint chutney.", price: 60, image: "/api/ai/dish-image?dish=Samosa", popularity: 98, rating: 4.9 },
-      { name: "Royal Shahi Raj Kachori Chaat", description: "Giant crisp kachori loaded with sprouted moong, boiled potatoes, dahi, tangy chutneys & sev.", price: 140, image: "/api/ai/dish-image?dish=SPDP", popularity: 99, rating: 5.0 },
-      { name: "Dahi Samosa Chaat Platter", description: "Crushed hot samosas smothered in sweet whipped curd, tamarind glaze & roasted cumin.", price: 110, image: "/api/ai/dish-image?dish=Samosa", popularity: 97, rating: 4.9 },
-      { name: "Crispy Moong Dal Khasta Kachori (2 Pcs)", description: "Flaky deep-fried puffed puris packed with spiced yellow lentil stuffing & dry spices.", price: 70, image: "/api/ai/dish-image?dish=Samosa", popularity: 96, rating: 4.8 },
-      { name: "Shahi Malai Ghevar with Rabdi", description: "Honeycomb textured festive delicacy soaked in saffron syrup crowned with thick malai.", price: 160, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 97, rating: 4.9 },
-      { name: "Hot Crispy Jalebi with Creamy Rabdi", description: "Thin spiral golden jalebis freshly fried and soaked in saffron sugar syrup with thickened rabdi.", price: 120, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 99, rating: 5.0 },
-      { name: "Warm Gulab Jamun with Saffron Dip (2 Pcs)", description: "Melt-in-mouth milk dumplings soaked in aromatic cardamom and rose water syrup.", price: 80, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 98, rating: 4.9 },
-      { name: "Rich Kaju Katli (4 Pcs)", description: "Diamond cut silver-foiled luxury sweet made with premium pulverized cashews and sugar.", price: 120, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 98, rating: 4.9 },
-      { name: "Fresh Motichoor Laddoo (2 Pcs)", description: "Tiny gram flour pearls fried in pure desi ghee and pressed into sweet saffron spheres.", price: 70, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 95, rating: 4.8 },
-      { name: "Special Masala Chai Kulhad", description: "Steaming hot ginger and cardamom tea brewed with whole milk and served in a clay pot.", price: 30, image: "/api/ai/dish-image?dish=Bun%20Maska", popularity: 99, rating: 5.0 },
-      { name: "Chilled Sweet Mango Lassi", description: "Thick hand-churned yogurt smoothie blended with ripe mango pulp and crushed pistachios.", price: 90, image: "/api/ai/dish-image?dish=Mango%20Lassi", popularity: 97, rating: 4.9 }
+      { name: "Special Crispy Pyaaz Kachori (2 Pcs)", description: "Crispy flaky golden pastry stuffed with spicy caramelized onion masala, served with tamarind chutney.", price: 80, image: "/api/ai/dish-image?dish=Kachori&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Hot Samosa with Sweet-Spicy Chutney (2 Pcs)", description: "Crispy pastry cones filled with spiced potatoes, green peas, and cashews, served with mint chutney.", price: 60, image: "/api/ai/dish-image?dish=Samosa&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Royal Shahi Raj Kachori Chaat", description: "Giant crisp kachori loaded with sprouted moong, boiled potatoes, dahi, tangy chutneys & sev.", price: 140, image: "/api/ai/dish-image?dish=Kachori&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Dahi Samosa Chaat Platter", description: "Crushed hot samosas smothered in sweet whipped curd, tamarind glaze & roasted cumin.", price: 110, image: "/api/ai/dish-image?dish=Samosa&v=v28", popularity: 97, rating: 4.9 },
+      { name: "Crispy Moong Dal Khasta Kachori (2 Pcs)", description: "Flaky deep-fried puffed puris packed with spiced yellow lentil stuffing & dry spices.", price: 70, image: "/api/ai/dish-image?dish=Kachori&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Shahi Malai Ghevar with Rabdi", description: "Honeycomb textured festive delicacy soaked in saffron syrup crowned with thick malai.", price: 160, image: "/api/ai/dish-image?dish=Rabri&v=v28", popularity: 97, rating: 4.9 },
+      { name: "Hot Crispy Jalebi with Creamy Rabdi", description: "Thin spiral golden jalebis freshly fried and soaked in saffron sugar syrup with thickened rabdi.", price: 120, image: "/api/ai/dish-image?dish=Jalebi&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Warm Gulab Jamun with Saffron Dip (2 Pcs)", description: "Melt-in-mouth milk dumplings soaked in aromatic cardamom and rose water syrup.", price: 80, image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Rich Kaju Katli (4 Pcs)", description: "Diamond cut silver-foiled luxury sweet made with premium pulverized cashews and sugar.", price: 120, image: "/api/ai/dish-image?dish=Kaju%20Katli&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Fresh Motichoor Laddoo (2 Pcs)", description: "Tiny gram flour pearls fried in pure desi ghee and pressed into sweet saffron spheres.", price: 70, image: "/api/ai/dish-image?dish=Ladoo&v=v28", popularity: 95, rating: 4.8 },
+      { name: "Special Masala Chai Kulhad", description: "Steaming hot ginger and cardamom tea brewed with whole milk and served in a clay pot.", price: 30, image: "/api/ai/dish-image?dish=Masala%20Chai&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Chilled Sweet Mango Lassi", description: "Thick hand-churned yogurt smoothie blended with ripe mango pulp and crushed pistachios.", price: 90, image: "/api/ai/dish-image?dish=Mango%20Lassi&v=v28", popularity: 97, rating: 4.9 }
     ]
   },
 
   // Sandwich & Fast Food
   {
     name: "Sandwich & Fast Food",
-    keywords: ['sandwich', 'toast', 'grill', 'club sandwich', 'grilled cheese', 'sub', 'toast sandwich'],
+    keywords: ['sandwich', 'sandwiches', 'toast', 'grill', 'club sandwich', 'grilled cheese', 'sub', 'toast sandwich'],
     dishes: [
-      { name: "Special 3-Layer Cheese Burst Grilled Sandwich", description: "Toasted jumbo bread loaded with spiced potato, veggies, spicy green chutney, and melted cheese blend.", price: 160, image: "/api/ai/dish-image?dish=Burger", popularity: 100, rating: 5.0 },
-      { name: "Classic Bombay Veg Toast Sandwich", description: "Thin-sliced potato, cucumber, tomato & onion with mint-coriander chutney and sandwich masala.", price: 110, image: "/api/ai/dish-image?dish=Burger", popularity: 98, rating: 4.9 },
-      { name: "Famous Chocolate Cheese Toast Sandwich", description: "Decadent sandwich layered with Nutella chocolate spread, butter, and grated processed cheese.", price: 140, image: "/api/ai/dish-image?dish=Burger", popularity: 98, rating: 4.9 },
-      { name: "Crispy Paneer Tikka Grilled Sandwich", description: "Marinated tandoori paneer cubes, crisp capsicum and mint mayonnaise pressed in buttered bread.", price: 170, image: "/api/ai/dish-image?dish=Paneer%20Tikka%20Sandwich", popularity: 99, rating: 5.0 },
-      { name: "Corn & Cheese Double Decker Toast", description: "Sweet corn kernels, green chillies and melted cheddar cheese grilled golden brown.", price: 150, image: "/api/ai/dish-image?dish=Burger", popularity: 97, rating: 4.8 },
-      { name: "Loaded Peri Peri French Fries", description: "Crispy golden potato fries seasoned with fiery African peri peri spice rub and cheese sauce.", price: 120, image: "/api/ai/dish-image?dish=Burger", popularity: 96, rating: 4.8 },
-      { name: "Golden Crispy Onion Rings (8 Pcs)", description: "Crisp batter-coated onion rings fried crunchy and served with garlic mayo.", price: 130, image: "/api/ai/dish-image?dish=Burger", popularity: 95, rating: 4.7 },
-      { name: "Cheesy Garlic Breadsticks with Dip", description: "Oven-toasted garlic bread smothered with garlic butter and melted mozzarella.", price: 140, image: "/api/ai/dish-image?dish=Pizza", popularity: 98, rating: 4.9 },
-      { name: "Creamy Thick Cold Coffee with Ice Cream", description: "Blended rich coffee and chilled whole milk crowned with a scoop of vanilla ice cream.", price: 110, image: "/api/ai/dish-image?dish=Cold%20Coffee", popularity: 99, rating: 5.0 },
-      { name: "Hazelnut Cold Coffee Frappe", description: "Espresso coffee blended with roasted hazelnut syrup, dark chocolate and whipped cream.", price: 130, image: "/api/ai/dish-image?dish=Cold%20Coffee", popularity: 97, rating: 4.9 },
-      { name: "Thick Chocolate Milkshake", description: "Velvety cocoa fudge blended with cream and chocolate drizzle.", price: 120, image: "/api/ai/dish-image?dish=Cold%20Coffee", popularity: 96, rating: 4.8 },
-      { name: "Chilled Iced Lemon Peach Tea", description: "Brewed black tea infused with real peach extract, fresh mint and lemon slice.", price: 90, image: "/api/ai/dish-image?dish=Cold%20Coffee", popularity: 95, rating: 4.7 }
+      { name: "Special 3-Layer Cheese Burst Grilled Sandwich", description: "Toasted jumbo bread loaded with spiced potato, veggies, spicy green chutney, and melted cheese blend.", price: 160, image: "/api/ai/dish-image?dish=Cheese%20Sandwich&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Classic Bombay Veg Toast Sandwich", description: "Thin-sliced potato, cucumber, tomato & onion with mint-coriander chutney and sandwich masala.", price: 110, image: "/api/ai/dish-image?dish=Veg%20Grilled%20Sandwich&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Famous Chocolate Cheese Toast Sandwich", description: "Decadent sandwich layered with Nutella chocolate spread, butter, and grated processed cheese.", price: 140, image: "/api/ai/dish-image?dish=Cheese%20Sandwich&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Crispy Paneer Tikka Grilled Sandwich", description: "Marinated tandoori paneer cubes, crisp capsicum and mint mayonnaise pressed in buttered bread.", price: 170, image: "/api/ai/dish-image?dish=Paneer%20Wrap&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Corn & Cheese Double Decker Toast", description: "Sweet corn kernels, green chillies and melted cheddar cheese grilled golden brown.", price: 150, image: "/api/ai/dish-image?dish=Cheese%20Sandwich&v=v28", popularity: 97, rating: 4.8 },
+      { name: "Loaded Peri Peri French Fries", description: "Crispy golden potato fries seasoned with fiery African peri peri spice rub and cheese sauce.", price: 120, image: "/api/ai/dish-image?dish=Peri%20Peri%20Fries&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Golden Crispy Onion Rings (8 Pcs)", description: "Crisp batter-coated onion rings fried crunchy and served with garlic mayo.", price: 130, image: "/api/ai/dish-image?dish=French%20Fries&v=v28", popularity: 95, rating: 4.7 },
+      { name: "Cheesy Garlic Breadsticks with Dip", description: "Oven-toasted garlic bread smothered with garlic butter and melted mozzarella.", price: 140, image: "/api/ai/dish-image?dish=Garlic%20Bread&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Creamy Thick Cold Coffee with Ice Cream", description: "Blended rich coffee and chilled whole milk crowned with a scoop of vanilla ice cream.", price: 110, image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Hazelnut Cold Coffee Frappe", description: "Espresso coffee blended with roasted hazelnut syrup, dark chocolate and whipped cream.", price: 130, image: "/api/ai/dish-image?dish=Iced%20Coffee&v=v28", popularity: 97, rating: 4.9 },
+      { name: "Thick Chocolate Milkshake", description: "Velvety cocoa fudge blended with cream and chocolate drizzle.", price: 120, image: "/api/ai/dish-image?dish=Milkshakes&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Chilled Iced Lemon Peach Tea", description: "Brewed black tea infused with real peach extract, fresh mint and lemon slice.", price: 90, image: "/api/ai/dish-image?dish=Iced%20Tea&v=v28", popularity: 95, rating: 4.7 }
     ]
   },
 
@@ -3450,38 +4188,38 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Momos & Tibetan Dumplings",
     keywords: ['momo', 'momos', 'dimsum', 'dumpling', 'dumplings', 'thukpa', 'tibetan', 'wow momo', 'momo king', 'the momo'],
     dishes: [
-      { name: "Steamed Darjeeling Veg Momos (6 Pcs)", description: "Authentic thin-wrapper steamed Himalayan dumplings served with fiery red chili garlic sauce.", price: 140, image: "/api/ai/dish-image?dish=Momos", popularity: 100, rating: 5.0 },
-      { name: "Steamed Juicy Chicken Momos (6 Pcs)", description: "Minced tender chicken seasoned with scallions and ginger, steamed to juicy perfection.", price: 160, image: "/api/ai/dish-image?dish=Momos", popularity: 100, rating: 5.0 },
-      { name: "Crispy Fried Cheese Corn Momos (6 Pcs)", description: "Golden fried crunchy momos loaded with melted mozzarella, sweet corn & herbs with spicy dip.", price: 170, image: "/api/ai/dish-image?dish=Momos", popularity: 99, rating: 5.0 },
-      { name: "Sizzling Schezwan Gravy Momos", description: "Steamed momos wok-tossed in rich red sizzling garlic schezwan pepper gravy.", price: 190, image: "/api/ai/dish-image?dish=Momos", popularity: 98, rating: 4.9 },
-      { name: "Butter Garlic Pan-Fried Momos", description: "Crispy bottom pan-seared dumplings drizzled in sizzling aromatic chili garlic butter.", price: 180, image: "/api/ai/dish-image?dish=Momos", popularity: 98, rating: 4.9 },
-      { name: "Crunchy Kurkure Momos Platter", description: "Crumb-coated extra crunchy fried momos dusted with tangy chatpata peri peri spice.", price: 180, image: "/api/ai/dish-image?dish=Momos", popularity: 97, rating: 4.9 },
-      { name: "Authentic Tibetan Thukpa Noodle Soup", description: "Comforting hot spiced broth with handmade noodles, crunchy shredded vegetables and fresh cilantro.", price: 160, image: "/api/ai/dish-image?dish=Fried%20Rice", popularity: 97, rating: 4.8 },
-      { name: "Special Veg Hakka Noodles", description: "Wok-tossed noodles with shredded cabbage, carrots, bell peppers, light soy & white pepper.", price: 180, image: "/api/ai/dish-image?dish=Fried%20Rice", popularity: 96, rating: 4.8 },
-      { name: "Triple Schezwan Fried Rice & Gravy", description: "Spicy wok rice and fried noodles tossed in fiery red Schezwan sauce with Manchurian gravy.", price: 240, image: "/api/ai/dish-image?dish=Fried%20Rice", popularity: 98, rating: 4.9 },
-      { name: "Crispy Vegetable Spring Rolls", description: "Golden fried wafer rolls stuffed with seasoned Asian juliennes served with sweet chilli dip.", price: 150, image: "/api/ai/dish-image?dish=Samosa", popularity: 95, rating: 4.8 },
-      { name: "Hot & Sour Manchow Soup", description: "Spicy dark broth loaded with garlic, chopped veggies and topped with crispy fried noodles.", price: 120, image: "/api/ai/dish-image?dish=Fried%20Rice", popularity: 96, rating: 4.8 },
-      { name: "Iced Peach Ice Tea", description: "Refreshing brewed iced tea infused with sweet peach puree and mint.", price: 90, image: "/api/ai/dish-image?dish=Cold%20Coffee", popularity: 95, rating: 4.7 }
+      { name: "Steamed Darjeeling Veg Momos (6 Pcs)", description: "Authentic thin-wrapper steamed Himalayan dumplings served with fiery red chili garlic sauce.", price: 140, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Steamed Juicy Chicken Momos (6 Pcs)", description: "Minced tender chicken seasoned with scallions and ginger, steamed to juicy perfection.", price: 160, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Crispy Fried Cheese Corn Momos (6 Pcs)", description: "Golden fried crunchy momos loaded with melted mozzarella, sweet corn & herbs with spicy dip.", price: 170, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Sizzling Schezwan Gravy Momos", description: "Steamed momos wok-tossed in rich red sizzling garlic schezwan pepper gravy.", price: 190, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Butter Garlic Pan-Fried Momos", description: "Crispy bottom pan-seared dumplings drizzled in sizzling aromatic chili garlic butter.", price: 180, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Crunchy Kurkure Momos Platter", description: "Crumb-coated extra crunchy fried momos dusted with tangy chatpata peri peri spice.", price: 180, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 97, rating: 4.9 },
+      { name: "Authentic Tibetan Thukpa Noodle Soup", description: "Comforting hot spiced broth with handmade noodles, crunchy shredded vegetables and fresh cilantro.", price: 160, image: "/api/ai/dish-image?dish=Veg%20Hakka%20Noodles&v=v28", popularity: 97, rating: 4.8 },
+      { name: "Special Veg Hakka Noodles", description: "Wok-tossed noodles with shredded cabbage, carrots, bell peppers, light soy & white pepper.", price: 180, image: "/api/ai/dish-image?dish=Veg%20Hakka%20Noodles&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Triple Schezwan Fried Rice & Gravy", description: "Spicy wok rice and fried noodles tossed in fiery red Schezwan sauce with Manchurian gravy.", price: 240, image: "/api/ai/dish-image?dish=Schezwan%20Noodles&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Crispy Vegetable Spring Rolls", description: "Golden fried wafer rolls stuffed with seasoned Asian juliennes served with sweet chilli dip.", price: 150, image: "/api/ai/dish-image?dish=Spring%20Rolls&v=v28", popularity: 95, rating: 4.8 },
+      { name: "Hot & Sour Manchow Soup", description: "Spicy dark broth loaded with garlic, chopped veggies and topped with crispy fried noodles.", price: 120, image: "/api/ai/dish-image?dish=Hot%20Garlic%20Noodles&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Iced Peach Ice Tea", description: "Refreshing brewed iced tea infused with sweet peach puree and mint.", price: 90, image: "/api/ai/dish-image?dish=Iced%20Tea&v=v28", popularity: 95, rating: 4.7 }
     ]
   },
 
   // Chai, Tea & Tapri
   {
     name: "Chai & Tapri Snacks",
-    keywords: ['chai', 'tea', 'tapri', 'katta', 'dolly', 'chalo chai', 'chaiwala', 'cutting', 'tea post', 'bun maska'],
+    keywords: ['chai', 'tea', 'tapri', 'katta', 'dolly', 'chalo chai', 'chaiwala', 'cutting', 'tea post', 'bun maska', 'amruttulya'],
     dishes: [
-      { name: "Special Kulhad Masala Chai & Bun Maska", description: "Strong aromatic tea brewed with ginger, cardamom, and lemongrass, served with warm buttery bun.", price: 70, image: "/api/ai/dish-image?dish=Bun%20Maska", popularity: 100, rating: 5.0 },
-      { name: "Sweet Bun Maska with Fruit Jam", description: "Soft bakery bun spread generously with pure Amul butter and sweet mixed fruit preserve.", price: 60, image: "/api/ai/dish-image?dish=Bun%20Maska", popularity: 98, rating: 4.9 },
-      { name: "Special Ginger Lemongrass Cutting Chai (2 Cups)", description: "Boiled milk tea infused with crushed fresh ginger root and aromatic lemongrass.", price: 40, image: "/api/ai/dish-image?dish=Bun%20Maska", popularity: 99, rating: 5.0 },
-      { name: "Legendary Mumbai Vada Pav (2 Pcs)", description: "Hot golden spiced potato dumplings in soft pav with dry garlic chutney & fried green chilli.", price: 50, image: "/api/ai/dish-image?dish=Vada%20Pav", popularity: 100, rating: 5.0 },
-      { name: "Crispy Samosa Pav with Spicy Garlic Chutney", description: "Fresh fried samosa tucked inside soft ladi pav with fiery red dry garlic chutney.", price: 50, image: "/api/ai/dish-image?dish=Samosa", popularity: 98, rating: 4.9 },
-      { name: "Crispy Kanda Bhajji (Onion Pakoda) Plate", description: "Thin sliced onions tossed in spiced gram flour and fried crunchy, served with fried chillies.", price: 70, image: "/api/ai/dish-image?dish=Samosa", popularity: 98, rating: 4.9 },
-      { name: "Steamed Kanda Poha Plate", description: "Fluffy flattened rice tempered with mustard seeds, curry leaves, onions & roasted peanuts.", price: 60, image: "/api/ai/dish-image?dish=Misal%20Pav", popularity: 97, rating: 4.8 },
-      { name: "Crispy Sabudana Vada with Sweet Dahi", description: "Golden fried sago pearl patties with roasted crushed peanuts and sweetened spiced curd.", price: 90, image: "/api/ai/dish-image?dish=Sabudana%20Vada", popularity: 98, rating: 4.9 },
-      { name: "Cheese Grilled Masala Toast Sandwich", description: "Golden toasted sandwich with spiced potato masala, green chutney and molten processed cheese.", price: 120, image: "/api/ai/dish-image?dish=Burger", popularity: 96, rating: 4.8 },
-      { name: "Creamy Kadak Filter Coffee", description: "Traditional strong decoction milk coffee frothed rich with velvety foam.", price: 50, image: "/api/ai/dish-image?dish=Cold%20Coffee", popularity: 97, rating: 4.8 },
-      { name: "Rich Mawa Cake Slice (2 Pcs)", description: "Traditional Parsi bakery butter cardamom sponge cake packed with dense reduced milk mawa.", price: 70, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 96, rating: 4.8 },
-      { name: "Chilled Badam Milk with Kesar", description: "Sweetened milk infused with almond paste, Kashmiri saffron strands and crushed cardamom.", price: 80, image: "/api/ai/dish-image?dish=Cold%20Coffee", popularity: 95, rating: 4.8 }
+      { name: "Special Kulhad Masala Chai & Bun Maska", description: "Strong aromatic tea brewed with ginger, cardamom, and lemongrass, served with warm buttery bun.", price: 70, image: "/api/ai/dish-image?dish=Masala%20Chai&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Sweet Bun Maska with Fruit Jam", description: "Soft bakery bun spread generously with pure Amul butter and sweet mixed fruit preserve.", price: 60, image: "/api/ai/dish-image?dish=Bun%20Maska&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Special Ginger Lemongrass Cutting Chai (2 Cups)", description: "Boiled milk tea infused with crushed fresh ginger root and aromatic lemongrass.", price: 40, image: "/api/ai/dish-image?dish=Masala%20Chai&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Legendary Mumbai Vada Pav (2 Pcs)", description: "Hot golden spiced potato dumplings in soft pav with dry garlic chutney & fried green chilli.", price: 50, image: "/api/ai/dish-image?dish=Vada%20Pav&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Crispy Samosa Pav with Spicy Garlic Chutney", description: "Fresh fried samosa tucked inside soft ladi pav with fiery red dry garlic chutney.", price: 50, image: "/api/ai/dish-image?dish=Samosa&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Crispy Kanda Bhajji (Onion Pakoda) Plate", description: "Thin sliced onions tossed in spiced gram flour and fried crunchy, served with fried chillies.", price: 70, image: "/api/ai/dish-image?dish=Kanda%20Bhaji&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Steamed Kanda Poha Plate", description: "Fluffy flattened rice tempered with mustard seeds, curry leaves, onions & roasted peanuts.", price: 60, image: "/api/ai/dish-image?dish=Poha&v=v28", popularity: 97, rating: 4.8 },
+      { name: "Crispy Sabudana Vada with Sweet Dahi", description: "Golden fried sago pearl patties with roasted crushed peanuts and sweetened spiced curd.", price: 90, image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Cheese Grilled Masala Toast Sandwich", description: "Golden toasted sandwich with spiced potato masala, green chutney and molten processed cheese.", price: 120, image: "/api/ai/dish-image?dish=Cheese%20Sandwich&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Creamy Kadak Filter Coffee", description: "Traditional strong decoction milk coffee frothed rich with velvety foam.", price: 50, image: "/api/ai/dish-image?dish=Filter%20Coffee&v=v28", popularity: 97, rating: 4.8 },
+      { name: "Rich Mawa Cake Slice (2 Pcs)", description: "Traditional Parsi bakery butter cardamom sponge cake packed with dense reduced milk mawa.", price: 70, image: "/api/ai/dish-image?dish=Cake&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Chilled Badam Milk with Kesar", description: "Sweetened milk infused with almond paste, Kashmiri saffron strands and crushed cardamom.", price: 80, image: "/api/ai/dish-image?dish=Milkshakes&v=v28", popularity: 95, rating: 4.8 }
     ]
   },
 
@@ -3490,18 +4228,18 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Gujarati Farsan & Thali",
     keywords: ['gujarat', 'gujarati', 'ahmedabad', 'surat', 'vadodara', 'rajkot', 'khaman', 'dhokla', 'fafda', 'jalebi', 'locho', 'thepla', 'undhiyu', 'handvo', 'kathiyawadi', 'sev khamani', 'sev tameta'],
     dishes: [
-      { name: "Special Surati Locho with Butter & Sev", description: "Steamed seasoned gram flour delicacy topped with melting butter, green garlic chutney, and crispy nylon sev.", price: 90, image: "/api/ai/dish-image?dish=Vada%20Pav", popularity: 100, rating: 5.0 },
-      { name: "Authentic Fafda Jalebi Plate with Papaya Sambharo", description: "Crispy gram flour fafda paired with hot crunchy saffron jalebi, fried green chillies, and raw papaya salad.", price: 130, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 100, rating: 5.0 },
-      { name: "Nylon Khaman Dhokla (4 Pcs)", description: "Melt-in-mouth spongy yellow steamed cakes tempered with mustard, green chilies, sugar syrup & coconut.", price: 80, image: "/api/ai/dish-image?dish=Vada%20Pav", popularity: 99, rating: 5.0 },
-      { name: "Royal Kathiyawadi Sev Tameta & Bajra No Rotlo", description: "Tangy spiced tomato curry topped with ratlami sev, served with clay-roasted pearl millet flatbread and fresh white butter.", price: 210, image: "/api/ai/dish-image?dish=Bhakri", popularity: 98, rating: 4.9 },
-      { name: "Crispy Methi Thepla with Chhundo (4 Pcs)", description: "Soft spiced whole wheat flatbreads kneaded with fresh fenugreek leaves and yogurt, served with sweet mango relish.", price: 90, image: "/api/ai/dish-image?dish=Bhakri", popularity: 97, rating: 4.8 },
-      { name: "Steamed Vegetable Handvo Slice", description: "Savory fermented baked cake made from lentils, rice, grated bottle gourd, sesame & mustard seeds.", price: 110, image: "/api/ai/dish-image?dish=Vada%20Pav", popularity: 96, rating: 4.8 },
-      { name: "Gujarati Surti Sev Khamani", description: "Crumbled chana dal delicacy sauteed in mustard seeds, ginger, pomegranate seeds and crispy sev.", price: 100, image: "/api/ai/dish-image?dish=Vada%20Pav", popularity: 96, rating: 4.8 },
-      { name: "Grand Gujarati Royal Thali Platter", description: "Complete feast: Kathiyawadi curry, Dal, Kadhi, Steamed Rice, 4 Phulkas, Farsan, Papad, Pickle & Sweet.", price: 260, image: "/api/ai/dish-image?dish=Veg%20Thali", popularity: 99, rating: 5.0 },
-      { name: "Warm Puran Poli with Pure Desi Ghee", description: "Thin whole wheat sweet flatbread stuffed with spiced jaggery and chana dal stuffing, served dripping in ghee.", price: 90, image: "/api/ai/dish-image?dish=Puran%20Poli", popularity: 98, rating: 4.9 },
-      { name: "Hot Saffron Jalebi Plate (4 Pcs)", description: "Crispy golden spirals soaked in pure saffron sugar syrup.", price: 80, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 99, rating: 5.0 },
-      { name: "Chilled Gujarati Masala Chaas (Buttermilk)", description: "Thin refreshing spiced churned yogurt cooler with roasted cumin and coriander.", price: 40, image: "/api/ai/dish-image?dish=Cold%20Coffee", popularity: 98, rating: 4.9 },
-      { name: "Alphonso Mango Aamras Bowl", description: "Pure sweet mango pulp garnished with green cardamom and dry fruits.", price: 110, image: "/api/ai/dish-image?dish=Gulab%20Jamun", popularity: 99, rating: 5.0 }
+      { name: "Special Surati Locho with Butter & Sev", description: "Steamed seasoned gram flour delicacy topped with melting butter, green garlic chutney, and crispy nylon sev.", price: 90, image: "/api/ai/dish-image?dish=Dhokla&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Authentic Fafda Jalebi Plate with Papaya Sambharo", description: "Crispy gram flour fafda paired with hot crunchy saffron jalebi, fried green chillies, and raw papaya salad.", price: 130, image: "/api/ai/dish-image?dish=Jalebi&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Nylon Khaman Dhokla (4 Pcs)", description: "Melt-in-mouth spongy yellow steamed cakes tempered with mustard, green chilies, sugar syrup & coconut.", price: 80, image: "/api/ai/dish-image?dish=Dhokla&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Royal Kathiyawadi Sev Tameta & Bajra No Rotlo", description: "Tangy spiced tomato curry topped with ratlami sev, served with clay-roasted pearl millet flatbread and fresh white butter.", price: 210, image: "/api/ai/dish-image?dish=Bhakri&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Crispy Methi Thepla with Chhundo (4 Pcs)", description: "Soft spiced whole wheat flatbreads kneaded with fresh fenugreek leaves and yogurt, served with sweet mango relish.", price: 90, image: "/api/ai/dish-image?dish=Thepla&v=v28", popularity: 97, rating: 4.8 },
+      { name: "Steamed Vegetable Handvo Slice", description: "Savory fermented baked cake made from lentils, rice, grated bottle gourd, sesame & mustard seeds.", price: 110, image: "/api/ai/dish-image?dish=Dhokla&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Gujarati Surti Sev Khamani", description: "Crumbled chana dal delicacy sauteed in mustard seeds, ginger, pomegranate seeds and crispy sev.", price: 100, image: "/api/ai/dish-image?dish=Dhokla&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Grand Gujarati Royal Thali Platter", description: "Complete feast: Kathiyawadi curry, Dal, Kadhi, Steamed Rice, 4 Phulkas, Farsan, Papad, Pickle & Sweet.", price: 260, image: "/api/ai/dish-image?dish=Veg%20Thali&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Warm Puran Poli with Pure Desi Ghee", description: "Thin whole wheat sweet flatbread stuffed with spiced jaggery and chana dal stuffing, served dripping in ghee.", price: 90, image: "/api/ai/dish-image?dish=Puran%20Poli&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Hot Saffron Jalebi Plate (4 Pcs)", description: "Crispy golden spirals soaked in pure saffron sugar syrup.", price: 80, image: "/api/ai/dish-image?dish=Jalebi&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Chilled Gujarati Masala Chaas (Buttermilk)", description: "Thin refreshing spiced churned yogurt cooler with roasted cumin and coriander.", price: 40, image: "/api/ai/dish-image?dish=Chaas&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Alphonso Mango Aamras Bowl", description: "Pure sweet mango pulp garnished with green cardamom and dry fruits.", price: 110, image: "/api/ai/dish-image?dish=Aamras&v=v28", popularity: 99, rating: 5.0 }
     ]
   },
 
@@ -3528,10 +4266,10 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Vada Pav & Street Food",
     keywords: ['vadapav', 'vada pav', 'wada pav', 'batata vada', 'vada', 'street food', 'babu vadapav', 'gajanan', 'jumbo king'],
     dishes: [
-      { name: "Special Legendary Vada Pav (2 Pcs)", description: "Freshly fried golden potato dumplings stuffed in soft ladi pav with red garlic chutney.", price: 50, image: "/api/ai/dish-image?dish=Vada%20Pav", popularity: 100, rating: 5.0 },
+      { name: "Special Legendary Vada Pav (2 Pcs)", description: "Freshly fried golden potato dumplings stuffed in soft ladi pav with red garlic chutney.", price: 50, image: "/api/ai/dish-image?dish=Vada%20Pav&v=v28", popularity: 100, rating: 5.0 },
       { name: "Fiery Schezwan Cheese Vada Pav", description: "Loaded with melted mozzarella, spicy schezwan glaze, and roasted garlic chutney.", price: 90, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
       { name: "Crispy Kothimbir Vadi Plate", description: "Steamed cilantro diamond cakes shallow-fried crisp with sweet-tangy chutney.", price: 80, image: "/images/food/kothimbir_vadi.jpg", popularity: 97, rating: 4.9 },
-      { name: "Crispy Sabudana Vada with Sweet Dahi", description: "Golden fried tapioca patties with roasted peanuts and sweetened curd.", price: 90, image: "/api/ai/dish-image?dish=Sabudana%20Vada", popularity: 97, rating: 4.8 },
+      { name: "Crispy Sabudana Vada with Sweet Dahi", description: "Golden fried tapioca patties with roasted peanuts and sweetened curd.", price: 90, image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v28", popularity: 97, rating: 4.8 },
       { name: "Steamed Kanda Poha Plate", description: "Fluffy flattened rice tempered with mustard, onions, roasted peanuts & lemon.", price: 60, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.7 },
       { name: "Spicy Misal Pav Combo", description: "Fiery sprouted bean curry topped with crispy farsan, onion, lemon & soft pav.", price: 120, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
       { name: "Batata Bhajji (Pakoda) Plate", description: "Crispy spiced gram flour coated potato fritters served with fried green chilies.", price: 70, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", popularity: 94, rating: 4.8 },
@@ -3546,8 +4284,8 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     dishes: [
       { name: "Fiery Kolhapuri Tarri Misal Pav", description: "Sprouted moth beans in blistering spicy red cut rassa, crunchy farsan & fresh pav.", price: 140, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
       { name: "Special Puneri Sweet-Spicy Misal", description: "Authentic Pune style misal with pohe, matki, sample gravy, farsan & onion.", price: 130, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Pithla Bhakri & Thecha Thali", description: "Gram flour pithla served piping hot with freshly roasted jowar bhakri & green thecha.", price: 180, image: "/api/ai/dish-image?dish=Bhakri", popularity: 99, rating: 5.0 },
-      { name: "Special Bhakri Bhaji Thali", description: "Authentic roasted jowar bhakri with spicy vegetable bhaji, green thecha, onion & pickle.", price: 190, image: "/api/ai/dish-image?dish=Bhakri", popularity: 100, rating: 5.0 },
+      { name: "Pithla Bhakri & Thecha Thali", description: "Gram flour pithla served piping hot with freshly roasted jowar bhakri & green thecha.", price: 180, image: "/api/ai/dish-image?dish=Bhakri&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Special Bhakri Bhaji Thali", description: "Authentic roasted jowar bhakri with spicy vegetable bhaji, green thecha, onion & pickle.", price: 190, image: "/api/ai/dish-image?dish=Bhakri&v=v28", popularity: 100, rating: 5.0 },
       { name: "Crispy Bhajani Thalipeeth with White Butter", description: "Multi-grain savory spiced flatbread served with fresh homemade white makkhan.", price: 120, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 },
       { name: "Bharli Vangi (Stuffed Eggplant Curry)", description: "Baby eggplants slow-cooked in rich roasted peanut, coconut and sesame gravy.", price: 190, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.8 },
       { name: "Khandeshi Shev Bhaji with Pav", description: "Fiery spicy roasted red gravy served with thick crunchy ratlami shev.", price: 170, image: "/images/food/shev_bhaji.jpg", popularity: 96, rating: 4.8 },
@@ -3563,10 +4301,10 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     dishes: [
       { name: "Special Dum Mutton Biryani", description: "Aromatic Basmati rice slow cooked on dum with tender mutton chunks & saffron ghee.", price: 390, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
       { name: "Hyderabadi Chicken Dum Biryani", description: "Fragrant spiced long grain rice layered with succulent marinated chicken & mint.", price: 320, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0 },
-      { name: "Charcoal Smoky Tandoori Chicken (Full)", description: "Whole spring chicken marinated in Kashmiri red chilli yogurt and grilled in clay tandoor.", price: 420, image: "/api/ai/dish-image?dish=Tandoori%20Chicken", popularity: 98, rating: 4.9 },
+      { name: "Charcoal Smoky Tandoori Chicken (Full)", description: "Whole spring chicken marinated in Kashmiri red chilli yogurt and grilled in clay tandoor.", price: 420, image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28", popularity: 98, rating: 4.9 },
       { name: "Old Delhi Style Butter Chicken", description: "Tender roasted chicken tikka simmered in rich creamy tomato cashew makhani gravy.", price: 360, image: "/images/food/butter_chicken.jpg", popularity: 99, rating: 5.0 },
       { name: "Mutton Rogan Josh Kashmiri", description: "Slow-cooked Kashmiri tender mutton curry infused with ratanjot & fennel spices.", price: 410, image: "/images/food/mutton_curry.jpg", popularity: 97, rating: 4.9 },
-      { name: "Juicy Chicken Seekh Kebab (4 Pcs)", description: "Charcoal grilled spiced minced chicken skewers served with mint chutney.", price: 290, image: "/api/ai/dish-image?dish=Tandoori%20Chicken", popularity: 96, rating: 4.8 },
+      { name: "Juicy Chicken Seekh Kebab (4 Pcs)", description: "Charcoal grilled spiced minced chicken skewers served with mint chutney.", price: 290, image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28", popularity: 96, rating: 4.8 },
       { name: "Spicy Chicken Handi with Gravy", description: "Rustic country chicken cooked in traditional earthenware handi with whole spices.", price: 370, image: "/images/food/chicken_curry.jpg", popularity: 97, rating: 4.9 },
       { name: "Fluffy Butter Garlic Naan (2 Pcs)", description: "Leavened oven-baked flatbread glazed with crushed roasted garlic & pure butter.", price: 90, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
       { name: "Dal Makhani Overnight Simmered", description: "Black lentils and kidney beans slow simmered with butter and fresh cream.", price: 230, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 96, rating: 4.8 },
@@ -3602,7 +4340,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
       { name: "Dahi Papdi Chaat Supreme", description: "Crispy flour wafers layered with boiled chickpeas, spiced yogurt, sev & pomegranate.", price: 120, image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.8 },
       { name: "Double Butter Masala Pav", description: "Soft ladi pavs drenched in sizzling butter garlic bhaji gravy.", price: 110, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=600&auto=format&fit=crop&q=80", popularity: 96, rating: 4.8 },
       { name: "Ragda Pattice Platter", description: "Crispy golden potato patties drowned in hot white pea curry, chutney & sev.", price: 120, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.8 },
-      { name: "Royal Mango Kulfi Falooda", description: "Chilled rose vermicelli blend with sweet basil seeds, mango puree & malai kulfi.", price: 150, image: "https://images.unsplash.com/photo-1553787499-6f9133860278?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 }
+      { name: "Royal Mango Kulfi Falooda", description: "Chilled rose vermicelli blend with sweet basil seeds, mango puree & malai kulfi.", price: 150, image: "/api/ai/dish-image?dish=Royal%20Mango%20Kulfi%20Falooda&v=v28", popularity: 97, rating: 4.9 }
     ]
   },
 
@@ -3611,16 +4349,22 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Bar & Multi-Cuisine Restaurant",
     keywords: ['temptation', 'bar', 'permit room', 'lounge', 'beer', 'pub', 'club', 'dining bar', 'restobar', 'resto bar', 'brewery', 'barometer', 'hidden place', 'wine', 'liquor'],
     dishes: [
-      { name: "Special Tandoori Chicken Tikka (6 Pcs)", description: "Smoky boneless chicken chunks marinated in hung curd, ginger garlic & roasted spices.", price: 320, image: "/api/ai/dish-image?dish=Tandoori%20Chicken", popularity: 100, rating: 5.0 },
-      { name: "Famous Butter Chicken with Garlic Naan", description: "Charcoal grilled chicken in rich creamy tomato cashew gravy with hot garlic butter naan.", price: 360, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
-      { name: "Crispy Fish Koliwada Fry", description: "Fresh fish fillets coated in spicy gram flour batter, deep fried crisp with mint dip.", price: 380, image: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Crispy Chicken Lollipop Schezwan (6 Pcs)", description: "Crumb-fried juicy chicken wings tossed in fiery wok Schezwan sauce.", price: 290, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 4.9 },
-      { name: "Paneer Chilli Dry & Hakka Noodles", description: "Wok-fried cottage cheese cubes tossed with bell peppers, green chillies & noodles.", price: 270, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.8 },
-      { name: "Tandoori Chicken Platter (Half)", description: "Smoky bone-in roasted chicken seasoned with lemon, chaat masala & mint sauce.", price: 280, image: "/api/ai/dish-image?dish=Tandoori%20Chicken", popularity: 98, rating: 4.9 },
-      { name: "Mutton Sukka Fry with Bhakri", description: "Dry roasted tender mutton cooked with caramelized onions, coconut and black masala.", price: 410, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 },
-      { name: "Special Veg Pulao with Raita", description: "Long grain Basmati rice tossed with fresh garden vegetables, paneer & brown onions.", price: 210, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.8 },
-      { name: "Garlic Cheese Naan (2 Pcs)", description: "Fresh tandoori naan stuffed with mozzarella cheese and coated in garlic butter.", price: 120, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 },
-      { name: "Sizzling Brownie with Vanilla Ice Cream", description: "Warm chocolate walnut brownie on cast iron sizzler with dark fudge sauce.", price: 180, image: "https://images.unsplash.com/photo-1553787499-6f9133860278?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0 }
+      { name: "Special Tandoori Chicken Tikka (6 Pcs)", description: "Smoky boneless chicken chunks marinated in hung curd, ginger garlic & roasted spices.", price: 320, image: "/api/ai/dish-image?dish=Tandoori%20Chicken&v=v28", popularity: 100, rating: 5.0, category: "Starters & Snacks", is_veg: 0 },
+      { name: "Famous Butter Chicken with Garlic Naan", description: "Charcoal grilled chicken in rich creamy tomato cashew gravy with hot garlic butter naan.", price: 360, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0, category: "Main Course", is_veg: 0 },
+      { name: "Paneer Butter Masala Handi", description: "Fresh cottage cheese cubes simmered in velvety tomato butter gravy and aromatic kasuri methi.", price: 270, image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala&v=v28", popularity: 99, rating: 5.0, category: "Main Course", is_veg: 1 },
+      { name: "Crispy Fish Koliwada Fry", description: "Fresh fish fillets coated in spicy gram flour batter, deep fried crisp with mint dip.", price: 380, image: "/api/ai/dish-image?dish=Fish%20Fry&v=v28", popularity: 98, rating: 4.9, category: "Starters & Snacks", is_veg: 0 },
+      { name: "Crispy Chicken Lollipop Schezwan (6 Pcs)", description: "Crumb-fried juicy chicken wings tossed in fiery wok Schezwan sauce.", price: 290, image: "/api/ai/dish-image?dish=Chicken%20Lollipop&v=v28", popularity: 99, rating: 4.9, category: "Starters & Snacks", is_veg: 0 },
+      { name: "Tandoori Paneer Tikka Platter (6 Pcs)", description: "Smoky chargrilled cottage cheese with bell peppers, onions and mint dip.", price: 280, image: "/api/ai/dish-image?dish=Paneer%20Tikka&v=v28", popularity: 98, rating: 4.9, category: "Starters & Snacks", is_veg: 1 },
+      { name: "Dal Makhani Overnight Charcoal Simmered", description: "Slow simmered black lentils finished with fresh cream and butter.", price: 230, image: "/api/ai/dish-image?dish=Dal%20Makhani&v=v28", popularity: 97, rating: 4.9, category: "Main Course", is_veg: 1 },
+      { name: "Mutton Sukka Fry with Bhakri", description: "Dry roasted tender mutton cooked with caramelized onions, coconut and black masala.", price: 410, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9, category: "Main Course", is_veg: 0 },
+      { name: "Hyderabadi Chicken Dum Biryani", description: "Fragrant spiced long grain basmati rice layered with juicy chicken and saffron.", price: 340, image: "/api/ai/dish-image?dish=Chicken%20Biryani&v=v28", popularity: 99, rating: 5.0, category: "Rice & Biryani", is_veg: 0 },
+      { name: "Special Veg Pulao with Raita", description: "Long grain Basmati rice tossed with fresh garden vegetables, paneer & brown onions.", price: 210, image: "/api/ai/dish-image?dish=Veg%20Pulao&v=v28", popularity: 95, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Crispy Corn Salt and Pepper", description: "Crunchy sweet corn kernels tossed with crushed pepper, spring onions & green chillies.", price: 220, image: "/api/ai/dish-image?dish=Paneer%20Tikka&v=v28", popularity: 96, rating: 4.8, category: "Starters & Snacks", is_veg: 1 },
+      { name: "Butter Garlic Naan (2 Pcs)", description: "Clay oven baked leavened bread slathered with roasted garlic butter.", price: 110, image: "/api/ai/dish-image?dish=Garlic%20Naan&v=v28", popularity: 98, rating: 4.9, category: "Indian Breads", is_veg: 1 },
+      { name: "Paneer Chilli Dry & Hakka Noodles", description: "Wok-fried cottage cheese cubes tossed with bell peppers, green chillies & noodles.", price: 270, image: "/api/ai/dish-image?dish=Fried%20Rice&v=v28", popularity: 97, rating: 4.8, category: "Starters & Snacks", is_veg: 1 },
+      { name: "Fragrant Jeera Rice with Dal Tadka", description: "Cumin tempered Basmati rice with yellow lentil garlic tadka.", price: 190, image: "/api/ai/dish-image?dish=Jeera%20Rice&v=v28", popularity: 96, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Sizzling Brownie with Vanilla Ice Cream", description: "Warm chocolate walnut brownie on cast iron sizzler with dark fudge sauce.", price: 180, image: "/api/ai/dish-image?dish=Warm%20Sizzling%20Chocolate%20Brownie%20with%20Ice%20Cream&v=v28", popularity: 99, rating: 5.0, category: "Desserts & Drinks", is_veg: 1 },
+      { name: "Hot Gulab Jamun in Saffron Syrup (2 Pcs)", description: "Melt-in-mouth milk dumplings soaked in cardamom sugar syrup.", price: 90, image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28", popularity: 97, rating: 4.9, category: "Desserts & Drinks", is_veg: 1 }
     ]
   },
 
@@ -3630,10 +4374,10 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     keywords: ['chinese', 'noodle', 'noodles', 'momo', 'momos', 'wok', 'schezwan', 'manchurian', 'dragon', 'asian', 'dimsum', 'chopstick', 'fried rice', 'mainland'],
     dishes: [
       { name: "Special Triple Schezwan Fried Rice & Gravy", description: "Wok-tossed spicy rice and noodles topped with red Schezwan gravy & crispy noodles.", price: 260, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
-      { name: "Steamed Veg Momos (6 Pcs)", description: "Authentic steamed Himalayan dumplings served with fiery red spicy garlic chutney.", price: 140, image: "/api/ai/dish-image?dish=Momos", popularity: 100, rating: 5.0 },
-      { name: "Crispy Fried Cheese Momos (6 Pcs)", description: "Golden fried crunchy dumplings stuffed with melted mozzarella & sweet corn, served with mayo dip.", price: 170, image: "/api/ai/dish-image?dish=Momos", popularity: 99, rating: 5.0 },
-      { name: "Steamed Butter Garlic Momos (6 Pcs)", description: "Handcrafted steamed dumplings glazed in sizzling chili garlic butter sauce.", price: 180, image: "/api/ai/dish-image?dish=Momos", popularity: 99, rating: 5.0 },
-      { name: "Fiery Schezwan Gravy Momos", description: "Steamed momos wok-tossed in hot sizzling Schezwan red pepper gravy.", price: 190, image: "/api/ai/dish-image?dish=Momos", popularity: 98, rating: 4.9 },
+      { name: "Steamed Veg Momos (6 Pcs)", description: "Authentic steamed Himalayan dumplings served with fiery red spicy garlic chutney.", price: 140, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Crispy Fried Cheese Momos (6 Pcs)", description: "Golden fried crunchy dumplings stuffed with melted mozzarella & sweet corn, served with mayo dip.", price: 170, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Steamed Butter Garlic Momos (6 Pcs)", description: "Handcrafted steamed dumplings glazed in sizzling chili garlic butter sauce.", price: 180, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Fiery Schezwan Gravy Momos", description: "Steamed momos wok-tossed in hot sizzling Schezwan red pepper gravy.", price: 190, image: "/api/ai/dish-image?dish=Momos&v=v28", popularity: 98, rating: 4.9 },
       { name: "Fiery Dragon Chicken / Paneer Sizzler", description: "Crispy strips tossed with cashews, red peppers, and fiery hot sauce on sizzler plate.", price: 310, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 },
       { name: "Classic Veg Hakka Noodles", description: "Wok-tossed noodles with shredded cabbage, carrots, capsicum, soy & white pepper.", price: 190, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 96, rating: 4.8 },
       { name: "Chilli Garlic Fried Rice", description: "Aromatic jasmine rice stir-fried with burnt garlic, red chillies and scallions.", price: 210, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.8 },
@@ -3647,28 +4391,28 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Pizza & Italian Adda",
     keywords: ['pizza', 'pizzeria', 'pizzas', 'domino', 'pizza hut', 'ovenstory', 'la pinoz', 'mojo', 'pasta', 'italian', 'slice', 'crust'],
     dishes: [
-      { name: "Special Farmhouse 7-Cheese Burst Pizza", description: "Hand-stretched crust overflowing with mozzarella, cheddar, bell peppers, olives & corn.", price: 360, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
-      { name: "Fiery Peri Peri Paneer / Chicken Pizza", description: "Loaded with spiced peri peri chunks, red paprika, jalapenos & smoked cheese blend.", price: 340, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 4.9 },
-      { name: "Cheesy Garlic Breadsticks with Dip", description: "Buttered golden breadsticks stuffed with molten mozzarella & sweet corn kernels.", price: 170, image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Creamy White Sauce Alfredo Pasta", description: "Penne pasta tossed in rich parmesan garlic cream sauce with mushrooms & herbs.", price: 260, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.8 },
-      { name: "Spicy Red Arrabiata Pasta", description: "Al dente penne in fiery crushed tomato sauce with garlic, basil, olives & parmesan.", price: 240, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 96, rating: 4.8 },
-      { name: "Margherita Supreme with Fresh Basil", description: "San Marzano style tomato base with fresh mozzarella slices & basil leaves.", price: 290, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 },
-      { name: "Molten Choco Lava Cake", description: "Warm chocolate sponge cake with gooey flowing dark chocolate center.", price: 110, image: "https://images.unsplash.com/photo-1553787499-6f9133860278?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0 }
+      { name: "Special Farmhouse 7-Cheese Burst Pizza", description: "Hand-stretched crust overflowing with mozzarella, cheddar, bell peppers, olives & corn.", price: 360, image: "/api/ai/dish-image?dish=Farmhouse%20Pizza&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Fiery Peri Peri Paneer / Chicken Pizza", description: "Loaded with spiced peri peri chunks, red paprika, jalapenos & smoked cheese blend.", price: 340, image: "/api/ai/dish-image?dish=Paneer%20Pizza&v=v28", popularity: 99, rating: 4.9 },
+      { name: "Cheesy Garlic Breadsticks with Dip", description: "Buttered golden breadsticks stuffed with molten mozzarella & sweet corn kernels.", price: 170, image: "/api/ai/dish-image?dish=Garlic%20Bread&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Creamy White Sauce Alfredo Pasta", description: "Penne pasta tossed in rich parmesan garlic cream sauce with mushrooms & herbs.", price: 260, image: "/api/ai/dish-image?dish=White%20Sauce%20Pasta&v=v28", popularity: 97, rating: 4.8 },
+      { name: "Spicy Red Arrabiata Pasta", description: "Al dente penne in fiery crushed tomato sauce with garlic, basil, olives & parmesan.", price: 240, image: "/api/ai/dish-image?dish=Red%20Sauce%20Pasta&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Margherita Supreme with Fresh Basil", description: "San Marzano style tomato base with fresh mozzarella slices & basil leaves.", price: 290, image: "/api/ai/dish-image?dish=Margherita%20Pizza&v=v28", popularity: 97, rating: 4.9 },
+      { name: "Molten Choco Lava Cake", description: "Warm chocolate sponge cake with gooey flowing dark chocolate center.", price: 110, image: "/api/ai/dish-image?dish=Cake&v=v28", popularity: 99, rating: 5.0 }
     ]
   },
 
   // Burger & Fast Food
   {
     name: "Burger & Fast Food",
-    keywords: ['burger', 'mcdonald', 'burger king', 'kfc', 'wendy', 'wrap', 'fries', 'fast food', 'crunch', 'subway'],
+    keywords: ['burger', 'burgers', 'flippin', 'good flippin', 'smash burger', 'mcdonald', 'burger king', 'kfc', 'wendy', 'wrap', 'fries', 'fast food', 'crunch', 'subway', 'crispy chicken burger', 'whopper'],
     dishes: [
-      { name: "Special Double Patty Crispy Burger & Fries", description: "Toasted brioche bun with crispy spiced patty, melted cheese, lettuce & secret sauce.", price: 210, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
-      { name: "Fiery Peri Peri Crunch Bites Bucket", description: "Crumb-fried golden bites tossed in hot peri peri spice mix with cheese dip.", price: 180, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Cheese Loaded Peri Peri French Fries", description: "Crispy crinkle-cut golden fries smothered in warm cheese sauce & jalapenos.", price: 140, image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0 },
-      { name: "Crispy Paneer / Chicken Tikka Wrap", description: "Warm tortilla stuffed with smoky tikka cubes, crunchy onions & mint mayo.", price: 190, image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.8 },
-      { name: "Spicy Zinger Crunch Burger", description: "Extra crispy spiced whole fillet topped with fresh coleslaw and chipotle drizzle.", price: 230, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Golden Crispy Onion Rings (8 Pcs)", description: "Thick sweet onion slices batter-fried crisp served with garlic aioli.", price: 130, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.7 },
-      { name: "Thick Cold Chocolate Frappe", description: "Blended dark espresso, rich cocoa fudge and whipped dairy cream.", price: 160, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 }
+      { name: "Special Double Patty Crispy Burger & Fries", description: "Toasted brioche bun with crispy spiced patty, melted cheese, lettuce & secret sauce.", price: 210, image: "/api/ai/dish-image?dish=Veg%20Burger&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Fiery Peri Peri Crunch Bites Bucket", description: "Crumb-fried golden bites tossed in hot peri peri spice mix with cheese dip.", price: 180, image: "/api/ai/dish-image?dish=Nuggets&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Cheese Loaded Peri Peri French Fries", description: "Crispy crinkle-cut golden fries smothered in warm cheese sauce & jalapenos.", price: 140, image: "/api/ai/dish-image?dish=Peri%20Peri%20Fries&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Crispy Paneer / Chicken Tikka Wrap", description: "Warm tortilla stuffed with smoky tikka cubes, crunchy onions & mint mayo.", price: 190, image: "/api/ai/dish-image?dish=Paneer%20Wrap&v=v28", popularity: 97, rating: 4.8 },
+      { name: "Spicy Zinger Crunch Burger", description: "Extra crispy spiced whole fillet topped with fresh coleslaw and chipotle drizzle.", price: 230, image: "/api/ai/dish-image?dish=Crispy%20Chicken%20Burger&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Golden Crispy Onion Rings (8 Pcs)", description: "Thick sweet onion slices batter-fried crisp served with garlic aioli.", price: 130, image: "/api/ai/dish-image?dish=French%20Fries&v=v28", popularity: 95, rating: 4.7 },
+      { name: "Thick Cold Chocolate Frappe", description: "Blended dark espresso, rich cocoa fudge and whipped dairy cream.", price: 160, image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v28", popularity: 98, rating: 4.9 }
     ]
   },
 
@@ -3677,12 +4421,12 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Ice Cream, Mastani & Shakes",
     keywords: ['ice cream', 'dessert', 'falooda', 'kulfi', 'mastani', 'shake', 'waffle', 'bakery', 'cake', 'naturals', 'havmor', 'amul', 'sujata', 'giani', 'baskin'],
     dishes: [
-      { name: "Special Alphonso Mango Mastani", description: "Thick mango puree milkshake crowned with vanilla ice cream, dry fruits & cherries.", price: 170, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
-      { name: "Royal Kaju Sitaphal Mastani", description: "Real custard apple pulp blended thick with whole roasted cashews & malai scoop.", price: 190, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0 },
-      { name: "Royal Shahi Falooda with Rabdi", description: "Rose milk layered with vermicelli, basil seeds, rich malai kulfi & rabdi.", price: 180, image: "https://images.unsplash.com/photo-1553787499-6f9133860278?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Tender Coconut Natural Ice Cream", description: "Artisanal handcrafted natural ice cream packed with fresh malai coconut chunks.", price: 100, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Saffron Matka Kulfi on Stick", description: "Slow-reduced milk kulfi infused with Kashmiri saffron, pistachios & cardamom.", price: 80, image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=600&auto=format&fit=crop&q=80", popularity: 97, rating: 4.9 },
-      { name: "Nutella Belgian Waffle with Ice Cream", description: "Freshly ironed golden crisp waffle smothered in warm Nutella and choco chips.", price: 210, image: "https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0 }
+      { name: "Special Alphonso Mango Mastani", description: "Thick mango puree milkshake crowned with vanilla ice cream, dry fruits & cherries.", price: 170, image: "/images/food/mango_mastani.jpg", popularity: 100, rating: 5.0 },
+      { name: "Royal Kaju Sitaphal Mastani", description: "Real custard apple pulp blended thick with whole roasted cashews & malai scoop.", price: 190, image: "/images/food/sitaphal_mastani.jpg", popularity: 99, rating: 5.0 },
+      { name: "Royal Shahi Falooda with Rabdi", description: "Rose milk layered with vermicelli, basil seeds, rich malai kulfi & rabdi.", price: 180, image: "/images/food/falooda.jpg", popularity: 98, rating: 4.9 },
+      { name: "Tender Coconut Natural Ice Cream", description: "Artisanal handcrafted natural ice cream packed with fresh malai coconut chunks.", price: 100, image: "/images/food/tender_coconut_ice_cream.jpg", popularity: 98, rating: 4.9 },
+      { name: "Saffron Matka Kulfi on Stick", description: "Slow-reduced milk kulfi infused with Kashmiri saffron, pistachios & cardamom.", price: 80, image: "/images/food/kulfi.jpg", popularity: 97, rating: 4.9 },
+      { name: "Nutella Belgian Waffle with Ice Cream", description: "Freshly ironed golden crisp waffle smothered in warm Nutella and choco chips.", price: 210, image: "/images/food/vanilla_ice_cream.jpg", popularity: 99, rating: 5.0 }
     ]
   },
 
@@ -3692,7 +4436,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     keywords: [
       'swayampakghar', 'swayampak', 'swayam', 'khanawal', 'poli bhaji', 'poli', 'bhaji kendra',
       'boarding', 'bhojanalay', 'bhojanalaya', 'dining hall', 'shabree', 'sukanta', 'shreyas',
-      'durvankur', 'badshahi', 'poona boarding', 'aaswad', 'marathi', 'maharashtrian',
+      'durvankur', 'badshahi', 'poona boarding', 'poona guest house', 'poona guest', 'guest house', 'aaswad', 'marathi', 'maharashtrian',
       'puneri', 'kothimbir', 'alu vadi', 'aloo vadi', 'patra', 'puran poli', 'pithla', 'pitla', 'bhakri', 'varan bhat',
       'thecha', 'modak', 'zunka', 'bharli vangi', 'sathe', 'chapati'
     ],
@@ -3718,7 +4462,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     keywords: [
       'military', 'military hotel', 'maratha', 'kolhapuri', 'tambda', 'pandhra',
       'rassa', 'gavran', 'mutton thali', 'chicken thali', 'surve', 'hotel sandeep',
-      'jagadamb', 'dehati', 'hotel shivaji'
+      'jagadamb', 'jagdamb', 'dehati', 'hotel shivaji'
     ],
     dishes: [
       { name: "Special Kolhapuri Mutton Thali (Tambda & Pandhra Rassa)", description: "Fiery red rassa, rich white coconut broth, tender mutton sukka, 2 jowar bhakris & fragrant rice.", price: 380, image: "/images/food/mutton_thali.jpg", popularity: 100, rating: 5.0, category: "Thalis & Combos", is_veg: 0 },
@@ -3747,14 +4491,14 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Paratha House & North Indian Tandoor",
     keywords: ['paratha', 'paranthas', 'parantha', 'parathas', 'chaitanya', 'aloo paratha', 'paneer paratha', 'kulcha', 'amritsari', 'paratha house'],
     dishes: [
-      { name: "Special Aloo Cheese Stuffed Paratha with Makhan & Dahi", description: "Hot crispy layered paratha packed with spiced mashed potatoes, cheese, served with dollop of white butter, fresh dahi & pickle.", price: 160, image: "", popularity: 100, rating: 5.0 },
-      { name: "Paneer Pyaz Special Stuffed Paratha", description: "Crumbled malai paneer and caramelized onions stuffed inside golden roasted butter paratha with mint chutney.", price: 180, image: "", popularity: 99, rating: 5.0 },
-      { name: "Crispy Amritsari Kulcha with Chole", description: "Flaky clay oven baked potato onion kulcha served with spicy Amritsari chole & imli chutney.", price: 190, image: "", popularity: 98, rating: 4.9 },
-      { name: "Mix Veg Cheese Double Decker Paratha", description: "Loaded with spiced cauliflower, carrots, peas, potatoes and melted cheese blend.", price: 170, image: "", popularity: 97, rating: 4.9 },
-      { name: "Methi Paneer Tawa Paratha with Raita", description: "Fresh fenugreek leaves and seasoned paneer kneaded into multi-layered paratha.", price: 150, image: "", popularity: 96, rating: 4.8 },
-      { name: "Punjabi Sweet Lassi Malai Mar Ke", description: "Thick hand-churned sweet creamy yogurt drink in a tall glass crowned with fresh malai.", price: 90, image: "", popularity: 99, rating: 5.0 },
-      { name: "Dal Makhani Charcoal Simmered", description: "Black lentils slow-cooked overnight with churned butter and fresh cream.", price: 210, image: "", popularity: 96, rating: 4.8 },
-      { name: "Hot Gulab Jamun in Saffron Syrup (2 Pcs)", description: "Warm melt-in-mouth milk dumplings soaked in cardamom saffron syrup.", price: 80, image: "", popularity: 97, rating: 4.8 }
+      { name: "Special Aloo Cheese Stuffed Paratha with Makhan & Dahi", description: "Hot crispy layered paratha packed with spiced mashed potatoes, cheese, served with dollop of white butter, fresh dahi & pickle.", price: 160, image: "/api/ai/dish-image?dish=Aloo%20Paratha&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Paneer Pyaz Special Stuffed Paratha", description: "Crumbled malai paneer and caramelized onions stuffed inside golden roasted butter paratha with mint chutney.", price: 180, image: "/api/ai/dish-image?dish=Paneer%20Paratha&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Crispy Amritsari Kulcha with Chole", description: "Flaky clay oven baked potato onion kulcha served with spicy Amritsari chole & imli chutney.", price: 190, image: "/api/ai/dish-image?dish=Kulcha&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Mix Veg Cheese Double Decker Paratha", description: "Loaded with spiced cauliflower, carrots, peas, potatoes and melted cheese blend.", price: 170, image: "/api/ai/dish-image?dish=Aloo%20Paratha&v=v28", popularity: 97, rating: 4.9 },
+      { name: "Methi Paneer Tawa Paratha with Raita", description: "Fresh fenugreek leaves and seasoned paneer kneaded into multi-layered paratha.", price: 150, image: "/api/ai/dish-image?dish=Paneer%20Paratha&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Punjabi Sweet Lassi Malai Mar Ke", description: "Thick hand-churned sweet creamy yogurt drink in a tall glass crowned with fresh malai.", price: 90, image: "/api/ai/dish-image?dish=Lassi&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Dal Makhani Charcoal Simmered", description: "Black lentils slow-cooked overnight with churned butter and fresh cream.", price: 210, image: "/api/ai/dish-image?dish=Dal%20Makhani&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Hot Gulab Jamun in Saffron Syrup (2 Pcs)", description: "Warm melt-in-mouth milk dumplings soaked in cardamom saffron syrup.", price: 80, image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28", popularity: 97, rating: 4.8 }
     ]
   },
 
@@ -3763,31 +4507,130 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     name: "Rolls, Wraps & Shawarma",
     keywords: ['roll', 'rolls', 'wrap', 'wraps', 'shawarma', 'kathi roll', 'frankie', 'rolls mania', 'tibbs', 'roll point'],
     dishes: [
-      { name: "Special Paneer Tikka Kathi Roll", description: "Clay oven roasted spiced cottage cheese, crunchy onions, and mint chutney rolled in flaky paratha.", price: 150, image: "", popularity: 100, rating: 5.0 },
-      { name: "Classic Double Egg Chicken Roll", description: "Succulent shredded chicken kebab and double egg omelette rolled with tangy onions and sauces.", price: 180, image: "", popularity: 99, rating: 5.0 },
-      { name: "Crispy Aloo Masala Frankie Roll", description: "Spiced potato cutlet roll wrapped with crunchy onions, chaat masala and tangy coriander sauce.", price: 110, image: "", popularity: 98, rating: 4.9 },
-      { name: "Mutton Seekh Kebab Roll with Green Chutney", description: "Tender spiced minced mutton seekh skewers rolled in crisp buttery laccha paratha.", price: 210, image: "", popularity: 98, rating: 4.9 },
-      { name: "Cheese Melt Veg Frankie Roll", description: "Golden toasted roll stuffed with spiced mixed vegetables and molten cheese blend.", price: 140, image: "", popularity: 97, rating: 4.8 },
-      { name: "Loaded Peri Peri French Fries", description: "Crispy golden potato fries seasoned with fiery African peri peri spice rub.", price: 110, image: "", popularity: 96, rating: 4.8 },
-      { name: "Chilled Sweet Mango Lassi Glass", description: "Thick churned creamy yogurt shake blended with sweet Alphonso mango pulp.", price: 90, image: "", popularity: 97, rating: 4.9 }
+      { name: "Special Paneer Tikka Kathi Roll", description: "Clay oven roasted spiced cottage cheese, crunchy onions, and mint chutney rolled in flaky paratha.", price: 150, image: "/api/ai/dish-image?dish=Paneer%20Wrap&v=v28", popularity: 100, rating: 5.0 },
+      { name: "Classic Double Egg Chicken Roll", description: "Succulent shredded chicken kebab and double egg omelette rolled with tangy onions and sauces.", price: 180, image: "/api/ai/dish-image?dish=Chicken%20Wrap&v=v28", popularity: 99, rating: 5.0 },
+      { name: "Crispy Aloo Masala Frankie Roll", description: "Spiced potato cutlet roll wrapped with crunchy onions, chaat masala and tangy coriander sauce.", price: 110, image: "/api/ai/dish-image?dish=Indian%20Rolls&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Mutton Seekh Kebab Roll with Green Chutney", description: "Tender spiced minced mutton seekh skewers rolled in crisp buttery laccha paratha.", price: 210, image: "/api/ai/dish-image?dish=Mutton%20Seekh%20Kebab&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Cheese Melt Veg Frankie Roll", description: "Golden toasted roll stuffed with spiced mixed vegetables and molten cheese blend.", price: 140, image: "/api/ai/dish-image?dish=Paneer%20Wrap&v=v28", popularity: 97, rating: 4.8 },
+      { name: "Loaded Peri Peri French Fries", description: "Crispy golden potato fries seasoned with fiery African peri peri spice rub.", price: 110, image: "/api/ai/dish-image?dish=Peri%20Peri%20Fries&v=v28", popularity: 96, rating: 4.8 },
+      { name: "Chilled Sweet Mango Lassi Glass", description: "Thick churned creamy yogurt shake blended with sweet Alphonso mango pulp.", price: 90, image: "/api/ai/dish-image?dish=Mango%20Lassi&v=v28", popularity: 97, rating: 4.9 }
     ]
   },
 
   // Pure Veg, Dhaba & North Indian
   {
     name: "Pure Veg & Punjabi Dhaba",
-    keywords: ['pure veg', 'veg', 'shakahari', 'dhaba', 'punjabi', 'paneer', 'north indian', 'chole', 'paratha', 'dal makhani', 'bhoj', 'rasoi', 'thali'],
+    keywords: ['dhaba', 'punjabi', 'paneer', 'north indian', 'chole', 'dal makhani', 'bhoj', 'rasoi'],
     dishes: [
-      { name: "Special Paneer Butter Masala", description: "Fresh malai paneer cubes simmered in rich creamy butter tomato gravy & kasuri methi.", price: 260, image: "/api/ai/dish-image?dish=Special%20Paneer%20Butter%20Masala", popularity: 100, rating: 5.0 },
-      { name: "Dal Makhani Charcoal Simmered", description: "Black lentils slow-cooked overnight with churned white butter, cream & whole spices.", price: 230, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=800&auto=format&fit=crop&q=85", popularity: 99, rating: 4.9 },
-      { name: "Crispy Butter Garlic Naan (2 Pcs)", description: "Clay oven tandoor baked leavened bread slathered with roasted garlic butter.", price: 90, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=85", popularity: 99, rating: 4.9 },
-      { name: "Grand Shahi Maharaja Veg Thali", description: "Paneer dish, veg gravy, dal fry, jeera rice, 2 butter rotis, papad, raita & gulab jamun.", price: 340, image: "https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9 },
-      { name: "Royal Shahi Kaju Kari", description: "Whole roasted cashews slow cooked in rich white onion, cashew and saffron gravy.", price: 290, image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.8 },
-      { name: "Tandoori Paneer Tikka Platter (6 Pcs)", description: "Charcoal grilled cottage cheese chunks with bell peppers, onions & mint chutney.", price: 270, image: "/api/ai/dish-image?dish=Tandoori%20Paneer%20Tikka%20Platter", popularity: 97, rating: 4.8 },
-      { name: "Fragrant Jeera Rice & Yellow Dal Tadka", description: "Cumin tempered Basmati rice served with garlic and red chili tadka yellow dal.", price: 220, image: "https://images.unsplash.com/photo-1789991184293-224a84e41900?w=800&auto=format&fit=crop&q=85", popularity: 96, rating: 4.8 },
-      { name: "Spicy Veg Kolhapuri Gravy", description: "Mixed garden vegetables tossed in fiery red Kolhapuri chili paste and roasted coconut.", price: 240, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85", popularity: 96, rating: 4.8 },
-      { name: "Hot Gulab Jamun in Saffron Syrup (2 Pcs)", description: "Soft melt-in-mouth milk solids dumplings soaked in warm cardamom saffron syrup.", price: 80, image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=85", popularity: 98, rating: 4.9 },
-      { name: "Punjabi Sweet Lassi Malai Mar Ke", description: "Thick churned creamy yogurt shake served in a tall brass glass with malai layer.", price: 90, image: "/api/ai/dish-image?dish=Punjabi%20Sweet%20Lassi%20Malai%20Mar%20Ke", popularity: 97, rating: 4.8 }
+      { name: "Special Paneer Butter Masala", description: "Fresh malai paneer cubes simmered in rich creamy butter tomato gravy & kasuri methi.", price: 260, image: "/api/ai/dish-image?dish=Special%20Paneer%20Butter%20Masala&v=v28", popularity: 100, rating: 5.0, category: "Main Course", is_veg: 1 },
+      { name: "Dal Makhani Charcoal Simmered", description: "Black lentils slow-cooked overnight with churned white butter, cream & whole spices.", price: 230, image: "/api/ai/dish-image?dish=Dal%20Makhani&v=v28", popularity: 99, rating: 4.9, category: "Main Course", is_veg: 1 },
+      { name: "Crispy Butter Garlic Naan (2 Pcs)", description: "Clay oven tandoor baked leavened bread slathered with roasted garlic butter.", price: 90, image: "/api/ai/dish-image?dish=Garlic%20Naan&v=v28", popularity: 99, rating: 4.9, category: "Indian Breads", is_veg: 1 },
+      { name: "Special Veg Dum Biryani with Boondi Raita", description: "Long grain Basmati rice cooked with garden vegetables and aromatic spices in sealed clay pot.", price: 250, image: "/api/ai/dish-image?dish=Veg%20Biryani&v=v28", popularity: 98, rating: 4.9, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Mumbai Street Style Tawa Pulao", description: "Fragrant long grain rice tossed on giant tawa with fresh veggies, paneer cubes & pav bhaji butter spices.", price: 210, image: "/api/ai/dish-image?dish=Tawa%20Pulao&v=v28", popularity: 98, rating: 4.9, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Special Veg Pulao with Raita", description: "Fragrant basmati rice tossed with fresh green peas, carrot cubes, paneer and browned onions.", price: 210, image: "/api/ai/dish-image?dish=Veg%20Pulao&v=v28", popularity: 97, rating: 4.9, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Fresh Green Peas (Matar) Pulao", description: "Delicate long grain rice tempered with sweet green peas, whole cumin, cardamom and pure ghee.", price: 190, image: "/api/ai/dish-image?dish=Matar%20Pulao&v=v28", popularity: 96, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Shahi Kashmiri Pulao with Dry Fruits & Pomegranate", description: "Aromatic saffron-infused basmati rice tossed with roasted cashews, almonds, raisins, and fresh pomegranate.", price: 240, image: "/api/ai/dish-image?dish=Kashmiri%20Pulao&v=v28", popularity: 96, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Tandoori Paneer Tikka Pulao", description: "Smoky clay-oven roasted paneer tikka cubes folded into spiced biryani rice with caramelized onions.", price: 230, image: "/api/ai/dish-image?dish=Paneer%20Pulao&v=v28", popularity: 96, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Royal Shahi Paneer Handi", description: "Soft paneer cubes simmered in royal cashew, almond, milk and saffron gravy.", price: 280, image: "/api/ai/dish-image?dish=Shahi%20Paneer&v=v28", popularity: 98, rating: 4.9, category: "Main Course", is_veg: 1 },
+      { name: "Fresh Palak Paneer", description: "Cottage cheese cubes folded in spiced smooth spinach puree finished with garlic and cream.", price: 250, image: "/api/ai/dish-image?dish=Palak%20Paneer&v=v28", popularity: 97, rating: 4.8, category: "Main Course", is_veg: 1 },
+      { name: "Amritsari Chole Bhature Platter", description: "Spicy dark Amritsari chickpea curry served with two puffed golden bhaturas, pickled onions and chili.", price: 210, image: "/api/ai/dish-image?dish=Chole%20Bhature&v=v28", popularity: 99, rating: 5.0, category: "Main Course", is_veg: 1 },
+      { name: "Home-Style Rajma Chawal Combo", description: "Slow-simmered Kashmiri kidney bean curry served over steaming hot basmati rice with pickle.", price: 190, image: "/api/ai/dish-image?dish=Rajma%20Chawal&v=v28", popularity: 97, rating: 4.8, category: "Main Course", is_veg: 1 },
+      { name: "Fragrant Jeera Rice & Yellow Dal Tadka", description: "Cumin tempered Basmati rice served with garlic and red chili tadka yellow dal.", price: 220, image: "/api/ai/dish-image?dish=Jeera%20Rice&v=v28", popularity: 96, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Spicy Veg Kolhapuri Gravy", description: "Mixed garden vegetables tossed in fiery red Kolhapuri chili paste and roasted coconut.", price: 240, image: "/api/ai/dish-image?dish=Veg%20Kolhapuri&v=v28", popularity: 96, rating: 4.8, category: "Main Course", is_veg: 1 },
+      { name: "Fresh Mix Veg Makhani", description: "Seasonal garden vegetables cooked in mild buttery tomato gravy.", price: 230, image: "/api/ai/dish-image?dish=Mix%20Veg&v=v28", popularity: 95, rating: 4.7, category: "Main Course", is_veg: 1 },
+      { name: "Dhaba Style Aloo Gobi Masala", description: "Tender potatoes and spiced cauliflower florets tossed with ginger, cumin and fresh coriander.", price: 200, image: "/api/ai/dish-image?dish=Aloo%20Gobi&v=v28", popularity: 95, rating: 4.7, category: "Main Course", is_veg: 1 },
+      { name: "Smoky Baingan Bharta with Bhakri", description: "Charcoal roasted spiced eggplant mash sauteed with onions, green chillies and fresh jowar bhakri.", price: 210, image: "/api/ai/dish-image?dish=Baingan%20Bharta&v=v28", popularity: 96, rating: 4.8, category: "Main Course", is_veg: 1 },
+      { name: "Traditional Kadhi Pakora with Rice", description: "Tangy yogurt gram flour kadhi with crispy onion pakoras served with steamed basmati rice.", price: 190, image: "/api/ai/dish-image?dish=Kadhi%20Pakora&v=v28", popularity: 95, rating: 4.7, category: "Main Course", is_veg: 1 },
+      { name: "Tandoori Paneer Tikka Platter (6 Pcs)", description: "Charcoal grilled cottage cheese chunks with bell peppers, onions & mint chutney.", price: 270, image: "/api/ai/dish-image?dish=Tandoori%20Paneer%20Tikka%20Platter&v=v28", popularity: 97, rating: 4.8, category: "Starters & Snacks", is_veg: 1 },
+      { name: "Crispy Hara Bhara Kabab (6 Pcs)", description: "Spinach, green peas, and paneer patties shallow-fried crisp with mint coriander chutney.", price: 210, image: "/api/ai/dish-image?dish=Hara%20Bhara%20Kebab&v=v28", popularity: 96, rating: 4.8, category: "Starters & Snacks", is_veg: 1 },
+      { name: "Special Aloo Stuffed Paratha with Butter & Curd", description: "Layered flatbread packed with spiced mashed potatoes, fresh white butter, dahi & pickle.", price: 160, image: "/api/ai/dish-image?dish=Aloo%20Paratha&v=v28", popularity: 97, rating: 4.8, category: "Indian Breads", is_veg: 1 },
+      { name: "Paneer Pyaz Special Paratha", description: "Crumbled fresh paneer and caramelized onions stuffed inside golden butter paratha.", price: 180, image: "/api/ai/dish-image?dish=Paneer%20Paratha&v=v28", popularity: 96, rating: 4.8, category: "Indian Breads", is_veg: 1 },
+      { name: "Amritsari Stuffed Kulcha", description: "Clay oven baked potato onion kulcha brushed with desi ghee served with chole & tamarind chutney.", price: 170, image: "/api/ai/dish-image?dish=Kulcha&v=v28", popularity: 97, rating: 4.8, category: "Indian Breads", is_veg: 1 },
+      { name: "Butter Tandoori Roti (2 Pcs)", description: "Whole wheat clay oven baked roti brushed with pure melted butter.", price: 50, image: "/api/ai/dish-image?dish=Butter%20Naan&v=v28", popularity: 97, rating: 4.8, category: "Indian Breads", is_veg: 1 },
+      { name: "Creamy Saffron Rasmalai (2 Pcs)", description: "Soft melt-in-mouth cottage cheese patties soaked in saffron and cardamom scented milk.", price: 110, image: "/api/ai/dish-image?dish=Rasmalai&v=v28", popularity: 98, rating: 4.9, category: "Desserts & Drinks", is_veg: 1 },
+      { name: "Hot Gulab Jamun in Saffron Syrup (2 Pcs)", description: "Soft melt-in-mouth milk solids dumplings soaked in warm cardamom saffron syrup.", price: 80, image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28", popularity: 98, rating: 4.9, category: "Desserts & Drinks", is_veg: 1 },
+      { name: "Garma Garam Gajar Ka Halwa with Khoya", description: "Slow-cooked grated red carrots simmered in whole milk, mawa, pure ghee, and roasted cashews.", price: 120, image: "/api/ai/dish-image?dish=Gajar%20Halwa&v=v28", popularity: 98, rating: 4.9, category: "Desserts & Drinks", is_veg: 1 },
+      { name: "Punjabi Sweet Lassi Malai Mar Ke", description: "Thick churned creamy yogurt shake served in a tall brass glass with malai layer.", price: 90, image: "/api/ai/dish-image?dish=Punjabi%20Sweet%20Lassi%20Malai%20Mar%20Ke&v=v28", popularity: 97, rating: 4.8, category: "Desserts & Drinks", is_veg: 1 }
+    ]
+  },
+
+  // Mumbai Street Food, Pav Bhaji & Tawa Pulao
+  {
+    name: "Mumbai Street Food, Pav Bhaji & Tawa Pulao",
+    keywords: ['pav bhaji', 'tawa pulao', 'bhel', 'chaat', 'pani puri', 'sev puri', 'dahi puri', 'dabeli', 'ragda pattice', 'vada pav', 'samosa', 'kachori', 'relax', 'girija', 'sardar', 'honest'],
+    dishes: [
+      { name: "Mumbai Street Style Tawa Pulao", description: "Fragrant long grain rice tossed on giant tawa with fresh bell peppers, green peas, paneer cubes, tomatoes & spicy pav bhaji butter spices.", price: 210, image: "/api/ai/dish-image?dish=Tawa%20Pulao&v=v28", popularity: 100, rating: 5.0, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Special Amul Butter Pav Bhaji", description: "Rich spiced mashed vegetable bhaji drenched in pure Amul butter, served with sizzling butter-toasted soft ladi pavs.", price: 160, image: "/api/ai/dish-image?dish=Pav%20Bhaji&v=v28", popularity: 100, rating: 5.0, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Cheese Loaded Masala Pav Bhaji", description: "Topped with a mountain of grated mozzarella and processed cheese, served with two buttery pavs.", price: 190, image: "/api/ai/dish-image?dish=Pav%20Bhaji&v=v28", popularity: 99, rating: 5.0, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Legendary Mumbai Vada Pav (2 Pcs)", description: "Golden spiced potato dumpling enclosed in soft ladi pav with red garlic chutney & green chili.", price: 50, image: "/api/ai/dish-image?dish=Vada%20Pav&v=v28", popularity: 100, rating: 5.0, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Pani Puri / Golgappa Platter (6 Pcs)", description: "Crispy hollow puris served with mint-coriander spiced water, sweet date chutney & warm ragda.", price: 60, image: "/api/ai/dish-image?dish=Pani%20Puri&v=v28", popularity: 100, rating: 5.0, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Special Sev Puri Chaat", description: "Flat crispy papdis loaded with diced potatoes, onions, trio of chutneys and a mountain of crisp nylon sev.", price: 90, image: "/api/ai/dish-image?dish=Sev%20Puri&v=v28", popularity: 99, rating: 4.9, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Dahi Puri Supreme", description: "Puffed puris filled with potato mash, sweet chilled curd, tamarind chutney, roasted cumin and sev.", price: 110, image: "/api/ai/dish-image?dish=Dahi%20Puri&v=v28", popularity: 99, rating: 4.9, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Crunchy Bhel Puri", description: "Puffed rice tossed with onions, tomatoes, raw mango, spiced chutneys and crushed papdi.", price: 80, image: "/api/ai/dish-image?dish=Bhel%20Puri&v=v28", popularity: 98, rating: 4.8, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Kutchi Dabeli (2 Pcs)", description: "Spiced potato mix tucked inside toasted pav with roasted peanuts, sweet pomegranate & sev.", price: 70, image: "/api/ai/dish-image?dish=Dabeli&v=v28", popularity: 97, rating: 4.8, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Ragda Pattice Platter", description: "Crisp potato patties smothered in steaming hot white pea ragda curry, chutneys and chopped coriander.", price: 120, image: "/api/ai/dish-image?dish=Ragda%20Pattice&v=v28", popularity: 98, rating: 4.8, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Crispy Samosa Plate with Chutney (2 Pcs)", description: "Golden triangular pastries filled with spicy potatoes, peas and cashews.", price: 60, image: "/api/ai/dish-image?dish=Samosa&v=v28", popularity: 98, rating: 4.9, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Moong Dal Khasta Kachori (2 Pcs)", description: "Flaky deep-fried puffed puris packed with spiced yellow lentil stuffing & dry spices.", price: 70, image: "/api/ai/dish-image?dish=Kachori&v=v28", popularity: 96, rating: 4.8, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Crispy Aloo Tikki Chaat", description: "Golden shallow-fried potato cutlets served with sweet curd, mint chutney & pomegranate seeds.", price: 110, image: "/api/ai/dish-image?dish=Aloo%20Tikki&v=v28", popularity: 97, rating: 4.8, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Crispy Kanda Bhajji (Onion Pakoda)", description: "Thin sliced onions coated with carom-seed spiced gram flour and fried super crunchy.", price: 80, image: "/api/ai/dish-image?dish=Kanda%20Bhaji&v=v28", popularity: 98, rating: 4.9, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Special Paneer Tikka Kathi Roll", description: "Clay oven roasted spiced cottage cheese, crunchy onions, and mint chutney rolled in flaky paratha.", price: 150, image: "/api/ai/dish-image?dish=Paneer%20Roll&v=v28", popularity: 98, rating: 4.9, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Classic Bombay Veg Toast Sandwich", description: "Thin-sliced potato, cucumber, tomato & onion with mint chutney, sandwich masala & butter.", price: 110, image: "/api/ai/dish-image?dish=Veg%20Sandwich&v=v28", popularity: 98, rating: 4.9, category: "Snacks & Starters", is_veg: 1 },
+      { name: "Special Veg Pulao with Raita", description: "Fragrant basmati rice tossed with fresh green peas, carrot cubes, paneer and browned onions.", price: 210, image: "/api/ai/dish-image?dish=Veg%20Pulao&v=v28", popularity: 97, rating: 4.9, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Fresh Green Peas (Matar) Pulao", description: "Delicate long-grain rice tempered with sweet green peas, whole cumin, cardamom and pure ghee.", price: 190, image: "/api/ai/dish-image?dish=Matar%20Pulao&v=v28", popularity: 96, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Royal Shahi Falooda with Rabdi & Kulfi", description: "Rose milk layered with vermicelli, sweet basil seeds, malai kulfi slice and creamy rabdi.", price: 160, image: "/api/ai/dish-image?dish=Falooda&v=v28", popularity: 99, rating: 5.0, category: "Desserts & Drinks", is_veg: 1 },
+      { name: "Chilled Sweet Mango Lassi", description: "Thick hand-churned yogurt smoothie blended with ripe mango pulp and crushed pistachios.", price: 90, image: "/api/ai/dish-image?dish=Mango%20Lassi&v=v28", popularity: 97, rating: 4.9, category: "Desserts & Drinks", is_veg: 1 }
+    ]
+  },
+
+  // Royal North Indian, Biryani & Mughlai Veg
+  {
+    name: "Royal North Indian, Biryani & Mughlai Veg",
+    keywords: ['royal veg', 'shahi', 'biryani veg', 'mughlai veg', 'veg dum biryani', 'kashmiri pulao', 'kaju kari'],
+    dishes: [
+      { name: "Special Veg Dum Biryani with Boondi Raita", description: "Long grain Basmati rice cooked with garden vegetables and aromatic spices in sealed clay pot.", price: 250, image: "/api/ai/dish-image?dish=Veg%20Biryani&v=v28", popularity: 100, rating: 5.0, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Shahi Kashmiri Pulao with Dry Fruits & Pomegranate", description: "Aromatic saffron-infused basmati rice tossed with roasted cashews, almonds, raisins, and fresh pomegranate.", price: 240, image: "/api/ai/dish-image?dish=Kashmiri%20Pulao&v=v28", popularity: 99, rating: 5.0, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Tandoori Paneer Tikka Biryani", description: "Smoky tandoori paneer tikka layered with saffron basmati rice and caramelized mint onions.", price: 270, image: "/api/ai/dish-image?dish=Paneer%20Biryani&v=v28", popularity: 98, rating: 4.9, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Fresh Mushroom Dum Biryani", description: "Earthy button mushrooms marinated in aromatic yogurt spices and slow-cooked with long grain rice.", price: 260, image: "/api/ai/dish-image?dish=Mushroom%20Biryani&v=v28", popularity: 97, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Mumbai Street Style Tawa Pulao", description: "Spicy basmati rice tossed with bell peppers, green peas, tomatoes and butter pav bhaji masala.", price: 210, image: "/api/ai/dish-image?dish=Tawa%20Pulao&v=v28", popularity: 98, rating: 4.9, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Special Veg Pulao with Raita", description: "Fragrant basmati rice tossed with fresh green peas, carrot cubes, paneer and browned onions.", price: 210, image: "/api/ai/dish-image?dish=Veg%20Pulao&v=v28", popularity: 97, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Royal Shahi Paneer Handi", description: "Soft malai paneer simmered in rich creamy white cashew and saffron gravy.", price: 280, image: "/api/ai/dish-image?dish=Shahi%20Paneer&v=v28", popularity: 99, rating: 5.0, category: "Main Course", is_veg: 1 },
+      { name: "Special Paneer Butter Masala", description: "Fresh cottage cheese in velvet tomato butter gravy and aromatic kasuri methi.", price: 260, image: "/api/ai/dish-image?dish=Paneer%20Butter%20Masala&v=v28", popularity: 99, rating: 4.9, category: "Main Course", is_veg: 1 },
+      { name: "Dal Makhani Overnight Charcoal Simmered", description: "Whole black lentils slow simmered for 18 hours with pure churned butter and cream.", price: 230, image: "/api/ai/dish-image?dish=Dal%20Makhani&v=v28", popularity: 98, rating: 4.9, category: "Main Course", is_veg: 1 },
+      { name: "Tandoori Paneer Tikka Platter (6 Pcs)", description: "Smoky chargrilled cottage cheese with bell peppers, onions and mint dip.", price: 270, image: "/api/ai/dish-image?dish=Paneer%20Tikka&v=v28", popularity: 98, rating: 4.9, category: "Starters & Snacks", is_veg: 1 },
+      { name: "Crispy Butter Garlic Naan (2 Pcs)", description: "Clay oven baked leavened bread slathered with roasted garlic butter.", price: 90, image: "/api/ai/dish-image?dish=Garlic%20Naan&v=v28", popularity: 98, rating: 4.9, category: "Indian Breads", is_veg: 1 },
+      { name: "Fragrant Jeera Rice & Yellow Dal Tadka", description: "Cumin tempered Basmati rice served with garlic and red chili tadka yellow dal.", price: 220, image: "/api/ai/dish-image?dish=Jeera%20Rice&v=v28", popularity: 96, rating: 4.8, category: "Rice & Biryani", is_veg: 1 },
+      { name: "Creamy Saffron Rasmalai (2 Pcs)", description: "Soft melt-in-mouth cottage cheese patties soaked in saffron and cardamom scented milk.", price: 110, image: "/api/ai/dish-image?dish=Rasmalai&v=v28", popularity: 98, rating: 4.9, category: "Desserts & Drinks", is_veg: 1 },
+      { name: "Warm Gulab Jamun in Saffron Syrup (2 Pcs)", description: "Warm melt-in-mouth milk dumplings soaked in cardamom saffron syrup.", price: 80, image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28", popularity: 98, rating: 4.9, category: "Desserts & Drinks", is_veg: 1 },
+      { name: "Royal Kaju Katli (4 Pcs)", description: "Diamond cut silver-foiled luxury sweet made with premium pulverized cashews and sugar.", price: 120, image: "/api/ai/dish-image?dish=Kaju%20Katli&v=v28", popularity: 98, rating: 4.9, category: "Desserts & Drinks", is_veg: 1 }
+    ]
+  },
+
+  // Healthy Food, Salads & Breakfast
+  {
+    name: "Healthy Food, Salads & Breakfast",
+    keywords: ['healthy', 'salad', 'diet', 'fit', 'quinoa', 'sprouts', 'buddha bowl', 'protein bowl', 'breakfast', 'brunch', 'oats', 'smoothie bowl'],
+    dishes: [
+      { name: "Crisp Classic Caesar Salad with Croutons", description: "Crisp romaine lettuce tossed in creamy parmesan garlic dressing with crunchy herb croutons.", price: 220, image: "/api/ai/dish-image?dish=Caesar%20Salad&v=v28", popularity: 100, rating: 5.0, category: "Salads & Healthy Food", is_veg: 1 },
+      { name: "Mediterranean Greek Salad with Feta", description: "Vine-ripened tomatoes, cucumbers, bell peppers, Kalamata olives, oregano, and crumbled feta cheese.", price: 230, image: "/api/ai/dish-image?dish=Greek%20Salad&v=v28", popularity: 99, rating: 5.0, category: "Salads & Healthy Food", is_veg: 1 },
+      { name: "Fresh Garden Green Salad with Lemon", description: "Crisp cucumber rounds, carrots, juicy tomatoes, radish, and fresh lemon wedges.", price: 140, image: "/api/ai/dish-image?dish=Garden%20Salad&v=v28", popularity: 96, rating: 4.8, category: "Salads & Healthy Food", is_veg: 1 },
+      { name: "Sprouted Moong & Chana Salad with Chaat Masala", description: "Steamed sprouted beans tossed with diced tomatoes, onions, green chillies, lemon and chaat spices.", price: 150, image: "/api/ai/dish-image?dish=Sprouts%20Salad&v=v28", popularity: 97, rating: 4.8, category: "Salads & Healthy Food", is_veg: 1 },
+      { name: "Fresh Seasonal Cut Fruit Bowl", description: "Handpicked fresh seasonal papaya, pineapple, crisp apples, watermelon, and pomegranate seeds.", price: 160, image: "/api/ai/dish-image?dish=Fruit%20Bowl&v=v28", popularity: 98, rating: 4.9, category: "Salads & Healthy Food", is_veg: 1 },
+      { name: "Wholesome Quinoa Buddha Bowl", description: "Fluffy cooked organic quinoa paired with roasted sweet potatoes, edamame, avocado, and tahini drizzle.", price: 280, image: "/api/ai/dish-image?dish=Buddha%20Bowl&v=v28", popularity: 98, rating: 4.9, category: "Salads & Healthy Food", is_veg: 1 },
+      { name: "Tandoori Paneer & Pepper Salad", description: "Warm chargrilled paneer cubes tossed over fresh rocket leaves and lemon olive oil dressing.", price: 240, image: "/api/ai/dish-image?dish=Paneer%20Salad&v=v28", popularity: 97, rating: 4.8, category: "Salads & Healthy Food", is_veg: 1 },
+      { name: "Acai Berry Smoothie Bowl with Seeds & Nuts", description: "Thick antioxidant-rich berry puree topped with chia seeds, pumpkin seeds, granola, and fresh banana slices.", price: 260, image: "/api/ai/dish-image?dish=Smoothie%20Bowl&v=v28", popularity: 99, rating: 5.0, category: "Salads & Healthy Food", is_veg: 1 },
+      { name: "Puneri Kanda Poha Plate", description: "Fluffy flattened rice tempered with mustard seeds, turmeric, peanuts, and freshly grated coconut.", price: 60, image: "/api/ai/dish-image?dish=Poha&v=v28", popularity: 98, rating: 4.9, category: "Breakfast & Brunch", is_veg: 1 },
+      { name: "Savory Semolina Upma", description: "Roasted semolina tempered with mustard seeds, curry leaves, ginger, green chillies & roasted cashews.", price: 70, image: "/api/ai/dish-image?dish=Upma&v=v28", popularity: 96, rating: 4.8, category: "Breakfast & Brunch", is_veg: 1 },
+      { name: "Street Style Bread Omelette", description: "Two-egg masala omelette wrapped inside golden butter-toasted bread slices with coriander chutney.", price: 90, image: "/api/ai/dish-image?dish=Bread%20Omelette&v=v28", popularity: 98, rating: 4.9, category: "Breakfast & Brunch", is_veg: 0 },
+      { name: "Double Cheese Omelette with Toast", description: "Fluffy three-egg omelette overflowing with melted cheddar and mozzarella cheese served with toast.", price: 140, image: "/api/ai/dish-image?dish=Cheese%20Omelette&v=v28", popularity: 98, rating: 4.9, category: "Breakfast & Brunch", is_veg: 0 },
+      { name: "Fluffy Buttery Scrambled Eggs", description: "Slow-cooked creamy scrambled eggs seasoned with cracked black pepper and chives served with toast.", price: 120, image: "/api/ai/dish-image?dish=Scrambled%20Eggs&v=v28", popularity: 96, rating: 4.8, category: "Breakfast & Brunch", is_veg: 0 },
+      { name: "Boiled Eggs with Black Pepper (2 Pcs)", description: "Farm-fresh hard-boiled eggs served halved with crushed peppercorns and pink Himalayan salt.", price: 50, image: "/api/ai/dish-image?dish=Boiled%20Eggs&v=v28", popularity: 95, rating: 4.7, category: "Breakfast & Brunch", is_veg: 0 },
+      { name: "Fluffy American Pancakes with Maple Syrup", description: "Stack of three golden buttermilk pancakes served with melted butter and pure maple syrup.", price: 210, image: "/api/ai/dish-image?dish=Pancakes&v=v28", popularity: 98, rating: 4.9, category: "Breakfast & Brunch", is_veg: 1 },
+      { name: "Nutella Belgian Waffles", description: "Freshly ironed golden crisp waffle smothered in warm Nutella and choco chips.", price: 210, image: "/api/ai/dish-image?dish=Waffles&v=v28", popularity: 99, rating: 5.0, category: "Breakfast & Brunch", is_veg: 1 },
+      { name: "Cinnamon Brioche French Toast", description: "Thick brioche bread dipped in spiced egg custard and pan-toasted golden with honey drizzle.", price: 190, image: "/api/ai/dish-image?dish=French%20Toast&v=v28", popularity: 97, rating: 4.8, category: "Breakfast & Brunch", is_veg: 1 },
+      { name: "Creamy Oatmeal Porridge with Nuts & Honey", description: "Warm rolled oats cooked in milk topped with toasted almonds, walnuts, chia seeds, and raw honey.", price: 140, image: "/api/ai/dish-image?dish=Oats&v=v28", popularity: 96, rating: 4.8, category: "Breakfast & Brunch", is_veg: 1 },
+      { name: "Fresh Berry Yogurt Granola Bowl", description: "Greek yogurt layered with crunchy artisanal honey granola and fresh seasonal berries.", price: 180, image: "/api/ai/dish-image?dish=Granola%20Bowl&v=v28", popularity: 98, rating: 4.9, category: "Breakfast & Brunch", is_veg: 1 },
+      { name: "Soothing Green Tea with Mint", description: "Whole leaf antioxidant-rich green tea brewed with fresh garden mint leaves.", price: 50, image: "/api/ai/dish-image?dish=Green%20Tea&v=v28", popularity: 95, rating: 4.7, category: "Tea & Coffee", is_veg: 1 },
+      { name: "Fresh Lemon Honey Tea", description: "Hot water infused with pure clover honey, fresh lemon juice and sliced ginger.", price: 50, image: "/api/ai/dish-image?dish=Lemon%20Tea&v=v28", popularity: 95, rating: 4.7, category: "Tea & Coffee", is_veg: 1 }
     ]
   }
 ];
@@ -3795,7 +4638,6 @@ export const CUISINE_MENUS: CuisineProfile[] = [
 // Helper to extract a clean prefix name from any restaurant string
 function getCleanSpotBrandName(rawName: string): string {
   if (!rawName) return 'Special';
-  // Remove common words like Hotel, Restaurant, Cafe, Stall, Dhaba, etc.
   const clean = rawName
     .replace(/\b(hotel|restaurant|cafe|dhaba|stall|point|corner|center|outlet|bhojanalaya|refreshment|bhandar|the|famous)\b/gi, '')
     .trim();
@@ -3837,7 +4679,7 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     }
   }
 
-  // 3. Find the BEST MATCHING CUISINE PROFILE (complement if collectedDishes < 25)
+  // 2. Profile Selection based on authentic keywords
   let matchedProfile = CUISINE_MENUS[0];
   let maxScore = 0;
 
@@ -3863,102 +4705,87 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     }
   }
 
-  // If no specific profile matched with positive score, use smart semantic heuristics
-  if (maxScore === 0) {
-    const isNonVeg = restNameLower.includes('non-veg') ||
-      restNameLower.includes('non veg') ||
-      restNameLower.includes('nonveg') ||
-      restNameLower.includes('mutton') ||
-      restNameLower.includes('chicken') ||
-      restNameLower.includes('meat') ||
-      restNameLower.includes('fish') ||
-      restNameLower.includes('rassa') ||
-      restNameLower.includes('seafood') ||
-      restNameLower.includes('military');
+  // 3. Fallback Heuristics & Deterministic Variety
+  const isStrictVeg = isPureVegRestaurantName(restNameLower) ||
+    restNameLower.includes('pure veg') ||
+    (restNameLower.includes('veg') && !restNameLower.includes('non')) ||
+    restNameLower.includes('bhojanalay') ||
+    restNameLower.includes('bhojanalaya') ||
+    restNameLower.includes('shakahari') ||
+    restNameLower.includes('swayampak') ||
+    restNameLower.includes('bhavan') ||
+    restNameLower.includes('udupi') ||
+    restNameLower.includes('dosa') ||
+    restNameLower.includes('idli') ||
+    restNameLower.includes('mithai') ||
+    restNameLower.includes('sweets') ||
+    restNameLower.includes('jain') ||
+    restaurant.is_veg === 1;
 
-    const isVegOnly = !isNonVeg && (
-      restNameLower.includes('pure veg') ||
-      (restNameLower.includes('veg') && !restNameLower.includes('non')) ||
-      restaurant.is_veg === 1
-    );
+  const isNonVeg = !isStrictVeg && (restaurant.is_veg === 0 ||
+    restNameLower.includes('non-veg') ||
+    restNameLower.includes('non veg') ||
+    restNameLower.includes('nonveg') ||
+    restNameLower.includes('mutton') ||
+    restNameLower.includes('chicken') ||
+    restNameLower.includes('meat') ||
+    restNameLower.includes('fish') ||
+    restNameLower.includes('rassa') ||
+    restNameLower.includes('seafood') ||
+    restNameLower.includes('kebab') ||
+    restNameLower.includes('biryani') ||
+    restNameLower.includes('military'));
 
-    if (restNameLower.includes('fish') || restNameLower.includes('seafood') || restNameLower.includes('surmai') || restNameLower.includes('malvan') || restNameLower.includes('pomfret') || restNameLower.includes('prawn')) {
-      const sProfile = CUISINE_MENUS.find(p => p.name.includes('Seafood') || p.name.includes('Fish'));
-      if (sProfile) matchedProfile = sProfile;
-    } else if (restNameLower.includes('swayampak') || restNameLower.includes('khanawal') || restNameLower.includes('marathi') || restNameLower.includes('boarding') || restNameLower.includes('thali') || restNameLower.includes('ganesh') || restNameLower.includes('jay') || restNameLower.includes('shree') || restNameLower.includes('swami') || restNameLower.includes('samarth')) {
-      const mProfile = CUISINE_MENUS.find(p => p.name.includes('Swayampakghar') || p.name.includes('Maharashtrian'));
-      if (mProfile) matchedProfile = mProfile;
-    } else if (restNameLower.includes('military') || restNameLower.includes('gavran') || restNameLower.includes('sandeep') || restNameLower.includes('surve') || restNameLower.includes('maratha')) {
-      const milProfile = CUISINE_MENUS.find(p => p.name.includes('Military'));
-      if (milProfile) matchedProfile = milProfile;
-    } else if (restNameLower.includes('temptation') || restNameLower.includes('permit room') || restNameLower.includes('dining bar') || (isNonVeg && (restNameLower.includes('bar') || restNameLower.includes('pub') || restNameLower.includes('lounge') || restNameLower.includes('brewery')))) {
-      const barProfile = CUISINE_MENUS.find(p => p.name.includes('Multi-Cuisine') || p.name.includes('Bar'));
-      if (barProfile) matchedProfile = barProfile;
-    } else if (isNonVeg || restNameLower.includes('biryani') || restNameLower.includes('kebab') || restNameLower.includes('darbar') || restNameLower.includes('mughlai') || restNameLower.includes('handi')) {
-      const bProfile = CUISINE_MENUS.find(p => p.name.includes('Biryani'));
-      if (bProfile) matchedProfile = bProfile;
-    } else if (restNameLower.includes('roll') || restNameLower.includes('shawarma') || restNameLower.includes('wrap') || restNameLower.includes('frankie')) {
-      const rProfile = CUISINE_MENUS.find(p => p.name.includes('Rolls'));
-      if (rProfile) matchedProfile = rProfile;
-    } else if (restNameLower.includes('paratha') || restNameLower.includes('parantha')) {
-      const paProfile = CUISINE_MENUS.find(p => p.name.includes('Paratha'));
-      if (paProfile) matchedProfile = paProfile;
-    } else if (restNameLower.includes('dosa') || restNameLower.includes('idli') || restNameLower.includes('udupi') || restNameLower.includes('south') || restNameLower.includes('tiffin') || restNameLower.includes('sagar') || restNameLower.includes('bhavan') || restNameLower.includes('sai')) {
-      const sProfile = CUISINE_MENUS.find(p => p.name.includes('South Indian'));
-      if (sProfile) matchedProfile = sProfile;
-    } else if (restNameLower.includes('misal') || restNameLower.includes('katta') || restNameLower.includes('bhel') || restNameLower.includes('chaat') || restNameLower.includes('pani puri') || restNameLower.includes('vadapav') || restNameLower.includes('vada pav') || restNameLower.includes('snack')) {
-      const chProfile = CUISINE_MENUS.find(p => p.name.includes('Chaat') || p.name.includes('Misal') || p.name.includes('Pav Bhaji'));
-      if (chProfile) matchedProfile = chProfile;
-    } else if (restNameLower.includes('cafe') || restNameLower.includes('coffee') || restNameLower.includes('tea') || restNameLower.includes('bistro') || restNameLower.includes('roastery')) {
-      const cProfile = CUISINE_MENUS.find(p => p.name.includes('Cafe'));
-      if (cProfile) matchedProfile = cProfile;
-    } else if (restNameLower.includes('sweet') || restNameLower.includes('mithai') || restNameLower.includes('halwai') || restNameLower.includes('farsan') || restNameLower.includes('bhandar') || restNameLower.includes('kachori') || restNameLower.includes('jalebi')) {
-      const swProfile = CUISINE_MENUS.find(p => p.name.includes('Kachori') || p.name.includes('Sweets'));
-      if (swProfile) matchedProfile = swProfile;
-    } else if (restNameLower.includes('pizza') || restNameLower.includes('pasta') || restNameLower.includes('italian')) {
-      const pzProfile = CUISINE_MENUS.find(p => p.name.includes('Pizza'));
-      if (pzProfile) matchedProfile = pzProfile;
-    } else if (restNameLower.includes('burger') || restNameLower.includes('fries') || restNameLower.includes('fast food')) {
-      const bgProfile = CUISINE_MENUS.find(p => p.name.includes('Burger'));
-      if (bgProfile) matchedProfile = bgProfile;
-    } else if (restNameLower.includes('chinese') || restNameLower.includes('momo') || restNameLower.includes('noodle') || restNameLower.includes('wok') || restNameLower.includes('asian')) {
-      const chProfile = CUISINE_MENUS.find(p => p.name.includes('Chinese') || p.name.includes('Momos'));
-      if (chProfile) matchedProfile = chProfile;
-    } else if (restNameLower.includes('dhaba') || restNameLower.includes('punjabi') || restNameLower.includes('hotel') || restNameLower.includes('restaurant') || restNameLower.includes('dining') || restNameLower.includes('kitchen') || restNameLower.includes('bhojanalay') || restNameLower.includes('rasoi')) {
-      // General Indian restaurant / hotel / dining with no explicit non-veg branding defaults to authentic vegetarian specialties
-      const vProfile = CUISINE_MENUS.find(p => p.name.includes('Pure Veg') || p.name.includes('Punjabi') || p.name.includes('Dhaba'));
-      if (vProfile) matchedProfile = vProfile;
+  const isVegOnly = isStrictVeg || (!isNonVeg && (
+    restNameLower.includes('pure veg') ||
+    (restNameLower.includes('veg') && !restNameLower.includes('non')) ||
+    restaurant.is_veg === 1
+  ));
+
+  // Deterministic name hash
+  const nameHash = Math.abs(
+    restNameLower.split('').reduce((acc, char, i) => (acc * 31 + char.charCodeAt(0) * (i + 1)) | 0, restaurant.id || 0)
+  );
+
+  if (maxScore <= 30) {
+    if (isNonVeg) {
+      const nonVegProfiles = [
+        CUISINE_MENUS.find(p => p.name.includes('Biryani')),
+        CUISINE_MENUS.find(p => p.name.includes('Military')),
+        CUISINE_MENUS.find(p => p.name.includes('Multi-Cuisine') || p.name.includes('Bar')),
+        CUISINE_MENUS.find(p => p.name.includes('Chinese')),
+        CUISINE_MENUS.find(p => p.name.includes('Burger')),
+        CUISINE_MENUS.find(p => p.name.includes('Seafood'))
+      ].filter(Boolean) as CuisineProfile[];
+      matchedProfile = nonVegProfiles[nameHash % nonVegProfiles.length] || matchedProfile;
     } else {
-      // Deterministic variety: Hash the restaurant name to assign a realistic cuisine profile instead of the same profile to all!
-      const charCodeSum = restNameLower.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-      if (isNonVeg) {
-        const nonVegProfiles = [
-          CUISINE_MENUS.find(p => p.name.includes('Biryani')),
-          CUISINE_MENUS.find(p => p.name.includes('Military')),
-          CUISINE_MENUS.find(p => p.name.includes('Multi-Cuisine'))
-        ].filter(Boolean) as CuisineProfile[];
-        matchedProfile = nonVegProfiles[charCodeSum % nonVegProfiles.length] || CUISINE_MENUS[0];
-      } else {
-        const vegProfiles = [
-          CUISINE_MENUS.find(p => p.name.includes('Pure Veg')),
-          CUISINE_MENUS.find(p => p.name.includes('Maharashtrian')),
-          CUISINE_MENUS.find(p => p.name.includes('South Indian')),
-          CUISINE_MENUS.find(p => p.name.includes('Pav Bhaji'))
-        ].filter(Boolean) as CuisineProfile[];
-        matchedProfile = vegProfiles[charCodeSum % vegProfiles.length] || CUISINE_MENUS[0];
-      }
+      const vegProfiles = [
+        CUISINE_MENUS.find(p => p.name.includes('Pav Bhaji') || p.name.includes('Street Food')),
+        CUISINE_MENUS.find(p => p.name.includes('Pure Veg') || p.name.includes('Punjabi')),
+        CUISINE_MENUS.find(p => p.name.includes('Royal North Indian') || p.name.includes('Biryani & Mughlai Veg')),
+        CUISINE_MENUS.find(p => p.name.includes('South Indian')),
+        CUISINE_MENUS.find(p => p.name.includes('Maharashtrian Swayampakghar'))
+      ].filter(Boolean) as CuisineProfile[];
+      matchedProfile = vegProfiles[nameHash % vegProfiles.length] || matchedProfile;
     }
   }
 
-  // 4. Complement dishes from matchedProfile to provide a rich, complete menu (20-30 items)
-  if (collectedDishes.length < 25) {
-    const sortedProfileDishes = [...matchedProfile.dishes].sort((a, b) => {
-      const rDiff = (b.rating || 0) - (a.rating || 0);
-      if (Math.abs(rDiff) > 0.01) return rDiff;
-      return (b.popularity || 0) - (a.popularity || 0);
-    });
+  // 4. Complement dishes from matchedProfile to provide a rich, complete menu (25-35 items)
+  if (collectedDishes.length < 28) {
+    let profileDishes = [...matchedProfile.dishes];
+    if (isStrictVeg) {
+      profileDishes = profileDishes.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
+    }
+    // If NOT an iconic match, rotate profile dishes deterministically so different family restaurants highlight different dishes
+    if (!isIconicMatch && profileDishes.length > 3) {
+      const offset = (nameHash % (profileDishes.length - 2));
+      const rotated = [...profileDishes.slice(offset), ...profileDishes.slice(0, offset)];
+      profileDishes.length = 0;
+      profileDishes.push(...rotated);
+    }
 
-    for (const item of sortedProfileDishes) {
+    for (const item of profileDishes) {
+      if (isStrictVeg && (!isDishVeg(item.name) || item.is_veg === 0)) continue;
       const coreName = item.name.toLowerCase().replace(/special|famous|royal|grand|hot|fresh|deluxe/gi, '').trim();
       const alreadyHas = collectedDishes.some(existing => {
         const existCore = existing.name.toLowerCase().replace(/special|famous|royal|grand|hot|fresh|deluxe/gi, '').trim();
@@ -3971,12 +4798,13 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
           is_veg: item.is_veg !== undefined ? item.is_veg : (isDishVeg(item.name) ? 1 : 0)
         });
       }
-      if (collectedDishes.length >= 25) break;
+      if (collectedDishes.length >= 30) break;
     }
   }
 
   // 4b. Strict Veg vs Non-Veg Alignment:
-  const isExplicitNonVegJoint = restNameLower.includes('non-veg') ||
+  const isExplicitNonVegJoint = !isStrictVeg && (
+    restNameLower.includes('non-veg') ||
     restNameLower.includes('non veg') ||
     restNameLower.includes('nonveg') ||
     restNameLower.includes('mutton') ||
@@ -3990,25 +4818,15 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     restNameLower.includes('biryani') ||
     restNameLower.includes('kebab') ||
     restNameLower.includes('kabab') ||
+    restNameLower.includes('kfc') ||
+    restNameLower.includes('fried chicken') ||
+    restNameLower.includes('kentucky') ||
     restNameLower.includes('bar') ||
     restNameLower.includes('pub') ||
-    restNameLower.includes('permit room');
-
-  const isStrictVegRestaurant = !isExplicitNonVegJoint && (
-    restNameLower.includes('pure veg') ||
-    (restNameLower.includes('veg') && !restNameLower.includes('non')) ||
-    restNameLower.includes('bhojanalay') ||
-    restNameLower.includes('shakahari') ||
-    restNameLower.includes('swayampak') ||
-    restNameLower.includes('bhavan') ||
-    restNameLower.includes('udupi') ||
-    restNameLower.includes('dosa') ||
-    restNameLower.includes('idli') ||
-    restNameLower.includes('mithai') ||
-    restNameLower.includes('sweets') ||
-    restNameLower.includes('jain') ||
-    restaurant.is_veg === 1
+    restNameLower.includes('permit room')
   );
+
+  const isStrictVegRestaurant = isStrictVeg;
 
   let finalDishes = collectedDishes;
   if (isStrictVegRestaurant || restaurant.is_veg === 1) {
@@ -4022,17 +4840,19 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
   }
 
   // 5. Return authentic dishes with verified categories, real names, and pure food visual assets
+  // Ensure the top 3 items have top ratings (5.0, 4.95, 4.9) and is_recommended: 1 so Frame 3 features them on top cards!
   return finalDishes.map((item, idx) => {
-    // Preserve authentic culinary dish names without forced artificial prefixes
     const dishName = item.name.trim();
     const cat = item.category || inferDishCategory(dishName, item.description);
     const vegVal = item.is_veg !== undefined ? item.is_veg : (isDishVeg(dishName) ? 1 : 0);
 
-    // Pass authentic scraper image URL into dynamic AI endpoint query if available
     const imgParam = item.image && (item.image.startsWith('http://') || item.image.startsWith('https://')) && (item.image.includes('swiggy.com') || item.image.includes('cloudinary.com'))
       ? `&imgUrl=${encodeURIComponent(item.image)}`
       : '';
     const aiFoodPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(dishName)}&restaurant=${encodeURIComponent(restaurant.name)}${imgParam}`;
+
+    const dynamicRating = idx === 0 ? 5.0 : idx === 1 ? 4.95 : idx === 2 ? 4.9 : (item.rating || 4.7);
+    const dynamicPopularity = idx < 3 ? (100 - idx) : (item.popularity || 90);
 
     return {
       id: restaurant.id * 100 + idx + 1,
@@ -4041,8 +4861,8 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
       description: item.description,
       price: item.price,
       image: aiFoodPngUrl,
-      rating: item.rating,
-      popularity: item.popularity,
+      rating: dynamicRating,
+      popularity: dynamicPopularity,
       is_recommended: idx < 3 ? 1 : 0,
       is_veg: vegVal,
       category: cat,
