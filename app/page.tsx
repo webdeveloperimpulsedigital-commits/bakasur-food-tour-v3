@@ -29,6 +29,7 @@ export type FrameNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
 export default function CampaignPage() {
   // Campaign State
   const [currentFrame, setCurrentFrame] = useState<FrameNumber>(1);
+  const [hasMounted, setHasMounted] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('Pune');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -94,6 +95,12 @@ export default function CampaignPage() {
       stepNumber: 1,
       userLocation: selectedCity
     });
+
+    const timer = setTimeout(() => {
+      setHasMounted(true);
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, [selectedCity]);
 
   // Instant Location Detection via IP address + GPS refinement on app mount
@@ -785,12 +792,19 @@ export default function CampaignPage() {
   };
 
   return (
-    <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#07153B] overflow-hidden select-none p-0">
-      {/* Responsive Canvas: Mobile/Tablet portrait stack (< lg), Desktop split screen (lg:flex-row, Left: Video, Right: Content) */}
-      {/* If Frame 5: FULL SCREEN EATING STAGE */}
-      {currentFrame === 5 ? (
-        <div className="w-full h-full flex items-center justify-center bg-[#031058] overflow-hidden relative">
-          <div className="w-full h-full max-w-[480px] lg:max-w-[500px] bg-[#031058] overflow-hidden relative">
+    <div className="h-[100dvh] min-h-[100dvh] max-h-[100dvh] w-full flex items-center justify-center bg-[#07153B] overflow-hidden select-none p-0 relative">
+      {/* Smooth Frame Slide-In Right-to-Left (Mobile Only, Disabled on Tablet/Desktop) */}
+      <div
+        key={`frame-stage-${currentFrame}-${tourSpotRound}`}
+        className={`w-full h-full flex items-center justify-center overflow-hidden relative ${
+          hasMounted ? 'animate-frame-slide-mobile' : ''
+        }`}
+      >
+        {/* Responsive Canvas: Mobile/Tablet portrait stack (< lg), Desktop split screen (lg:flex-row, Left: Video, Right: Content) */}
+        {/* If Frame 5: FULL SCREEN EATING STAGE */}
+        {currentFrame === 5 ? (
+        <div className="fixed inset-0 w-full h-[100dvh] flex items-center justify-center bg-[#031058] overflow-hidden select-none touch-none overscroll-none z-40">
+          <div className="w-full h-full max-w-[480px] lg:max-w-[500px] bg-[#031058] overflow-hidden relative select-none touch-none overscroll-none">
             <BakasurEatingStage
               dishName={selectedDish?.name || 'Signature Dish'}
               dishImage={selectedDish?.image}
@@ -849,11 +863,24 @@ export default function CampaignPage() {
             />
           )}
         </div>
-      ) : currentFrame === 7 ? (
-        /* Frame 7 Acidity Appears with Fire on stomach video & smooth zoom-out reveal animation */
+      ) : currentFrame === 7 || currentFrame === 8 ? (
+        /* Frame 7 & 8: Acidity Reaction & Help Bhookasur (Continuous Video, Seamless Animated Content Transition) */
         <div className="w-full h-full bg-[#07153B] overflow-hidden relative flex flex-col">
           <Frame7AcidityAppears
-            onAutoAdvance={handleAcidityAutoAdvance}
+            initialStep={currentFrame === 8 ? 2 : 1}
+            onHelpBakasur={handleHelpBakasur}
+            onStepChange={(step) => {
+              if (step === 2) {
+                const activeSession = sessionId || getOrCreateSessionId();
+                trackUserStep({
+                  sessionId: activeSession,
+                  stepName: 'frame_8_help_bakasur',
+                  stepTitle: 'Frame 8: Bakasur Needs Help Prompt',
+                  stepNumber: 8,
+                  restaurantId: selectedRestaurant?.id
+                });
+              }
+            }}
             onBack={() => setCurrentFrame(6)}
             soundEnabled={false}
           />
@@ -1092,6 +1119,7 @@ export default function CampaignPage() {
           </div>
         </div>
       )}
+      </div>
 
       {/* Full-width Story Video Transition Overlay between frames */}
       {activeTransitionVideo && (

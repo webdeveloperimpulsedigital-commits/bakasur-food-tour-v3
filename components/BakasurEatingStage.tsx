@@ -84,6 +84,15 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   const [dragCurrentPos, setDragCurrentPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  const draggingFoodRef = useRef(draggingFood);
+  draggingFoodRef.current = draggingFood;
+
+  const dragCurrentPosRef = useRef(dragCurrentPos);
+  dragCurrentPosRef.current = dragCurrentPos;
+
+  const isSideAngleRef = useRef(isSideAngle);
+  isSideAngleRef.current = isSideAngle;
+
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -102,6 +111,69 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
     setDraggingFood(null);
     setChompEffect(false);
   }, [feastingStage]);
+
+  // Prevent browser native scrolling or rubber-banding while swiping food on mobile devices
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalOverscroll = document.body.style.overscrollBehavior;
+    const originalTouchAction = document.body.style.touchAction;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    document.body.style.touchAction = 'none';
+
+    const el = containerRef.current;
+    const preventTouchScroll = (e: TouchEvent) => {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    if (el) {
+      el.addEventListener('touchmove', preventTouchScroll, { passive: false });
+    }
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.overscrollBehavior = originalOverscroll;
+      document.body.style.touchAction = originalTouchAction;
+      if (el) {
+        el.removeEventListener('touchmove', preventTouchScroll);
+      }
+    };
+  }, []);
+
+  // Global window listeners while dragging to guarantee smooth tracking and release on mobile
+  useEffect(() => {
+    if (!draggingFood) return;
+
+    const handleWindowTouchMove = (e: TouchEvent) => {
+      if (e.touches && e.touches[0]) {
+        if (e.cancelable) e.preventDefault();
+        setDragCurrentPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      setDragCurrentPos({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleGlobalEnd = () => {
+      handleEndDrag();
+    };
+
+    window.addEventListener('touchmove', handleWindowTouchMove, { passive: false });
+    window.addEventListener('touchend', handleGlobalEnd);
+    window.addEventListener('mousemove', handleWindowMouseMove);
+    window.addEventListener('mouseup', handleGlobalEnd);
+
+    return () => {
+      window.removeEventListener('touchmove', handleWindowTouchMove);
+      window.removeEventListener('touchend', handleGlobalEnd);
+      window.removeEventListener('mousemove', handleWindowMouseMove);
+      window.removeEventListener('mouseup', handleGlobalEnd);
+    };
+  }, [draggingFood]);
 
   // Selected dish visual asset (plate or user-uploaded image)
   const selectedDishAsset = useMemo(() => {
@@ -343,17 +415,19 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   };
 
   const handleEndDrag = () => {
-    if (!draggingFood) return;
+    const currentDrag = draggingFoodRef.current;
+    if (!currentDrag) return;
 
-    const deltaY = dragCurrentPos.y - touchStartPosRef.current.y;
-    const deltaX = dragCurrentPos.x - touchStartPosRef.current.x;
+    const currentPos = dragCurrentPosRef.current;
+    const deltaY = currentPos.y - touchStartPosRef.current.y;
+    const deltaX = currentPos.x - touchStartPosRef.current.x;
 
-    if (isSideAngle) {
+    if (isSideAngleRef.current) {
       // In Side-Angle mode: Dragging LEFT towards mouth triggers feeding
-      if (deltaX < -30 || dragCurrentPos.x < (typeof window !== 'undefined' ? window.innerWidth * 0.6 : 300)) {
-        const pIdx = foodOptions.findIndex((f) => f.id === draggingFood.food.id);
+      if (deltaX < -25 || currentPos.x < (typeof window !== 'undefined' ? window.innerWidth * 0.65 : 300)) {
+        const pIdx = foodOptions.findIndex((f) => f.id === currentDrag.food.id);
         handleFeedFood(
-          draggingFood.food,
+          currentDrag.food,
           touchStartPosRef.current.x,
           pIdx >= 0 ? pIdx : 1,
           null,
@@ -362,8 +436,9 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       }
     } else {
       // In Stage 1 mode: Dragging UP towards mouth triggers feeding
-      if (deltaY < -30 || dragCurrentPos.y < (typeof window !== 'undefined' ? window.innerHeight * 0.65 : 400)) {
-        handleFeedFood(draggingFood.food, touchStartPosRef.current.x);
+      // Highly responsive: even a small 20px swipe up or release in top 72% triggers feeding
+      if (deltaY < -20 || currentPos.y < (typeof window !== 'undefined' ? window.innerHeight * 0.72 : 450)) {
+        handleFeedFood(currentDrag.food, touchStartPosRef.current.x);
       }
     }
 
@@ -375,9 +450,14 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
       ref={containerRef}
       onMouseMove={(e) => handleMoveDrag(e.clientX, e.clientY)}
       onMouseUp={handleEndDrag}
-      onTouchMove={(e) => handleMoveDrag(e.touches[0].clientX, e.touches[0].clientY)}
+      onTouchMove={(e) => {
+        if (e.touches && e.touches[0]) {
+          handleMoveDrag(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }}
       onTouchEnd={handleEndDrag}
-      className="relative w-full h-full flex flex-col justify-between overflow-hidden bg-[#031058] select-none"
+      style={{ touchAction: 'none' }}
+      className="relative w-full h-full flex flex-col justify-between overflow-hidden bg-[#031058] select-none touch-none overscroll-none"
     >
       {/* 1. BACKGROUND VIDEO LAYER */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-black">
@@ -515,17 +595,22 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
           )}
 
           {/* Right side floating vertical stack of 3 food plates - centered vertically on screen */}
-          <div className="absolute right-3 xs:right-4 sm:right-6 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-4 xs:gap-5 select-none">
+          <div className="absolute right-3 xs:right-4 sm:right-6 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-4 xs:gap-5 select-none touch-none">
             {foodOptions.map((food, index) => {
               const isEaten = eatenDishIds.includes(food.id);
 
               return (
                 <div
                   key={food.id}
+                  style={{ touchAction: 'none' }}
                   onMouseDown={(e) => handleStartDrag(food, e.clientX, e.clientY)}
-                  onTouchStart={(e) => handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY)}
+                  onTouchStart={(e) => {
+                    if (e.touches && e.touches[0]) {
+                      handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                  }}
                   onClick={(e) => handleFeedFood(food, e.clientX, index, e.currentTarget, e.clientY)}
-                  className={`group relative w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.85)] border-[2.5px] transition-all duration-200 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 bg-slate-950 ${
+                  className={`group relative w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.85)] border-[2.5px] transition-all duration-200 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 bg-slate-950 touch-none select-none ${
                     isEaten
                       ? 'border-white/30 opacity-40 grayscale-[50%]'
                       : 'border-amber-400 hover:border-amber-300 hover:scale-105 shadow-[0_0_16px_rgba(245,158,11,0.4)]'
@@ -555,19 +640,24 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
         </>
       ) : (
         /* NORMAL STAGE 1 MODE: Food Plates in bottom row */
-        <div className="relative z-30 px-4 pb-3 sm:pb-5 flex flex-col items-center justify-end w-full shrink-0 gap-1.5">
+        <div className="relative z-30 px-3 xs:px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,20px))] sm:pb-6 flex flex-col items-center justify-end w-full shrink-0 gap-1.5 touch-none select-none">
           {/* 3 Food Item Ceramic Plates Row */}
-          <div className="flex items-center justify-center gap-2.5 xs:gap-3 sm:gap-6 w-full max-w-2xl mx-auto pt-0.5 pb-0.5">
+          <div className="flex items-center justify-center gap-2 xs:gap-3 sm:gap-6 w-full max-w-2xl mx-auto pt-0.5 pb-0.5 touch-none">
             {foodOptions.map((food, index) => {
               const isEaten = eatenDishIds.includes(food.id);
 
               return (
                 <div
                   key={food.id}
+                  style={{ touchAction: 'none' }}
                   onMouseDown={(e) => handleStartDrag(food, e.clientX, e.clientY)}
-                  onTouchStart={(e) => handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY)}
+                  onTouchStart={(e) => {
+                    if (e.touches && e.touches[0]) {
+                      handleStartDrag(food, e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                  }}
                   onClick={(e) => handleFeedFood(food, e.clientX, index, e.currentTarget, e.clientY)}
-                  className="group relative w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden shadow-[0_14px_35px_rgba(0,0,0,0.9)] border-[2.5px] border-amber-400/80 bg-slate-950 cursor-grab active:cursor-grabbing transition-all duration-150 flex items-center justify-center shrink-0 active:scale-95"
+                  className="group relative w-[72px] h-[72px] xs:w-20 xs:h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.9)] border-[2.5px] border-amber-400/80 bg-slate-950 cursor-grab active:cursor-grabbing transition-all duration-150 flex items-center justify-center shrink-0 active:scale-95 touch-none select-none"
                 >
                   <img
                     src={food.image}
@@ -582,7 +672,7 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
 
                   {isEaten && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-[1px]">
-                      <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-400 fill-slate-950 drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]" />
+                      <CheckCircle2 className="w-8 h-8 xs:w-9 xs:h-9 sm:w-11 sm:h-11 text-emerald-400 fill-slate-950 drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]" />
                     </div>
                   )}
                 </div>

@@ -211,7 +211,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
         {/* Headline */}
         <div className="shrink-0 w-full text-center">
           <h1 className="text-[19px] xs:text-[22px] sm:text-[25px] font-black tracking-tight leading-[1.18] text-[#D4380D] text-center">
-            #Bhookasur ka live Food Tour Map.
+            #Bhookasur ka Food Tour Map Live
           </h1>
         </div>
 
@@ -307,7 +307,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
           {/* Headline */}
           <div className="w-full text-center">
             <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-[1.18] text-[#D4380D] text-center">
-              #Bhookasur ka live Food Tour Map.
+              #Bhookasur ka Food Tour Map Live
             </h1>
           </div>
 

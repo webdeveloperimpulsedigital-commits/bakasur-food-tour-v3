@@ -337,4 +337,30 @@ input {
 .leaflet-popup-tip {
   background: #ffffff !important;
 }
- 
+
+/* Smooth Frame Slide-In Right to Left (Mobile Only: < 768px) */
+@keyframes frameSlideInRightToLeft {
+  0% {
+    transform: translate3d(100%, 0, 0);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.animate-frame-slide-mobile {
+  animation: frameSlideInRightToLeft 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Strictly disabled on Tablet and Desktop devices */
+@media (min-width: 768px) {
+  .animate-frame-slide-mobile {
+    animation: none !important;
+    transform: none !important;
+  }
+}
