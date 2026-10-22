@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
-import { parseRestaurantQuery } from '@/lib/locationParser';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -213,52 +212,16 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
           { signal: controller.signal }
         );
         const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          setSearchResults(json.data.slice(0, 15));
-        } else {
-          // Provide instant custom restaurant for user's query with accurate locality & city
-          const parsed = parseRestaurantQuery(q, selectedCity, coords);
-          const customSpot: Restaurant = {
-            id: 890000 + Math.floor(Math.random() * 1000),
-            name: parsed.cleanName,
-            description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
-            address: parsed.address,
-            area: parsed.area,
-            city: parsed.city,
-            latitude: parsed.latitude,
-            longitude: parsed.longitude,
-            rating: 4.8,
-            image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
-            is_campaign_active: 1,
-            total_visits: 120,
-            status: 'active'
-          };
-          setSearchResults([customSpot]);
-        }
+        // Strict verified mode: only show restaurants the API verified. Never fabricate one from typed text.
+        setSearchResults(json.success && Array.isArray(json.data) ? json.data.slice(0, 15) : []);
       } catch (err: unknown) {
         if ((err as Error)?.name !== 'AbortError') {
-          const parsed = parseRestaurantQuery(q, selectedCity, coords);
-          const customSpot: Restaurant = {
-            id: 890000 + Math.floor(Math.random() * 1000),
-            name: parsed.cleanName,
-            description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
-            address: parsed.address,
-            area: parsed.area,
-            city: parsed.city,
-            latitude: parsed.latitude,
-            longitude: parsed.longitude,
-            rating: 4.8,
-            image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
-            is_campaign_active: 1,
-            total_visits: 120,
-            status: 'active'
-          };
-          setSearchResults([customSpot]);
+          setSearchResults([]);
         }
       } finally {
         setIsSearching(false);
       }
-    }, 150);
+    }, 350);
 
     return () => {
       clearTimeout(timer);
@@ -288,6 +251,21 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     setShowDropdown(false);
   };
 
+  // Find a verified restaurant in the current results that matches the typed text
+  const findVerifiedMatch = (text: string): Restaurant | undefined => {
+    const qLower = text.trim().toLowerCase();
+    if (!qLower) return undefined;
+    return searchResults.find(r => {
+      const rNameLower = r.name.toLowerCase();
+      return (
+        rNameLower === qLower ||
+        qLower.includes(rNameLower) ||
+        rNameLower.includes(qLower) ||
+        (r.area && `${rNameLower}, ${r.area.toLowerCase()}` === qLower)
+      );
+    });
+  };
+
   const ensureRestaurantSelected = () => {
     const query = searchQuery.trim();
     if (!query) {
@@ -309,47 +287,26 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       }
     }
 
-    // 2. Check if query matches any item in live searchResults
-    const searchMatch = searchResults.find(r => {
-      const rNameLower = r.name.toLowerCase();
-      return (
-        rNameLower === qLower ||
-        qLower.includes(rNameLower) ||
-        rNameLower.includes(qLower) ||
-        (r.area && `${rNameLower}, ${r.area.toLowerCase()}` === qLower)
-      );
-    });
+    // 2. Check if query matches any item in live (verified) searchResults
+    const searchMatch = findVerifiedMatch(query);
     if (searchMatch) {
       setChosenSpot(searchMatch);
       onSelectRestaurant(searchMatch);
       return searchMatch;
     }
 
-    // 3. Generate clean parsed restaurant with zero pollution from previous restaurant
-    const parsed = parseRestaurantQuery(query, selectedCity, coords);
-    const customSpot: Restaurant = {
-      id: Math.floor(Math.random() * 80000) + 10000,
-      name: parsed.cleanName,
-      description: `Popular dining destination in ${parsed.area}, ${parsed.city}`,
-      address: parsed.address,
-      area: parsed.area,
-      city: parsed.city,
-      latitude: parsed.latitude,
-      longitude: parsed.longitude,
-      rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
-      is_campaign_active: 1,
-      total_visits: 100,
-      status: 'active'
-    };
-    setChosenSpot(customSpot);
-    onSelectRestaurant(customSpot);
-    return customSpot;
+    // 3. Strict verified mode: free text that doesn't match a verified restaurant is never accepted
+    return null;
   };
 
   const handleConfirm = () => {
     const confirmed = ensureRestaurantSelected();
-    onNext(confirmed || undefined);
+    if (!confirmed) {
+      // Keep the user on this step and show the verified options instead
+      setShowDropdown(true);
+      return;
+    }
+    onNext(confirmed);
   };
 
   return (
@@ -440,29 +397,15 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         {/* Live Search Autocomplete Dropdown */}
         {showDropdown && (
           <div className="absolute top-[105%] inset-x-0 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-[260px] sm:max-h-[300px] overflow-y-auto p-1.5 scrollbar-thin">
-            {/* Quick 1-Click Instant Selection for Typed Query */}
+            {/* Quick 1-Click Instant Selection for Typed Query (only when it matches a verified restaurant) */}
             {searchQuery.trim().length >= 2 && (() => {
-              const parsed = parseRestaurantQuery(searchQuery, selectedCity, coords);
+              const verifiedMatch = findVerifiedMatch(searchQuery);
+              if (!verifiedMatch) return null;
               return (
                 <button
                   type="button"
                   onClick={() => {
-                    const customSpot: Restaurant = {
-                      id: Math.floor(Math.random() * 80000) + 10000,
-                      name: parsed.cleanName,
-                      description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
-                      address: parsed.address,
-                      area: parsed.area,
-                      city: parsed.city,
-                      latitude: parsed.latitude,
-                      longitude: parsed.longitude,
-                      rating: 4.8,
-                      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=85',
-                      is_campaign_active: 1,
-                      total_visits: 100,
-                      status: 'active'
-                    };
-                    handleSelectSpot(customSpot);
+                    handleSelectSpot(verifiedMatch);
                   }}
                   className="w-full text-left p-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all flex items-center justify-between gap-2 cursor-pointer mb-1.5 shadow-xs"
                 >
@@ -472,10 +415,10 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                     </div>
                     <div className="min-w-0">
                       <p className="font-black text-xs sm:text-sm text-[#0B1B48] truncate">
-                        Select &ldquo;{parsed.cleanName}&rdquo;
+                        Select &ldquo;{verifiedMatch.name}&rdquo;
                       </p>
                       <p className="text-[11px] text-[#1D4ED8] font-bold truncate">
-                        📍 {parsed.area}, {parsed.city}
+                        📍 {verifiedMatch.area}, {verifiedMatch.city}
                       </p>
                     </div>
                   </div>

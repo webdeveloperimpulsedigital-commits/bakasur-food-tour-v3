@@ -1,65 +1,32 @@
-const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
-const dishesToTest = [
-  'Barfi',
-  'Kaju Katli',
-  'Bhakarwadi',
-  'Bhakrwadi',
-  'Ladoo',
-  'Motichoor Ladoo',
-  'Chai',
-  'Masala Chai',
-  'Coffee',
-  'Filter Coffee',
-  'Cold Coffee',
-  'Rasmalai',
-  'Gulab Jamun',
-  'Jalebi',
-  'Modak',
-  'Puran Poli',
-  'Solkadhi',
-  'Masala Taak',
-  'Punjabi Sweet Lassi',
-  'Sandwich',
-  'Veg Pulao',
-  'Tawa Pulao',
-  'Chicken Pulao',
-  'Paneer Butter Masala',
-  'Butter Chicken'
+const CANONICAL_LOCAL_ASSETS = {
+  ragda_pattice: 'ragda_pattice.jpg',
+  ragda_puri: 'ragda_puri.jpg',
+  pani_puri: 'pani_puri.jpg',
+  batata_bhaji: 'batata_bhaji.jpg',
+  masala_pav: 'masala_pav.jpg',
+  cheese_pav_bhaji: 'cheese_pav_bhaji.jpg',
+  kanda_bhaji: 'kanda_bhaji.jpg',
+  pav_bhaji: 'pav_bhaji.jpg',
+  vada_pav: 'vada_pav.jpg'
+};
+
+const testDishes = [
+  'Ragda Pattice',
+  'Ragda Puri',
+  'Pani Puri',
+  'Batata Bhaji',
+  'Masala Pav',
+  'Cheese Pav Bhaji',
+  'Kanda Bhaji'
 ];
 
-async function checkDish(dish) {
-  return new Promise((resolve) => {
-    const url = `http://localhost:3000/api/ai/dish-image?dish=${encodeURIComponent(dish)}`;
-    http.get(url, (res) => {
-      let dataLen = 0;
-      res.on('data', chunk => { dataLen += chunk.length; });
-      res.on('end', () => {
-        resolve({
-          dish,
-          statusCode: res.statusCode,
-          contentType: res.headers['content-type'],
-          bytes: dataLen
-        });
-      });
-    }).on('error', (err) => {
-      resolve({ dish, error: err.message });
-    });
-  });
+console.log('Testing food files existence:');
+for (const [key, filename] of Object.entries(CANONICAL_LOCAL_ASSETS)) {
+  const p = path.join(__dirname, '..', 'public', 'images', 'food', filename);
+  const exists = fs.existsSync(p);
+  const size = exists ? fs.statSync(p).size : 0;
+  console.log(`- ${key} -> ${filename}: exists=${exists}, size=${size} bytes`);
 }
-
-async function run() {
-  console.log('Testing food dish images against dev server...');
-  for (const dish of dishesToTest) {
-    const result = await checkDish(dish);
-    if (result.error) {
-      console.log(`❌ ${dish}: ERROR - ${result.error}`);
-    } else if (result.statusCode === 200 && result.bytes > 5000) {
-      console.log(`✅ ${dish}: HTTP ${result.statusCode} (${result.contentType}, ${result.bytes} bytes)`);
-    } else {
-      console.log(`⚠️ ${dish}: HTTP ${result.statusCode} (${result.contentType}, ${result.bytes} bytes)`);
-    }
-  }
-}
-
-run();

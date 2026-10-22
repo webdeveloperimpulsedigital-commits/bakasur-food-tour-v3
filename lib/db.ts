@@ -1,4 +1,6 @@
 import mysql from 'mysql2/promise';
+import { verifySwiggyRestaurant } from './verifiedRestaurants';
+import { formatCleanDishName } from './dishAssets';
 
 // Types
 export interface Restaurant {
@@ -20,6 +22,12 @@ export interface Restaurant {
   created_at?: string;
   cuisine_tags?: string[];
   updated_at?: string;
+  // Verification metadata (strict verified mode)
+  swiggy_id?: string | null;
+  is_verified?: number;
+  verification_source?: string | null;
+  fssai_license?: string | null;
+  verified_at?: string | null;
 }
 
 export interface Category {
@@ -187,6 +195,8 @@ export const INITIAL_RESTAURANTS: Omit<Restaurant, 'id'>[] = [
   { name: "Hotel Sonali Non-Veg", description: "Hadapsar & Magarpatta meat lover's destination famous for Kolhapuri chicken handi and crisp bajra bhakri.", address: "Pune-Solapur Road, Hadapsar", area: "Hadapsar", city: "Pune", latitude: 18.5020, longitude: 73.9280, rating: 4.7, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 1460, status: 'active', is_veg: 0 },
   { name: "Mezza9 Family Restaurant", description: "Hinjewadi IT hub's top dining destination for North Indian curries, kebabs, and live sizzlers.", address: "Hinjewadi Phase 1, Near Infosys", area: "Hinjewadi", city: "Pune", latitude: 18.5910, longitude: 73.7380, rating: 4.8, image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 2150, status: 'active' },
   { name: "Chitale Bandhu Mithaiwale", description: "Historic 1950 Bajirao Road institution world-famous for crunchy Bakarwadi, Mango Barfi, and Shrikhand.", address: "777, Sadashiv Peth, Bajirao Road", area: "Sadashiv Peth", city: "Pune", latitude: 18.5135, longitude: 73.8535, rating: 4.9, image: "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 3200, status: 'active', is_veg: 1 },
+  { name: "Joshi Wadewale", description: "Pune's legendary 1989 Maharashtrian pure-veg snack landmark in Shaniwar Peth famous for piping hot Vada Pav, Misal Pav, and Kothimbir Vadi.", address: "Near Shaniwar Wada, Appa Balwant Chowk, Shaniwar Peth", area: "Shaniwar Peth", city: "Pune", latitude: 18.5195, longitude: 73.8553, rating: 4.9, image: "/images/food/vada_pav.jpg", is_campaign_active: 1, total_visits: 3500, status: 'active', is_veg: 1 },
+  { name: "Rohit Wadewale", description: "Pune's beloved pure-veg snack chain celebrated for Classic Vada Pav, Ulta Vada Pav, Cheese Vada Pav, and Misal Pav.", address: "Near Alka Talkies, Sadashiv Peth / Deccan", area: "Sadashiv Peth", city: "Pune", latitude: 18.5145, longitude: 73.8495, rating: 4.8, image: "/images/food/vada_pav.jpg", is_campaign_active: 1, total_visits: 2800, status: 'active', is_veg: 1 },
 
 
   // Thane & Mumbai Metropolitan Area
@@ -335,9 +345,17 @@ export const INITIAL_DISHES: Omit<Dish, 'id'>[] = [
   { restaurant_id: 10, name: "Fresh Strawberry Crush Mastani", description: "Real Mahabaleshwar strawberry pulp blended into thick ice cream shake with fresh berry toppings.", price: 140.00, image: "/images/food/strawberry_mastani.jpg", rating: 4.8, popularity: 93, is_recommended: 1, status: 'active' },
 
   // 11. Poona Guest House - Sadashiv Peth (rest_id: 11)
-  { restaurant_id: 11, name: "Traditional Puneri Thali", description: "Heritage Maharashtrian feast featuring Puran Poli, Katachi Amti, Koshimbir, Batata Bhaji, Varann Bhaat & ghee.", price: 280.00, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 98, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Traditional Puneri Thali", description: "Heritage Maharashtrian feast featuring Puran Poli, Katachi Amti, Koshimbir, Batata Bhaji, Varan Bhaat & pure ghee.", price: 280.00, image: "/images/food/thali.jpg", rating: 4.9, popularity: 98, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Fresh Shrikhand Puri Plate (4 Pcs)", description: "Creamy saffron and cardamom-infused hung curd shrikhand served with 4 puffed golden wheat puris.", price: 160.00, image: "/images/food/shrikhand_puri.jpg", rating: 5.0, popularity: 100, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Authentic Maharashtrian Puri Bhaji", description: "4 Crispy golden puffed puris served with aromatic yellow batata sukhi bhaji, lemon and green thecha.", price: 130.00, image: "/images/food/puri_bhaji.jpg", rating: 4.9, popularity: 99, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Traditional Kheer with Saffron & Dry Fruits", description: "Slow-cooked rich creamy milk kheer infused with Kashmiri saffron, cardamom, cashews, almonds & pistachios.", price: 90.00, image: "/images/food/kheer.jpg", rating: 4.9, popularity: 98, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Pure Alphonso Aamras Puri Platter", description: "Seasonal heritage special: pure Alphonso mango pulp served with 4 fluffy hot puris.", price: 210.00, image: "/images/food/aamras_puri.jpg", rating: 5.0, popularity: 100, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Garma Garam Pithla Bhakri with Thecha & Kanda", description: "Hot comforting besan pithla served with piping hot roasted jowar bhakri, spicy thecha and fresh onions.", price: 160.00, image: "/images/food/pithla_bhakri.jpg", rating: 5.0, popularity: 99, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Authentic Bharli Vangi with Jowar Bhakri", description: "Spiced baby brinjals simmered in rich roasted peanut and sesame goda gravy.", price: 190.00, image: "/images/food/bharli_vangi.jpg", rating: 4.8, popularity: 97, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Indrayani Varan Bhat with Pure Desi Ghee", description: "Steaming aromatic soft rice topped with yellow lentil varan, fresh lemon & pure desi ghee.", price: 130.00, image: "/images/food/varan_bhat.jpg", rating: 4.8, popularity: 96, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Authentic Bhajani Thalipeeth with White Loni Butter", description: "Crispy multigrain roasted flatbread prepared from traditional bhajani flour, served with fresh white butter.", price: 120.00, image: "/images/food/thalipeeth.jpg", rating: 4.9, popularity: 98, is_recommended: 1, is_veg: 1, status: 'active' },
   { restaurant_id: 11, name: "Steamed Ukdiche Modak (2 Pcs)", description: "Hot steamed rice-flour dumplings filled with grated coconut and jaggery, drenched in pure ghee.", price: 120.00, image: "/images/food/modak.jpg", rating: 5.0, popularity: 100, is_recommended: 1, is_veg: 1, status: 'active' },
-  { restaurant_id: 11, name: "Puran Poli with Ghee (2 Pcs)", description: "Sweet golden flatbreads stuffed with cardamom-infused Bengal gram and jaggery.", price: 140.00, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 96, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 11, name: "Puran Poli with Ghee (2 Pcs)", description: "Sweet golden flatbreads stuffed with cardamom-infused Bengal gram and jaggery.", price: 140.00, image: "/images/food/puran_poli.jpg", rating: 4.9, popularity: 96, is_recommended: 1, is_veg: 1, status: 'active' },
   { restaurant_id: 11, name: "Kothimbir Vadi Platter", description: "Crispy steamed and shallow-fried coriander diamond cakes served with spicy chutney.", price: 90.00, image: "/images/food/kothimbir_vadi.jpg", rating: 4.7, popularity: 92, is_recommended: 1, is_veg: 1, status: 'active' },
   { restaurant_id: 11, name: "Chilled Spiced Mattha Glass", description: "Puneri buttermilk seasoned with ginger, green chillies, fresh coriander, and roasted cumin.", price: 40.00, image: "/images/food/masala_taak.jpg", rating: 4.8, popularity: 94, is_recommended: 1, is_veg: 1, status: 'active' },
 
@@ -683,6 +701,7 @@ const globalForDB = globalThis as unknown as {
   mysqlPool?: mysql.Pool;
   memoryStore?: MemoryStore;
   dbType?: 'mysql' | 'memory';
+  verificationSchemaReady?: Promise<boolean>;
 };
 
 const memoryStore = globalForDB.memoryStore || new MemoryStore();
@@ -749,16 +768,63 @@ export function getDatabaseStatus() {
 }
 
 // ==========================================================
+// RESTAURANT VERIFICATION SCHEMA (auto-migration, idempotent)
+// ==========================================================
+// Adds verification columns to `restaurants`. Existing rows default to
+// is_verified = 0 (kept for history/admin review, hidden from users).
+const VERIFICATION_COLUMNS: Array<{ name: string; ddl: string }> = [
+  { name: 'swiggy_id', ddl: 'ADD COLUMN `swiggy_id` varchar(32) DEFAULT NULL' },
+  { name: 'verification_source', ddl: 'ADD COLUMN `verification_source` varchar(32) DEFAULT NULL' },
+  { name: 'fssai_license', ddl: 'ADD COLUMN `fssai_license` varchar(20) DEFAULT NULL' },
+  { name: 'is_verified', ddl: 'ADD COLUMN `is_verified` tinyint(1) NOT NULL DEFAULT 0' },
+  { name: 'verified_at', ddl: 'ADD COLUMN `verified_at` timestamp NULL DEFAULT NULL' }
+];
+
+export async function ensureRestaurantVerificationSchema(pool: mysql.Pool): Promise<boolean> {
+  if (!globalForDB.verificationSchemaReady) {
+    globalForDB.verificationSchemaReady = (async () => {
+      try {
+        const [cols] = await pool.query<mysql.RowDataPacket[]>(
+          `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'restaurants'`
+        );
+        const existing = new Set(cols.map(c => String(c.COLUMN_NAME).toLowerCase()));
+        const missing = VERIFICATION_COLUMNS.filter(c => !existing.has(c.name));
+        if (missing.length > 0) {
+          await pool.query(`ALTER TABLE restaurants ${missing.map(c => c.ddl).join(', ')}`);
+        }
+        const [idx] = await pool.query<mysql.RowDataPacket[]>(
+          `SHOW INDEX FROM restaurants WHERE Key_name = 'idx_restaurants_swiggy'`
+        );
+        if (!idx || idx.length === 0) {
+          await pool.query('ALTER TABLE restaurants ADD INDEX `idx_restaurants_swiggy` (`swiggy_id`)');
+        }
+        return true;
+      } catch (err) {
+        console.warn('Restaurant verification schema migration notice:', err instanceof Error ? err.message : err);
+        globalForDB.verificationSchemaReady = undefined; // retry on next call
+        return false;
+      }
+    })();
+  }
+  return globalForDB.verificationSchemaReady;
+}
+
+// ==========================================================
 // DB SERVICE METHODS (Universal Abstracted API)
 // ==========================================================
 
 export const db = {
   // RESTAURANTS
-  async getRestaurants(options?: { city?: string; area?: string; search?: string; limit?: number }) {
+  // User-facing callers get verified restaurants only; admin passes includeUnverified.
+  async getRestaurants(options?: { city?: string; area?: string; search?: string; limit?: number; includeUnverified?: boolean }) {
     try {
       const pool = getMySQLPool();
       if (pool) {
+        await ensureRestaurantVerificationSchema(pool);
         let sql = 'SELECT * FROM restaurants WHERE status = "active"';
+        if (!options?.includeUnverified) {
+          sql += ' AND is_verified = 1';
+        }
         const params: unknown[] = [];
         if (options?.city && options.city !== 'All') {
           sql += ' AND LOWER(city) = LOWER(?)';
@@ -807,15 +873,23 @@ export const db = {
             description: String(r.description || ''),
             is_campaign_active: Number(r.is_campaign_active ?? 1),
             total_visits: Number(r.total_visits || 0),
-            status: (r.status || 'active') as 'active' | 'inactive'
+            status: (r.status || 'active') as 'active' | 'inactive',
+            swiggy_id: r.swiggy_id ? String(r.swiggy_id) : null,
+            is_verified: Number(r.is_verified || 0),
+            verification_source: r.verification_source ? String(r.verification_source) : null,
+            fssai_license: r.fssai_license ? String(r.fssai_license) : null,
+            verified_at: r.verified_at ? new Date(r.verified_at).toISOString() : null
           }));
         }
+        return [];
       }
     } catch (err) {
       console.warn('MySQL getRestaurants fallback:', err);
     }
 
-    let list = [...memoryStore.restaurants].filter(r => r.status === 'active');
+    let list = [...memoryStore.restaurants].filter(
+      r => r.status === 'active' && (options?.includeUnverified || r.is_verified === 1)
+    );
 
     if (options?.city && options.city !== 'All') {
       list = list.filter(r => r.city.toLowerCase() === options.city?.toLowerCase());
@@ -1673,9 +1747,23 @@ export const db = {
   }) {
     const id = memoryStore.visits.length + 1;
     const matchedRest = memoryStore.restaurants.find(r => r.id === data.restaurant_id);
-    const finalRestName = data.restaurant_name || matchedRest?.name || 'Local Food Spot';
+    let finalRestName = data.restaurant_name || matchedRest?.name || 'Local Food Spot';
     const finalDishName = data.dish_name || 'Specialty Dish';
     const roundNumber = data.round_number || 1;
+
+    // Server-side verification: restaurant_id is the Swiggy restaurant id chosen in the UI.
+    // Identity, name and coordinates come from Swiggy, never from the client payload.
+    const verification = await verifySwiggyRestaurant(data.restaurant_id, {
+      lat: data.latitude,
+      lng: data.longitude
+    }).catch(() => null);
+    const verifiedProfile = verification && verification.verified ? verification.profile : null;
+    if (verifiedProfile) {
+      finalRestName = verifiedProfile.name;
+      data.latitude = verifiedProfile.latitude;
+      data.longitude = verifiedProfile.longitude;
+      data.city = verifiedProfile.city || data.city;
+    }
 
     const visit: CampaignVisit = {
       id,
@@ -1730,37 +1818,40 @@ export const db = {
           }
         }
 
-        // 2. Ensure restaurant exists in restaurants table
-        let targetRestaurantId = data.restaurant_id;
-        if (finalRestName) {
+        // 2. Link the visit to a VERIFIED restaurant only (keyed by Swiggy id).
+        //    Unverified selections are logged as a visit but never create restaurant/dish rows.
+        await ensureRestaurantVerificationSchema(pool);
+        let targetRestaurantId = 0;
+        if (verifiedProfile) {
+          const p = verifiedProfile;
           const [existingRest] = await pool.query<mysql.RowDataPacket[]>(
-            'SELECT id FROM restaurants WHERE LOWER(name) = LOWER(?) LIMIT 1',
-            [finalRestName]
+            'SELECT id FROM restaurants WHERE swiggy_id = ? LIMIT 1',
+            [p.swiggyId]
           );
           if (existingRest && existingRest.length > 0) {
             targetRestaurantId = Number(existingRest[0].id);
             await pool.query(
-              'UPDATE restaurants SET total_visits = total_visits + 1, status = "active" WHERE id = ?',
-              [targetRestaurantId]
-            ).catch(() => {});
+              `UPDATE restaurants
+               SET name = ?, address = ?, area = ?, city = ?, latitude = ?, longitude = ?, rating = ?,
+                   image = ?, description = ?, fssai_license = ?, verification_source = 'swiggy',
+                   is_verified = 1, verified_at = CURRENT_TIMESTAMP, status = 'active',
+                   total_visits = total_visits + 1
+               WHERE id = ?`,
+              [p.name, p.address, p.area, p.city, p.latitude, p.longitude, p.rating, p.imageUrl || null,
+               p.cuisines.join(', '), p.fssaiLicense, targetRestaurantId]
+            ).catch((err) => console.warn('Verified restaurant update notice:', err));
           } else {
-            // New user-recommended restaurant! Insert into restaurants table in MySQL!
+            const slug = `${p.name}-${p.swiggyId}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             const [insertRes] = await pool.query<mysql.ResultSetHeader>(
-              `INSERT INTO restaurants (location_id, name, slug, address, area, city, latitude, longitude, rating, is_campaign_active, total_visits, status)
-               VALUES (?, ?, LOWER(REPLACE(?, ' ', '-')), ?, ?, ?, ?, ?, 4.8, 1, 1, 'active')`,
-              [
-                locationId,
-                finalRestName,
-                finalRestName,
-                `${data.city || 'Pune'}, India`,
-                data.city || 'Local',
-                data.city || 'Pune',
-                data.latitude || 18.5204,
-                data.longitude || 73.8407
-              ]
+              `INSERT INTO restaurants (location_id, name, slug, address, area, city, latitude, longitude, rating, image,
+                                        description, is_campaign_active, total_visits, status, swiggy_id,
+                                        verification_source, fssai_license, is_verified, verified_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 'active', ?, 'swiggy', ?, 1, CURRENT_TIMESTAMP)`,
+              [locationId, p.name, slug, p.address, p.area, p.city, p.latitude, p.longitude, p.rating,
+               p.imageUrl || null, p.cuisines.join(', '), p.swiggyId, p.fssaiLicense]
             ).catch((err) => {
-              console.warn('Restaurant insert notice:', err);
-              return [{ insertId: targetRestaurantId }];
+              console.warn('Verified restaurant insert notice:', err);
+              return [{ insertId: 0 }];
             });
             if (insertRes && insertRes.insertId) {
               targetRestaurantId = insertRes.insertId;
@@ -1768,18 +1859,27 @@ export const db = {
           }
         }
 
-        // 3. Ensure dish exists in dishes table
-        if (finalDishName && targetRestaurantId) {
-          const [existingDish] = await pool.query<mysql.RowDataPacket[]>(
-            'SELECT id FROM dishes WHERE restaurant_id = ? AND LOWER(name) = LOWER(?) LIMIT 1',
-            [targetRestaurantId, finalDishName]
+        // 3. Store the dish ONLY if it exists on the verified live menu (real price/photo)
+        if (verifiedProfile && finalDishName && targetRestaurantId) {
+          const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const wanted = norm(finalDishName);
+          const menuDish = verifiedProfile.dishes.find(
+            d => norm(d.name) === wanted || norm(formatCleanDishName(d.name, verifiedProfile.name)) === wanted
           );
-          if (!existingDish || existingDish.length === 0) {
-            await pool.query(
-              `INSERT INTO dishes (restaurant_id, name, slug, price, rating, popularity, is_recommended, status)
-               VALUES (?, ?, LOWER(REPLACE(?, ' ', '-')), 180.00, 4.8, 90, 1, 'active')`,
-              [targetRestaurantId, finalDishName, finalDishName]
-            ).catch(() => {});
+          if (menuDish) {
+            const [existingDish] = await pool.query<mysql.RowDataPacket[]>(
+              'SELECT id FROM dishes WHERE restaurant_id = ? AND LOWER(name) = LOWER(?) LIMIT 1',
+              [targetRestaurantId, menuDish.name]
+            );
+            if (!existingDish || existingDish.length === 0) {
+              const dishSlug = menuDish.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+              await pool.query(
+                `INSERT INTO dishes (restaurant_id, name, slug, description, price, image, rating, popularity, is_recommended, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+                [targetRestaurantId, menuDish.name, dishSlug, menuDish.description || null, menuDish.price,
+                 menuDish.image || null, menuDish.rating || null, menuDish.popularity, menuDish.is_recommended]
+              ).catch(() => {});
+            }
           }
         }
 
@@ -1846,7 +1946,8 @@ export const db = {
     try {
       const pool = getMySQLPool();
       if (pool) {
-        // 1. Fetch all active restaurants from MySQL restaurants table with real coordinates & visits
+        await ensureRestaurantVerificationSchema(pool);
+        // 1. Fetch all active VERIFIED restaurants from MySQL restaurants table with real coordinates & visits
         const [restRows] = await pool.query<mysql.RowDataPacket[]>(`
           SELECT r.id, r.name, r.address, r.area, r.city,
                  CAST(r.latitude AS DECIMAL(10,6)) as latitude,
@@ -1859,7 +1960,7 @@ export const db = {
                    'Specialty Dish'
                  ) as featured_dish
           FROM restaurants r
-          WHERE r.status = 'active' AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
+          WHERE r.status = 'active' AND r.is_verified = 1 AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
           ORDER BY r.total_visits DESC
         `);
 
@@ -1872,7 +1973,8 @@ export const db = {
                  COALESCE(cv.restaurant_name, r.name) as restaurant_name,
                  COALESCE(cv.dish_name, d.name, 'Specialty Dish') as dish_name,
                  COALESCE(r.rating, 4.8) as rating,
-                 COALESCE(r.image, '') as image
+                 COALESCE(r.image, '') as image,
+                 COALESCE(r.is_verified, 0) as is_verified
           FROM campaign_visits cv
           LEFT JOIN restaurants r ON cv.restaurant_id = r.id
           LEFT JOIN dishes d ON cv.dish_id = d.id
@@ -1967,7 +2069,8 @@ export const db = {
           const stopNumber = currentUserKeysMap.get(key);
           const isCurrentUserSpot = stopNumber !== undefined;
 
-          if (!spotsMap.has(key)) {
+          // Public pins only for verified restaurants; unverified history is shown only as the user's own stop
+          if (!spotsMap.has(key) && (Number(v.is_verified) === 1 || isCurrentUserSpot)) {
             spotsMap.set(key, {
               id: Number(v.id),
               name: restName,
@@ -1996,25 +2099,20 @@ export const db = {
 
         visitedPoints = Array.from(spotsMap.values());
 
-        // 6. Dynamic database statistics directly from MySQL
+        // 6. Dynamic database statistics directly from MySQL (verified restaurants only)
         const [[rCount]] = await pool.query<mysql.RowDataPacket[]>(`
-          SELECT COUNT(DISTINCT name) as c FROM (
-            SELECT name FROM restaurants WHERE status = 'active'
-            UNION
-            SELECT restaurant_name as name FROM campaign_visits WHERE restaurant_name IS NOT NULL AND restaurant_name != ''
-          ) as all_spots
+          SELECT COUNT(DISTINCT name) as c FROM restaurants WHERE status = 'active' AND is_verified = 1
         `);
 
         const [[dCount]] = await pool.query<mysql.RowDataPacket[]>(`
-          SELECT COUNT(*) as c FROM dishes WHERE status = 'active'
+          SELECT COUNT(*) as c FROM dishes d
+          INNER JOIN restaurants r ON d.restaurant_id = r.id
+          WHERE d.status = 'active' AND r.is_verified = 1
         `);
 
         const [[cCount]] = await pool.query<mysql.RowDataPacket[]>(`
-          SELECT COUNT(DISTINCT city) as c FROM (
-            SELECT city FROM restaurants WHERE status = 'active' AND city IS NOT NULL AND city != ''
-            UNION
-            SELECT city FROM campaign_visits WHERE city IS NOT NULL AND city != ''
-          ) as all_cities
+          SELECT COUNT(DISTINCT city) as c FROM restaurants
+          WHERE status = 'active' AND is_verified = 1 AND city IS NOT NULL AND city != ''
         `);
 
         dbFoodSpots = Number(rCount?.c || visitedPoints.length || 0);
@@ -2025,12 +2123,11 @@ export const db = {
       console.warn('MySQL getMapData query warning:', err);
     }
 
-    // Bulletproof Fallback: If MySQL returned no food spots or was unavailable/empty
+    // Fallback (MySQL unavailable): only verified in-memory restaurants may appear on the public map.
+    // The hardcoded seed list (INITIAL_RESTAURANTS) is unverified and is never shown to users.
     const nonUserPoints = visitedPoints.filter(p => !p.isCurrentUserSpot);
     if (nonUserPoints.length === 0) {
-      const sourceRestaurants = (memoryStore.restaurants && memoryStore.restaurants.length > 0)
-        ? memoryStore.restaurants
-        : INITIAL_RESTAURANTS.map((r, idx) => ({ ...r, id: idx + 1 } as Restaurant));
+      const sourceRestaurants = (memoryStore.restaurants || []).filter(r => r.is_verified === 1 && r.status === 'active');
 
       const fallbackList = sourceRestaurants.map((r) => ({
         id: r.id,
@@ -2039,7 +2136,7 @@ export const db = {
         city: r.city,
         latitude: r.latitude,
         longitude: r.longitude,
-        rating: r.rating || 4.8,
+        rating: r.rating,
         image: r.image || '',
         total_visits: r.total_visits || 1,
         featured_dish: 'Specialty Dish',
@@ -2047,13 +2144,10 @@ export const db = {
         stopNumber: undefined
       }));
 
-      // Preserve current user's spots at top, and append all curated food tour spots
+      // Preserve current user's spots at top, and append verified spots
       visitedPoints = [...visitedPoints.filter(p => p.isCurrentUserSpot), ...fallbackList];
       if (!dbFoodSpots || dbFoodSpots === 0) {
         dbFoodSpots = fallbackList.length;
-      }
-      if (!dbDishes || dbDishes === 0) {
-        dbDishes = (memoryStore.dishes?.length > 0 ? memoryStore.dishes.length : INITIAL_DISHES.length) || 100;
       }
       if (!dbCities || dbCities === 0) {
         dbCities = new Set(fallbackList.map(p => p.city)).size;

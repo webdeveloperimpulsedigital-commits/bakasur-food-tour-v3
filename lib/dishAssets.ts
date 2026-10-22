@@ -73,9 +73,13 @@ export function isDishVeg(dishName?: string): boolean {
     n.includes('katachi amti') || n.includes('amti') || n.includes('shev bhaji') ||
     n.includes('rassa bhaji') || n.includes('sukhi bhaji') || n.includes('masala bhaat') ||
     n.includes('masale bhat') || n.includes('shrikhand') || n.includes('aamras') ||
+    n.includes('kheer') || n.includes('payasam') || n.includes('puri bhaji') ||
+    n.includes('poori bhaji') || n.includes('batata bhaji') ||
     n.includes('mattha') || n.includes('khamang kakdi') || n.includes('sabudana') ||
     n.includes('matki') || n.includes('usal') || n.includes('aluchi bhaji') ||
     n.includes('fadfade') || n.includes('puneri thali') || n.includes('dadpe pohe') ||
+    n.includes('vada') || n.includes('wada') || n.includes('bhajji') || n.includes('bhaji') ||
+    n.includes('pakoda') || n.includes('pakora') || n.includes('pattice') || n.includes('piyush') ||
     /\bveg\b/i.test(n) || /\bvegetarian\b/i.test(n)
   ) {
     return true;
@@ -108,11 +112,14 @@ export function isPureVegRestaurantName(restaurantName?: string): boolean {
     return false;
   }
 
-  // Heritage vegetarian landmarks and pure-veg indicators
+  // Heritage vegetarian landmarks and pure-veg institutions (Pune, Mumbai, etc.)
   const vegLandmarks = [
+    'joshi wadewale', 'rohit wadewale', 'wadewale', 'wade wale', 'wada pav', 'vadapav',
+    'shaniwar peth', 'sadashiv peth', 'narayan peth',
     'poona guest house', 'poona guest', 'durvankur', 'shreyas', 'sukanta',
     'badshahi', 'shabree', 'sujata mastani', 'sujata', 'chitale bandhu',
     'chitale', 'bedekar tea stall', 'bedekar', 'bipin snacks', 'bipin katta',
+    'tilak hotel', 'tilak snacks', 'saraswati misal',
     'vaishali', 'roopali', 'hotel roopali', 'wadeshwar', 'girija pure veg',
     'ankur veg', 'visava pure veg', 'greens pure veg', 'gajanan vadapav',
     'mamledar misal', 'prashant corner', 'sardar refreshments', 'gurukripa',
@@ -126,6 +133,13 @@ export function isPureVegRestaurantName(restaurantName?: string): boolean {
 
   // Generic pure veg identifiers
   return (
+    lower.includes('wadewale') ||
+    lower.includes('wade wale') ||
+    lower.includes('vada pav') ||
+    lower.includes('vadapav') ||
+    lower.includes('wada') ||
+    lower.includes('batata vada') ||
+    lower.includes('shaniwar peth') ||
     lower.includes('pure veg') ||
     lower.includes('pure-veg') ||
     (lower.includes('veg') && !lower.includes('non')) ||
@@ -137,6 +151,13 @@ export function isPureVegRestaurantName(restaurantName?: string): boolean {
     lower.includes('dining hall') ||
     lower.includes('dining room') ||
     lower.includes('khanawal') ||
+    lower.includes('upahar') ||
+    lower.includes('upahargruh') ||
+    lower.includes('upahar gruh') ||
+    lower.includes('nashta') ||
+    lower.includes('poli bhaji') ||
+    lower.includes('farsan') ||
+    lower.includes('sweet mart') ||
     lower.includes('bhavan') ||
     lower.includes('udupi') ||
     lower.includes('udipi') ||
@@ -199,3 +220,187 @@ export function getDishExactPlateImage(dishName?: string, dishImage?: string, re
 export function getDishExactFlyingImage(dishName?: string, dishImage?: string, restaurantName?: string): string {
   return getDishVisualAssets(dishName, dishImage, restaurantName).flyingImage;
 }
+
+/**
+ * Universal Strict Culinary Search & Menu Matcher
+ * Guarantees that dish searches strictly return dishes relevant to the searched dish,
+ * matching on dish name / title identity rather than accidental ingredient mentions.
+ * Prevents cross-cuisine leakage, unrelated substitutions, or dish mixing.
+ */
+export function isDishRelevantToSearch(dishTitle?: string, userQuery?: string): boolean {
+  if (!dishTitle || !userQuery) return false;
+
+  const clean = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const dRaw = clean(dishTitle);
+  const qRaw = clean(userQuery);
+  if (!dRaw || !qRaw) return false;
+
+  const typoMap: Record<string, string> = {
+    vadapav: 'vada pav',
+    wada: 'vada',
+    bhajiya: 'bhaji',
+    bhajji: 'bhaji',
+    pakoda: 'bhaji',
+    pakora: 'bhaji',
+    poori: 'puri',
+    pavbhaji: 'pav bhaji',
+    panipuri: 'pani puri',
+    ragdapuri: 'ragda puri',
+    shevpuri: 'sev puri',
+    bhelpuri: 'bhel puri',
+    pulav: 'pulao',
+    biriyani: 'biryani',
+    briyani: 'biryani',
+    pattice: 'pattice',
+    patties: 'pattice'
+  };
+
+  const normalize = (str: string) => {
+    let s = str;
+    for (const [k, v] of Object.entries(typoMap)) {
+      s = s.replace(new RegExp(`\\b${k}\\b`, 'g'), v);
+    }
+    return s.replace(/\s+/g, ' ').trim();
+  };
+
+  const d = normalize(dRaw);
+  const q = normalize(qRaw);
+
+  // === 1. Pav Bhaji & Variations (Strict Isolation) ===
+  const isPavBhajiQuery =
+    q.includes('pav bhaji') ||
+    (q.includes('pav') && q.includes('bhaji') && !q.includes('masala pav') && !q.includes('vada pav') && !q.includes('misal'));
+
+  if (isPavBhajiQuery) {
+    const isDishPavBhaji =
+      d.includes('pav bhaji') ||
+      (d.includes('pav') && d.includes('bhaji') && !d.includes('vada pav') && !d.includes('misal pav'));
+
+    if (!isDishPavBhaji) return false;
+
+    // If query specifically asks for cheese pav bhaji:
+    if (q.includes('cheese') && !d.includes('cheese') && !d.includes('cheesy')) {
+      return false;
+    }
+    return true;
+  }
+
+  // === 2. Masala Pav (Distinct dish: spiced butter pav on tawa, NOT pav bhaji) ===
+  const isMasalaPavQuery =
+    q.includes('masala pav') || (q.includes('masala') && q.includes('pav') && !q.includes('bhaji'));
+
+  if (isMasalaPavQuery) {
+    return (
+      (d.includes('masala pav') || (d.includes('masala') && d.includes('pav'))) &&
+      !d.includes('pav bhaji') &&
+      !d.includes('vada pav') &&
+      !d.includes('misal')
+    );
+  }
+
+  // === 3. Vada Pav ===
+  const isVadaPavQuery =
+    q.includes('vada pav') || q.includes('wada pav') || (q.includes('vada') && q.includes('pav'));
+
+  if (isVadaPavQuery) {
+    return (
+      d.includes('vada pav') ||
+      d.includes('wada pav') ||
+      (d.includes('vada') && d.includes('pav') && !d.includes('misal') && !d.includes('bhaji'))
+    );
+  }
+
+  // === 4. Pani Puri / Golgappa ===
+  const isPaniPuriQuery =
+    q.includes('pani puri') || q.includes('golgappa') || q.includes('puchka');
+
+  if (isPaniPuriQuery) {
+    return d.includes('pani puri') || d.includes('golgappa') || d.includes('puchka');
+  }
+
+  // === 5. Ragda Puri ===
+  const isRagdaPuriQuery =
+    q.includes('ragda puri') || (q.includes('ragda') && q.includes('puri'));
+
+  if (isRagdaPuriQuery) {
+    return (
+      (d.includes('ragda puri') || (d.includes('ragda') && d.includes('puri'))) &&
+      !d.includes('pattice') &&
+      !d.includes('patties')
+    );
+  }
+
+  // === 6. Ragda Pattice ===
+  const isRagdaPatticeQuery =
+    q.includes('ragda pattice') || q.includes('ragda patties') || q.includes('pattice') || q.includes('patties');
+
+  if (isRagdaPatticeQuery) {
+    return d.includes('pattice') || d.includes('patties') || (d.includes('ragda') && d.includes('pattice'));
+  }
+
+  // === 7. Kanda Bhaji / Onion Pakoda ===
+  const isKandaBhajiQuery =
+    q.includes('kanda bhaji') || q.includes('khekda bhaji') || (q.includes('kanda') && (q.includes('bhaji') || q.includes('pakoda')));
+
+  if (isKandaBhajiQuery) {
+    return (
+      (d.includes('kanda') && (d.includes('bhaji') || d.includes('pakoda') || d.includes('bhajji'))) ||
+      d.includes('khekda bhaji')
+    );
+  }
+
+  // === 8. Batata Bhaji (Yellow sukhi sabzi, distinct from Puri Bhaji and Pav Bhaji) ===
+  const isBatataBhajiQuery =
+    q.includes('batata bhaji') || q.includes('batatyachi bhaji') ||
+    (q.includes('batata') && q.includes('bhaji') && !q.includes('puri') && !q.includes('pav'));
+
+  if (isBatataBhajiQuery) {
+    return (
+      (d.includes('batata') && (d.includes('bhaji') || d.includes('bhajji')) && !d.includes('puri') && !d.includes('pav')) ||
+      d.includes('batatyachi bhaji')
+    );
+  }
+
+  // === 9. Puri Bhaji ===
+  const isPuriBhajiQuery =
+    (q.includes('puri') || q.includes('poori')) && (q.includes('bhaji') || q.includes('bhajji') || q.includes('sagu'));
+
+  if (isPuriBhajiQuery) {
+    return (
+      (d.includes('puri') || d.includes('poori')) &&
+      (d.includes('bhaji') || d.includes('bhajji') || d.includes('sagu')) &&
+      !d.includes('pav')
+    );
+  }
+
+  // === 10. Shrikhand Puri ===
+  const isShrikhandPuriQuery =
+    (q.includes('shrikhand') || q.includes('amrakhand')) && (q.includes('puri') || q.includes('poori'));
+
+  if (isShrikhandPuriQuery) {
+    return (d.includes('shrikhand') || d.includes('amrakhand')) && (d.includes('puri') || d.includes('poori'));
+  }
+
+  // === 11. Misal / Misal Pav ===
+  const isMisalQuery = q.includes('misal') || q.includes('katakirr');
+  if (isMisalQuery) {
+    return d.includes('misal') || d.includes('katakirr');
+  }
+
+  // === 12. General Food Queries (Biryani, Pizza, Burger, Dosa, Idli, Pulao, Mastani, Falooda, etc.) ===
+  // Direct full substring match
+  if (d.includes(q)) return true;
+
+  // Significant token match (all words with length >= 3 must appear in dish title)
+  const stopWords = new Set(['special', 'plate', 'dish', 'best', 'super', 'hot', 'authentic', 'famous', 'legendary', 'the', 'and', 'with', 'for']);
+  const qTokens = q.split(/\s+/).filter(t => t.length >= 3 && !stopWords.has(t));
+  if (qTokens.length > 0) {
+    const allTokensPresent = qTokens.every(token => d.includes(token));
+    if (allTokensPresent) return true;
+  }
+
+  return false;
+}
+

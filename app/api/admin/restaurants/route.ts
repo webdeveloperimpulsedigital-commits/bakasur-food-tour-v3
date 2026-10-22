@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const restaurants = await db.getRestaurants();
+    // Admin review: include unverified (legacy/user-entered) rows; each row carries is_verified
+    const restaurants = await db.getRestaurants({ includeUnverified: true });
     return NextResponse.json({ success: true, count: restaurants.length, data: restaurants });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to fetch restaurants';

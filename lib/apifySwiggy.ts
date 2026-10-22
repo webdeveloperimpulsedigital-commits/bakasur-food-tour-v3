@@ -427,30 +427,7 @@ export async function fetchSwiggyRestaurantViaApify(
   }
 
   if (!isApifyConfigured()) {
-    // If not configured, but query is a Swiggy URL or has restaurant_id, return synthetic restaurant
-    if (parsedUrl.restaurantId) {
-      return [
-        {
-          restaurant_id: parsedUrl.restaurantId,
-          name: parsedUrl.name || cleanQuery || 'Meghana Foods',
-          cuisine: ['Biryani', 'Andhra', 'South Indian'],
-          rating: 4.7,
-          rating_count: '93K+',
-          cost_for_two: '₹500 for two',
-          cost_for_two_rupees: 500,
-          delivery_time: '30-35 MINS',
-          delivery_time_minutes: 33,
-          address: `${parsedUrl.name || cleanQuery}, ${cityKey}`,
-          city: cityKey,
-          is_open: true,
-          veg_only: false,
-          offers: ['FLAT DEAL: 50% OFF'],
-          badges: ['Best in Biryani', 'Best in Bolt'],
-          image_url: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80',
-          url: query.startsWith('http') ? query : `https://www.swiggy.com/city/${cityKey}/${encodeURIComponent(cleanQuery)}`
-        }
-      ];
-    }
+    // Strict mode: never fabricate a restaurant when live data is unavailable
     return [];
   }
 
@@ -723,6 +700,23 @@ export async function fetchSwiggyRestaurantMenu(
 }
 
 /**
+ * Strict name equality check between a requested restaurant name and a Swiggy listing
+ * (normalised; generic words like "hotel"/"restaurant" ignored).
+ */
+function isSameRestaurantName(requested: string, candidate: string): boolean {
+  const norm = (s: string) =>
+    (s || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/\b(hotel|restaurant|the|cafe|pure veg|family|and)\b/g, ' ')
+      .replace(/[^a-z0-9]/g, '');
+  const a = norm(requested);
+  const b = norm(candidate);
+  if (!a || !b) return false;
+  return a === b || (a.length >= 5 && b.startsWith(a)) || (b.length >= 5 && a.startsWith(b));
+}
+
+/**
  * 3. Primary dish extractor: live scrape restaurant menu items and images from Swiggy
  * Coordinates Apify actor discovery + direct menu retrieval
  */
@@ -758,12 +752,13 @@ export async function fetchSwiggyDishesViaApify(
     directDishes = await fetchSwiggyRestaurantMenu(targetId, lat, lng);
   }
 
-  // B. Direct Swiggy Search First: Search restaurant directly on Swiggy & fetch authentic live menu
+  // B. Direct Swiggy Search: use a result ONLY if its name genuinely matches (never blindly take [0])
   if (directDishes.length === 0) {
     try {
       const liveMatches = await searchSwiggyDirectRestaurant(restaurantName, cityKey, { lat, lng });
-      if (liveMatches.length > 0 && liveMatches[0].restaurant_id) {
-        directDishes = await fetchSwiggyRestaurantMenu(liveMatches[0].restaurant_id, lat, lng);
+      const matched = liveMatches.find(r => isSameRestaurantName(cleanName, r.name));
+      if (matched && matched.restaurant_id) {
+        directDishes = await fetchSwiggyRestaurantMenu(matched.restaurant_id, lat, lng);
       }
     } catch (directErr) {
       console.warn('Direct Swiggy search notice:', directErr);
@@ -780,17 +775,8 @@ export async function fetchSwiggyDishesViaApify(
       });
 
       if (scrapedRestaurants.length > 0) {
-        // Find the best matching restaurant
-        const queryLower = cleanName.toLowerCase();
-        let matchedRest = scrapedRestaurants.find(r => r.name.toLowerCase().includes(queryLower));
-        if (!matchedRest) {
-          // Check if any word from cleanName is in restaurant name
-          const words = queryLower.split(' ').filter(w => w.length > 2);
-          matchedRest = scrapedRestaurants.find(r => words.some(w => r.name.toLowerCase().includes(w)));
-        }
-        if (!matchedRest) {
-          matchedRest = scrapedRestaurants[0];
-        }
+        // Use a scraped restaurant ONLY if its name genuinely matches (no loose word or [0] fallback)
+        const matchedRest = scrapedRestaurants.find(r => isSameRestaurantName(cleanName, r.name));
 
         if (matchedRest && matchedRest.restaurant_id) {
           directDishes = await fetchSwiggyRestaurantMenu(matchedRest.restaurant_id, lat, lng);

@@ -2731,6 +2731,26 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       rating: 4.8,
       category: "Indian Breads",
       is_veg: 1
+    },
+    {
+      name: "Authentic Maharashtrian Puri Bhaji",
+      description: "4 Crispy golden puffed puris served with aromatic yellow batata sukhi bhaji, lemon and green thecha.",
+      price: 130,
+      image: "/images/food/puri_bhaji.jpg",
+      popularity: 99,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Traditional Kheer with Saffron & Roasted Dry Fruits",
+      description: "Slow-cooked rich creamy milk kheer infused with Kashmiri saffron, cardamom, cashews, almonds & pistachios.",
+      price: 90,
+      image: "/images/food/kheer.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Desserts & Sweets",
+      is_veg: 1
     }
   ],
   'poona guest house': [
@@ -3003,6 +3023,26 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       rating: 4.8,
       category: "Indian Breads",
       is_veg: 1
+    },
+    {
+      name: "Authentic Maharashtrian Puri Bhaji",
+      description: "4 Crispy golden puffed puris served with aromatic yellow batata sukhi bhaji, lemon and green thecha.",
+      price: 130,
+      image: "/images/food/puri_bhaji.jpg",
+      popularity: 99,
+      rating: 4.9,
+      category: "Maharashtrian",
+      is_veg: 1
+    },
+    {
+      name: "Traditional Kheer with Saffron & Roasted Dry Fruits",
+      description: "Slow-cooked rich creamy milk kheer infused with Kashmiri saffron, cardamom, cashews, almonds & pistachios.",
+      price: 90,
+      image: "/images/food/kheer.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Desserts & Sweets",
+      is_veg: 1
     }
   ],
 
@@ -3147,6 +3187,542 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       image: "/api/ai/dish-image?dish=Masala%20Chai&v=v28",
       popularity: 99,
       rating: 5.0
+    }
+  ],
+
+  // Joshi Wadewale (Iconic Pune Maharashtrian Pure Veg Snack Institution since 1989)
+  'joshi wadewale': [
+    {
+      name: "Joshi Special Vada Pav",
+      description: "Pune's iconic 1989 legend: piping hot golden batata vada inside fresh soft pav, slathered with fiery dry garlic chutney, green mint chutney & fried green chilli.",
+      price: 25,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 100,
+      rating: 5.0,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Batata Vada Plate (2 Pcs)",
+      description: "Handcrafted potato mash tempered with mustard seeds, green chillies, ginger & turmeric, golden fried in besan batter, served with fried chillies.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Puneri Misal Pav Special",
+      description: "Authentic spicy sprouted matki usal layered with fluffy poha, crunchy Puneri farsan, chopped onions, coriander, fiery tarri rassa and soft butter pav.",
+      price: 90,
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v30",
+      popularity: 98,
+      rating: 4.9,
+      category: "Misal & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Kothimbir Vadi (6 Pcs)",
+      description: "Traditional Maharashtrian steamed fresh coriander and gram flour diamond cakes shallow-fried to perfection, served with sweet-tangy chutney.",
+      price: 80,
+      image: "/images/food/kothimbir_vadi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Maharashtrian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Sabudana Vada with Sweet Dahi (2 Pcs)",
+      description: "Crispy golden fried sago tapioca pearl and roasted crushed peanut patties, served with sweet spiced curd and peanut chutney.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v30",
+      popularity: 97,
+      rating: 4.9,
+      category: "Upwas & Fasting Special",
+      is_veg: 1
+    },
+    {
+      name: "Puneri Kanda Poha Plate",
+      description: "Fluffy flattened rice cooked with tempered mustard seeds, turmeric, green chillies, curry leaves, potatoes, roasted peanuts & grated coconut.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Kanda%20Poha&v=v30",
+      popularity: 97,
+      rating: 4.8,
+      category: "Maharashtrian Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Kanda Bhajji Plate (Pakoda)",
+      description: "Thinly sliced onions coated in spiced carom-seed besan batter and fried ultra crispy, served with fried salted green chillies.",
+      price: 60,
+      image: "/api/ai/dish-image?dish=Kanda%20Bhaji&v=v30",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Moong Dal Bhajji Plate",
+      description: "Spiced yellow moong dal fritters deep-fried golden and crunchy, served with mint coriander chutney.",
+      price: 70,
+      image: "/api/ai/dish-image?dish=Bhajji&v=v30",
+      popularity: 95,
+      rating: 4.8,
+      category: "Maharashtrian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Maharashtrian Thalipeeth with Loni Butter",
+      description: "Multi-grain roasted flour spiced flatbread made with traditional bhajani, served piping hot with fresh white butter and spicy green thecha.",
+      price: 90,
+      image: "/api/ai/dish-image?dish=Thalipeeth&v=v30",
+      popularity: 98,
+      rating: 4.9,
+      category: "Maharashtrian Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Sabudana Khichdi (Upwas Special)",
+      description: "Sago tapioca pearls sauteed in desi ghee with roasted peanut powder, cumin seeds, green chillies, and boiled potatoes.",
+      price: 70,
+      image: "/api/ai/dish-image?dish=Sabudana%20Khichdi&v=v30",
+      popularity: 96,
+      rating: 4.8,
+      category: "Upwas & Fasting Special",
+      is_veg: 1
+    },
+    {
+      name: "Puri Bhaji Plate (4 Puris with Batata Bhaji)",
+      description: "Puffed golden whole wheat puris served with comforting Maharashtrian yellow potato bhaji tempered with mustard and turmeric.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Puri%20Bhaji&v=v30",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Special Masala Taak (Cooling Buttermilk)",
+      description: "Refreshing churned spiced yogurt cooler seasoned with roasted cumin, ginger, coriander, and rock salt.",
+      price: 30,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Chilled Shahi Piyush Glass",
+      description: "Thick, creamy, traditional Maharashtrian festive beverage prepared with sweetened shrikhand, curd, nutmeg, saffron, and pistachios.",
+      price: 70,
+      image: "/api/ai/dish-image?dish=Lassi&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Special Ginger Masala Cutting Chai",
+      description: "Strong piping hot brew of Assam tea leaves, buffalo milk, crushed ginger, cardamom, and lemongrass.",
+      price: 20,
+      image: "/api/ai/dish-image?dish=Masala%20Chai&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Special South Indian Filter Coffee",
+      description: "Fresh chicory-infused strong coffee decoction frothed with rich hot milk.",
+      price: 35,
+      image: "/api/ai/dish-image?dish=Filter%20Coffee&v=v30",
+      popularity: 95,
+      rating: 4.7,
+      category: "Beverages",
+      is_veg: 1
+    }
+  ],
+
+  // Rohit Wadewale (Pune Fast Food & Vada Pav Chain)
+  'rohit wadewale': [
+    {
+      name: "Rohit Classic Vada Pav",
+      description: "Rohit's signature freshly fried jumbo batata vada packed inside soft pav with spicy green chutney, fiery dry garlic chutney and fried chillies.",
+      price: 25,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 100,
+      rating: 5.0,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Rohit Cheese Burst Vada Pav",
+      description: "Golden crispy batata vada topped with melted processed cheese slice and spiced mayo inside soft toasted pav.",
+      price: 50,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Ulta Vada Pav (Signature Specialty)",
+      description: "Rohit's famous invention: spicy potato bhaji stuffed inside pav, dipped completely in spiced gram flour batter and fried crispy like a savory pocket.",
+      price: 45,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Batata Vada Plate (2 Pcs)",
+      description: "Two piping hot Maharashtrian potato fritters served with hot garlic-coconut chutney and fried green chillies.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 98,
+      rating: 4.9,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Puneri Misal Pav with Butter Pav",
+      description: "Spicy sprout curry with thick crunchy farsan, diced onions, lemon wedge, and 2 butter-toasted pavs.",
+      price: 85,
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v30",
+      popularity: 98,
+      rating: 4.9,
+      category: "Misal & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Samosa Pav with Chutney",
+      description: "Crunchy spiced potato and green pea samosa stuffed inside soft pav with sweet date chutney and fiery garlic podi.",
+      price: 30,
+      image: "/api/ai/dish-image?dish=Samosa&v=v30",
+      popularity: 97,
+      rating: 4.8,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Kanda Bhaji Plate (Pyaaz Pakoda)",
+      description: "Crunchy onion fritters tossed with carom seeds and green chillies, fried crisp.",
+      price: 60,
+      image: "/api/ai/dish-image?dish=Kanda%20Bhaji&v=v30",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Sabudana Vada with Dahi (2 Pcs)",
+      description: "Fasting delicacy: crispy tapioca pearl vadas with crushed roasted peanuts, served with sweetened curd.",
+      price: 75,
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v30",
+      popularity: 97,
+      rating: 4.9,
+      category: "Upwas & Fasting Special",
+      is_veg: 1
+    },
+    {
+      name: "Kanda Poha with Peanuts & Sev",
+      description: "Steamed seasoned flattened rice garnished with crunchy peanuts, fine sev, fresh cilantro and lemon.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Kanda%20Poha&v=v30",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Bread Pattice Plate with Chutney",
+      description: "Triangular bread slices sandwiched with spicy batata mash, dipped in gram flour batter and deep-fried golden.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 95,
+      rating: 4.8,
+      category: "Maharashtrian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Sabudana Khichdi Plate",
+      description: "Upwas special sago pearls tossed in ghee with roasted peanuts, cumin, and potatoes.",
+      price: 65,
+      image: "/api/ai/dish-image?dish=Sabudana%20Khichdi&v=v30",
+      popularity: 95,
+      rating: 4.7,
+      category: "Upwas & Fasting Special",
+      is_veg: 1
+    },
+    {
+      name: "Special Masala Taak (Buttermilk)",
+      description: "Chilled churning of fresh curd with roasted cumin, mint, and black salt.",
+      price: 25,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Kokum Solkadhi Glass",
+      description: "Digestive pink cooler made with fresh coconut milk, kokum juice, garlic, and green chillies.",
+      price: 40,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 97,
+      rating: 4.8,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Special Kadak Cutting Chai",
+      description: "Strong hot milk tea brewed with crushed ginger and aromatic spices.",
+      price: 20,
+      image: "/api/ai/dish-image?dish=Masala%20Chai&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Thick Cold Coffee with Chocolate Sauce",
+      description: "Frothed rich chilled milk coffee topped with chocolate syrup.",
+      price: 60,
+      image: "/api/ai/dish-image?dish=Cold%20Coffee&v=v30",
+      popularity: 96,
+      rating: 4.8,
+      category: "Beverages",
+      is_veg: 1
+    }
+  ],
+
+  // Shaniwar Peth (Pune Heritage Cultural Snacks & Meals)
+  'shaniwar peth': [
+    {
+      name: "Shaniwar Peth Puneri Vada Pav",
+      description: "Iconic heritage-style batata vada nestled in soft pav with freshly ground dry garlic-coconut chutney and fried salted green chillies.",
+      price: 25,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 100,
+      rating: 5.0,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Shaniwar Wada Special Misal Pav",
+      description: "Heritage Puneri misal with sprouted matki, crunchy chiwda and farsan, topped with spicy red rassa, chopped onion, and butter pav.",
+      price: 90,
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v30",
+      popularity: 100,
+      rating: 5.0,
+      category: "Misal & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Traditional Pithla Bhakri with Thecha",
+      description: "Piping hot besan pithla tempered with mustard and garlic, served with fresh roasted jowar bhakri, fiery green mirchi thecha, and raw onion.",
+      price: 150,
+      image: "/images/food/pithla_bhakri.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Maharashtrian Meals",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Kothimbir Vadi (6 Pcs)",
+      description: "Traditional coriander cakes steamed and shallow-fried golden crisp, served with mint chutney.",
+      price: 80,
+      image: "/images/food/kothimbir_vadi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Maharashtrian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Maharashtrian Thalipeeth with Fresh White Loni",
+      description: "Spiced multi-grain bhajani flatbread pan-toasted with ghee, served with dollop of fresh churned white butter.",
+      price: 95,
+      image: "/images/food/thalipeeth.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Maharashtrian Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Puran Poli with Desi Ghee & Katachi Amti",
+      description: "Festive sweet flatbread stuffed with fragrant chana dal jaggery filling, drenched in pure cow ghee and paired with spicy chana broth amti.",
+      price: 120,
+      image: "/images/food/puran_poli.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Maharashtrian Meals",
+      is_veg: 1
+    },
+    {
+      name: "Shrikhand Puri Plate (4 Puris with Kesar Shrikhand)",
+      description: "Golden hot wheat puris served with thick saffron-cardamom strained yogurt sweet.",
+      price: 110,
+      image: "/images/food/shrikhand_puri.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Maharashtrian Meals",
+      is_veg: 1
+    },
+    {
+      name: "Sabudana Vada with Sweet Dahi (2 Pcs)",
+      description: "Crunchy sago patties with crushed roasted peanuts served with sweet dahi.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v30",
+      popularity: 97,
+      rating: 4.9,
+      category: "Upwas & Fasting Special",
+      is_veg: 1
+    },
+    {
+      name: "Authentic Puneri Kanda Poha",
+      description: "Fluffy yellow flattened rice with roasted peanuts, curry leaves, fresh grated coconut, and lemon.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Kanda%20Poha&v=v30",
+      popularity: 97,
+      rating: 4.8,
+      category: "Maharashtrian Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Bharli Vangi with Jowar Bhakri (2 Pcs)",
+      description: "Baby brinjals stuffed with roasted peanut, sesame and Goda masala gravy, served with hot jowar bhakri.",
+      price: 160,
+      image: "/images/food/bharli_vangi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Maharashtrian Meals",
+      is_veg: 1
+    },
+    {
+      name: "Puneri Mattha (Spiced Buttermilk)",
+      description: "Churned curd drink infused with green chillies, ginger, roasted cumin, and fresh cilantro.",
+      price: 30,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Chilled Solkadhi Glass",
+      description: "Traditional digestive coconut-kokum cooler.",
+      price: 45,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 97,
+      rating: 4.8,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Special Masala Chai",
+      description: "Spiced boiling ginger tea.",
+      price: 20,
+      image: "/api/ai/dish-image?dish=Masala%20Chai&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Beverages",
+      is_veg: 1
+    }
+  ],
+
+  // Generic Wadewale (Fallback for any Wadewale outlet)
+  'wadewale': [
+    {
+      name: "Crispy Famous Vada Pav",
+      description: "Classic hot batata vada inside fresh pav with garlic chutney and fried chillies.",
+      price: 25,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 100,
+      rating: 5.0,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Batata Vada Plate (2 Pcs)",
+      description: "Piping hot spiced potato fritters served with chutneys.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Vada%20Pav&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Vada Pav & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Puneri Misal Pav",
+      description: "Sprouted matki usal with spicy tarri, farsan and soft pav.",
+      price: 85,
+      image: "/api/ai/dish-image?dish=Misal%20Pav&v=v30",
+      popularity: 98,
+      rating: 4.9,
+      category: "Misal & Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Crispy Kothimbir Vadi",
+      description: "Steamed cilantro cakes shallow-fried crisp.",
+      price: 80,
+      image: "/images/food/kothimbir_vadi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Maharashtrian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Sabudana Vada with Dahi (2 Pcs)",
+      description: "Golden fried tapioca patties with roasted peanuts.",
+      price: 80,
+      image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v30",
+      popularity: 97,
+      rating: 4.9,
+      category: "Upwas & Fasting Special",
+      is_veg: 1
+    },
+    {
+      name: "Kanda Poha Plate",
+      description: "Tempered flattened rice with peanuts, curry leaves & lemon.",
+      price: 40,
+      image: "/api/ai/dish-image?dish=Kanda%20Poha&v=v30",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian Breakfast",
+      is_veg: 1
+    },
+    {
+      name: "Kanda Bhaji Plate",
+      description: "Crispy onion fritters with fried green chillies.",
+      price: 60,
+      image: "/api/ai/dish-image?dish=Kanda%20Bhaji&v=v30",
+      popularity: 96,
+      rating: 4.8,
+      category: "Maharashtrian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Special Masala Taak",
+      description: "Chilled spiced churned buttermilk.",
+      price: 25,
+      image: "/images/food/solkadhi.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: "Beverages",
+      is_veg: 1
+    },
+    {
+      name: "Masala Chai",
+      description: "Hot milk tea with ginger and cardamom.",
+      price: 20,
+      image: "/api/ai/dish-image?dish=Masala%20Chai&v=v30",
+      popularity: 99,
+      rating: 5.0,
+      category: "Beverages",
+      is_veg: 1
     }
   ],
 
@@ -4264,7 +4840,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
   // Vada Pav & Street Food
   {
     name: "Vada Pav & Street Food",
-    keywords: ['vadapav', 'vada pav', 'wada pav', 'batata vada', 'vada', 'street food', 'babu vadapav', 'gajanan', 'jumbo king'],
+    keywords: ['vadapav', 'vada pav', 'wada pav', 'batata vada', 'vada', 'wada', 'wadewale', 'wade wale', 'joshi', 'rohit', 'street food', 'babu vadapav', 'gajanan', 'jumbo king', 'nashta', 'snacks'],
     dishes: [
       { name: "Special Legendary Vada Pav (2 Pcs)", description: "Freshly fried golden potato dumplings stuffed in soft ladi pav with red garlic chutney.", price: 50, image: "/api/ai/dish-image?dish=Vada%20Pav&v=v28", popularity: 100, rating: 5.0 },
       { name: "Fiery Schezwan Cheese Vada Pav", description: "Loaded with melted mozzarella, spicy schezwan glaze, and roasted garlic chutney.", price: 90, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
@@ -4272,7 +4848,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
       { name: "Crispy Sabudana Vada with Sweet Dahi", description: "Golden fried tapioca patties with roasted peanuts and sweetened curd.", price: 90, image: "/api/ai/dish-image?dish=Sabudana%20Vada&v=v28", popularity: 97, rating: 4.8 },
       { name: "Steamed Kanda Poha Plate", description: "Fluffy flattened rice tempered with mustard, onions, roasted peanuts & lemon.", price: 60, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80", popularity: 95, rating: 4.7 },
       { name: "Spicy Misal Pav Combo", description: "Fiery sprouted bean curry topped with crispy farsan, onion, lemon & soft pav.", price: 120, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
-      { name: "Batata Bhajji (Pakoda) Plate", description: "Crispy spiced gram flour coated potato fritters served with fried green chilies.", price: 70, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", popularity: 94, rating: 4.8 },
+      { name: "Batata Bhajji (Pakoda) Plate", description: "Crispy spiced gram flour coated potato fritters served with fried green chillies.", price: 70, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", popularity: 94, rating: 4.8 },
       { name: "Special Masala Chai Kulhad", description: "Cardamom & ginger infused hot milky tea served in traditional clay cup.", price: 30, image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80", popularity: 99, rating: 5.0 }
     ]
   },
@@ -4280,7 +4856,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
   // Misal & Maharashtrian
   {
     name: "Misal & Maharashtrian Food",
-    keywords: ['misal', 'tarri', 'bhakri', 'pithla', 'thalipeeth', 'maratha', 'kolhapuri', 'katakirr', 'bedekar', 'mamledar'],
+    keywords: ['misal', 'tarri', 'bhakri', 'pithla', 'thalipeeth', 'maratha', 'kolhapuri', 'katakirr', 'bedekar', 'mamledar', 'shaniwar peth', 'sadashiv peth', 'narayan peth', 'katta', 'bipin'],
     dishes: [
       { name: "Fiery Kolhapuri Tarri Misal Pav", description: "Sprouted moth beans in blistering spicy red cut rassa, crunchy farsan & fresh pav.", price: 140, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 100, rating: 5.0 },
       { name: "Special Puneri Sweet-Spicy Misal", description: "Authentic Pune style misal with pohe, matki, sample gravy, farsan & onion.", price: 130, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&auto=format&fit=crop&q=80", popularity: 98, rating: 4.9 },
@@ -4452,7 +5028,13 @@ export const CUISINE_MENUS: CuisineProfile[] = [
       { name: "Digestive Pink Kokum Solkadhi", description: "Chilled fresh coconut milk extract with wild kokum, garlic, and fresh coriander.", price: 50, image: "/images/food/solkadhi.jpg", popularity: 98, rating: 4.9 },
       { name: "Chilled Masala Taak (Mattha)", description: "Traditional spiced buttermilk tempered with roasted cumin, fresh coriander, ginger & mint.", price: 40, image: "/images/food/masala_taak.jpg", popularity: 98, rating: 4.9 },
       { name: "Authentic Bhajani Thalipeeth with White Butter", description: "Crispy multigrain roasted flatbread served with homemade white butter and pickle.", price: 120, image: "https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85", popularity: 97, rating: 4.8 },
-      { name: "Khandeshi Shev Bhaji with Pav", description: "Fiery spicy roasted red masala gravy served with thick crunchy ratlami shev.", price: 170, image: "/images/food/shev_bhaji.jpg", popularity: 96, rating: 4.8 }
+      { name: "Khandeshi Shev Bhaji with Pav", description: "Fiery spicy roasted red masala gravy served with thick crunchy ratlami shev.", price: 170, image: "/images/food/shev_bhaji.jpg", popularity: 96, rating: 4.8 },
+      { name: "Fresh Shrikhand Puri Plate (4 Pcs)", description: "Creamy saffron and cardamom-infused hung curd shrikhand served with 4 puffed golden wheat puris.", price: 160, image: "/images/food/shrikhand_puri.jpg", popularity: 99, rating: 5.0 },
+      { name: "Authentic Maharashtrian Puri Bhaji", description: "4 Crispy golden puffed puris served with aromatic yellow batata sukhi bhaji, lemon and green thecha.", price: 130, image: "/images/food/puri_bhaji.jpg", popularity: 98, rating: 4.9 },
+      { name: "Traditional Kheer with Saffron & Roasted Dry Fruits", description: "Slow-cooked rich creamy milk kheer infused with Kashmiri saffron, cardamom, cashews, almonds & pistachios.", price: 90, image: "/images/food/kheer.jpg", popularity: 98, rating: 4.9 },
+      { name: "Pure Alphonso Aamras Puri Platter", description: "Seasonal heritage special: pure Alphonso mango pulp served with 4 fluffy hot puris.", price: 210, image: "/images/food/aamras_puri.jpg", popularity: 99, rating: 5.0 },
+      { name: "Traditional Masala Bhaat with Pure Ghee", description: "Fragrant spiced wedding rice prepared with goda masala, tendli, cashews, and fresh coconut garnish.", price: 150, image: "/images/food/masala_bhaat.jpg", popularity: 97, rating: 4.8 },
+      { name: "Sabudana Khichdi with Sweet Dahi", description: "Tender sago pearls sauteed in pure ghee with roasted peanuts, cumin, and green chillies, served with fresh curd.", price: 90, image: "/images/food/sabudana_khichdi.jpg", popularity: 98, rating: 4.9 }
     ]
   },
 
@@ -4679,165 +5261,30 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     }
   }
 
-  // 2. Profile Selection based on authentic keywords
-  let matchedProfile = CUISINE_MENUS[0];
-  let maxScore = 0;
-
-  for (const profile of CUISINE_MENUS) {
-    let score = 0;
-    for (const kw of profile.keywords) {
-      const lowerKw = kw.toLowerCase().trim();
-      if (!lowerKw) continue;
-      const wordRegex = new RegExp(`(^|[^a-z0-9])${lowerKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'i');
-      if (wordRegex.test(restNameLower)) {
-        score += 60;
-      } else if (lowerKw.length >= 4 && restNameLower.includes(lowerKw)) {
-        score += 30;
-      } else if (wordRegex.test(descLower)) {
-        score += 25;
-      } else if (lowerKw.length >= 4 && text.includes(lowerKw)) {
-        score += 10;
-      }
-    }
-    if (score > maxScore) {
-      maxScore = score;
-      matchedProfile = profile;
-    }
+  // If this restaurant is NOT a recognized iconic brand, DO NOT fabricate generic dishes!
+  // Return empty array so the system fetches real-time Swiggy / Google Places data,
+  // or displays "Menu Not Available".
+  if (!isIconicMatch || collectedDishes.length === 0) {
+    return [];
   }
 
-  // 3. Fallback Heuristics & Deterministic Variety
   const isStrictVeg = isPureVegRestaurantName(restNameLower) ||
+    isPureVegRestaurantName(restaurant.name) ||
+    restNameLower.includes('wadewale') ||
+    restNameLower.includes('wade wale') ||
+    restNameLower.includes('vada pav') ||
+    restNameLower.includes('vadapav') ||
+    restNameLower.includes('wada') ||
+    restNameLower.includes('shaniwar peth') ||
     restNameLower.includes('pure veg') ||
     (restNameLower.includes('veg') && !restNameLower.includes('non')) ||
-    restNameLower.includes('bhojanalay') ||
-    restNameLower.includes('bhojanalaya') ||
-    restNameLower.includes('shakahari') ||
-    restNameLower.includes('swayampak') ||
-    restNameLower.includes('bhavan') ||
-    restNameLower.includes('udupi') ||
-    restNameLower.includes('dosa') ||
-    restNameLower.includes('idli') ||
-    restNameLower.includes('mithai') ||
-    restNameLower.includes('sweets') ||
-    restNameLower.includes('jain') ||
     restaurant.is_veg === 1;
 
-  const isNonVeg = !isStrictVeg && (restaurant.is_veg === 0 ||
-    restNameLower.includes('non-veg') ||
-    restNameLower.includes('non veg') ||
-    restNameLower.includes('nonveg') ||
-    restNameLower.includes('mutton') ||
-    restNameLower.includes('chicken') ||
-    restNameLower.includes('meat') ||
-    restNameLower.includes('fish') ||
-    restNameLower.includes('rassa') ||
-    restNameLower.includes('seafood') ||
-    restNameLower.includes('kebab') ||
-    restNameLower.includes('biryani') ||
-    restNameLower.includes('military'));
-
-  const isVegOnly = isStrictVeg || (!isNonVeg && (
-    restNameLower.includes('pure veg') ||
-    (restNameLower.includes('veg') && !restNameLower.includes('non')) ||
-    restaurant.is_veg === 1
-  ));
-
-  // Deterministic name hash
-  const nameHash = Math.abs(
-    restNameLower.split('').reduce((acc, char, i) => (acc * 31 + char.charCodeAt(0) * (i + 1)) | 0, restaurant.id || 0)
-  );
-
-  if (maxScore <= 30) {
-    if (isNonVeg) {
-      const nonVegProfiles = [
-        CUISINE_MENUS.find(p => p.name.includes('Biryani')),
-        CUISINE_MENUS.find(p => p.name.includes('Military')),
-        CUISINE_MENUS.find(p => p.name.includes('Multi-Cuisine') || p.name.includes('Bar')),
-        CUISINE_MENUS.find(p => p.name.includes('Chinese')),
-        CUISINE_MENUS.find(p => p.name.includes('Burger')),
-        CUISINE_MENUS.find(p => p.name.includes('Seafood'))
-      ].filter(Boolean) as CuisineProfile[];
-      matchedProfile = nonVegProfiles[nameHash % nonVegProfiles.length] || matchedProfile;
-    } else {
-      const vegProfiles = [
-        CUISINE_MENUS.find(p => p.name.includes('Pav Bhaji') || p.name.includes('Street Food')),
-        CUISINE_MENUS.find(p => p.name.includes('Pure Veg') || p.name.includes('Punjabi')),
-        CUISINE_MENUS.find(p => p.name.includes('Royal North Indian') || p.name.includes('Biryani & Mughlai Veg')),
-        CUISINE_MENUS.find(p => p.name.includes('South Indian')),
-        CUISINE_MENUS.find(p => p.name.includes('Maharashtrian Swayampakghar'))
-      ].filter(Boolean) as CuisineProfile[];
-      matchedProfile = vegProfiles[nameHash % vegProfiles.length] || matchedProfile;
-    }
-  }
-
-  // 4. Complement dishes from matchedProfile to provide a rich, complete menu (25-35 items)
-  if (collectedDishes.length < 28) {
-    let profileDishes = [...matchedProfile.dishes];
-    if (isStrictVeg) {
-      profileDishes = profileDishes.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
-    }
-    // If NOT an iconic match, rotate profile dishes deterministically so different family restaurants highlight different dishes
-    if (!isIconicMatch && profileDishes.length > 3) {
-      const offset = (nameHash % (profileDishes.length - 2));
-      const rotated = [...profileDishes.slice(offset), ...profileDishes.slice(0, offset)];
-      profileDishes.length = 0;
-      profileDishes.push(...rotated);
-    }
-
-    for (const item of profileDishes) {
-      if (isStrictVeg && (!isDishVeg(item.name) || item.is_veg === 0)) continue;
-      const coreName = item.name.toLowerCase().replace(/special|famous|royal|grand|hot|fresh|deluxe/gi, '').trim();
-      const alreadyHas = collectedDishes.some(existing => {
-        const existCore = existing.name.toLowerCase().replace(/special|famous|royal|grand|hot|fresh|deluxe/gi, '').trim();
-        return existCore.includes(coreName) || coreName.includes(existCore);
-      });
-      if (!alreadyHas) {
-        collectedDishes.push({
-          ...item,
-          category: item.category || inferDishCategory(item.name, item.description),
-          is_veg: item.is_veg !== undefined ? item.is_veg : (isDishVeg(item.name) ? 1 : 0)
-        });
-      }
-      if (collectedDishes.length >= 30) break;
-    }
-  }
-
-  // 4b. Strict Veg vs Non-Veg Alignment:
-  const isExplicitNonVegJoint = !isStrictVeg && (
-    restNameLower.includes('non-veg') ||
-    restNameLower.includes('non veg') ||
-    restNameLower.includes('nonveg') ||
-    restNameLower.includes('mutton') ||
-    restNameLower.includes('chicken') ||
-    restNameLower.includes('meat') ||
-    restNameLower.includes('fish') ||
-    restNameLower.includes('seafood') ||
-    restNameLower.includes('prawn') ||
-    restNameLower.includes('crab') ||
-    restNameLower.includes('military') ||
-    restNameLower.includes('biryani') ||
-    restNameLower.includes('kebab') ||
-    restNameLower.includes('kabab') ||
-    restNameLower.includes('kfc') ||
-    restNameLower.includes('fried chicken') ||
-    restNameLower.includes('kentucky') ||
-    restNameLower.includes('bar') ||
-    restNameLower.includes('pub') ||
-    restNameLower.includes('permit room')
-  );
-
-  const isStrictVegRestaurant = isStrictVeg;
-
   let finalDishes = collectedDishes;
-  if (isStrictVegRestaurant || restaurant.is_veg === 1) {
-    // Pure veg restaurants must strictly contain ZERO non-veg dishes
+  if (isStrictVeg || restaurant.is_veg === 1 || isPureVegRestaurantName(restaurant.name)) {
     finalDishes = finalDishes.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
-  } else if (!isExplicitNonVegJoint) {
-    // General family restaurants/hotels without non-veg branding must place all delicious vegetarian favorites first
-    const vegItems = finalDishes.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
-    const nonVegItems = finalDishes.filter(d => !isDishVeg(d.name) || d.is_veg === 0);
-    finalDishes = [...vegItems, ...nonVegItems];
   }
+
 
   // 5. Return authentic dishes with verified categories, real names, and pure food visual assets
   // Ensure the top 3 items have top ratings (5.0, 4.95, 4.9) and is_recommended: 1 so Frame 3 features them on top cards!

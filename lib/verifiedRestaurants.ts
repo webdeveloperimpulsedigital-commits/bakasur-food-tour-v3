@@ -1,0 +1,596 @@
+/**
+ * Verified Restaurant Engine (Swiggy-backed, strict mode)
+ * ------------------------------------------------------------------
+ * Single source of truth for which restaurants may be shown to users.
+ *
+ * A restaurant is shown ONLY if ALL of the following are confirmed live from
+ * Swiggy's restaurant + menu endpoints (nothing is synthesized or defaulted):
+ *
+ *   1. Listed on Swiggy with a numeric restaurant id, and the menu endpoint
+ *      returns that exact same id (identity check).
+ *   2. Operational: Swiggy marks it visible and either open now or with a
+ *      scheduled next opening time (temporarily/permanently closed = rejected).
+ *   3. Real coordinates: Swiggy `latLong` parses to a valid point inside India.
+ *   4. Business registration: an FSSAI licence number (14 digits) is published
+ *      on its Swiggy menu page.
+ *   5. Genuine customer activity: it has a real Swiggy customer rating.
+ *   6. Actual menu: at least MIN_MENU_ITEMS in-stock items on its live menu.
+ *
+ * Restaurants failing any check are hidden. Results are cached (positive and
+ * negative) to keep autocomplete fast and avoid hammering Swiggy.
+ */
+
+import type { Dish, Restaurant } from './db';
+import { buildSwiggyImageUrl, getSwiggyProxyUrl } from './apifySwiggy';
+import { isDishVeg } from './dishAssets';
+
+// ---------------------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------------------
+const SWIGGY_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  Accept: 'application/json, text/plain, */*',
+  Referer: 'https://www.swiggy.com/'
+};
+
+const REQUEST_TIMEOUT_MS = 6000;
+const MIN_MENU_ITEMS = 3;
+const MAX_VERIFY_CANDIDATES = 8;
+const NEARBY_RESULT_LIMIT = 5;
+const SEARCH_RESULT_LIMIT = 15;
+
+const PROFILE_TTL_MS = 2 * 60 * 60 * 1000; // verified profile reuse: 2h
+const NEGATIVE_TTL_MS = 10 * 60 * 1000; // failed verification reuse: 10 min
+const LIST_TTL_MS = 10 * 60 * 1000; // search / nearby result reuse: 10 min
+
+// India bounding box (generous) for coordinate sanity checks
+const INDIA_BOUNDS = { minLat: 6, maxLat: 37.6, minLng: 68, maxLng: 97.5 };
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+export interface VerifiedRestaurantProfile {
+  swiggyId: string;
+  name: string;
+  address: string;
+  area: string;
+  locality: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  rating: number;
+  ratingCount: string | null;
+  cuisines: string[];
+  vegOnly: boolean;
+  isOpenNow: boolean;
+  nextOpenMessage: string | null;
+  fssaiLicense: string;
+  imageUrl: string;
+  costForTwo: string | null;
+  swiggyUrl: string;
+  dishes: Dish[];
+  verifiedAt: string;
+}
+
+export type VerificationFailure =
+  | 'invalid_id'
+  | 'swiggy_unreachable'
+  | 'identity_mismatch'
+  | 'not_visible'
+  | 'not_operational'
+  | 'no_coordinates'
+  | 'no_fssai_license'
+  | 'no_customer_ratings'
+  | 'no_menu';
+
+export type VerificationResult =
+  | { verified: true; profile: VerifiedRestaurantProfile }
+  | { verified: false; reason: VerificationFailure };
+
+/** Restaurant shape returned to the frontend (superset of db.Restaurant). */
+export type VerifiedRestaurant = Restaurant & {
+  swiggy_id: string;
+  is_verified: 1;
+  verification_source: 'swiggy';
+  fssai_license: string;
+  verified_at: string;
+  is_open_now: boolean;
+  next_open_message: string | null;
+  cuisine: string[];
+  cost_for_two: string | null;
+  rating_count: string | null;
+  swiggy_url: string;
+};
+
+interface SwiggyListingCandidate {
+  id: string;
+  name: string;
+  cuisines: string[];
+  promoted: boolean;
+  approxDistanceKm: number | null;
+  matchScore: number;
+}
+
+// ---------------------------------------------------------------------------
+// Caches (kept on globalThis so they survive Next.js dev hot reloads)
+// ---------------------------------------------------------------------------
+type CacheEntry<T> = { timestamp: number; ttl: number; value: T };
+const globalStore = globalThis as unknown as {
+  __verifiedProfileCache?: Map<string, CacheEntry<VerificationResult>>;
+  __verifiedListCache?: Map<string, CacheEntry<VerifiedRestaurant[]>>;
+};
+const profileCache: Map<string, CacheEntry<VerificationResult>> =
+  (globalStore.__verifiedProfileCache ??= new Map<string, CacheEntry<VerificationResult>>());
+const listCache: Map<string, CacheEntry<VerifiedRestaurant[]>> =
+  (globalStore.__verifiedListCache ??= new Map<string, CacheEntry<VerifiedRestaurant[]>>());
+
+function cacheGet<T>(map: Map<string, CacheEntry<T>>, key: string): T | undefined {
+  const hit = map.get(key);
+  if (!hit) return undefined;
+  if (Date.now() - hit.timestamp > hit.ttl) {
+    map.delete(key);
+    return undefined;
+  }
+  return hit.value;
+}
+
+function cacheSet<T>(map: Map<string, CacheEntry<T>>, key: string, value: T, ttl: number) {
+  map.set(key, { timestamp: Date.now(), ttl, value });
+}
+
+export function clearVerifiedRestaurantCache(): void {
+  profileCache.clear();
+  listCache.clear();
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+async function fetchSwiggyJson(url: string): Promise<any | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { headers: SWIGGY_HEADERS, signal: controller.signal, cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
+}
+
+function parseLatLong(raw: unknown): { lat: number; lng: number } | null {
+  if (typeof raw !== 'string') return null;
+  const [a, b] = raw.split(',').map(s => parseFloat(s.trim()));
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  if (a < INDIA_BOUNDS.minLat || a > INDIA_BOUNDS.maxLat) return null;
+  if (b < INDIA_BOUNDS.minLng || b > INDIA_BOUNDS.maxLng) return null;
+  return { lat: a, lng: b };
+}
+
+function isValidCoord(lat?: number, lng?: number): lat is number {
+  return (
+    typeof lat === 'number' && typeof lng === 'number' &&
+    Number.isFinite(lat) && Number.isFinite(lng) &&
+    lat >= INDIA_BOUNDS.minLat && lat <= INDIA_BOUNDS.maxLat &&
+    lng >= INDIA_BOUNDS.minLng && lng <= INDIA_BOUNDS.maxLng
+  );
+}
+
+/** Swiggy item prices are always in paise. */
+function paiseToRupees(raw: unknown): number | null {
+  const n = typeof raw === 'number' ? raw : typeof raw === 'string' ? parseFloat(raw) : NaN;
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n / 100);
+}
+
+const GENERIC_NAME_WORDS = new Set([
+  'hotel', 'restaurant', 'restaurants', 'the', 'and', 'pure', 'veg', 'family', 'bar',
+  'cafe', 'dhaba', 'kitchen', 'foods', 'food', 'new', 'shree', 'shri', 'sri', 'by', 'of'
+]);
+
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function meaningfulTokens(text: string): string[] {
+  const all = tokenize(text);
+  const meaningful = all.filter(t => !GENERIC_NAME_WORDS.has(t));
+  return meaningful.length > 0 ? meaningful : all;
+}
+
+function levenshtein(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function tokenMatches(queryToken: string, candidateTokens: string[]): boolean {
+  return candidateTokens.some(
+    ct => ct.startsWith(queryToken) || (queryToken.length >= 5 && ct.length >= 4 && levenshtein(queryToken, ct) <= 1)
+  );
+}
+
+/**
+ * Name relevance between a user query and a Swiggy restaurant name.
+ * Returns 0 when the restaurant should NOT be considered a match.
+ */
+export function scoreNameMatch(query: string, name: string): number {
+  const q = tokenize(query).join(' ');
+  const n = tokenize(name).join(' ');
+  if (!q || !n) return 0;
+  if (n === q) return 100;
+  if (n.startsWith(q)) return 80;
+  const qTokens = meaningfulTokens(query);
+  const nTokens = tokenize(name);
+  if (qTokens.length > 0 && qTokens.every(t => tokenMatches(t, nTokens))) return 60;
+  return 0;
+}
+
+function scoreCuisineMatch(query: string, cuisines: string[]): number {
+  const qTokens = meaningfulTokens(query);
+  if (qTokens.length === 0 || cuisines.length === 0) return 0;
+  const cTokens = tokenize(cuisines.join(' '));
+  return qTokens.every(t => tokenMatches(t, cTokens)) ? 30 : 0;
+}
+
+// ---------------------------------------------------------------------------
+// Core verification
+// ---------------------------------------------------------------------------
+function parseMenuItems(regularCards: any[], swiggyId: string, vegOnly: boolean): Dish[] {
+  const dishes: Dish[] = [];
+  const seen = new Set<string>();
+  const EXCLUDED = ['about', 'faq', 'frequently asked', 'popular search', 'license', 'fssai', 'download', 'order from', 'footer'];
+
+  const pushItem = (info: any, category: string) => {
+    if (!info || typeof info.name !== 'string' || !info.name.trim()) return;
+    if (info.inStock === 0 || info.isAvailable === false) return; // not currently orderable
+    const name = info.name.trim();
+    const key = name.toLowerCase();
+    if (seen.has(key)) return;
+
+    const price = paiseToRupees(info.price ?? info.defaultPrice ?? info.variantsV2?.pricingModels?.[0]?.price);
+    if (price === null) return; // no real price -> not a real orderable item
+
+    const vegFlag = info.itemAttribute?.vegClassifier;
+    const isVeg = vegFlag ? vegFlag === 'VEG' : info.isVeg === 1 ? true : vegOnly ? true : isDishVeg(name);
+
+    const rawRating = parseFloat(info.ratings?.aggregatedRating?.rating);
+    const rating = Number.isFinite(rawRating) && rawRating > 0 && rawRating <= 5 ? rawRating : 0;
+    const photo = info.imageId ? buildSwiggyImageUrl(info.imageId) : '';
+
+    seen.add(key);
+    dishes.push({
+      id: parseInt(info.id, 10) || Number(`${swiggyId}${dishes.length + 1}`),
+      restaurant_id: Number(swiggyId),
+      name,
+      description: typeof info.description === 'string' ? info.description.trim() : '',
+      price,
+      image: photo,
+      proxy_image: photo ? getSwiggyProxyUrl(photo) : '',
+      rating,
+      popularity: info.isBestseller ? 100 : 90,
+      is_recommended: category.toLowerCase().includes('recommended') || info.isBestseller ? 1 : 0,
+      is_veg: isVeg ? 1 : 0,
+      category: category || 'Menu',
+      status: 'active',
+      ...(info.isBestseller ? { is_bestseller: true } : {}),
+      ...(info.ratings?.aggregatedRating?.ratingCountV2 ? { rating_count: info.ratings.aggregatedRating.ratingCountV2 } : {})
+    } as Dish);
+  };
+
+  for (const gc of regularCards) {
+    const card = gc?.card?.card;
+    if (!card) continue;
+    const title = String(card.title || '').trim();
+    if (!card.itemCards && !card.categories) continue;
+    if (EXCLUDED.some(e => title.toLowerCase().includes(e))) continue;
+    for (const ic of card.itemCards || []) pushItem(ic?.card?.info, title);
+    for (const sub of card.categories || []) {
+      for (const ic of sub.itemCards || []) pushItem(ic?.card?.info, String(sub.title || title));
+    }
+  }
+  return dishes;
+}
+
+/**
+ * Verify a Swiggy restaurant by id. `lat/lng` are only a serviceability hint
+ * for Swiggy's menu endpoint; identity always comes from Swiggy itself.
+ */
+export async function verifySwiggyRestaurant(
+  swiggyId: string | number,
+  hint?: { lat?: number; lng?: number }
+): Promise<VerificationResult> {
+  const id = String(swiggyId ?? '').trim().replace(/^rest/i, '');
+  if (!/^\d{2,10}$/.test(id)) return { verified: false, reason: 'invalid_id' };
+
+  const cached = cacheGet(profileCache, id);
+  if (cached) return cached;
+
+  const lat = isValidCoord(hint?.lat, hint?.lng) ? hint!.lat! : 18.5204;
+  const lng = isValidCoord(hint?.lat, hint?.lng) ? hint!.lng! : 73.8567;
+  const json = await fetchSwiggyJson(
+    `https://www.swiggy.com/mapi/menu/pl?page-type=REGULAR_MENU&complete-menu=true&lat=${lat}&lng=${lng}&restaurantId=${id}`
+  );
+
+  // Network/blocking failures are not cached as negative (transient)
+  if (!json) return { verified: false, reason: 'swiggy_unreachable' };
+
+  const fail = (reason: VerificationFailure): VerificationResult => {
+    const result: VerificationResult = { verified: false, reason };
+    cacheSet(profileCache, id, result, NEGATIVE_TTL_MS);
+    return result;
+  };
+
+  const cards: any[] = json?.data?.cards || [];
+  const info = cards.map(c => c?.card?.card?.info).find(i => i && i.id);
+  if (!info || String(info.id) !== id || !info.name) return fail('identity_mismatch');
+
+  const availability = info.availability || {};
+  if (availability.visibility === false) return fail('not_visible');
+  const isOpenNow = availability.opened === true || info.isOpen === true;
+  const nextOpenMessage: string | null = availability.nextOpenTimeMessage || availability.nextOpenMessage || null;
+  if (!isOpenNow && !availability.nextOpenTime && !nextOpenMessage) return fail('not_operational');
+
+  const coords = parseLatLong(info.latLong);
+  if (!coords) return fail('no_coordinates');
+
+  const regularCards: any[] =
+    cards.find(c => c.groupedCard)?.groupedCard?.cardGroupMap?.REGULAR?.cards || [];
+
+  const licenseCard = regularCards
+    .map(gc => gc?.card?.card)
+    .find(c => String(c?.['@type'] || '').includes('RestaurantLicenseInfo'));
+  const fssaiLicense = licenseCard ? JSON.stringify(licenseCard).match(/\b(\d{14})\b/)?.[1] : undefined;
+  if (!fssaiLicense) return fail('no_fssai_license');
+
+  const rating = parseFloat(info.avgRating ?? info.avgRatingString);
+  if (!Number.isFinite(rating) || rating <= 0 || rating > 5) return fail('no_customer_ratings');
+
+  const vegOnly = Boolean(info.veg);
+  const dishes = parseMenuItems(regularCards, id, vegOnly);
+  if (dishes.length < MIN_MENU_ITEMS) return fail('no_menu');
+
+  const addressCard = regularCards
+    .map(gc => gc?.card?.card)
+    .find(c => String(c?.['@type'] || '').includes('RestaurantAddress'));
+  const locality = String(info.locality || '').trim();
+  const area = String(info.areaName || locality || '').trim();
+  const city = String(info.city || '').trim();
+  const address =
+    String(addressCard?.completeAddress || '').trim() ||
+    [locality, area !== locality ? area : '', city].filter(Boolean).join(', ');
+
+  const profile: VerifiedRestaurantProfile = {
+    swiggyId: id,
+    name: String(info.name).trim(),
+    address,
+    area: area || city,
+    locality,
+    city,
+    latitude: coords.lat,
+    longitude: coords.lng,
+    rating: Math.round(rating * 10) / 10,
+    ratingCount: info.totalRatingsString || null,
+    cuisines: Array.isArray(info.cuisines) ? info.cuisines : [],
+    vegOnly,
+    isOpenNow,
+    nextOpenMessage,
+    fssaiLicense,
+    imageUrl: info.cloudinaryImageId ? buildSwiggyImageUrl(info.cloudinaryImageId, 800, 600) : '',
+    costForTwo: info.costForTwoMessage || null,
+    swiggyUrl: `https://www.swiggy.com/menu/${id}`,
+    dishes,
+    verifiedAt: new Date().toISOString()
+  };
+
+  const result: VerificationResult = { verified: true, profile };
+  cacheSet(profileCache, id, result, PROFILE_TTL_MS);
+  return result;
+}
+
+/** Convert a verified profile into the Restaurant shape the UI already consumes. */
+export function toVerifiedRestaurant(
+  profile: VerifiedRestaurantProfile,
+  userCoords?: { lat: number; lng: number } | null
+): VerifiedRestaurant {
+  const distanceKm =
+    userCoords && isValidCoord(userCoords.lat, userCoords.lng)
+      ? haversineKm(userCoords.lat, userCoords.lng, profile.latitude, profile.longitude)
+      : undefined;
+
+  return {
+    id: Number(profile.swiggyId),
+    swiggy_id: profile.swiggyId,
+    name: profile.name,
+    description: profile.cuisines.slice(0, 3).join(' • '),
+    address: profile.address,
+    area: profile.area,
+    city: profile.city,
+    latitude: profile.latitude,
+    longitude: profile.longitude,
+    rating: profile.rating,
+    image: profile.imageUrl,
+    is_campaign_active: 1,
+    total_visits: 0,
+    status: 'active',
+    is_veg: profile.vegOnly ? 1 : 0,
+    ...(distanceKm !== undefined ? { distanceKm } : {}),
+    is_verified: 1,
+    verification_source: 'swiggy',
+    fssai_license: profile.fssaiLicense,
+    verified_at: profile.verifiedAt,
+    is_open_now: profile.isOpenNow,
+    next_open_message: profile.nextOpenMessage,
+    cuisine: profile.cuisines,
+    cost_for_two: profile.costForTwo,
+    rating_count: profile.ratingCount,
+    swiggy_url: profile.swiggyUrl
+  };
+}
+
+async function verifyCandidates(
+  candidates: SwiggyListingCandidate[],
+  userCoords: { lat: number; lng: number }
+): Promise<VerifiedRestaurant[]> {
+  const top = candidates.slice(0, MAX_VERIFY_CANDIDATES);
+  const results = await Promise.all(top.map(c => verifySwiggyRestaurant(c.id, userCoords)));
+  const verified: Array<{ r: VerifiedRestaurant; c: SwiggyListingCandidate }> = [];
+  results.forEach((res, i) => {
+    if (res.verified) verified.push({ r: toVerifiedRestaurant(res.profile, userCoords), c: top[i] });
+  });
+  verified.sort((a, b) => {
+    if (b.c.matchScore !== a.c.matchScore) return b.c.matchScore - a.c.matchScore;
+    return (a.r.distanceKm ?? Infinity) - (b.r.distanceKm ?? Infinity);
+  });
+  return verified.map(v => v.r);
+}
+
+// ---------------------------------------------------------------------------
+// Public: nearby + search
+// ---------------------------------------------------------------------------
+
+/** Closest verified restaurants around the user's coordinates (top 5). */
+export async function fetchVerifiedNearbyRestaurants(
+  lat: number,
+  lng: number,
+  limit = NEARBY_RESULT_LIMIT
+): Promise<VerifiedRestaurant[]> {
+  if (!isValidCoord(lat, lng)) return [];
+  const cacheKey = `nearby_${lat.toFixed(3)}_${lng.toFixed(3)}`;
+  const cached = cacheGet(listCache, cacheKey);
+  if (cached) return cached.slice(0, limit);
+
+  const json = await fetchSwiggyJson(
+    `https://www.swiggy.com/dapi/restaurants/list/v5?lat=${lat}&lng=${lng}&is-seo-homepage-enabled=true&page_type=DESKTOP_WEB_LISTING`
+  );
+  if (!json) return [];
+
+  const seen = new Set<string>();
+  const candidates: SwiggyListingCandidate[] = [];
+  for (const c of json?.data?.cards || []) {
+    for (const r of c?.card?.card?.gridElements?.infoWithStyle?.restaurants || []) {
+      const info = r?.info;
+      const id = info?.id ? String(info.id) : '';
+      if (!id || seen.has(id) || info?.availability?.visibility === false) continue;
+      seen.add(id);
+      candidates.push({
+        id,
+        name: String(info.name || ''),
+        cuisines: info.cuisines || [],
+        promoted: Boolean(info.promoted),
+        approxDistanceKm: typeof info.sla?.lastMileTravel === 'number' ? info.sla.lastMileTravel : null,
+        matchScore: 0
+      });
+    }
+  }
+  candidates.sort((a, b) => (a.approxDistanceKm ?? Infinity) - (b.approxDistanceKm ?? Infinity));
+
+  const verified = await verifyCandidates(candidates, { lat, lng });
+  if (verified.length > 0) cacheSet(listCache, cacheKey, verified, LIST_TTL_MS);
+  return verified.slice(0, limit);
+}
+
+/**
+ * Search verified restaurants by restaurant name, cuisine, or dish.
+ * Only Swiggy-listed restaurants that genuinely match the query AND pass full
+ * verification are returned. Unknown text never produces a result.
+ */
+export async function searchVerifiedRestaurants(
+  query: string,
+  lat: number,
+  lng: number,
+  limit = SEARCH_RESULT_LIMIT
+): Promise<VerifiedRestaurant[]> {
+  const q = (query || '').trim();
+  if (q.length < 2 || !isValidCoord(lat, lng)) return [];
+
+  const cacheKey = `search_${q.toLowerCase()}_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  const cached = cacheGet(listCache, cacheKey);
+  if (cached) return cached.slice(0, limit);
+
+  const json = await fetchSwiggyJson(
+    `https://www.swiggy.com/dapi/restaurants/search/v3?lat=${lat}&lng=${lng}&str=${encodeURIComponent(q)}&trackingId=undefined&submitAction=ENTER&queryUniqueId=undefined`
+  );
+  if (!json) return [];
+
+  const groups = json?.data?.cards?.find((c: any) => c.groupedCard)?.groupedCard?.cardGroupMap || {};
+  const byId = new Map<string, SwiggyListingCandidate>();
+  const upsert = (cand: SwiggyListingCandidate) => {
+    const prev = byId.get(cand.id);
+    if (!prev || cand.matchScore > prev.matchScore) byId.set(cand.id, cand);
+  };
+
+  // A. Restaurant results: must match by name or cuisine (promoted ads included only if they match)
+  for (const rc of groups.RESTAURANT?.cards || []) {
+    const info = rc?.card?.card?.info;
+    if (!info?.id || info?.availability?.visibility === false) continue;
+    const name = String(info.name || '');
+    const cuisines: string[] = info.cuisines || [];
+    const score = Math.max(scoreNameMatch(q, name), scoreCuisineMatch(q, cuisines));
+    if (score <= 0) continue;
+    upsert({
+      id: String(info.id),
+      name,
+      cuisines,
+      promoted: Boolean(info.promoted),
+      approxDistanceKm: typeof info.sla?.lastMileTravel === 'number' ? info.sla.lastMileTravel : null,
+      matchScore: score
+    });
+  }
+
+  // B. Dish results: restaurant qualifies if it actually lists a matching dish
+  const qTokens = meaningfulTokens(q);
+  for (const dc of groups.DISH?.cards || []) {
+    const card = dc?.card?.card;
+    const dishName = String(card?.info?.name || '');
+    const rInfo = card?.restaurant?.info;
+    if (!rInfo?.id || !dishName || rInfo?.availability?.visibility === false) continue;
+    if (!qTokens.every(t => tokenMatches(t, tokenize(dishName)))) continue;
+    const nameScore = scoreNameMatch(q, String(rInfo.name || ''));
+    upsert({
+      id: String(rInfo.id),
+      name: String(rInfo.name || ''),
+      cuisines: rInfo.cuisines || [],
+      promoted: Boolean(rInfo.promoted),
+      approxDistanceKm: typeof rInfo.sla?.lastMileTravel === 'number' ? rInfo.sla.lastMileTravel : null,
+      matchScore: Math.max(nameScore, 20)
+    });
+  }
+
+  const candidates = Array.from(byId.values()).sort((a, b) => {
+    if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+    if (a.promoted !== b.promoted) return a.promoted ? 1 : -1;
+    return (a.approxDistanceKm ?? Infinity) - (b.approxDistanceKm ?? Infinity);
+  });
+
+  const verified = await verifyCandidates(candidates, { lat, lng });
+  cacheSet(listCache, cacheKey, verified, LIST_TTL_MS);
+  return verified.slice(0, limit);
+}

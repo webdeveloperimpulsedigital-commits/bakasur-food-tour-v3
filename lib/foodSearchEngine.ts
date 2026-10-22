@@ -10,7 +10,7 @@
  */
 
 import { Restaurant, Dish } from './db';
-import { getDishVisualAssets, formatCleanDishName, isDishVeg } from './dishAssets';
+import { getDishVisualAssets, formatCleanDishName, isDishVeg, isDishRelevantToSearch } from './dishAssets';
 import { generateLiveMenuForRestaurant, CUISINE_MENUS, ICONIC_RESTAURANT_DISHES } from './liveMenu';
 import { parseRestaurantQuery } from './locationParser';
 import { getDeterministicPlaceId } from './livePlaces';
@@ -54,7 +54,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     name: 'Maharashtrian Special',
     hindiName: 'महाराष्ट्रीयन स्पेशल',
     icon: '🍲',
-    keywords: ['misal', 'misal pav', 'katakirr', 'tarri', 'rassa', 'tambda pandhra rassa', 'pithla bhakri', 'bhakri', 'puran poli', 'thalipeeth', 'modak', 'kothimbir vadi'],
+    keywords: ['misal', 'misal pav', 'katakirr', 'tarri', 'rassa', 'tambda pandhra rassa', 'pithla bhakri', 'bhakri', 'puran poli', 'thalipeeth', 'modak', 'kothimbir vadi', 'shaniwar peth', 'sadashiv peth', 'narayan peth', 'bipin'],
     signatureImage: '/api/ai/dish-image?dish=Misal%20Pav'
   },
   {
@@ -63,7 +63,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     name: 'Street Food & Chaat',
     hindiName: 'स्ट्रीट फूड और चाट',
     icon: '🥪',
-    keywords: ['vada pav', 'vadapav', 'wada pav', 'batata vada', 'pav bhaji', 'pavbhaji', 'samosa', 'pani puri', 'golgappe', 'puchka', 'spdp', 'bhel', 'sev puri', 'dahi samosa'],
+    keywords: ['vada pav', 'vadapav', 'wada pav', 'batata vada', 'wadewale', 'wade wale', 'joshi wadewale', 'rohit wadewale', 'pav bhaji', 'pavbhaji', 'samosa', 'pani puri', 'golgappe', 'puchka', 'spdp', 'bhel', 'sev puri', 'dahi samosa'],
     signatureImage: '/api/ai/dish-image?dish=Vada%20Pav'
   },
   {
@@ -569,7 +569,7 @@ export function searchDishesSwiggyZomato(
     : generateLiveMenuForRestaurant(restaurant);
 
   if (!trimmed) {
-    // Return top 15 menu dishes sorted by rating & popularity
+    // Return top menu dishes sorted by rating & popularity
     return [...baseMenu].sort((a, b) => {
       const rDiff = (b.rating || 0) - (a.rating || 0);
       if (Math.abs(rDiff) > 0.01) return rDiff;
@@ -577,139 +577,51 @@ export function searchDishesSwiggyZomato(
     });
   }
 
-  const intent = analyzeFoodQuery(trimmed, restaurant.city || 'Pune');
-  const qLower = intent.normalizedQuery;
-  const tokens = intent.tokens;
-
-  const scored: DishSearchResult[] = [];
-  const seenDishNames = new Set<string>();
-
-  // 1. Search Within Restaurant's Current Active Menu
-  for (const dish of baseMenu) {
-    const dName = dish.name.toLowerCase().trim();
-    const dDesc = (dish.description || '').toLowerCase();
-    const fullText = `${dName} ${dDesc}`;
-
-    let score = 0;
-
-    // Exact name match
-    if (dName === qLower || dName === intent.rawQuery.toLowerCase()) {
-      score += 2500;
-    } else if (dName.startsWith(qLower)) {
-      score += 2000;
-    } else if (dName.includes(qLower)) {
-      score += 1500;
-    }
-
-    // Canonical dish match
-    if (intent.canonicalDishName && fullText.includes(intent.canonicalDishName)) {
-      score += 1200;
-    }
-
-    // Category match
-    if (intent.matchedCategory) {
-      for (const kw of intent.matchedCategory.keywords) {
-        if (fullText.includes(kw)) score += 200;
-      }
-    }
-
-    // Token matching
-    for (const t of tokens) {
-      if (t.length >= 2) {
-        if (dName.includes(t)) score += 350;
-        else if (dDesc.includes(t)) score += 100;
-      }
-    }
-
-    // Fuzzy Levenshtein for typos
-    if (score < 400) {
-      const words = dName.split(/[\s,/-]+/);
-      for (const w of words) {
-        if (Math.abs(w.length - qLower.length) <= 2) {
-          const dist = calculateLevenshtein(w, qLower);
-          if (dist <= 2) {
-            score += Math.max(0, 450 - dist * 150);
-            break;
-          }
-        }
-      }
-    }
-
-    if (score > 0) {
-      // Popularity and rating weighting
-      score += (dish.popularity || 90) * 2;
-      score += Math.round((dish.rating || 4.5) * 40);
-
-      // Map verified high-res food image via DishAsset engine
-      const visual = getDishVisualAssets(dish.name, dish.image);
-      const cleanName = formatCleanDishName(dish.name, restaurant.name);
-
-      seenDishNames.add(cleanName.toLowerCase());
-      scored.push({
-        dish: {
-          ...dish,
-          name: cleanName,
-          image: visual.flyingImage || visual.plateImage
-        },
-        score
-      });
-    }
-  }
-
-  // 2. Also search compatible dishes in CUISINE_MENUS so users find all authentic varieties
   const isPureVegRest = (restaurant.is_veg === 1) ||
     restaurant.name.toLowerCase().includes('pure veg') ||
     (restaurant.name.toLowerCase().includes('veg') && !restaurant.name.toLowerCase().includes('non-veg') && !restaurant.name.toLowerCase().includes('non veg'));
 
-  for (const profile of CUISINE_MENUS) {
-    for (const d of profile.dishes) {
-      const cleanName = formatCleanDishName(d.name, restaurant.name);
-      const lower = cleanName.toLowerCase();
-      if (seenDishNames.has(lower)) continue;
+  const scored: DishSearchResult[] = [];
+  const seenDishNames = new Set<string>();
+  const qLower = trimmed.toLowerCase();
 
-      const isNonVeg = !isDishVeg(cleanName) || d.is_veg === 0;
-      if (isPureVegRest && isNonVeg) continue;
+  // Search STRICTLY within the restaurant's authentic menu
+  for (const dish of baseMenu) {
+    const cleanName = formatCleanDishName(dish.name, restaurant.name);
+    const lowerName = cleanName.toLowerCase().trim();
+    if (seenDishNames.has(lowerName)) continue;
 
-      const dDesc = (d.description || '').toLowerCase();
-      const text = `${lower} ${dDesc}`;
+    // Check vegetarian filter for pure veg restaurants
+    const isNonVeg = !isDishVeg(cleanName) || dish.is_veg === 0;
+    if (isPureVegRest && isNonVeg) continue;
 
-      let score = 0;
-      if (lower === qLower || lower === intent.rawQuery.toLowerCase()) score += 2000;
-      else if (lower.startsWith(qLower)) score += 1600;
-      else if (lower.includes(qLower)) score += 1200;
-      else if (intent.canonicalDishName && text.includes(intent.canonicalDishName)) score += 1000;
-      else if (tokens.some(t => t.length >= 3 && lower.includes(t))) score += 700;
-
-      if (score > 0) {
-        seenDishNames.add(lower);
-        const visual = getDishVisualAssets(cleanName, d.image);
-        scored.push({
-          dish: {
-            id: Math.floor(Math.random() * 80000) + 10000,
-            restaurant_id: restaurant.id,
-            name: cleanName,
-            description: d.description,
-            price: d.price,
-            image: visual.flyingImage || visual.plateImage,
-            rating: d.rating || 4.8,
-            popularity: d.popularity || 95,
-            is_recommended: 1,
-            is_veg: isNonVeg ? 0 : 1,
-            category: d.category,
-            status: 'active'
-          },
-          score
-        });
-      }
+    // Strictly validate title relevance
+    if (!isDishRelevantToSearch(cleanName, trimmed)) {
+      continue;
     }
+
+    seenDishNames.add(lowerName);
+
+    let score = 1000;
+    if (lowerName === qLower) score += 1500;
+    else if (lowerName.startsWith(qLower)) score += 1000;
+    else if (lowerName.includes(qLower)) score += 500;
+
+    score += (dish.popularity || 90) * 2;
+    score += Math.round((dish.rating || 4.5) * 40);
+
+    const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
+    scored.push({
+      dish: {
+        ...dish,
+        name: cleanName,
+        image: visual.flyingImage || visual.plateImage
+      },
+      score
+    });
   }
 
-  const filtered = isPureVegRest
-    ? scored.filter(s => isDishVeg(s.dish.name) && s.dish.is_veg !== 0)
-    : scored;
-
-  filtered.sort((a, b) => b.score - a.score);
-
-  return filtered.map(s => s.dish);
+  scored.sort((a, b) => b.score - a.score);
+  return scored.map(s => s.dish);
 }
 

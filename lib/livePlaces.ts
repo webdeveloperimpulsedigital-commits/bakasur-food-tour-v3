@@ -1,5 +1,5 @@
 import { INITIAL_RESTAURANTS, type Restaurant } from './db';
-import { getDishVisualAssets } from './dishAssets';
+import { getDishVisualAssets, isPureVegRestaurantName } from './dishAssets';
 import { parseRestaurantQuery } from './locationParser';
 import { isGooglePlacesConfigured, searchGoogleNearbyRestaurants } from './googlePlaces';
 
@@ -19,7 +19,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 export function pickCuisineImage(name: string): string {
   const n = name.toLowerCase();
-  if (n.includes('puran poli') || n.includes('puran') || n.includes('poli') || n.includes('thali') || n.includes('durvankur') || n.includes('poona guest') || n.includes('shreyas') || n.includes('sukanta') || n.includes('pithla')) {
+  if (n.includes('puran poli') || n.includes('puran') || n.includes('poli') || n.includes('thali') || n.includes('durvankur') || n.includes('poona guest') || n.includes('shreyas') || n.includes('sukanta') || n.includes('pithla') || n.includes('shaniwar peth')) {
     return 'https://images.unsplash.com/photo-1545247181-516773cae754?w=800&auto=format&fit=crop&q=80';
   }
   if (n.includes('dosa') || n.includes('idli') || n.includes('udupi') || n.includes('south') || n.includes('bhavan') || n.includes('roopali') || n.includes('vaishali') || n.includes('wadeshwar') || n.includes('ctr') || n.includes('vidyarthi')) {
@@ -40,8 +40,8 @@ export function pickCuisineImage(name: string): string {
   if (n.includes('misal') || n.includes('katakirr') || n.includes('maratha') || n.includes('kolhapuri') || n.includes('bedekar') || n.includes('mamledar') || n.includes('saraswati')) {
     return 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=80';
   }
-  if (n.includes('vadapav') || n.includes('vada pav') || n.includes('wada pav') || n.includes('batata vada') || n.includes('gajanan')) {
-    return 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=80';
+  if (n.includes('vadapav') || n.includes('vada pav') || n.includes('wada pav') || n.includes('batata vada') || n.includes('wadewale') || n.includes('joshi') || n.includes('rohit') || n.includes('gajanan')) {
+    return '/images/food/vada_pav.jpg';
   }
   if (n.includes('cafe') || n.includes('bakery') || n.includes('coffee') || n.includes('chai') || n.includes('tea') || n.includes('irani') || n.includes('goodluck') || n.includes('durga') || n.includes('katta')) {
     return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80';
@@ -571,6 +571,11 @@ export async function searchLivePlaces(options: {
   // 2. Synthesize user's exact typed restaurant name ONLY if it's a specific venue name (NOT a food dish or recipe query)
   const isFoodQuery = isDishOrFoodQuery(rawTyped);
   if (rawTyped.length >= 2 && !isFoodQuery) {
+    const isPureVegSpot = isPureVegRestaurantName(parsed.cleanName) ||
+      parsed.cleanName.toLowerCase().includes('wadewale') ||
+      parsed.cleanName.toLowerCase().includes('vada pav') ||
+      parsed.cleanName.toLowerCase().includes('shaniwar peth');
+
     const userSpot: Restaurant & { relevanceScore: number } = {
       id: searchId++,
       name: parsed.cleanName,
@@ -581,6 +586,7 @@ export async function searchLivePlaces(options: {
       latitude: parsed.latitude,
       longitude: parsed.longitude,
       rating: 4.8,
+      is_veg: isPureVegSpot ? 1 : 0,
       image: pickCuisineImage(parsed.cleanName),
       is_campaign_active: 1,
       total_visits: 750,

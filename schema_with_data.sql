@@ -150,6 +150,16 @@ INSERT INTO `restaurants` VALUES
 (65, 1, 'Poona Guest House', 'poona-guest-house', NULL, 'Pune, India', 1, 0, '2026-10-16 10:12:25', '2026-10-16 10:12:37', 'Pune', 'Pune', '18.51400000', '73.85400000', '4.80', NULL, 1, 2, 'active', NULL),
 (66, 1, 'Poona Guest House & Jagaat Bhaari Kolhapuri', 'poona-guest-house-&-jagaat-bhaari-kolhapuri', NULL, 'Pune, India', 1, 0, '2026-10-16 10:13:01', '2026-10-16 10:13:01', 'Pune', 'Pune', '18.51400000', '73.85400000', '4.80', NULL, 1, 1, 'active', NULL);
 
+-- Restaurant verification columns (strict verified mode).
+-- All rows above are legacy/unverified (is_verified = 0): kept for history/admin review, hidden from users.
+ALTER TABLE `restaurants`
+  ADD COLUMN `swiggy_id` varchar(32) DEFAULT NULL,
+  ADD COLUMN `verification_source` varchar(32) DEFAULT NULL,
+  ADD COLUMN `fssai_license` varchar(20) DEFAULT NULL,
+  ADD COLUMN `is_verified` tinyint(1) NOT NULL DEFAULT 0,
+  ADD COLUMN `verified_at` timestamp NULL DEFAULT NULL,
+  ADD INDEX `idx_restaurants_swiggy` (`swiggy_id`);
+
 -- --------------------------------------------------------
 -- Table structure for table `dishes`
 -- --------------------------------------------------------

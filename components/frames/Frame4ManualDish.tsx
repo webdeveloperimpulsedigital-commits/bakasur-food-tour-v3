@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, PlusCircle, Search } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
-import { getDishVisualAssets } from '@/lib/dishAssets';
+import { getDishVisualAssets, isDishVeg, isPureVegRestaurantName } from '@/lib/dishAssets';
 import { FrameFooter } from './FrameFooter';
 
 interface Frame4ManualDishProps {
@@ -12,16 +12,16 @@ interface Frame4ManualDishProps {
   onBackToOptions: () => void;
 }
 
-const POPULAR_SUGGESTIONS = [
-  'Chicken Triple Schezwan Rice',
+const ALL_POPULAR_SUGGESTIONS = [
   'Steamed Veg Momos',
   'Crispy Fried Cheese Momos',
-  'Mutton Dum Biryani',
-  'Butter Chicken & Garlic Naan',
   'Kolhapuri Spicy Misal Pav',
   'Crispy Butter Masala Dosa',
   'Amul Butter Pav Bhaji',
-  'Sita Ram Chole Bhature'
+  'Sita Ram Chole Bhature',
+  'Chicken Triple Schezwan Rice',
+  'Mutton Dum Biryani',
+  'Butter Chicken & Garlic Naan'
 ];
 
 export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
@@ -162,7 +162,7 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
             </span>
             <div className="space-y-1.5">
               {suggestions.map((dish) => {
-                const visual = getDishVisualAssets(dish.name, dish.image);
+                const visual = getDishVisualAssets(dish.name, dish.image, restaurant.name);
                 return (
                   <button
                     key={dish.id || dish.name}
@@ -204,7 +204,10 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
               Ya yahan se direct select karo:
             </span>
             <div className="flex flex-wrap gap-1.5">
-              {POPULAR_SUGGESTIONS.map((sug) => (
+              {(restaurant.is_veg === 1 || isPureVegRestaurantName(restaurant.name)
+                ? ALL_POPULAR_SUGGESTIONS.filter(s => isDishVeg(s))
+                : ALL_POPULAR_SUGGESTIONS
+              ).map((sug) => (
                 <button
                   key={sug}
                   type="button"

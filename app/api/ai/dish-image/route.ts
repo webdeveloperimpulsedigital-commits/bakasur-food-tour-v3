@@ -6,18 +6,74 @@ import path from 'path';
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v30_clear_cache_all_authentic_flavors_kfc_pizza';
+const CACHE_VERSION = 'v32_accurate_search_dish_images_pav_bhaji_ragda_puri';
 const imageBufferCache = new Map<string, { buffer: Buffer; timestamp: number }>();
 imageBufferCache.clear();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // Local authentic photographic assets stored in public/images/food/
 const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
+  // Authentic Maharashtrian Main Courses, Sweets & Breads
+  shrikhand_puri: 'shrikhand_puri.jpg',
+  shrikhand: 'shrikhand.jpg',
+  puri_bhaji: 'puri_bhaji.jpg',
+  poori_bhaji: 'puri_bhaji.jpg',
+  batata_bhaji: 'batata_bhaji.jpg',
+  sukhi_bhaji: 'batata_bhaji.jpg',
+  kheer: 'kheer.jpg',
+  rice_kheer: 'kheer.jpg',
+  shevai_kheer: 'kheer.jpg',
+  seviyan_kheer: 'kheer.jpg',
+  payasam: 'kheer.jpg',
+  aamras_puri: 'aamras_puri.jpg',
+  aamras: 'aamras.jpg',
+  pithla_bhakri: 'pithla_bhakri.jpg',
+  pitla_bhakri: 'pithla_bhakri.jpg',
+  pithla: 'pithla_bhakri.jpg',
+  pitla: 'pithla_bhakri.jpg',
+  zunka_bhakar: 'pithla_bhakri.jpg',
+  zunka: 'pithla_bhakri.jpg',
+  bharli_vangi: 'bharli_vangi.jpg',
+  varan_bhat: 'varan_bhat.jpg',
+  masala_bhaat: 'masala_bhaat.jpg',
+  thalipeeth: 'thalipeeth.jpg',
+  bhajani_thalipeeth: 'thalipeeth.jpg',
+  sabudana_khichdi: 'sabudana_khichdi.jpg',
+  sabudana_vada: 'sabudana_vada.jpg',
+  shev_bhaji: 'shev_bhaji.jpg',
+  modak: 'modak.jpg',
+  kothimbir_vadi: 'kothimbir_vadi.jpg',
+  alu_vadi: 'alu_vadi.jpg',
+  masala_taak: 'masala_taak.jpg',
+  solkadhi: 'solkadhi.jpg',
+  puran_poli: 'puran_poli.jpg',
+  katachi_amti: 'katachi_amti.jpg',
+  matki_usal: 'matki_usal.jpg',
+  bhakri: 'bhakri.jpg',
+  poha: 'poha.jpg',
+  misal_pav: 'misal_pav.jpg',
+
+  // Street Food, Chaat & Pav Specialties
+  ragda_pattice: 'ragda_pattice.jpg',
+  pattice: 'ragda_pattice.jpg',
+  ragda_patties: 'ragda_pattice.jpg',
+  ragda_puri: 'ragda_puri.jpg',
+  pani_puri: 'pani_puri.jpg',
+  golgappa: 'pani_puri.jpg',
+  puchka: 'pani_puri.jpg',
+  masala_pav: 'masala_pav.jpg',
+  butter_masala_pav: 'masala_pav.jpg',
+  cheese_pav_bhaji: 'cheese_pav_bhaji.jpg',
+  cheese_loaded_pav_bhaji: 'cheese_pav_bhaji.jpg',
+  kanda_bhaji: 'kanda_bhaji.jpg',
+  khekda_bhaji: 'kanda_bhaji.jpg',
+  kanda_bhajiya: 'kanda_bhaji.jpg',
+  kanda_pakoda: 'kanda_bhaji.jpg',
+  onion_pakoda: 'kanda_bhaji.jpg',
+
   garlic_naan: 'garlic_naan.jpg',
   butter_naan: 'butter_naan.jpg',
-  bhakri: 'bhakri.jpg',
   paratha: 'paratha.jpg',
-  puran_poli: 'puran_poli.jpg',
   chole_bhature: 'chole_bhature.jpg',
   dal_makhani: 'dal_makhani.jpg',
   dal_tadka: 'dal_tadka.jpg',
@@ -36,17 +92,13 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   coffee: 'coffee.jpg',
   filter_coffee: 'coffee.jpg',
   cold_coffee: 'coffee.jpg',
-  poha: 'poha.jpg',
   kathi_roll: 'kathi_roll.jpg',
-  misal_pav: 'misal_pav.jpg',
   mutton_thali: 'mutton_thali.jpg',
   mutton_curry: 'mutton_curry.jpg',
   chicken_curry: 'chicken_curry.jpg',
   chicken_lollipop: 'chicken_lollipop.jpg',
   fish_fry: 'fish_fry.jpg',
   seafood: 'fish_fry.jpg',
-  pani_puri: 'pani_puri.jpg',
-  sabudana_vada: 'sabudana_vada.jpg',
   thali: 'thali.jpg',
   jeera_rice: 'jeera_rice.jpg',
   biryani: 'biryani.jpg',
@@ -60,12 +112,6 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   paneer_tikka: 'paneer_tikka.jpg',
   palak_paneer: 'palak_paneer.jpg',
   veg_kolhapuri: 'veg_kolhapuri.jpg',
-  shev_bhaji: 'shev_bhaji.jpg',
-  modak: 'modak.jpg',
-  kothimbir_vadi: 'kothimbir_vadi.jpg',
-  alu_vadi: 'alu_vadi.jpg',
-  masala_taak: 'masala_taak.jpg',
-  solkadhi: 'solkadhi.jpg',
   lassi: 'punjabi_lassi.jpg',
   punjabi_lassi: 'punjabi_lassi.jpg',
   pav_bhaji: 'pav_bhaji.jpg',
@@ -436,12 +482,24 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   nachos: 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?w=800&auto=format&fit=crop&q=85',
   loaded_fries: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=800&auto=format&fit=crop&q=85',
 
-  // Maharashtrian
+  // Maharashtrian Main Courses, Sweets & Breads
+  shrikhand_puri: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
+  batata_bhaji: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=85',
+  kheer: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=85',
+  rice_kheer: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=85',
+  shevai_kheer: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=85',
+  aamras_puri: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800&auto=format&fit=crop&q=85',
+  aamras: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800&auto=format&fit=crop&q=85',
+  pithla_bhakri: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800&auto=format&fit=crop&q=85',
+  zunka_bhakar: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800&auto=format&fit=crop&q=85',
+  bharli_vangi: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85',
+  varan_bhat: 'https://images.unsplash.com/photo-1789991184293-224a84e41900?w=800&auto=format&fit=crop&q=85',
+  masala_bhaat: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=85',
   thalipeeth: 'https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85',
   sabudana_khichdi: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=85',
-  zunka_bhakar: 'https://images.unsplash.com/photo-1668357530437-72a12c660f94?w=800&auto=format&fit=crop&q=85',
-  bharli_vangi: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85',
   ukadiche_modak: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=800&auto=format&fit=crop&q=85',
+  katachi_amti: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=85',
+  matki_usal: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&auto=format&fit=crop&q=85',
   bun_maska: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&auto=format&fit=crop&q=85',
   default_feast: 'https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?w=800&auto=format&fit=crop&q=85'
 };
@@ -522,21 +580,209 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   if (d.includes('milkshake') || d.includes('shake')) return 'milkshakes';
   if (d.includes('juice') || d.includes('fresh lime') || d.includes('lemonade') || d.includes('sharbat')) return 'fruit_juice';
 
-  // === 1. INDIAN STREET FOOD & CHAAT ===
-  if (d.includes('pav bhaji') || d.includes('pavbhaji') || d.includes('bhaji pav')) return 'pav_bhaji';
-  if (d.includes('vada pav') || d.includes('vadapav') || d.includes('wada pav') || d.includes('batata vada') || d.includes('batatavada')) return 'vada_pav';
+  // === 0b. AUTHENTIC MAHARASHTRIAN MAIN COURSES, SPECIALTIES & SWEETS ===
+  // Shrikhand, Amrakhand & Puri Combos
+  if ((d.includes('shrikhand') || d.includes('amrakhand') || d.includes('shrikhanda')) && (d.includes('puri') || d.includes('poori') || d.includes('plate') || d.includes('combo') || d.includes('thali'))) {
+    return 'shrikhand_puri';
+  }
+  if (d.includes('shrikhand') || d.includes('amrakhand') || d.includes('srikhand')) {
+    return 'shrikhand';
+  }
+
+  // Aamras & Puri Combos
+  if ((d.includes('aamras') || d.includes('amras') || d.includes('aam ras') || d.includes('mango pulp') || d.includes('aamrasa')) && (d.includes('puri') || d.includes('poori') || d.includes('plate') || d.includes('combo') || d.includes('thali'))) {
+    return 'aamras_puri';
+  }
+  if (d.includes('aamras') || d.includes('amras') || d.includes('aam ras')) {
+    return 'aamras';
+  }
+
+  // Puri Bhaji / Poori Bhaji & Batata Sukhi Bhaji
+  if (
+    d.includes('puri bhaji') || d.includes('poori bhaji') ||
+    d.includes('puri sagu') || d.includes('poori sagu') ||
+    d.includes('puri masala') || d.includes('poori masala') ||
+    (d.includes('puri') && (d.includes('bhaji') || d.includes('batata') || d.includes('aloo') || d.includes('alu')))
+  ) {
+    return 'puri_bhaji';
+  }
+  if (
+    d.includes('batata sukhi bhaji') || d.includes('batata bhaji') ||
+    d.includes('batatyachi bhaji') || d.includes('sukhi bhaji') ||
+    d.includes('sukha batata') || d.includes('sukha aloo') || d.includes('aloo sukhi')
+  ) {
+    return 'batata_bhaji';
+  }
+
+  // Traditional Kheer, Shevai Kheer, Rice Kheer & Payasam
+  if (
+    d.includes('kheer') || d.includes('khir') || d.includes('payasam') ||
+    d.includes('payasa') || d.includes('seviyan') || d.includes('shevai') ||
+    d.includes('rice pudding') || d.includes('tandul kheer') || d.includes('gud kheer')
+  ) {
+    return 'kheer';
+  }
+
+  // Puran Poli
+  if (d.includes('puran poli') || d.includes('puranpoli') || d.includes('vedmi') || d.includes('bobbatlu') || d.includes('holige')) {
+    return 'puran_poli';
+  }
+
+  // Pithla Bhakri, Zunka Bhakar & Besan
+  if (
+    d.includes('pithla') || d.includes('pitla') ||
+    d.includes('zunka') || d.includes('zhunka') ||
+    d.includes('junka') || d.includes('besan bhakri') ||
+    (d.includes('bhakri') && (d.includes('thecha') || d.includes('kanda')))
+  ) {
+    return 'pithla_bhakri';
+  }
+
+  // Bharli Vangi (Stuffed Eggplants)
+  if (d.includes('bharli vangi') || d.includes('bharli wangi') || d.includes('vangyachi bhaji') || (d.includes('vangi') && !d.includes('bharta'))) {
+    return 'bharli_vangi';
+  }
+
+  // Varan Bhat (Indrayani Rice with Golden Toor Dal & Pure Ghee)
+  if (
+    d.includes('varan bhat') || d.includes('varan bhaat') ||
+    d.includes('indrayani varan') || d.includes('indrayani bhat') ||
+    d.includes('dal varan') || d.includes('sajuk toop bhat') ||
+    (d.includes('bhat') && d.includes('varan')) || (d.includes('rice') && d.includes('varan'))
+  ) {
+    return 'varan_bhat';
+  }
+
+  // Masala Bhaat (Spiced Goda Masala Wedding Rice)
+  if (
+    d.includes('masala bhaat') || d.includes('masala bhat') ||
+    d.includes('masale bhaat') || d.includes('masale bhat') ||
+    d.includes('goda masala rice') || d.includes('marathi rice')
+  ) {
+    return 'masala_bhaat';
+  }
+
+  // Thalipeeth
+  if (d.includes('thalipeeth') || d.includes('thali pith') || d.includes('bhajani thalipeeth') || d.includes('dhapate')) {
+    return 'thalipeeth';
+  }
+
+  // Sabudana Khichdi
+  if (d.includes('sabudana khichdi') || d.includes('sabudana khichadi') || d.includes('sago khichdi') || (d.includes('sabudana') && (d.includes('khichdi') || d.includes('dahi')))) {
+    return 'sabudana_khichdi';
+  }
+
+  // Sabudana Vada
+  if (d.includes('sabudana vada') || d.includes('sabudana wada') || d.includes('sago vada')) {
+    return 'sabudana_vada';
+  }
+
+  // Modak / Ukdiche Modak
+  if (d.includes('modak') || d.includes('ukdiche modak') || d.includes('ukadiche modak')) {
+    return 'modak';
+  }
+
+  // Kothimbir Vadi & Alu Vadi
+  if (d.includes('kothimbir') || d.includes('kothambir') || d.includes('coriander vadi')) {
+    return 'kothimbir_vadi';
+  }
+  if (d.includes('alu vadi') || d.includes('aloo vadi') || d.includes('patra') || d.includes('aluche')) {
+    return 'alu_vadi';
+  }
+
+  // Khandeshi Shev Bhaji
+  if (d.includes('shev bhaji') || d.includes('sev bhaji') || d.includes('shev curry')) {
+    return 'shev_bhaji';
+  }
+
+  // Katachi Amti
+  if (d.includes('katachi amti') || d.includes('amti') || d.includes('aamti') || d.includes('chana dal amti')) {
+    return 'katachi_amti';
+  }
+
+  // Matki Usal
+  if (d.includes('matki usal') || d.includes('usal') || d.includes('misal rassa')) {
+    return 'matki_usal';
+  }
+
+  // Dadpe Pohe
+  if (d.includes('dadpe pohe') || d.includes('dadpe poha')) {
+    return 'poha';
+  }
+
+  // === 1. INDIAN STREET FOOD, CHAAT & PAV SPECIALTIES ===
+  // Cheese Pav Bhaji (Must precede regular Pav Bhaji)
+  if (
+    (d.includes('cheese') || d.includes('cheesy')) &&
+    (d.includes('pav bhaji') || d.includes('pavbhaji') || d.includes('bhaji pav') || (d.includes('pav') && d.includes('bhaji')))
+  ) {
+    return 'cheese_pav_bhaji';
+  }
+
+  // Regular Pav Bhaji
+  if (
+    d.includes('pav bhaji') || d.includes('pavbhaji') || d.includes('bhaji pav') ||
+    (d.includes('pav') && d.includes('bhaji') && !d.includes('masala pav') && !d.includes('vada pav') && !d.includes('misal'))
+  ) {
+    return 'pav_bhaji';
+  }
+
+  // Masala Pav (Distinct dish: spiced butter pav tossed on tawa, NOT pav bhaji)
+  if (
+    d.includes('masala pav') || d.includes('masalapav') ||
+    (d.includes('masala') && d.includes('pav') && !d.includes('bhaji') && !d.includes('vada') && !d.includes('misal'))
+  ) {
+    return 'masala_pav';
+  }
+
+  // Vada Pav
+  if (d.includes('vada pav') || d.includes('vadapav') || d.includes('wada pav') || d.includes('batata vada') || d.includes('batatavada')) {
+    return 'vada_pav';
+  }
+
+  // Ragda Puri (Strictly before Ragda Pattice)
+  if (
+    d.includes('ragda puri') || d.includes('ragdapuri') ||
+    (d.includes('ragda') && (d.includes('puri') || d.includes('poori')))
+  ) {
+    return 'ragda_puri';
+  }
+
+  // Ragda Pattice
+  if (
+    d.includes('ragda pattice') || d.includes('ragda patties') || d.includes('pattice') || d.includes('patties') ||
+    (d.includes('ragda') && !d.includes('puri') && !d.includes('poori'))
+  ) {
+    return 'ragda_pattice';
+  }
+
+  // Pani Puri (Golgappa)
+  if (d.includes('pani puri') || d.includes('panipuri') || d.includes('golgappa') || d.includes('golgappe') || d.includes('puchka')) {
+    return 'pani_puri';
+  }
+
+  // Sev Puri & SPDP & Dahi Puri & Bhel
   if (d.includes('sev puri') || d.includes('shev puri') || d.includes('sev batata')) return 'sev_puri';
   if (d.includes('dahi puri') || d.includes('spdp') || d.includes('dahi batata') || d.includes('dahi papdi')) return 'dahi_puri';
   if (d.includes('bhel') || d.includes('bhelpuri') || d.includes('sukha bhel') || d.includes('oli bhel') || d.includes('matki bhel')) return 'bhel_puri';
   if (d.includes('dabeli') || d.includes('kutchi dabeli')) return 'dabeli';
-  if (d.includes('ragda') || d.includes('pattice') || d.includes('ragda patties')) return 'ragda_pattice';
+
+  // Kanda Bhaji / Onion Pakoda (Strictly crispy onion fritters)
+  if (
+    d.includes('kanda bhaji') || d.includes('kanda bhajji') || d.includes('khekda bhaji') ||
+    d.includes('kanda pakoda') || d.includes('kanda bhajiya') || d.includes('onion pakoda') ||
+    d.includes('onion bhaji') || d.includes('pyaz pakoda') ||
+    (d.includes('bhajiya') || d.includes('pakoda') || d.includes('bhajji'))
+  ) {
+    return 'kanda_bhaji';
+  }
+
+  // Misal Pav
   if (d.includes('misal') || d.includes('missal') || d.includes('katakirr') || d.includes('tarri pav')) return 'misal_pav';
-  if (d.includes('pani puri') || d.includes('panipuri') || d.includes('golgappa') || d.includes('golgappe') || d.includes('puchka')) return 'pani_puri';
   if (d.includes('samosa') || d.includes('samose')) return 'samosa';
   if (d.includes('kachori') || d.includes('khasta kachori')) return 'kachori';
   if (d.includes('aloo tikki') || d.includes('alu tikki')) return 'aloo_tikki';
   if (d.includes('chaat') || d.includes('papdi chaat')) return 'chaat';
-  if (d.includes('kanda bhaji') || d.includes('khekda bhaji') || d.includes('bhajiya') || d.includes('pakoda') || d.includes('bhajji')) return 'kanda_bhaji';
   if (d.includes('sabudana vada') || d.includes('sabudana wada')) return 'sabudana_vada';
   if (d.includes('poha') || d.includes('pohe') || d.includes('kanda poha') || d.includes('batata poha')) return 'poha';
 
