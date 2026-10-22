@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { MapPin, Navigation, Compass, Layers } from 'lucide-react';
+import { getOrCreateUserId, getUserSessionsHistory, getStoredUserMobile } from '@/lib/tracker';
 
 export interface TourMapPoint {
   id: number;
@@ -58,9 +59,16 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
     async function loadData() {
       try {
         setIsLoading(true);
-        const url = sessionId
-          ? `/api/campaign/map?session_id=${encodeURIComponent(sessionId)}`
-          : '/api/campaign/map';
+        const params = new URLSearchParams();
+        if (sessionId) params.set('session_id', sessionId);
+        const uid = getOrCreateUserId();
+        if (uid) params.set('user_id', uid);
+        const history = getUserSessionsHistory();
+        if (history.length > 0) params.set('session_ids', history.join(','));
+        const mob = getStoredUserMobile();
+        if (mob) params.set('mobile', mob);
+
+        const url = `/api/campaign/map?${params.toString()}`;
         const res = await fetch(url);
         const json = await res.json();
 
@@ -99,63 +107,97 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
             return clean || base.replace(/[^a-z0-9]/g, '');
           };
 
-          // Strictly deduplicate and assign sequential stop numbers: Stop 1, Stop 2
+          // Deduplicate rawUserSpots while preserving unique stop numbers
           const cleanUserSpots: CurrentUserSpotInfo[] = [];
-          const seenKeys = new Set<string>();
+          const seenStopKeys = new Set<string>();
           rawUserSpots.forEach((s) => {
-            const k = normalizeKey(s.name);
-            if (k && !seenKeys.has(k)) {
-              seenKeys.add(k);
+            const k = `${normalizeKey(s.name)}_${s.stopNumber || 0}`;
+            if (!seenStopKeys.has(k)) {
+              seenStopKeys.add(k);
               cleanUserSpots.push({
                 ...s,
-                stopNumber: cleanUserSpots.length + 1
+                stopNumber: s.stopNumber || (cleanUserSpots.length + 1)
               });
             }
           });
+          cleanUserSpots.sort((a, b) => (a.stopNumber || 1) - (b.stopNumber || 1));
 
-          // Build a map of normalized user restaurant keys to sequential stop number
-          const userKeyStopMap = new Map<string, number>();
-          cleanUserSpots.forEach(s => {
-            userKeyStopMap.set(normalizeKey(s.name), s.stopNumber!);
-          });
-
-          // Update existing points in list: mark ONLY active user spots as isCurrentUserSpot with their sequential stopNumber
+          // STRICT 1-TO-1 PIN MAPPING:
+          // Reset all points first to regular historical spots
           list.forEach(p => {
-            const k = normalizeKey(p.name);
-            const userStopNum = userKeyStopMap.get(k);
-            if (userStopNum !== undefined) {
-              p.isCurrentUserSpot = true;
-              p.stopNumber = userStopNum;
-              const matchedUserSpot = cleanUserSpots.find(s => s.stopNumber === userStopNum);
-              if (matchedUserSpot?.dishName) {
-                p.featured_dish = matchedUserSpot.dishName;
-              }
-            } else {
-              p.isCurrentUserSpot = false;
-              p.stopNumber = undefined;
-            }
+            p.isCurrentUserSpot = false;
+            p.stopNumber = undefined;
           });
 
-          // If a user spot from cleanUserSpots isn't in list yet, insert it at the beginning
-          // (only when it has a real location; never plot a spot at a default/fake coordinate)
+          // Each user stop (Stop 1, Stop 2) claims EXACTLY ONE marker in list
+          const claimedPointIds = new Set<number>();
           cleanUserSpots.forEach(s => {
-            const k = normalizeKey(s.name);
-            const exists = list.some(p => normalizeKey(p.name) === k);
-            const hasRealCoords = typeof s.latitude === 'number' && typeof s.longitude === 'number'
-              && !isNaN(s.latitude) && !isNaN(s.longitude) && s.latitude !== 0 && s.longitude !== 0;
-            if (!exists && hasRealCoords) {
+            let chosenPoint: TourMapPoint | undefined = undefined;
+
+            // 1. Try matching by exact coordinates (within 100 meters)
+            if (s.latitude && s.longitude) {
+              chosenPoint = list.find(p => !claimedPointIds.has(p.id) &&
+                Math.abs(p.latitude - s.latitude!) < 0.001 &&
+                Math.abs(p.longitude - s.longitude!) < 0.001
+              );
+            }
+
+            // 2. Try matching by normalized name, picking the geographically closest point
+            if (!chosenPoint) {
+              const nameKey = normalizeKey(s.name);
+              const candidates = list.filter(p => !claimedPointIds.has(p.id) && normalizeKey(p.name) === nameKey);
+              if (candidates.length > 0) {
+                if (s.latitude && s.longitude) {
+                  const sLat = s.latitude;
+                  const sLng = s.longitude;
+                  candidates.sort((a, b) => {
+                    const distA = Math.hypot(a.latitude - sLat, a.longitude - sLng);
+                    const distB = Math.hypot(b.latitude - sLat, b.longitude - sLng);
+                    return distA - distB;
+                  });
+                }
+                chosenPoint = candidates[0];
+              }
+            }
+
+            if (chosenPoint) {
+              claimedPointIds.add(chosenPoint.id);
+              chosenPoint.isCurrentUserSpot = true;
+              chosenPoint.stopNumber = s.stopNumber;
+              if (s.dishName) chosenPoint.featured_dish = s.dishName;
+              if (s.latitude && s.longitude && (!chosenPoint.latitude || !chosenPoint.longitude)) {
+                chosenPoint.latitude = s.latitude;
+                chosenPoint.longitude = s.longitude;
+              }
+            } else if (s.latitude && s.longitude && s.latitude !== 0 && s.longitude !== 0) {
+              // Only insert if completely absent from list
+              const newPointId = 999990 + s.stopNumber!;
+              claimedPointIds.add(newPointId);
               list.unshift({
-                id: 999990 + s.stopNumber!,
+                id: newPointId,
                 name: s.name,
                 city: s.city,
-                latitude: s.latitude as number,
-                longitude: s.longitude as number,
+                latitude: s.latitude,
+                longitude: s.longitude,
                 rating: 4.8,
                 total_visits: 1,
                 featured_dish: s.dishName,
                 isCurrentUserSpot: true,
                 stopNumber: s.stopNumber
               });
+            }
+          });
+
+          // Final deduplication guarantee: Ensure NO stopNumber ever appears more than once
+          const verifiedStopNums = new Set<number>();
+          list.forEach(p => {
+            if (p.isCurrentUserSpot && p.stopNumber) {
+              if (verifiedStopNums.has(p.stopNumber)) {
+                p.isCurrentUserSpot = false;
+                p.stopNumber = undefined;
+              } else {
+                verifiedStopNums.add(p.stopNumber);
+              }
             }
           });
 
@@ -355,7 +397,7 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
             <div style="font-family: inherit; padding: 4px 6px; min-width: 150px; text-align: left;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 6px;">
                 <span style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #DC2626; background: #FEE2E2; padding: 1px 6px; border-radius: 4px;">
-                  Bhookasur Food Stop
+                  Visited Food Spot
                 </span>
                 <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 900; color: #DC2626; background: #FEF2F2; border: 1px solid #FECACA; padding: 1px 6px; border-radius: 9999px;">
                   👥 ${point.total_visits} ${point.total_visits === 1 ? 'Visit' : 'Visits'}
@@ -368,7 +410,7 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
                 🍽️ ${point.featured_dish || 'Famous Food'}
               </div>
               <div style="font-size: 10px; color: #64748B; margin-top: 2px;">
-                📍 ${point.city} • <strong style="color: #DC2626;">${point.total_visits} ${point.total_visits === 1 ? 'foodie ne visit kiya' : 'foodies ne visit kiya'}</strong>
+                📍 ${point.city} • <strong style="color: #DC2626;">${point.total_visits} ${point.total_visits === 1 ? 'foodie visited' : 'foodies visited'}</strong>
               </div>
             </div>
           `);
@@ -382,31 +424,19 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         }
       });
 
-      // Initial View: Focus on user's visited food tour spots (blue) together with the existing
-      // visited spots (red) around them, so both are always visible on the first view.
+      // View: Focus initial camera on user's visited spots, or region of visited tour spots
       const userSpots = points.filter(p => p.isCurrentUserSpot);
-      const kmBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
-        const toRad = (d: number) => (d * Math.PI) / 180;
-        const dLat = toRad(bLat - aLat);
-        const dLng = toRad(bLng - aLng);
-        const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
-        return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-      };
-      const nearbyExisting = userSpots.length > 0
-        ? points.filter(p => !p.isCurrentUserSpot && userSpots.some(u => kmBetween(u.latitude, u.longitude, p.latitude, p.longitude) <= 10))
-        : [];
-      const focusSpots = [...userSpots, ...nearbyExisting];
-      if (focusSpots.length >= 2) {
-        const userBounds = L.latLngBounds(focusSpots.map(p => [p.latitude, p.longitude]));
+      if (userSpots.length > 1) {
+        const userBounds = L.latLngBounds(userSpots.map(p => [p.latitude, p.longitude]));
         if (userBounds.isValid()) {
-          map.fitBounds(userBounds, { padding: [50, 50], maxZoom: 15 });
+          map.fitBounds(userBounds, { padding: [60, 60], maxZoom: 12 });
         }
-      } else if (focusSpots.length === 1) {
-        map.setView([focusSpots[0].latitude, focusSpots[0].longitude], 13);
-      } else if (points.length > 0) {
+      } else if (userSpots.length === 1) {
+        map.setView([userSpots[0].latitude, userSpots[0].longitude], 12);
+      } else if (points.length >= 2) {
         const bounds = L.latLngBounds(points.map(p => [p.latitude, p.longitude]));
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 11 });
         }
       } else {
         map.setView([21.5, 78.9], 4.8);

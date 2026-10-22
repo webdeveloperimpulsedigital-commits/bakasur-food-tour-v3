@@ -8,6 +8,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       session_id,
+      user_id,
       restaurant_id,
       restaurant_name,
       dish_id,
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     // Record visit in MySQL & memoryStore
     const visit = await db.recordVisit({
       session_id,
+      user_id: user_id ? String(user_id) : undefined,
       restaurant_id: restId,
       restaurant_name: restaurant_name ? String(restaurant_name) : undefined,
       dish_id: dishId,

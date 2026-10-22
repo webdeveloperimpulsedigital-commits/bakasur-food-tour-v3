@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { session_id, name, mobile, email, city, restaurant_id, dish_id, consent, terms_accepted } = body;
+    const { session_id, user_id, name, mobile, email, city, restaurant_id, dish_id, consent, terms_accepted } = body;
 
     const rawMobile = String(mobile || '').trim();
     const cleanMobile = rawMobile.replace(/\D/g, '');
@@ -213,11 +213,12 @@ export async function POST(request: Request) {
       }, { status: 409 });
     }
 
-    // Record visit on global map (using resolved restaurant ID, preventing duplicates)
+    // Record visit on user map (using resolved restaurant ID, preventing duplicates)
     const restIdToRecord = finalRestId || (restaurant_id ? parseInt(restaurant_id, 10) : null);
     if (restIdToRecord) {
       await db.recordVisit({
         session_id: participant.session_id,
+        user_id: user_id ? String(user_id) : undefined,
         restaurant_id: restIdToRecord,
         restaurant_name: restaurantName,
         dish_id: finalDishId,

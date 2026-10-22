@@ -126,7 +126,7 @@ export function inferDishCategory(name: string, description?: string): string {
   }
 
   // 1. Breakfast Items
-  if (hasWord(nameLower, 'breakfast') || hasWord(nameLower, 'upma') || hasWord(nameLower, 'sabudana') || hasWord(nameLower, 'omelette') || hasWord(nameLower, 'boiled eggs') || hasWord(nameLower, 'scrambled eggs') || hasWord(nameLower, 'puri bhaji') || hasWord(nameLower, 'poori bhaji')) {
+  if (hasWord(nameLower, 'breakfast') || hasWord(nameLower, 'upma') || hasWord(nameLower, 'sabudana') || hasWord(nameLower, 'omelette') || hasWord(nameLower, 'omelet') || hasWord(nameLower, 'omlet') || hasWord(nameLower, 'boiled eggs') || hasWord(nameLower, 'scrambled eggs') || hasWord(nameLower, 'puri bhaji') || hasWord(nameLower, 'poori bhaji')) {
     return 'Breakfast';
   }
 
@@ -1310,6 +1310,26 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
 
   // Vaishali (FC Road Pune)
   'vaishali': [
+    {
+      name: "Special Vaishali Tomato Omelette",
+      description: "FC Road's iconic golden chickpea-flour pancake prepared with chopped fresh ripe tomatoes, green chilies and coriander, served with crisp buttered toast.",
+      price: 150,
+      image: "/images/food/tomato_omelette.jpg",
+      popularity: 100,
+      rating: 5.0,
+      category: "South Indian Snacks",
+      is_veg: 1
+    },
+    {
+      name: "Special Cheese Tomato Omelette",
+      description: "Vaishali's famous savory tomato besan pancake smothered in melted Amul cheese, served with hot buttered toast.",
+      price: 180,
+      image: "/images/food/tomato_omelette.jpg",
+      popularity: 99,
+      rating: 4.9,
+      category: "South Indian Snacks",
+      is_veg: 1
+    },
     {
       name: "Vaishali Special Mysore Masala Dosa",
       description: "FC Road's iconic golden fermented rice crepe smeared with fiery red garlic paste & spiced potato mash.",

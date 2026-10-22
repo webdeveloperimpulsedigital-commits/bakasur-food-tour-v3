@@ -52,6 +52,8 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   bhakri: 'bhakri.jpg',
   poha: 'poha.jpg',
   misal_pav: 'misal_pav.jpg',
+  tomato_omelette: 'tomato_omelette.jpg',
+  veg_omelette: 'tomato_omelette.jpg',
 
   // Street Food, Chaat & Pav Specialties
   ragda_pattice: 'ragda_pattice.jpg',
@@ -375,6 +377,7 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   crab_masala: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=85',
 
   // Breakfast
+  tomato_omelette: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=85',
   pancakes: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&auto=format&fit=crop&q=85',
   waffles: 'https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=800&auto=format&fit=crop&q=85',
   french_toast: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&auto=format&fit=crop&q=85',
@@ -1008,6 +1011,7 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   if (d.includes('chicken') || d.includes('murgh') || d.includes('kukkad')) return 'chicken_curry';
 
   // === 11. BREAKFAST & EGGS ===
+  if (d.includes('tomato omelette') || d.includes('tomato omelet') || d.includes('tomato omlet') || d.includes('veg omelette') || d.includes('veg omelet') || d.includes('cheese tomato omelette')) return 'tomato_omelette';
   if (d.includes('pancake') || d.includes('pancakes')) return 'pancakes';
   if (d.includes('waffle') || d.includes('waffles')) return 'waffles';
   if (d.includes('french toast')) return 'french_toast';

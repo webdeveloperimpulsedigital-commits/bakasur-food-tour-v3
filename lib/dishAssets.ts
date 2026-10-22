@@ -39,21 +39,53 @@ export function formatCleanDishName(dishName?: string, restaurantName?: string):
 
 export function isDishVeg(dishName?: string): boolean {
   if (!dishName) return true;
-  const n = dishName.toLowerCase();
+  const n = dishName.toLowerCase().trim();
 
-  // Non-veg meats and poultry ALWAYS make a dish non-veg
+  // 1. Tomato Omelette in Indian & Maharashtrian cuisine is 100% vegetarian (besan/tomato/coriander pancake)
+  if (
+    n.includes('tomato omelette') || n.includes('tomato omelet') || n.includes('tomato omlet') ||
+    n.includes('veg omelette') || n.includes('veg omelet') || n.includes('vegan omelette') ||
+    n.includes('besan cheela') || n.includes('cheela') || n.includes('chilla')
+  ) {
+    return true;
+  }
+
+  // 2. Regular omelettes without explicit vegetarian prefix are made of eggs (non-vegetarian)
+  if (/\bomelet(te)?\b/i.test(n) || /\bomlet\b/i.test(n)) {
+    return false;
+  }
+
+  // 3. Non-veg meats, eggs, poultry, seafood ALWAYS make a dish non-veg
   const meatKeywords = [
-    'chicken', 'mutton', 'egg', 'anda', 'fish', 'prawn', 'prawns', 'crab',
+    'chicken', 'mutton', 'egg', 'eggs', 'anda', 'ande', 'fish', 'prawn', 'prawns', 'crab',
     'bombil', 'surmai', 'pomfret', 'meat', 'gosht', 'bokud', 'bolai',
     'tangdi', 'lamb', 'beef', 'pork', 'bacon', 'nihari', 'paya',
     'seafood', 'duck', 'turkey', 'rawas', 'kolambi', 'clams', 'lobster',
-    'zinger', 'fried chicken', 'kfc'
+    'zinger', 'fried chicken', 'kfc', 'baida roti', 'boti'
   ];
   if (meatKeywords.some(kw => new RegExp(`(^|[^a-z0-9])${kw}([^a-z0-9]|$)`, 'i').test(n))) {
     return false;
   }
 
-  // Explicit vegetarian identifiers
+  // 4. Vegetarian exceptions for kebabs and seekh
+  if (
+    n.includes('veg kebab') || n.includes('veg seekh') || n.includes('hara bhara') ||
+    n.includes('dahi ke') || n.includes('paneer tikka') || n.includes('mushroom tikka') ||
+    n.includes('soya chaap') || n.includes('veg cutlet')
+  ) {
+    return true;
+  }
+
+  // 5. Other non-veg keywords
+  const otherNonVegKeywords = [
+    'keema', 'kheema', 'galouti', 'seekh', 'non veg', 'non-veg', 'nonveg',
+    'tandoori chicken', 'kebab', 'kabab', 'shawarma', 'sukka', 'gavran', 'tambda', 'pandhra'
+  ];
+  if (otherNonVegKeywords.some(kw => n.includes(kw))) {
+    return false;
+  }
+
+  // 6. Explicit vegetarian identifiers
   if (
     n.includes('paneer') || n.includes('pure veg') || n.includes('veg thali') ||
     n.includes('soya') || n.includes('dal') || n.includes('aloo') || n.includes('gobi') ||
@@ -85,11 +117,7 @@ export function isDishVeg(dishName?: string): boolean {
     return true;
   }
 
-  const otherNonVegKeywords = [
-    'keema', 'kheema', 'galouti', 'seekh', 'non veg', 'non-veg', 'nonveg',
-    'tandoori chicken', 'kebab', 'kabab', 'shawarma', 'sukka', 'gavran', 'tambda', 'pandhra', 'rassa'
-  ];
-  return !otherNonVegKeywords.some(kw => n.includes(kw));
+  return true;
 }
 
 /**
@@ -181,24 +209,24 @@ export function isPureVegRestaurantName(restaurantName?: string): boolean {
 export function getDishVisualAssets(dishName?: string, dishImage?: string, restaurantName?: string): DishVisualAssets {
   const cleanName = formatCleanDishName(dishName, restaurantName);
 
-  // If dishImage is already an AI endpoint URL, check that it matches cleanName
-  if (dishImage && dishImage.startsWith('/api/ai/dish-image')) {
-    try {
-      const url = new URL(dishImage, 'http://localhost');
-      const urlDish = url.searchParams.get('dish') || '';
-      if (urlDish && (cleanName.toLowerCase().includes(urlDish.toLowerCase().slice(0, 6)) || urlDish.toLowerCase().includes(cleanName.toLowerCase().slice(0, 6)))) {
-        return {
-          plateImage: dishImage,
-          flyingImage: dishImage
-        };
-      }
-    } catch {
-      // ignore
-    }
+  // 1. Direct local authentic photographic asset in public/images/food/
+  if (dishImage && dishImage.startsWith('/images/food/')) {
+    return {
+      plateImage: dishImage,
+      flyingImage: dishImage
+    };
   }
 
-  let aiPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName || '')}&v=v30`;
-  // Only forward verified remote Swiggy CDN or Cloudinary API images, never local assets or generic Unsplash URLs
+  // 2. If dishImage is already a fully formed AI endpoint URL specifically for this dish
+  if (dishImage && dishImage.startsWith('/api/ai/dish-image')) {
+    return {
+      plateImage: dishImage,
+      flyingImage: dishImage
+    };
+  }
+
+  let aiPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName || '')}&v=v32`;
+  // Only forward verified remote Swiggy CDN or Cloudinary API images, never generic placeholders
   if (dishImage && (dishImage.startsWith('http://') || dishImage.startsWith('https://')) && (dishImage.includes('swiggy.com') || dishImage.includes('cloudinary.com'))) {
     aiPngUrl += `&imgUrl=${encodeURIComponent(dishImage)}`;
   }
@@ -389,7 +417,18 @@ export function isDishRelevantToSearch(dishTitle?: string, userQuery?: string): 
     return d.includes('misal') || d.includes('katakirr');
   }
 
-  // === 12. General Food Queries (Biryani, Pizza, Burger, Dosa, Idli, Pulao, Mastani, Falooda, etc.) ===
+  // === 12. Tomato Omelette / Veg Omelette / Besan Cheela ===
+  const isTomatoOmeletteQuery =
+    q.includes('tomato omelette') || q.includes('tomato omelet') || q.includes('tomato omlet') ||
+    q.includes('veg omelette') || q.includes('veg omelet') || q.includes('besan cheela');
+  if (isTomatoOmeletteQuery) {
+    return (
+      d.includes('tomato omelette') || d.includes('tomato omelet') || d.includes('tomato omlet') ||
+      d.includes('veg omelette') || d.includes('veg omelet') || d.includes('besan cheela')
+    );
+  }
+
+  // === 13. General Food Queries (Biryani, Pizza, Burger, Dosa, Idli, Pulao, Mastani, Falooda, etc.) ===
   // Direct full substring match
   if (d.includes(q)) return true;
 

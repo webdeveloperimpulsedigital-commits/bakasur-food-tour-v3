@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     }
     const {
       session_id,
+      user_id,
       user_location,
       latitude,
       longitude,
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
 
     const session = await db.createOrUpdateSession({
       session_id,
+      user_id: user_id ? String(user_id) : undefined,
       user_location,
       latitude: latitude ? parseFloat(latitude) : null,
       longitude: longitude ? parseFloat(longitude) : null,

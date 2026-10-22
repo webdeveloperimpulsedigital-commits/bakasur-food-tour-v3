@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise';
 import { verifySwiggyRestaurant } from './verifiedRestaurants';
-import { formatCleanDishName } from './dishAssets';
+import { formatCleanDishName, isPureVegRestaurantName } from './dishAssets';
 
 // Types
 export interface Restaurant {
@@ -62,6 +62,8 @@ export interface Dish {
   popularity: number;
   is_recommended: number;
   is_veg?: number;
+  is_bestseller?: boolean;
+  rating_count?: number | string;
   status: 'active' | 'inactive';
   created_at?: string;
   updated_at?: string;
@@ -87,6 +89,7 @@ export interface BakasurVideo {
 export interface CampaignSession {
   id: number;
   session_id: string;
+  user_id?: string | null;
   user_location: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -107,6 +110,7 @@ export interface CampaignSession {
 export interface CampaignVisit {
   id: number;
   session_id: string;
+  user_id?: string;
   restaurant_id: number;
   restaurant_name?: string;
   dish_id: number | null;
@@ -324,6 +328,8 @@ export const INITIAL_DISHES: Omit<Dish, 'id'>[] = [
   { restaurant_id: 7, name: "Special Adrak Wali Chai", description: "Strong boiled milk tea infused with freshly crushed ginger root.", price: 25.00, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80", rating: 4.8, popularity: 94, is_recommended: 1, status: 'active' },
 
   // 8. Vaishali Restaurant - FC Road (rest_id: 8)
+  { restaurant_id: 8, name: "Special Vaishali Tomato Omelette", description: "FC Road's iconic golden chickpea-flour pancake prepared with chopped fresh ripe tomatoes, green chilies and coriander, served with crisp buttered toast.", price: 150.00, image: "/images/food/tomato_omelette.jpg", rating: 5.0, popularity: 100, is_recommended: 1, is_veg: 1, status: 'active' },
+  { restaurant_id: 8, name: "Special Cheese Tomato Omelette", description: "Vaishali's famous savory tomato besan pancake smothered in melted Amul cheese, served with hot buttered toast.", price: 180.00, image: "/images/food/tomato_omelette.jpg", rating: 4.9, popularity: 99, is_recommended: 1, is_veg: 1, status: 'active' },
   { restaurant_id: 8, name: "Mysore Masala Dosa", description: "Crispy fermented crepe smeared with spicy fiery red garlic chutney, filled with spiced potato mash and laden with pure ghee.", price: 160.00, image: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=600&auto=format&fit=crop&q=80", rating: 4.9, popularity: 99, is_recommended: 1, status: 'active' },
   { restaurant_id: 8, name: "SPDP (Sev Potato Dahi Puri)", description: "Crunchy puris filled with spiced potatoes, chilled sweet curd, tangy tamarind chutney, and mountain of crisp sev.", price: 130.00, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80", rating: 4.8, popularity: 96, is_recommended: 1, status: 'active' },
   { restaurant_id: 8, name: "Filter Coffee Supreme", description: "Aromatic South Indian chicory blend frothed to perfection in traditional stainless steel tumbler.", price: 60.00, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80", rating: 4.7, popularity: 92, is_recommended: 1, status: 'active' },
@@ -686,7 +692,12 @@ class MemoryStore {
     this.nextVideoId = 1;
     this.nextJourneyId = 1;
     this.journeySteps = [];
-    this.restaurants = INITIAL_RESTAURANTS.map((r) => ({ ...r, id: this.nextRestId++ } as Restaurant));
+    this.restaurants = INITIAL_RESTAURANTS.map((r) => ({
+      ...r,
+      id: this.nextRestId++,
+      is_verified: 1,
+      verification_source: 'verified_registry'
+    } as Restaurant));
     this.dishes = INITIAL_DISHES.map((d) => ({ ...d, id: this.nextDishId++ } as Dish));
     this.videos = INITIAL_VIDEOS.map(v => ({ ...v, id: this.nextVideoId++ }));
 
@@ -798,6 +809,25 @@ export async function ensureRestaurantVerificationSchema(pool: mysql.Pool): Prom
         if (!idx || idx.length === 0) {
           await pool.query('ALTER TABLE restaurants ADD INDEX `idx_restaurants_swiggy` (`swiggy_id`)');
         }
+
+        // Auto-ensure user_id column on campaign_visits for user-scoped visit tracking
+        const [visitCols] = await pool.query<mysql.RowDataPacket[]>(
+          `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'campaign_visits' AND COLUMN_NAME = 'user_id'`
+        );
+        if (!visitCols || visitCols.length === 0) {
+          await pool.query('ALTER TABLE campaign_visits ADD COLUMN `user_id` VARCHAR(100) NULL AFTER `session_id`');
+          await pool.query('ALTER TABLE campaign_visits ADD INDEX `idx_visit_user` (`user_id`)').catch(() => {});
+        }
+
+        // Auto-ensure user_id column on campaign_sessions
+        const [sessCols] = await pool.query<mysql.RowDataPacket[]>(
+          `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'campaign_sessions' AND COLUMN_NAME = 'user_id'`
+        );
+        if (!sessCols || sessCols.length === 0) {
+          await pool.query('ALTER TABLE campaign_sessions ADD COLUMN `user_id` VARCHAR(100) NULL AFTER `session_id`');
+          await pool.query('ALTER TABLE campaign_sessions ADD INDEX `idx_sess_user` (`user_id`)').catch(() => {});
+        }
+
         return true;
       } catch (err) {
         console.warn('Restaurant verification schema migration notice:', err instanceof Error ? err.message : err);
@@ -878,7 +908,9 @@ export const db = {
             is_verified: Number(r.is_verified || 0),
             verification_source: r.verification_source ? String(r.verification_source) : null,
             fssai_license: r.fssai_license ? String(r.fssai_license) : null,
-            verified_at: r.verified_at ? new Date(r.verified_at).toISOString() : null
+            verified_at: r.verified_at ? new Date(r.verified_at).toISOString() : null,
+            is_veg: r.is_veg !== undefined && r.is_veg !== null ? Number(r.is_veg) : (isPureVegRestaurantName(String(r.name)) ? 1 : 0),
+            cuisine_tags: (r.cuisine_tags as string[]) || []
           }));
         }
         return [];
@@ -968,6 +1000,7 @@ export const db = {
     try {
       const pool = getMySQLPool();
       if (pool) {
+        await ensureRestaurantVerificationSchema(pool);
         const [rows] = await pool.query<mysql.RowDataPacket[]>('SELECT * FROM restaurants WHERE id = ?', [id]);
         if (rows && rows.length > 0) {
           const r = rows[0];
@@ -984,7 +1017,13 @@ export const db = {
             description: String(r.description || ''),
             is_campaign_active: Number(r.is_campaign_active ?? 1),
             total_visits: Number(r.total_visits || 0),
-            status: (r.status || 'active') as 'active' | 'inactive'
+            status: (r.status || 'active') as 'active' | 'inactive',
+            swiggy_id: r.swiggy_id ? String(r.swiggy_id) : null,
+            is_verified: Number(r.is_verified ?? 1),
+            verification_source: r.verification_source ? String(r.verification_source) : 'verified_registry',
+            fssai_license: r.fssai_license ? String(r.fssai_license) : null,
+            verified_at: r.verified_at ? new Date(r.verified_at).toISOString() : null,
+            is_veg: r.is_veg !== undefined && r.is_veg !== null ? Number(r.is_veg) : (isPureVegRestaurantName(String(r.name)) ? 1 : 0)
           };
         }
       }
@@ -1456,6 +1495,7 @@ export const db = {
     const session: CampaignSession = {
       id: existing ? existing.id : memoryStore.sessions.size + 1,
       session_id: data.session_id,
+      user_id: data.user_id ?? existing?.user_id ?? null,
       user_location: data.user_location ?? existing?.user_location ?? null,
       latitude: data.latitude ?? existing?.latitude ?? null,
       longitude: data.longitude ?? existing?.longitude ?? null,
@@ -1479,9 +1519,10 @@ export const db = {
       const pool = getMySQLPool();
       if (pool) {
         await pool.query(
-          `INSERT INTO campaign_sessions (session_id, user_location, latitude, longitude, restaurant_id, dish_id, current_stage, current_step, food_meter_percentage, aur_khilo_clicks, map_visited, form_submitted)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO campaign_sessions (session_id, user_id, user_location, latitude, longitude, restaurant_id, dish_id, current_stage, current_step, food_meter_percentage, aur_khilo_clicks, map_visited, form_submitted)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON DUPLICATE KEY UPDATE
+             user_id = COALESCE(VALUES(user_id), user_id),
              user_location = COALESCE(VALUES(user_location), user_location),
              latitude = COALESCE(VALUES(latitude), latitude),
              longitude = COALESCE(VALUES(longitude), longitude),
@@ -1496,6 +1537,7 @@ export const db = {
              updated_at = CURRENT_TIMESTAMP`,
           [
             session.session_id,
+            session.user_id || null,
             session.user_location,
             session.latitude,
             session.longitude,
@@ -1736,6 +1778,7 @@ export const db = {
   // VISITS & MAP
   async recordVisit(data: {
     session_id: string;
+    user_id?: string;
     restaurant_id: number;
     restaurant_name?: string;
     dish_id?: number | null;
@@ -1768,6 +1811,7 @@ export const db = {
     const visit: CampaignVisit = {
       id,
       session_id: data.session_id,
+      user_id: data.user_id,
       restaurant_id: data.restaurant_id,
       restaurant_name: finalRestName,
       dish_id: data.dish_id ?? null,
@@ -1892,9 +1936,9 @@ export const db = {
           const keepId = existing[0].id;
           await pool.query(
             `UPDATE campaign_visits 
-             SET restaurant_id = ?, dish_id = ?, dish_name = ?, restaurant_name = ?, city = ?, latitude = ?, longitude = ?, visited_at = CURRENT_TIMESTAMP
+             SET restaurant_id = ?, dish_id = ?, dish_name = ?, restaurant_name = ?, city = ?, latitude = ?, longitude = ?, user_id = COALESCE(?, user_id), visited_at = CURRENT_TIMESTAMP
              WHERE id = ?`,
-            [targetRestaurantId, data.dish_id ?? null, finalDishName, finalRestName, data.city, data.latitude, data.longitude, keepId]
+            [targetRestaurantId, data.dish_id ?? null, finalDishName, finalRestName, data.city, data.latitude, data.longitude, data.user_id || null, keepId]
           );
           if (existing.length > 1) {
             const extraIds = existing.slice(1).map(r => r.id);
@@ -1902,10 +1946,11 @@ export const db = {
           }
         } else {
           await pool.query(
-            `INSERT INTO campaign_visits (session_id, restaurant_id, dish_id, city, latitude, longitude, restaurant_name, dish_name, round_number)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO campaign_visits (session_id, user_id, restaurant_id, dish_id, city, latitude, longitude, restaurant_name, dish_name, round_number)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               data.session_id,
+              data.user_id || null,
               targetRestaurantId,
               data.dish_id ?? null,
               data.city,
@@ -1925,27 +1970,27 @@ export const db = {
     return visit;
   },
 
-  async getMapData(sessionId?: string) {
-    // Map data comes ONLY from real user visits stored in the database (campaign_visits).
-    //  - RED pins:  every restaurant any user has visited (all sessions, including older history)
-    //  - BLUE pins: the current session's own stops (Stop 1, Stop 2, ...)
-    // No seed restaurants, no synthesized points and no default/fake coordinates are ever plotted.
-    type VisitRow = {
-      id: number;
-      session_id: string;
-      restaurant_id: number;
-      restaurant_name: string;
-      dish_name: string;
-      city: string;
-      latitude: number;
-      longitude: number;
-      rating: number;
-      image: string;
-      address: string;
-      round_number: number;
-    };
+  async getMapData(
+    sessionOrOptions?: string | { sessionId?: string; userId?: string; mobile?: string; sessionIds?: string[] },
+    extraOptions?: { userId?: string; mobile?: string; sessionIds?: string[] }
+  ) {
+    // Global Food Tour Map:
+    //  - Displays all valid, recorded restaurant locations across all users and historical sessions
+    //  - BLUE pins: current user's session stops (Stop 1, Stop 2, ...) with clear floating labels
+    //  - RED pins:  all other historical & recorded restaurant visits across the campaign with visit counts
+    //  - Stats: global database totals using COUNT(DISTINCT ...) aggregation across all tables
 
-    // Helper to normalize restaurant names for accurate visit grouping & matching
+    let sessionId = typeof sessionOrOptions === 'string' ? sessionOrOptions : sessionOrOptions?.sessionId;
+    const opts = (typeof sessionOrOptions === 'object' && sessionOrOptions !== null)
+      ? sessionOrOptions
+      : (extraOptions || {});
+    const userId = opts.userId?.trim() || undefined;
+    const mobile = opts.mobile?.trim() || undefined;
+    const sessionIdsList = (opts.sessionIds || []).map(s => String(s || '').trim()).filter(Boolean);
+    if (sessionId && !sessionIdsList.includes(sessionId)) {
+      sessionIdsList.push(sessionId);
+    }
+
     const getRestaurantKey = (name: string): string => {
       if (!name) return 'unknown';
       const baseName = name.split(/[,-]/)[0].trim();
@@ -1956,7 +2001,6 @@ export const db = {
       return clean || baseName.toLowerCase().replace(/[^a-z0-9]/g, '');
     };
 
-    // Only real coordinates inside India are plotted (rows without a stored location are skipped, never defaulted)
     const isValidCoord = (lat: number, lng: number): boolean =>
       Number.isFinite(lat) && Number.isFinite(lng) && lat >= 6 && lat <= 37.5 && lng >= 68 && lng <= 97.5;
 
@@ -1968,159 +2012,364 @@ export const db = {
       return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
-    // 1. Load every recorded visit from MySQL (fallback: in-memory visits recorded by this server)
-    let visitRows: VisitRow[] = [];
+    // Resolve user's sessions to highlight their own stops as Blue pins
+    const userSessionIds = new Set<string>(sessionIdsList);
+    if (sessionId) userSessionIds.add(sessionId);
+
+    let dbFoodSpots = 0;
+    let dbDishes = 0;
+    let dbCities = 0;
+    let visitedPoints: any[] = [];
+    let currentUserSpots: any[] = [];
     let loadedFromDb = false;
+
     try {
       const pool = getMySQLPool();
       if (pool) {
         await ensureRestaurantVerificationSchema(pool);
-        const [rows] = await pool.query<mysql.RowDataPacket[]>(`
-          SELECT cv.id, cv.session_id, cv.restaurant_id, cv.round_number,
+
+        // A. Expand user session IDs if mobile or userId provided
+        if (mobile) {
+          const cleanMobile = mobile.replace(/\D/g, '');
+          const tenDigit = cleanMobile.length >= 10 ? cleanMobile.slice(-10) : cleanMobile;
+          if (tenDigit) {
+            const [partRows] = await pool.query<mysql.RowDataPacket[]>(
+              'SELECT DISTINCT session_id FROM participants WHERE mobile = ? OR mobile LIKE ?',
+              [tenDigit, `%${tenDigit}`]
+            );
+            partRows.forEach(r => { if (r.session_id) userSessionIds.add(String(r.session_id)); });
+          }
+        }
+        if (userId) {
+          const [sessRows] = await pool.query<mysql.RowDataPacket[]>(
+            'SELECT DISTINCT session_id FROM campaign_sessions WHERE user_id = ? UNION SELECT DISTINCT session_id FROM campaign_visits WHERE user_id = ?',
+            [userId, userId]
+          );
+          sessRows.forEach(r => { if (r.session_id) userSessionIds.add(String(r.session_id)); });
+        }
+
+        // B. Fetch all active restaurants from MySQL with valid coordinates
+        const [restRows] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT r.id, r.name, r.address, r.area, r.city,
+                 CAST(r.latitude AS DECIMAL(10,6)) as latitude,
+                 CAST(r.longitude AS DECIMAL(10,6)) as longitude,
+                 COALESCE(r.rating, 4.8) as rating,
+                 COALESCE(r.image, '') as image,
+                 COALESCE(r.total_visits, 1) as total_visits,
+                 COALESCE(
+                   (SELECT d.name FROM dishes d WHERE d.restaurant_id = r.id AND d.status = 'active' ORDER BY d.is_recommended DESC, d.popularity DESC LIMIT 1),
+                   'Specialty Dish'
+                 ) as featured_dish
+          FROM restaurants r
+          WHERE r.status = 'active' AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
+          ORDER BY r.total_visits DESC
+        `);
+
+        // C. Fetch all campaign visits across all users & sessions
+        const [cvRows] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT cv.id, cv.session_id, cv.user_id, cv.restaurant_id, cv.round_number,
                  COALESCE(NULLIF(cv.restaurant_name, ''), r.name) AS restaurant_name,
                  COALESCE(NULLIF(cv.dish_name, ''), d.name, '') AS dish_name,
-                 COALESCE(NULLIF(r.city, ''), NULLIF(cv.city, ''), '') AS city,
+                 COALESCE(NULLIF(r.city, ''), NULLIF(cv.city, ''), 'Pune') AS city,
                  COALESCE(r.latitude, cv.latitude) AS latitude,
                  COALESCE(r.longitude, cv.longitude) AS longitude,
-                 COALESCE(r.rating, 0) AS rating,
+                 COALESCE(r.rating, 4.8) AS rating,
                  COALESCE(r.image, '') AS image,
-                 COALESCE(r.address, '') AS address
+                 COALESCE(r.address, '') AS address,
+                 cv.visited_at
           FROM campaign_visits cv
           LEFT JOIN restaurants r ON cv.restaurant_id = r.id
           LEFT JOIN dishes d ON cv.dish_id = d.id
+          WHERE cv.restaurant_name IS NOT NULL AND cv.restaurant_name != ''
           ORDER BY cv.visited_at ASC, cv.id ASC
         `);
-        loadedFromDb = true;
-        visitRows = rows.map(v => ({
+
+        // D. Fetch all tour submissions across all users & sessions
+        const [tsRows] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT ts.id, ts.session_id, ts.restaurant_id, ts.restaurant_name, ts.dish_name, ts.location_name as city,
+                 ts.created_at as visited_at
+          FROM tour_submissions ts
+          WHERE ts.restaurant_name IS NOT NULL AND ts.restaurant_name != ''
+        `);
+
+        // E. Determine current user's spots (highlighted with Blue pins)
+        const userVisits = cvRows.filter(v =>
+          (sessionId && v.session_id === sessionId) ||
+          (userId && v.user_id === userId) ||
+          (v.session_id && userSessionIds.has(v.session_id))
+        );
+
+        const roundMap = new Map<number, any>();
+        userVisits.forEach(v => {
+          const rNum = Number(v.round_number) || 1;
+          roundMap.set(rNum, v);
+        });
+
+        const sortedRounds = Array.from(roundMap.entries()).sort((a, b) => a[0] - b[0]);
+        currentUserSpots = sortedRounds.map(([roundNum, v], idx) => ({
           id: Number(v.id),
           session_id: String(v.session_id || ''),
           restaurant_id: Number(v.restaurant_id || 0),
-          restaurant_name: String(v.restaurant_name || '').trim(),
-          dish_name: String(v.dish_name || '').trim(),
-          city: String(v.city || '').trim(),
+          name: String(v.restaurant_name),
+          city: String(v.city || 'Pune'),
           latitude: Number(v.latitude),
           longitude: Number(v.longitude),
-          rating: Number(v.rating || 0),
+          rating: Number(v.rating || 4.8),
           image: String(v.image || ''),
-          address: String(v.address || ''),
-          round_number: Number(v.round_number) || 1
+          featured_dish: String(v.dish_name || 'Specialty Dish'),
+          isCurrentUserSpot: true,
+          stopNumber: idx + 1
         }));
+
+        // F. Visit counts across all historical and current sessions
+        const visitCounts = new Map<string, number>();
+        [...cvRows, ...tsRows].forEach(v => {
+          const nameKey = getRestaurantKey(String(v.restaurant_name || ''));
+          if (!nameKey) return;
+          visitCounts.set(nameKey, (visitCounts.get(nameKey) || 0) + 1);
+        });
+
+        // G. STRICT 1-TO-1 MATCHING: Map each user stop to EXACTLY ONE restaurant ID
+        // Prevents multi-branch chains (like Faasos or Relax Pure Veg) from showing duplicate Stop 1 or Stop 2 pins
+        const restIdToUserStopMap = new Map<number, any>();
+        const matchedUserStopNumbers = new Set<number>();
+
+        currentUserSpots.forEach(s => {
+          let matchedRest: any = null;
+
+          // 1. Match by exact restaurant_id
+          if (s.restaurant_id) {
+            matchedRest = restRows.find(r => Number(r.id) === Number(s.restaurant_id));
+          }
+
+          // 2. Match by exact coordinates (within 100 meters)
+          if (!matchedRest && isValidCoord(s.latitude, s.longitude)) {
+            matchedRest = restRows.find(r =>
+              !restIdToUserStopMap.has(Number(r.id)) &&
+              Math.abs(Number(r.latitude) - s.latitude) < 0.001 &&
+              Math.abs(Number(r.longitude) - s.longitude) < 0.001
+            );
+          }
+
+          // 3. Match by normalized name, picking the closest geographic location
+          if (!matchedRest) {
+            const sKey = getRestaurantKey(s.name);
+            const candidates = restRows.filter(r =>
+              !restIdToUserStopMap.has(Number(r.id)) &&
+              getRestaurantKey(String(r.name || '')) === sKey
+            );
+            if (candidates.length > 0) {
+              if (isValidCoord(s.latitude, s.longitude)) {
+                candidates.sort((a, b) =>
+                  distanceKm(Number(a.latitude), Number(a.longitude), s.latitude, s.longitude) -
+                  distanceKm(Number(b.latitude), Number(b.longitude), s.latitude, s.longitude)
+                );
+              }
+              matchedRest = candidates[0];
+            }
+          }
+
+          if (matchedRest) {
+            restIdToUserStopMap.set(Number(matchedRest.id), s);
+            matchedUserStopNumbers.add(s.stopNumber);
+          }
+        });
+
+        // H. Assemble unique map spots
+        const spotsMap = new Map<string, any>();
+
+        // 1. Add all active restaurants from database
+        restRows.forEach(r => {
+          const restName = String(r.name || '');
+          const lat = Number(r.latitude);
+          const lng = Number(r.longitude);
+          if (!restName || !isValidCoord(lat, lng)) return;
+
+          const restIdKey = `rest_${r.id}`;
+          const nameKey = getRestaurantKey(restName);
+
+          const userSpot = restIdToUserStopMap.get(Number(r.id));
+          const isCurrentUserSpot = Boolean(userSpot);
+          const stopNumber = userSpot?.stopNumber;
+          const additionalVisits = visitCounts.get(nameKey) || 0;
+          const totalVisits = Math.max(Number(r.total_visits || 1), additionalVisits);
+
+          let featured_dish = String(r.featured_dish || 'Specialty Dish');
+          if (isCurrentUserSpot && userSpot?.featured_dish) {
+            featured_dish = userSpot.featured_dish;
+          }
+
+          spotsMap.set(restIdKey, {
+            id: Number(r.id),
+            name: restName,
+            address: String(r.address || ''),
+            city: String(r.city || 'Pune'),
+            latitude: lat,
+            longitude: lng,
+            rating: Number(r.rating || 4.8),
+            image: String(r.image || ''),
+            total_visits: totalVisits,
+            featured_dish,
+            isCurrentUserSpot,
+            isHistorical: !isCurrentUserSpot,
+            stopNumber
+          });
+        });
+
+        // 2. Add any user stop not matched to active restaurants as its own unique point
+        currentUserSpots.forEach(s => {
+          if (!matchedUserStopNumbers.has(s.stopNumber) && isValidCoord(s.latitude, s.longitude)) {
+            spotsMap.set(`user_stop_${s.stopNumber}`, {
+              id: s.restaurant_id || (999900 + s.stopNumber),
+              name: s.name,
+              address: '',
+              city: s.city || 'Pune',
+              latitude: s.latitude,
+              longitude: s.longitude,
+              rating: s.rating || 4.8,
+              image: s.image || '',
+              total_visits: 1,
+              featured_dish: s.featured_dish || 'Specialty Dish',
+              isCurrentUserSpot: true,
+              isHistorical: false,
+              stopNumber: s.stopNumber
+            });
+            matchedUserStopNumbers.add(s.stopNumber);
+          }
+        });
+
+        visitedPoints = Array.from(spotsMap.values());
+
+        // Sort: Current user's spots first (Stop 1, Stop 2), followed by highest visits
+        visitedPoints.sort((a, b) => {
+          if (a.isCurrentUserSpot && b.isCurrentUserSpot) {
+            return (a.stopNumber || 1) - (b.stopNumber || 1);
+          }
+          if (a.isCurrentUserSpot) return -1;
+          if (b.isCurrentUserSpot) return 1;
+          return (b.total_visits || 0) - (a.total_visits || 0);
+        });
+
+        // H. Database Aggregations for accurate global statistics
+        const [[rCount]] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT COUNT(DISTINCT name) as c FROM (
+            SELECT name FROM restaurants WHERE status = 'active'
+            UNION
+            SELECT restaurant_name as name FROM campaign_visits WHERE restaurant_name IS NOT NULL AND restaurant_name != ''
+            UNION
+            SELECT restaurant_name as name FROM tour_submissions WHERE restaurant_name IS NOT NULL AND restaurant_name != ''
+          ) t
+        `);
+
+        const [[dCount]] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT COUNT(DISTINCT name) as c FROM (
+            SELECT name FROM dishes WHERE status = 'active'
+            UNION
+            SELECT dish_name as name FROM campaign_visits WHERE dish_name IS NOT NULL AND dish_name != ''
+            UNION
+            SELECT dish_name as name FROM tour_submissions WHERE dish_name IS NOT NULL AND dish_name != ''
+          ) t
+        `);
+
+        const [[cCount]] = await pool.query<mysql.RowDataPacket[]>(`
+          SELECT COUNT(DISTINCT city) as c FROM (
+            SELECT name as city FROM locations WHERE is_active = 1
+            UNION
+            SELECT city FROM restaurants WHERE city IS NOT NULL AND city != ''
+            UNION
+            SELECT city FROM campaign_visits WHERE city IS NOT NULL AND city != ''
+            UNION
+            SELECT location_name as city FROM tour_submissions WHERE location_name IS NOT NULL AND location_name != ''
+          ) t
+        `);
+
+        dbFoodSpots = Number(rCount?.c || visitedPoints.length);
+        dbDishes = Number(dCount?.c || 100);
+        dbCities = Number(cCount?.c || 7);
+        loadedFromDb = true;
       }
     } catch (err) {
       console.warn('MySQL getMapData query warning:', err);
     }
 
     if (!loadedFromDb) {
-      visitRows = (memoryStore.visits || []).map(v => ({
+      // In-Memory Fallback Engine
+      const allRests = memoryStore.restaurants || [];
+      const allVisits = memoryStore.visits || [];
+
+      // Determine current user visits
+      const userVisits = allVisits.filter(v =>
+        (sessionId && v.session_id === sessionId) ||
+        (userId && v.user_id === userId) ||
+        (v.session_id && userSessionIds.has(v.session_id))
+      );
+
+      const roundMap = new Map<number, any>();
+      userVisits.forEach(v => {
+        const rNum = Number(v.round_number) || 1;
+        roundMap.set(rNum, v);
+      });
+
+      const sortedRounds = Array.from(roundMap.entries()).sort((a, b) => a[0] - b[0]);
+      currentUserSpots = sortedRounds.map(([roundNum, v], idx) => ({
         id: Number(v.id),
         session_id: String(v.session_id || ''),
         restaurant_id: Number(v.restaurant_id || 0),
-        restaurant_name: String(v.restaurant_name || '').trim(),
-        dish_name: String(v.dish_name || '').trim(),
-        city: String(v.city || '').trim(),
-        latitude: Number(v.latitude),
-        longitude: Number(v.longitude),
-        rating: 0,
+        name: String(v.restaurant_name || ''),
+        city: String(v.city || 'Pune'),
+        latitude: Number(v.latitude || 18.5204),
+        longitude: Number(v.longitude || 73.8407),
+        rating: 4.8,
         image: '',
-        address: '',
-        round_number: Number(v.round_number) || 1
+        featured_dish: String(v.dish_name || 'Specialty Dish'),
+        isCurrentUserSpot: true,
+        stopNumber: idx + 1
       }));
-    }
 
-    const plottable = visitRows.filter(v => v.restaurant_name && isValidCoord(v.latitude, v.longitude));
+      const spotsMap = new Map<string, any>();
+      allRests.forEach(r => {
+        const key = getRestaurantKey(r.name);
+        const userSpot = currentUserSpots.find(s =>
+          (s.restaurant_id && s.restaurant_id === r.id) ||
+          (getRestaurantKey(s.name) === key)
+        );
+        const isCurrent = Boolean(userSpot);
 
-    // 2. Group visits into unique places: same normalized name within 1 km = same restaurant
-    const spots: any[] = [];
-    const findSpot = (name: string, lat: number, lng: number) => {
-      const key = getRestaurantKey(name);
-      return spots.find(s => s._key === key && distanceKm(s.latitude, s.longitude, lat, lng) <= 1);
-    };
-
-    plottable.forEach(v => {
-      let spot = findSpot(v.restaurant_name, v.latitude, v.longitude);
-      if (!spot) {
-        spot = {
-          id: v.restaurant_id || v.id,
-          name: v.restaurant_name,
-          address: v.address,
-          city: v.city,
-          latitude: v.latitude,
-          longitude: v.longitude,
-          rating: v.rating,
-          image: v.image,
-          total_visits: 0,
-          featured_dish: '',
-          isCurrentUserSpot: false,
-          stopNumber: undefined as number | undefined,
-          _key: getRestaurantKey(v.restaurant_name),
-          _sessions: new Set<string>(),
-          _dishes: new Set<string>()
-        };
-        spots.push(spot);
-      }
-      spot._sessions.add(v.session_id || `visit_${v.id}`);
-      spot.total_visits = spot._sessions.size; // real number of foodies (sessions) who visited
-      if (v.dish_name) {
-        spot.featured_dish = v.dish_name; // latest visited dish (rows are ordered oldest -> newest)
-        spot._dishes.add(v.dish_name.toLowerCase());
-      }
-      if (!spot.city && v.city) spot.city = v.city;
-      if (!spot.image && v.image) spot.image = v.image;
-      if (!spot.address && v.address) spot.address = v.address;
-    });
-
-    // 3. Current user's stops (BLUE) strictly for this session_id: latest visit per round
-    let currentUserSpots: any[] = [];
-    if (sessionId) {
-      const roundMap = new Map<number, VisitRow>();
-      plottable
-        .filter(v => v.session_id === sessionId)
-        .forEach(v => roundMap.set(v.round_number, v));
-
-      const sortedRounds = Array.from(roundMap.entries()).sort((a, b) => a[0] - b[0]);
-      currentUserSpots = sortedRounds.map(([, v], idx) => {
-        const spot = findSpot(v.restaurant_name, v.latitude, v.longitude);
-        return {
-          id: Number(v.id),
-          session_id: v.session_id,
-          restaurant_id: v.restaurant_id,
-          name: v.restaurant_name,
-          city: v.city,
-          latitude: spot ? spot.latitude : v.latitude,
-          longitude: spot ? spot.longitude : v.longitude,
-          rating: v.rating,
-          image: v.image,
-          featured_dish: v.dish_name,
-          isCurrentUserSpot: true,
-          stopNumber: idx + 1
-        };
+        spotsMap.set(`rest_${r.id}`, {
+          id: r.id,
+          name: r.name,
+          address: r.address || '',
+          city: r.city || 'Pune',
+          latitude: r.latitude,
+          longitude: r.longitude,
+          rating: r.rating || 4.8,
+          image: r.image || '',
+          total_visits: r.total_visits || 1,
+          featured_dish: userSpot?.featured_dish || 'Specialty Dish',
+          isCurrentUserSpot: isCurrent,
+          isHistorical: !isCurrent,
+          stopNumber: userSpot?.stopNumber
+        });
       });
 
-      currentUserSpots.forEach(u => {
-        const spot = findSpot(u.name, u.latitude, u.longitude);
-        if (!spot) return;
-        spot.isCurrentUserSpot = true;
-        if (spot.stopNumber === undefined) spot.stopNumber = u.stopNumber;
-        if (u.featured_dish) spot.featured_dish = u.featured_dish;
-      });
+      visitedPoints = Array.from(spotsMap.values());
+      const distinctSpotNames = new Set([
+        ...allRests.map(r => r.name),
+        ...allVisits.map(v => v.restaurant_name).filter(Boolean)
+      ]);
+      const distinctDishNames = new Set([
+        ...(memoryStore.dishes || []).map(d => d.name),
+        ...allVisits.map(v => v.dish_name).filter(Boolean)
+      ]);
+      const distinctCities = new Set([
+        ...allRests.map(r => r.city).filter(Boolean),
+        ...allVisits.map(v => v.city).filter(Boolean)
+      ]);
+
+      dbFoodSpots = distinctSpotNames.size;
+      dbDishes = distinctDishNames.size;
+      dbCities = distinctCities.size;
     }
-
-    // 4. Statistics computed from the same real visit data that is plotted
-    const dbFoodSpots = spots.length;
-    const dbDishes = spots.reduce((sum, s) => sum + s._dishes.size, 0);
-    const dbCities = new Set(spots.map(s => String(s.city || '').toLowerCase()).filter(Boolean)).size;
-
-    const visitedPoints = spots.map(({ _key, _sessions, _dishes, ...point }) => point);
-
-    // Sort: Current user's spots first (Stop 1, Stop 2), followed by highest visits
-    visitedPoints.sort((a, b) => {
-      if (a.isCurrentUserSpot && b.isCurrentUserSpot) {
-        return (a.stopNumber || 1) - (b.stopNumber || 1);
-      }
-      if (a.isCurrentUserSpot) return -1;
-      if (b.isCurrentUserSpot) return 1;
-      return (b.total_visits || 0) - (a.total_visits || 0);
-    });
 
     return {
       points: visitedPoints,
@@ -2130,7 +2379,8 @@ export const db = {
         citiesCount: dbCities
       },
       currentUserPoint: currentUserSpots[0] || null,
-      currentUserSpots
+      currentUserSpots,
+      historicalSpots: visitedPoints.filter(p => p.isHistorical)
     };
   },
 

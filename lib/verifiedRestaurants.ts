@@ -90,17 +90,17 @@ export type VerificationResult =
 
 /** Restaurant shape returned to the frontend (superset of db.Restaurant). */
 export type VerifiedRestaurant = Restaurant & {
-  swiggy_id: string;
+  swiggy_id?: string | null;
   is_verified: 1;
-  verification_source: 'swiggy';
-  fssai_license: string;
+  verification_source: 'swiggy' | 'verified_registry';
+  fssai_license: string | null;
   verified_at: string;
-  is_open_now: boolean;
-  next_open_message: string | null;
-  cuisine: string[];
-  cost_for_two: string | null;
-  rating_count: string | null;
-  swiggy_url: string;
+  is_open_now?: boolean;
+  next_open_message?: string | null;
+  cuisine?: string[];
+  cost_for_two?: string | null;
+  rating_count?: string | null;
+  swiggy_url?: string;
 };
 
 interface SwiggyListingCandidate {
@@ -296,6 +296,11 @@ function parseMenuItems(regularCards: any[], swiggyId: string, vegOnly: boolean)
     const rawRating = parseFloat(info.ratings?.aggregatedRating?.rating);
     const rating = Number.isFinite(rawRating) && rawRating > 0 && rawRating <= 5 ? rawRating : 0;
     const photo = info.imageId ? buildSwiggyImageUrl(info.imageId) : '';
+    const rawCount = info.ratings?.aggregatedRating?.ratingCountV2 || info.ratings?.aggregatedRating?.ratingCount || null;
+    const isBestseller = Boolean(
+      info.isBestseller ||
+      (typeof info.ribbon?.text === 'string' && info.ribbon.text.toLowerCase().includes('bestseller'))
+    );
 
     seen.add(key);
     dishes.push({
@@ -307,13 +312,13 @@ function parseMenuItems(regularCards: any[], swiggyId: string, vegOnly: boolean)
       image: photo,
       proxy_image: photo ? getSwiggyProxyUrl(photo) : '',
       rating,
-      popularity: info.isBestseller ? 100 : 90,
-      is_recommended: category.toLowerCase().includes('recommended') || info.isBestseller ? 1 : 0,
+      popularity: isBestseller ? 100 : 90,
+      is_recommended: category.toLowerCase().includes('recommended') || isBestseller ? 1 : 0,
       is_veg: isVeg ? 1 : 0,
       category: category || 'Menu',
       status: 'active',
-      ...(info.isBestseller ? { is_bestseller: true } : {}),
-      ...(info.ratings?.aggregatedRating?.ratingCountV2 ? { rating_count: info.ratings.aggregatedRating.ratingCountV2 } : {})
+      ...(isBestseller ? { is_bestseller: true } : {}),
+      ...(rawCount ? { rating_count: rawCount } : {})
     } as Dish);
   };
 

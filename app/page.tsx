@@ -22,7 +22,7 @@ import { Frame13Confirmation } from '@/components/frames/Frame13Confirmation';
 import { VideoTransitionOverlay } from '@/components/VideoTransitionOverlay';
 import { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
-import { getOrCreateSessionId, resetSessionId, trackUserStep } from '@/lib/tracker';
+import { getOrCreateSessionId, resetSessionId, trackUserStep, getOrCreateUserId, setStoredUserMobile } from '@/lib/tracker';
 
 export type FrameNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
 
@@ -283,11 +283,13 @@ export default function CampaignPage() {
 
     // Persist session and record visit in DB immediately
     try {
+      const activeUserId = getOrCreateUserId();
       await fetch('/api/campaign/session/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: activeSession,
+          user_id: activeUserId,
           user_location: selectedRestaurant?.city || selectedCity,
           latitude: selectedRestaurant?.latitude || userCoords?.lat,
           longitude: selectedRestaurant?.longitude || userCoords?.lng,
@@ -305,6 +307,7 @@ export default function CampaignPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: activeSession,
+          user_id: activeUserId,
           restaurant_id: selectedRestaurant?.id || 1,
           restaurant_name: selectedRestaurant?.name || 'Local Food Spot',
           dish_id: (finalDish as { id?: number })?.id || 1,
@@ -596,11 +599,13 @@ export default function CampaignPage() {
 
     // Automatically persist visited spot to MySQL DB and mark map_visited = 1
     try {
+      const activeUserId = getOrCreateUserId();
       await fetch('/api/campaign/visit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: activeSession,
+          user_id: activeUserId,
           restaurant_id: selectedRestaurant?.id || 1,
           restaurant_name: selectedRestaurant?.name || 'Local Restaurant',
           dish_id: (selectedDish as { id?: number })?.id || null,
@@ -617,6 +622,7 @@ export default function CampaignPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: activeSession,
+          user_id: activeUserId,
           current_stage: 'map',
           current_step: 'live_map',
           map_visited: 1
@@ -704,11 +710,13 @@ export default function CampaignPage() {
       : (selectedDish?.name || firstRoundDish?.name || 'Signature Food');
 
     try {
+      const activeUserId = getOrCreateUserId();
       const res = await fetch('/api/campaign/participate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: sessionId,
+          user_id: activeUserId,
           mobile,
           name: name || 'Foodie Follower',
           city: selectedRestaurant?.city || firstRoundRestaurant?.city || selectedCity,
@@ -728,6 +736,7 @@ export default function CampaignPage() {
       if (json.success && json.data) {
         playSound('fanfare');
         setRegisteredMobile(mobile);
+        setStoredUserMobile(mobile);
         setParticipationId(json.data.participation_id || 'BKT-' + Math.floor(100000 + Math.random() * 900000));
         setCurrentFrame(13);
 
@@ -981,7 +990,7 @@ export default function CampaignPage() {
                       ? "/images/final-frames/3.mp4"
                       : currentFrame === 6
                         ? "/images/all-frames/Showing Love.mp4"
-                        : currentFrame === 8
+                        : (currentFrame as number) === 8
                           ? "/images/final-frames/Acidity-and-Dakare.mp4"
                           : currentFrame === 9
                             ? "/images/final-frames/Bhookasur-Drinking-Gastrium.mp4"
@@ -996,7 +1005,7 @@ export default function CampaignPage() {
                   currentFrame === 2 ? 'restaurant' :
                     currentFrame === 3 || currentFrame === 4 ? 'dish' :
                       currentFrame === 6 ? 'trailer' :
-                        currentFrame === 8 ? 'heartburn' :
+                        (currentFrame as number) === 8 ? 'heartburn' :
                           currentFrame === 9 ? 'relief' :
                             currentFrame === 10 ? 'relief_done' : 'map'
               }
@@ -1074,7 +1083,7 @@ export default function CampaignPage() {
 
 
               {/* Frame 8: Help Bakasur */}
-              {currentFrame === 8 && (
+              {(currentFrame as number) === 8 && (
                 <Frame8HelpBakasur onHelpBakasur={handleHelpBakasur} />
               )}
 

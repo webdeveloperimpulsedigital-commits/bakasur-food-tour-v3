@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, Search, Utensils, X, Sparkles, BookOpen } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName, isDishVeg, isPureVegRestaurantName, isDishRelevantToSearch } from '@/lib/dishAssets';
+import { selectTopRestaurantDishes } from '@/lib/dishRanking';
 
 interface Frame3DishSelectionProps {
   restaurant: Restaurant;
@@ -76,7 +77,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   const isNonVegRestaurant = useMemo(() => {
     if (isHeritageVeg || restaurant.is_veg === 1) return false;
     const rName = restaurant.name.toLowerCase();
-    return rName.includes('non-veg') ||
+    if (
+      rName.includes('non-veg') ||
       rName.includes('non veg') ||
       rName.includes('nonveg') ||
       rName.includes('mutton') ||
@@ -92,8 +94,13 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       rName.includes('kabab') ||
       rName.includes('bar') ||
       rName.includes('pub') ||
-      rName.includes('permit room');
-  }, [restaurant.name, restaurant.is_veg, isHeritageVeg]);
+      rName.includes('permit room')
+    ) {
+      return true;
+    }
+    // If the restaurant's actual verified menu contains non-veg items, it serves non-veg
+    return rawDishes.some(d => d.is_veg === 0 || !isDishVeg(d.name));
+  }, [restaurant.name, restaurant.is_veg, isHeritageVeg, rawDishes]);
 
   const isPureVegRestaurant = useMemo(() => {
     if (isNonVegRestaurant) return false;
@@ -111,54 +118,35 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       rName.includes('idli') ||
       rName.includes('mithai') ||
       rName.includes('sweets') ||
-      rName.includes('jain');
-  }, [restaurant.name, restaurant.is_veg, isNonVegRestaurant, isHeritageVeg]);
+      rName.includes('jain') ||
+      (rawDishes.length > 0 && rawDishes.every(d => d.is_veg === 1 || isDishVeg(d.name)));
+  }, [restaurant.name, restaurant.is_veg, isNonVegRestaurant, isHeritageVeg, rawDishes]);
 
   // All authentic available dishes for this restaurant (strictly verified from actual menu, empty if unavailable)
   const allRestaurantDishes: Dish[] = useMemo(() => {
     if (rawDishes.length === 0) return [];
-    const list = rawDishes;
     if (isPureVegRestaurant) {
       // Guarantee zero non-veg items for pure veg restaurants
-      return list.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
+      return rawDishes.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
     }
-    if (!isNonVegRestaurant) {
-      // Prioritize pure vegetarian dishes so non-veg never invades the top menu of family restaurants
-      const vegDishes = list.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
-      const nonVegDishes = list.filter(d => !isDishVeg(d.name) || d.is_veg === 0);
-      return [...vegDishes, ...nonVegDishes];
-    }
-    return list;
-  }, [rawDishes, isPureVegRestaurant, isNonVegRestaurant]);
+    return rawDishes;
+  }, [rawDishes, isPureVegRestaurant]);
 
-
-  // Extract top 3 signature dishes for quick 1-tap picks at top
+  // Extract top signature dishes using multi-signal weighted ranking:
+  // 1. Restaurant specialties / bestsellers
+  // 2. High order counts and popularity
+  // 3. Ratings and review volume (Bayesian credibility)
+  // 4. Genuine meal relevance (disqualifying accompaniments and beverages for food dining)
   const threeDishes: Dish[] = useMemo(() => {
-    let candidates = allRestaurantDishes;
-    // CRITICAL: Unless the restaurant is explicitly a non-veg specialty joint,
-    // the top 3 quick-pick featured cards MUST ALWAYS BE 100% PURE VEGETARIAN!
-    // This guarantees that vegetarian diners NEVER see Chicken/Mutton on top cards,
-    // while non-veg users can still pick any dish via live menu or search.
-    if (!isNonVegRestaurant) {
-      const vegCandidates = candidates.filter(d => isDishVeg(d.name) && d.is_veg !== 0);
-      if (vegCandidates.length >= 3) {
-        candidates = vegCandidates;
-      }
-    }
-    const sorted = [...candidates].sort((a, b) => {
-      const rDiff = (b.rating || 0) - (a.rating || 0);
-      if (Math.abs(rDiff) > 0.01) return rDiff;
-      if ((b.is_recommended || 0) !== (a.is_recommended || 0)) {
-        return (b.is_recommended || 0) - (a.is_recommended || 0);
-      }
-      return (b.popularity || 0) - (a.popularity || 0);
-    });
-    return sorted.slice(0, 3);
-  }, [allRestaurantDishes, isNonVegRestaurant]);
+    return selectTopRestaurantDishes(allRestaurantDishes, restaurant, 3);
+  }, [allRestaurantDishes, restaurant]);
 
   // Contextual, authentic search placeholder matching this restaurant's real food
   const dynamicPlaceholder = useMemo(() => {
     const rName = restaurant.name.toLowerCase();
+    if (rName.includes('wok') || rName.includes('chinese') || rName.includes('noodle') || rName.includes('asia')) {
+      return `Search in ${restaurant.name} (e.g. Hakka Noodles, Fried Rice, Manchurian)...`;
+    }
     if (isNonVegRestaurant) {
       return `Search in ${restaurant.name} (e.g. Biryani, Chicken, Kebab, Mutton)...`;
     }
@@ -279,11 +267,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   }, [restaurant.id, restaurant.name]);
 
   useEffect(() => {
-    if (threeDishes.length > 0 && !selectedDish && !hasAutoSelectedRef.current) {
+    if (threeDishes.length > 0 && (!selectedDish || !hasAutoSelectedRef.current)) {
       hasAutoSelectedRef.current = true;
       const first = threeDishes[0];
       const cleanDishName = formatCleanDishName(first.name, restaurant.name);
-      const visual = getDishVisualAssets(first.name, first.image, restaurant.name);
+      const visual = getDishVisualAssets(cleanDishName, first.image, restaurant.name);
       onSelectDish({
         ...first,
         name: cleanDishName,
@@ -368,58 +356,66 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         </div>
       ) : (
         <>
-          {/* 2. Top 3 Signature Quick-Pick Cards */}
-          <div className="shrink-0 w-full">
-            <div className="grid grid-cols-3 gap-2 w-full">
-              {threeDishes.map((dish) => {
-                const cleanDishName = formatCleanDishName(dish.name, restaurant.name);
-                const isSelected = selectedDish?.name?.toLowerCase() === cleanDishName.toLowerCase() ||
-                  selectedDish?.name?.toLowerCase() === dish.name.toLowerCase();
-                const visual = getDishVisualAssets(cleanDishName, dish.image, restaurant.name);
+          {/* 2. Top Signature Quick-Pick Cards */}
+          {threeDishes.length > 0 && (
+            <div className="shrink-0 w-full">
+              <div className={`grid gap-2 w-full ${
+                threeDishes.length === 1
+                  ? 'grid-cols-1 max-w-[180px] mx-auto'
+                  : threeDishes.length === 2
+                  ? 'grid-cols-2 max-w-[360px] mx-auto'
+                  : 'grid-cols-3'
+              }`}>
+                {threeDishes.map((dish) => {
+                  const cleanDishName = formatCleanDishName(dish.name, restaurant.name);
+                  const isSelected = selectedDish?.name?.toLowerCase() === cleanDishName.toLowerCase() ||
+                    selectedDish?.name?.toLowerCase() === dish.name.toLowerCase();
+                  const visual = getDishVisualAssets(cleanDishName, dish.image, restaurant.name);
 
-                return (
-                  <button
-                    key={`quick-${dish.id}-${dish.name}`}
-                    type="button"
-                    onClick={() => handleSelectDishItem(dish)}
-                    className={`w-full py-2 px-1.5 rounded-xl transition-all flex flex-col items-center justify-center text-center relative cursor-pointer border-2 min-h-[76px] sm:min-h-[82px] ${
-                      isSelected
-                        ? 'bg-orange-50 border-[#D4380D] text-[#D4380D] shadow-sm shadow-[#D4380D]/15 scale-[1.02]'
-                        : 'bg-white hover:bg-slate-50 border-slate-200/90 text-[#0B1B48]'
-                    }`}
-                  >
-                    {/* Floating Checkmark for Selected State */}
-                    {isSelected && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#D4380D] text-white flex items-center justify-center shadow-xs z-10">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  return (
+                    <button
+                      key={`quick-${dish.id}-${dish.name}`}
+                      type="button"
+                      onClick={() => handleSelectDishItem(dish)}
+                      className={`w-full py-2 px-1.5 rounded-xl transition-all flex flex-col items-center justify-center text-center relative cursor-pointer border-2 min-h-[76px] sm:min-h-[82px] ${
+                        isSelected
+                          ? 'bg-orange-50 border-[#D4380D] text-[#D4380D] shadow-sm shadow-[#D4380D]/15 scale-[1.02]'
+                          : 'bg-white hover:bg-slate-50 border-slate-200/90 text-[#0B1B48]'
+                      }`}
+                    >
+                      {/* Floating Checkmark for Selected State */}
+                      {isSelected && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#D4380D] text-white flex items-center justify-center shadow-xs z-10">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </div>
+                      )}
+
+                      {/* Pure Food PNG Image */}
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 mb-0.5 flex items-center justify-center shrink-0">
+                        <img
+                          src={visual.flyingImage || visual.plateImage}
+                          alt={cleanDishName}
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.src.includes('default_feast')) {
+                              target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Feast')}&restaurant=Indian`;
+                            }
+                          }}
+                          className="w-full h-full object-contain filter drop-shadow-sm pointer-events-none"
+                        />
                       </div>
-                    )}
 
-                    {/* Pure Food PNG Image */}
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 mb-0.5 flex items-center justify-center shrink-0">
-                      <img
-                        src={visual.flyingImage || visual.plateImage}
-                        alt={cleanDishName}
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          if (!target.src.includes('default_feast')) {
-                            target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Feast')}&restaurant=Indian`;
-                          }
-                        }}
-                        className="w-full h-full object-contain filter drop-shadow-sm pointer-events-none"
-                      />
-                    </div>
-
-                    <span className={`font-black text-[11px] sm:text-xs leading-tight line-clamp-2 ${
-                      isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
-                    }`}>
-                      {cleanDishName}
-                    </span>
-                  </button>
-                );
-              })}
+                      <span className={`font-black text-[11px] sm:text-xs leading-tight line-clamp-2 ${
+                        isSelected ? 'text-[#D4380D]' : 'text-[#0B1B48]'
+                      }`}>
+                        {cleanDishName}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 3. MENU SEARCH BAR & REAL-TIME AUTO-SUGGESTIONS (No full menu scroll) */}
           <div className="w-full shrink-0 flex flex-col rounded-2xl border-2 border-slate-200/90 bg-white overflow-hidden shadow-sm mt-0.5">

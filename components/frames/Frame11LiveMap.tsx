@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Menu, ArrowRight, ArrowLeft, X, Phone, User, CheckCircle2, AlertCircle, HelpCircle, Share2 } from 'lucide-react';
 import { InteractiveTourMap } from './InteractiveTourMap';
 import { BakasurShareCardModal } from '../BakasurShareCardModal';
+import { getOrCreateUserId, getUserSessionsHistory, getStoredUserMobile } from '@/lib/tracker';
 
 interface Frame11LiveMapProps {
   sessionId?: string;
@@ -125,7 +126,16 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
   React.useEffect(() => {
     async function loadStats() {
       try {
-        const url = sessionId ? `/api/campaign/map?session_id=${encodeURIComponent(sessionId)}` : '/api/campaign/map';
+        const params = new URLSearchParams();
+        if (sessionId) params.set('session_id', sessionId);
+        const uid = getOrCreateUserId();
+        if (uid) params.set('user_id', uid);
+        const history = getUserSessionsHistory();
+        if (history.length > 0) params.set('session_ids', history.join(','));
+        const mob = registeredMobile || getStoredUserMobile();
+        if (mob) params.set('mobile', mob);
+
+        const url = `/api/campaign/map?${params.toString()}`;
         const res = await fetch(url);
         const json = await res.json();
         if (json.success && json.data?.stats) {
@@ -136,7 +146,7 @@ export const Frame11LiveMap: React.FC<Frame11LiveMapProps> = ({
       }
     }
     loadStats();
-  }, [sessionId]);
+  }, [sessionId, registeredMobile]);
 
   const handleOpenRegistration = () => {
     setLocalError('');

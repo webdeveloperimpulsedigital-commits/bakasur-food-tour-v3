@@ -221,16 +221,11 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
               </div>
             </div>
 
-            {/* Message Delivery Meta (Timestamp & Checkmarks) */}
-            <div className="flex items-center justify-end gap-1 mt-2 px-1 text-[10px] text-slate-400 font-medium">
+            {/* Message Delivery Meta (Timestamp) */}
+            <div className="flex items-center justify-end mt-2 px-1 text-[10px] text-slate-400 font-medium">
               <span>{typeof window !== 'undefined' ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '5:40 pm'}</span>
-              <span className="text-blue-500 font-bold">✓✓</span>
             </div>
           </div>
-
-          <p className="text-[11px] text-slate-500 text-center max-w-xs font-medium mt-3">
-            Shared as a single message with preview image and clickable link.
-          </p>
         </div>
 
         {/* Bottom Action Bar */}
