@@ -35,6 +35,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(!userCoords);
   const [isLoadingNearby, setIsLoadingNearby] = useState<boolean>(true);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchMessage, setSearchMessage] = useState<string>('');
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [firstVisitorInfo, setFirstVisitorInfo] = useState<{
     checked: boolean;
@@ -213,10 +214,13 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         );
         const json = await res.json();
         // Strict verified mode: only show restaurants the API verified. Never fabricate one from typed text.
-        setSearchResults(json.success && Array.isArray(json.data) ? json.data.slice(0, 15) : []);
+        const verifiedList = json.success && Array.isArray(json.data) ? json.data.slice(0, 15) : [];
+        setSearchResults(verifiedList);
+        setSearchMessage(verifiedList.length === 0 ? String(json.message || '') : '');
       } catch (err: unknown) {
         if ((err as Error)?.name !== 'AbortError') {
           setSearchResults([]);
+          setSearchMessage('');
         }
       } finally {
         setIsSearching(false);
@@ -484,7 +488,11 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               })
             ) : (
               <div className="p-3 text-center text-xs text-slate-500">
-                {isSearching ? 'Searching live restaurants...' : 'Type name or select from nearby list'}
+                {isSearching
+                  ? 'Searching live restaurants...'
+                  : searchQuery.trim()
+                    ? (searchMessage || `No verified restaurant found for "${searchQuery.trim()}". Try adding the area or city, e.g. "Prashant Corner, Thane".`)
+                    : 'Type name or select from nearby list'}
               </div>
             )}
           </div>

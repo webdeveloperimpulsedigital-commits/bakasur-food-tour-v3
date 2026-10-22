@@ -10,10 +10,10 @@
 import type { Restaurant, Dish } from './db';
 import { formatCleanDishName } from './dishAssets';
 
+// Server-only secret. Never read a NEXT_PUBLIC_* variant: those are inlined into browser JavaScript.
 const GOOGLE_API_KEY =
   process.env.GOOGLE_PLACES_API_KEY ||
   process.env.GOOGLE_MAPS_API_KEY ||
-  process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
   '';
 
 export function isGooglePlacesConfigured(): boolean {

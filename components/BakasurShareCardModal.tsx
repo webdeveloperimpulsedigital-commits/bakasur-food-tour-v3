@@ -26,7 +26,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Strictly use the official existing Bhookasur Food Tour image only
-  const heroImageSrc = '/images/final-frames/food-tour-img.jpg';
+  const heroImageSrc = '/images/final-frames/food-tour-img-gastrium.jpg';
   const activeImageSrc = heroImageSrc;
 
   // In-memory preloaded Bhookasur photo assets

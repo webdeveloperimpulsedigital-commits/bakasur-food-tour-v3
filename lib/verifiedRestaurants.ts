@@ -110,6 +110,14 @@ interface SwiggyListingCandidate {
   promoted: boolean;
   approxDistanceKm: number | null;
   matchScore: number;
+  /** Name-only relevance (0 when the restaurant name itself doesn't match the query) */
+  nameScore?: number;
+}
+
+export interface ScoredVerifiedRestaurant {
+  restaurant: VerifiedRestaurant;
+  score: number;
+  nameScore: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -119,11 +127,14 @@ type CacheEntry<T> = { timestamp: number; ttl: number; value: T };
 const globalStore = globalThis as unknown as {
   __verifiedProfileCache?: Map<string, CacheEntry<VerificationResult>>;
   __verifiedListCache?: Map<string, CacheEntry<VerifiedRestaurant[]>>;
+  __verifiedCandidateCache?: Map<string, CacheEntry<SwiggyListingCandidate[]>>;
 };
 const profileCache: Map<string, CacheEntry<VerificationResult>> =
   (globalStore.__verifiedProfileCache ??= new Map<string, CacheEntry<VerificationResult>>());
 const listCache: Map<string, CacheEntry<VerifiedRestaurant[]>> =
   (globalStore.__verifiedListCache ??= new Map<string, CacheEntry<VerifiedRestaurant[]>>());
+const candidateCache: Map<string, CacheEntry<SwiggyListingCandidate[]>> =
+  (globalStore.__verifiedCandidateCache ??= new Map<string, CacheEntry<SwiggyListingCandidate[]>>());
 
 function cacheGet<T>(map: Map<string, CacheEntry<T>>, key: string): T | undefined {
   const hit = map.get(key);
@@ -142,6 +153,7 @@ function cacheSet<T>(map: Map<string, CacheEntry<T>>, key: string, value: T, ttl
 export function clearVerifiedRestaurantCache(): void {
   profileCache.clear();
   listCache.clear();
+  candidateCache.clear();
 }
 
 // ---------------------------------------------------------------------------
@@ -518,7 +530,159 @@ export async function fetchVerifiedNearbyRestaurants(
 }
 
 /**
- * Search verified restaurants by restaurant name, cuisine, or dish.
+ * Fetch + score Swiggy search candidates around a location (cached per query/location).
+ * Only restaurants whose NAME, CUISINE, or an actual listed DISH matches the query qualify.
+ */
+async function fetchSearchCandidates(q: string, lat: number, lng: number): Promise<SwiggyListingCandidate[] | null> {
+  const cacheKey = `cand2_${q.toLowerCase()}_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  const cached = cacheGet(candidateCache, cacheKey);
+  if (cached) return cached;
+
+  const url = `https://www.swiggy.com/dapi/restaurants/search/v3?lat=${lat}&lng=${lng}&str=${encodeURIComponent(q)}&trackingId=undefined&submitAction=ENTER&queryUniqueId=undefined`;
+  const first = await fetchSwiggyJson(url);
+  if (!first) return null; // transient failure: not cached
+
+  const responses = [first];
+  let candidates = parseSearchCandidates(responses, q);
+  // Swiggy occasionally answers with a "related results" layout that omits the exact restaurant: ask once more
+  if (!candidates.some(c => (c.nameScore || 0) >= 60)) {
+    const second = await fetchSwiggyJson(url);
+    if (second) {
+      responses.push(second);
+      candidates = parseSearchCandidates(responses, q);
+    }
+  }
+
+  // Empty results are not cached so the next search retries Swiggy
+  if (candidates.length > 0) cacheSet(candidateCache, cacheKey, candidates, LIST_TTL_MS);
+  return candidates;
+}
+
+function parseSearchCandidates(responses: any[], q: string): SwiggyListingCandidate[] {
+  const byId = new Map<string, SwiggyListingCandidate>();
+  const upsert = (cand: SwiggyListingCandidate) => {
+    const prev = byId.get(cand.id);
+    if (!prev || cand.matchScore > prev.matchScore) byId.set(cand.id, cand);
+  };
+  const toCandidate = (info: any, matchScore: number, nameScore: number): SwiggyListingCandidate => ({
+    id: String(info.id),
+    name: String(info.name || ''),
+    cuisines: Array.isArray(info.cuisines) ? info.cuisines : [],
+    promoted: Boolean(info.promoted),
+    approxDistanceKm: typeof info.sla?.lastMileTravel === 'number' ? info.sla.lastMileTravel : null,
+    matchScore,
+    nameScore
+  });
+
+  // A. Restaurant results: must match by name or cuisine (promoted ads included only if they match).
+  //    Swiggy returns restaurants as single cards, collections ("More results like this") or grids.
+  const considerRestaurant = (info: any) => {
+    if (!info?.id || !info?.name || info?.availability?.visibility === false) return;
+    const cuisines: string[] = Array.isArray(info.cuisines) ? info.cuisines : [];
+    const nameScore = scoreNameMatch(q, String(info.name));
+    const score = Math.max(nameScore, scoreCuisineMatch(q, cuisines));
+    if (score > 0) upsert(toCandidate(info, score, nameScore));
+  };
+
+  // B. Dish results: restaurant qualifies only if it actually lists a matching dish
+  const qTokens = meaningfulTokens(q);
+  const dishMatches = (dishName: string) =>
+    Boolean(dishName) && qTokens.every(t => tokenMatches(t, tokenize(dishName)));
+  const considerDishRestaurant = (rInfo: any) => {
+    if (!rInfo?.id || !rInfo?.name || rInfo?.availability?.visibility === false) return;
+    const nameScore = scoreNameMatch(q, String(rInfo.name));
+    upsert(toCandidate(rInfo, Math.max(nameScore, 20), nameScore));
+  };
+
+  for (const json of responses) {
+    const groups = json?.data?.cards?.find((c: any) => c.groupedCard)?.groupedCard?.cardGroupMap || {};
+
+    for (const groupKey of Object.keys(groups)) {
+      for (const rc of groups[groupKey]?.cards || []) {
+        const card = rc?.card?.card;
+        if (!card) continue;
+        const type = String(card['@type'] || '');
+        if (/\.Restaurant$/.test(type)) considerRestaurant(card.info);
+        for (const r of Array.isArray(card.restaurants) ? card.restaurants : []) considerRestaurant(r?.info || r);
+        for (const r of card.gridElements?.infoWithStyle?.restaurants || []) considerRestaurant(r?.info || r);
+      }
+    }
+
+    for (const dc of groups.DISH?.cards || []) {
+      const card = dc?.card?.card;
+      if (!card?.restaurant?.info) continue;
+      // Single dish card: { info: dish, restaurant: { info } }
+      if (dishMatches(String(card.info?.name || ''))) considerDishRestaurant(card.restaurant.info);
+      // Grouped dishes per restaurant: { restaurant: { info }, dishes: [{ info }] }
+      if (Array.isArray(card.dishes) &&
+          card.dishes.some((d: any) => dishMatches(String(d?.info?.name || d?.card?.info?.name || '')))) {
+        considerDishRestaurant(card.restaurant.info);
+      }
+    }
+  }
+
+  return Array.from(byId.values()).sort((a, b) => {
+    if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+    if (a.promoted !== b.promoted) return a.promoted ? 1 : -1;
+    return (a.approxDistanceKm ?? Infinity) - (b.approxDistanceKm ?? Infinity);
+  });
+}
+
+export interface ScoredSearchOptions {
+  /** User's real position: used ONLY to compute "km away" (never to restrict results) */
+  userCoords?: { lat: number; lng: number } | null;
+  /** Keep only restaurants whose name matches the query (used for far-away/multi-city lookups) */
+  nameOnly?: boolean;
+  /** Reject verified restaurants farther than this from the searched location */
+  maxDistanceKm?: number;
+  maxVerify?: number;
+}
+
+/**
+ * Search verified restaurants around ANY location (searchCoords) and return them with
+ * their relevance score so results from several locations can be merged.
+ */
+export async function searchVerifiedScored(
+  query: string,
+  searchCoords: { lat: number; lng: number },
+  opts: ScoredSearchOptions = {}
+): Promise<ScoredVerifiedRestaurant[]> {
+  const q = (query || '').trim();
+  if (q.length < 2 || !isValidCoord(searchCoords.lat, searchCoords.lng)) return [];
+
+  const all = await fetchSearchCandidates(q, searchCoords.lat, searchCoords.lng);
+  if (!all || all.length === 0) return [];
+
+  const pool = opts.nameOnly ? all.filter(c => (c.nameScore || 0) >= 60) : all;
+  const top = pool.slice(0, opts.maxVerify ?? MAX_VERIFY_CANDIDATES);
+  if (top.length === 0) return [];
+
+  const distanceFrom = opts.userCoords && isValidCoord(opts.userCoords.lat, opts.userCoords.lng)
+    ? opts.userCoords
+    : searchCoords;
+
+  const results = await Promise.all(top.map(c => verifySwiggyRestaurant(c.id, searchCoords)));
+  const out: ScoredVerifiedRestaurant[] = [];
+  results.forEach((res, i) => {
+    if (!res.verified) return;
+    const p = res.profile;
+    if (
+      typeof opts.maxDistanceKm === 'number' &&
+      haversineKm(searchCoords.lat, searchCoords.lng, p.latitude, p.longitude) > opts.maxDistanceKm
+    ) {
+      return; // not actually located at the searched place
+    }
+    out.push({
+      restaurant: toVerifiedRestaurant(p, distanceFrom),
+      score: top[i].matchScore,
+      nameScore: top[i].nameScore || 0
+    });
+  });
+  return out;
+}
+
+/**
+ * Search verified restaurants by restaurant name, cuisine, or dish around a location.
  * Only Swiggy-listed restaurants that genuinely match the query AND pass full
  * verification are returned. Unknown text never produces a result.
  */
@@ -528,69 +692,10 @@ export async function searchVerifiedRestaurants(
   lng: number,
   limit = SEARCH_RESULT_LIMIT
 ): Promise<VerifiedRestaurant[]> {
-  const q = (query || '').trim();
-  if (q.length < 2 || !isValidCoord(lat, lng)) return [];
-
-  const cacheKey = `search_${q.toLowerCase()}_${lat.toFixed(2)}_${lng.toFixed(2)}`;
-  const cached = cacheGet(listCache, cacheKey);
-  if (cached) return cached.slice(0, limit);
-
-  const json = await fetchSwiggyJson(
-    `https://www.swiggy.com/dapi/restaurants/search/v3?lat=${lat}&lng=${lng}&str=${encodeURIComponent(q)}&trackingId=undefined&submitAction=ENTER&queryUniqueId=undefined`
-  );
-  if (!json) return [];
-
-  const groups = json?.data?.cards?.find((c: any) => c.groupedCard)?.groupedCard?.cardGroupMap || {};
-  const byId = new Map<string, SwiggyListingCandidate>();
-  const upsert = (cand: SwiggyListingCandidate) => {
-    const prev = byId.get(cand.id);
-    if (!prev || cand.matchScore > prev.matchScore) byId.set(cand.id, cand);
-  };
-
-  // A. Restaurant results: must match by name or cuisine (promoted ads included only if they match)
-  for (const rc of groups.RESTAURANT?.cards || []) {
-    const info = rc?.card?.card?.info;
-    if (!info?.id || info?.availability?.visibility === false) continue;
-    const name = String(info.name || '');
-    const cuisines: string[] = info.cuisines || [];
-    const score = Math.max(scoreNameMatch(q, name), scoreCuisineMatch(q, cuisines));
-    if (score <= 0) continue;
-    upsert({
-      id: String(info.id),
-      name,
-      cuisines,
-      promoted: Boolean(info.promoted),
-      approxDistanceKm: typeof info.sla?.lastMileTravel === 'number' ? info.sla.lastMileTravel : null,
-      matchScore: score
-    });
-  }
-
-  // B. Dish results: restaurant qualifies if it actually lists a matching dish
-  const qTokens = meaningfulTokens(q);
-  for (const dc of groups.DISH?.cards || []) {
-    const card = dc?.card?.card;
-    const dishName = String(card?.info?.name || '');
-    const rInfo = card?.restaurant?.info;
-    if (!rInfo?.id || !dishName || rInfo?.availability?.visibility === false) continue;
-    if (!qTokens.every(t => tokenMatches(t, tokenize(dishName)))) continue;
-    const nameScore = scoreNameMatch(q, String(rInfo.name || ''));
-    upsert({
-      id: String(rInfo.id),
-      name: String(rInfo.name || ''),
-      cuisines: rInfo.cuisines || [],
-      promoted: Boolean(rInfo.promoted),
-      approxDistanceKm: typeof rInfo.sla?.lastMileTravel === 'number' ? rInfo.sla.lastMileTravel : null,
-      matchScore: Math.max(nameScore, 20)
-    });
-  }
-
-  const candidates = Array.from(byId.values()).sort((a, b) => {
-    if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
-    if (a.promoted !== b.promoted) return a.promoted ? 1 : -1;
-    return (a.approxDistanceKm ?? Infinity) - (b.approxDistanceKm ?? Infinity);
+  const scored = await searchVerifiedScored(query, { lat, lng }, { userCoords: { lat, lng } });
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return (a.restaurant.distanceKm ?? Infinity) - (b.restaurant.distanceKm ?? Infinity);
   });
-
-  const verified = await verifyCandidates(candidates, { lat, lng });
-  cacheSet(listCache, cacheKey, verified, LIST_TTL_MS);
-  return verified.slice(0, limit);
+  return scored.map(s => s.restaurant).slice(0, limit);
 }

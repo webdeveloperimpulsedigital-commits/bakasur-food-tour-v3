@@ -15,9 +15,9 @@ export const metadata: Metadata = {
     siteName: "Bhookasur Food Tour",
     images: [
       {
-        url: "https://bhookasur.com/images/final-frames/food-tour-img.jpg",
-        width: 1080,
-        height: 1080,
+        url: "https://bhookasur.com/images/final-frames/food-tour-img-gastrium.jpg",
+        width: 360,
+        height: 360,
         alt: "Bhookasur Ka Food Tour"
       }
     ]
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bhookasur Ka Food Tour 🍔🔥",
     description: "Maine Bhookasur ke saath Food Tour kiya! Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!",
-    images: ["https://bhookasur.com/images/final-frames/food-tour-img.jpg"]
+    images: ["https://bhookasur.com/images/final-frames/food-tour-img-gastrium.jpg"]
   }
 };
 

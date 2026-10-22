@@ -137,16 +137,19 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           });
 
           // If a user spot from cleanUserSpots isn't in list yet, insert it at the beginning
+          // (only when it has a real location; never plot a spot at a default/fake coordinate)
           cleanUserSpots.forEach(s => {
             const k = normalizeKey(s.name);
             const exists = list.some(p => normalizeKey(p.name) === k);
-            if (!exists) {
+            const hasRealCoords = typeof s.latitude === 'number' && typeof s.longitude === 'number'
+              && !isNaN(s.latitude) && !isNaN(s.longitude) && s.latitude !== 0 && s.longitude !== 0;
+            if (!exists && hasRealCoords) {
               list.unshift({
                 id: 999990 + s.stopNumber!,
                 name: s.name,
                 city: s.city,
-                latitude: s.latitude || 18.5204,
-                longitude: s.longitude || 73.8407,
+                latitude: s.latitude as number,
+                longitude: s.longitude as number,
                 rating: 4.8,
                 total_visits: 1,
                 featured_dish: s.dishName,
@@ -379,19 +382,31 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         }
       });
 
-      // Initial View: Focus directly on user's visited food tour spots so both locations show clearly!
+      // Initial View: Focus on user's visited food tour spots (blue) together with the existing
+      // visited spots (red) around them, so both are always visible on the first view.
       const userSpots = points.filter(p => p.isCurrentUserSpot);
-      if (userSpots.length >= 2) {
-        const userBounds = L.latLngBounds(userSpots.map(p => [p.latitude, p.longitude]));
+      const kmBetween = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+        const toRad = (d: number) => (d * Math.PI) / 180;
+        const dLat = toRad(bLat - aLat);
+        const dLng = toRad(bLng - aLng);
+        const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+        return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+      };
+      const nearbyExisting = userSpots.length > 0
+        ? points.filter(p => !p.isCurrentUserSpot && userSpots.some(u => kmBetween(u.latitude, u.longitude, p.latitude, p.longitude) <= 10))
+        : [];
+      const focusSpots = [...userSpots, ...nearbyExisting];
+      if (focusSpots.length >= 2) {
+        const userBounds = L.latLngBounds(focusSpots.map(p => [p.latitude, p.longitude]));
         if (userBounds.isValid()) {
-          map.fitBounds(userBounds, { padding: [50, 50], maxZoom: 14 });
+          map.fitBounds(userBounds, { padding: [50, 50], maxZoom: 15 });
         }
-      } else if (userSpots.length === 1) {
-        map.setView([userSpots[0].latitude, userSpots[0].longitude], 13);
+      } else if (focusSpots.length === 1) {
+        map.setView([focusSpots[0].latitude, focusSpots[0].longitude], 13);
       } else if (points.length > 0) {
         const bounds = L.latLngBounds(points.map(p => [p.latitude, p.longitude]));
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [20, 20], maxZoom: 5.0 });
+          map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
         }
       } else {
         map.setView([21.5, 78.9], 4.8);

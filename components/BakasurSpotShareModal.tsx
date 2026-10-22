@@ -29,7 +29,7 @@ export const BakasurSpotShareModal: React.FC<BakasurSpotShareModalProps> = ({
 
   React.useEffect(() => {
     let isMounted = true;
-    fetch('/images/final-frames/food-tour-img.jpg')
+    fetch('/images/final-frames/food-tour-img-gastrium.jpg')
       .then(res => res.blob())
       .then(blob => {
         if (isMounted && blob && blob.size > 1000) {

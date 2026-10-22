@@ -77,10 +77,10 @@ export interface SwiggyDishItem {
 }
 
 export function getApifyToken(): string {
+  // Server-only secret. Never read a NEXT_PUBLIC_* variant: those are inlined into browser JavaScript.
   return (
     process.env.APIFY_TOKEN ||
     process.env.APIFY_API_KEY ||
-    process.env.NEXT_PUBLIC_APIFY_TOKEN ||
     ''
   ).trim();
 }
@@ -437,11 +437,12 @@ export async function fetchSwiggyRestaurantViaApify(
   const timer = setTimeout(() => controller.abort(), 35000);
 
   try {
-    const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${token}&timeout=30`;
+    const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?timeout=30`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
         'User-Agent': 'BakasurFoodTour/3.0'
       },
       body: JSON.stringify({

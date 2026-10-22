@@ -147,9 +147,11 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="pt-2 border-t border-stone-800/80 text-center text-[11px] text-stone-500">
-            Default credentials: <span className="text-amber-400 font-mono">admin</span> / <span className="text-amber-400 font-mono">admin123</span>
-          </div>
+          {process.env.NODE_ENV !== 'production' && (
+            <div className="pt-2 border-t border-stone-800/80 text-center text-[11px] text-stone-500">
+              Default credentials: <span className="text-amber-400 font-mono">admin</span> / <span className="text-amber-400 font-mono">admin123</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

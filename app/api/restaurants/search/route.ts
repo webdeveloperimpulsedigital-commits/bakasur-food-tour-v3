@@ -3,15 +3,20 @@ import { fetchLocationFromIP } from '@/lib/ipLocation';
 import { parseSwiggyRestaurantUrl, CITY_COORDINATES } from '@/lib/apifySwiggy';
 import {
   fetchVerifiedNearbyRestaurants,
-  searchVerifiedRestaurants,
   verifySwiggyRestaurant,
   toVerifiedRestaurant
 } from '@/lib/verifiedRestaurants';
+import { searchRestaurantsAnywhere } from '@/lib/restaurantSearch';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Restaurant search (strict verified mode).
+ * Restaurant search (strict verified mode, location-independent).
+ *
+ * - No query      -> verified restaurants nearest to the user (default list).
+ * - With a query  -> any restaurant in any city: a typed location ("Prashant Corner Thane",
+ *                    "Misal in Thane", "Vaishali, FC Road Pune") is searched at that place;
+ *                    otherwise around the user, then across major cities by restaurant name.
  *
  * Only restaurants that pass full Swiggy verification are returned
  * (see lib/verifiedRestaurants.ts). No restaurant is ever synthesized from the
@@ -26,7 +31,7 @@ export async function GET(request: Request) {
     let lng = parseFloat(searchParams.get('lng') || searchParams.get('longitude') || '');
     let hasUserCoords = !isNaN(lat) && !isNaN(lng);
 
-    // Resolve search location: explicit coords -> selected city centre -> IP geolocation
+    // Resolve the user's position: explicit coords -> selected city centre -> IP geolocation
     const cityKey = city.toLowerCase();
     if (!hasUserCoords && cityKey && CITY_COORDINATES[cityKey]) {
       lat = CITY_COORDINATES[cityKey].lat;
@@ -45,16 +50,11 @@ export async function GET(request: Request) {
       }
     }
 
-    if (!hasUserCoords) {
-      // Without a location we cannot verify serviceable, nearby restaurants
-      return NextResponse.json({ success: true, count: 0, isLiveAPI: true, verification: 'swiggy_strict', userCoords: null, data: [] });
-    }
+    const userCoords = hasUserCoords ? { lat, lng } : null;
 
-    const userCoords = { lat, lng };
-
-    // 1. No query -> closest verified restaurants
+    // 1. No query -> closest verified restaurants to the user (the ONLY place user location limits results)
     if (!query) {
-      const nearby = await fetchVerifiedNearbyRestaurants(lat, lng, 5);
+      const nearby = userCoords ? await fetchVerifiedNearbyRestaurants(lat, lng, 5) : [];
       return NextResponse.json({
         success: true,
         count: nearby.length,
@@ -65,22 +65,32 @@ export async function GET(request: Request) {
       });
     }
 
-    // 2. Pasted Swiggy URL / id -> verify that exact restaurant only
+    // 2. Pasted Swiggy URL / id -> verify that exact restaurant only (works for any city)
     const parsedUrl = parseSwiggyRestaurantUrl(query);
     if (parsedUrl.isSwiggyUrl && parsedUrl.restaurantId) {
-      const result = await verifySwiggyRestaurant(parsedUrl.restaurantId, userCoords);
+      const result = await verifySwiggyRestaurant(parsedUrl.restaurantId, userCoords || undefined);
       const data = result.verified ? [toVerifiedRestaurant(result.profile, userCoords)] : [];
-      return NextResponse.json({ success: true, count: data.length, isLiveAPI: true, verification: 'swiggy_strict', data });
+      return NextResponse.json({
+        success: true,
+        count: data.length,
+        isLiveAPI: true,
+        verification: 'swiggy_strict',
+        data,
+        ...(data.length === 0 ? { message: 'This Swiggy restaurant could not be verified.' } : {})
+      });
     }
 
-    // 3. Name / cuisine / dish search -> verified matches only
-    const results = await searchVerifiedRestaurants(query, lat, lng, 15);
+    // 3. Name / cuisine / dish search in any location -> verified matches only
+    const result = await searchRestaurantsAnywhere(query, userCoords, { selectedCity: city });
     return NextResponse.json({
       success: true,
-      count: results.length,
+      count: result.data.length,
       isLiveAPI: true,
       verification: 'swiggy_strict',
-      data: results
+      scope: result.scope,
+      searchedLocation: result.searchedLocation,
+      ...(result.message ? { message: result.message } : {}),
+      data: result.data
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Search failed';

@@ -9,9 +9,9 @@ export const metadata: Metadata = {
     description: 'Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye! Powered by Gastrium.',
     images: [
       {
-        url: '/images/final-frames/food-tour-img.jpg',
-        width: 1080,
-        height: 1080,
+        url: '/images/final-frames/food-tour-img-gastrium.jpg',
+        width: 360,
+        height: 360,
         alt: 'Bhookasur Food Tour'
       }
     ],
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Maine Bhookasur ke saath Food Tour kiya! 🍔🔥',
     description: 'Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!',
-    images: ['/images/final-frames/food-tour-img.jpg']
+    images: ['/images/final-frames/food-tour-img-gastrium.jpg']
   }
 };
 
@@ -32,7 +32,7 @@ export default function PassPage() {
         {/* Pure Food Tour Photo (No baked-in text) */}
         <div className="w-full rounded-2xl overflow-hidden shadow-md border border-slate-200 aspect-square bg-slate-100">
           <img
-            src="/images/final-frames/food-tour-img.jpg"
+            src="/images/final-frames/food-tour-img-gastrium.jpg"
             alt="Bhookasur Food Tour"
             className="w-full h-full object-cover block"
           />
