@@ -8,6 +8,18 @@ interface Frame9GastriumAnimationProps {
 
 export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = ({ onAnimationComplete }) => {
   const [showTagline, setShowTagline] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
+  const [gastriumImgError, setGastriumImgError] = useState<boolean>(false);
+  const [acidityImgError, setAcidityImgError] = useState<boolean>(false);
+
+  // Preload both logo images immediately on mount so transitions are instant
+  useEffect(() => {
+    setMounted(true);
+    const img1 = new Image();
+    img1.src = '/images/final-frames/Gastrium-logo-new.png';
+    const img2 = new Image();
+    img2.src = '/images/final-frames/Acidity-ko-bolo-gn.png';
+  }, []);
 
   useEffect(() => {
     // 1. Listen for exact video time update (at ~4.0s when blue stomach appears)
@@ -39,26 +51,109 @@ export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = (
     return () => clearTimeout(timer);
   }, [showTagline, onAnimationComplete]);
 
+  // Robust path fallbacks in case user places logos in /images/final-frames/, /images/, or root
+  const handleGastriumError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    const currentSrc = target.getAttribute('src') || '';
+    if (currentSrc.includes('Gastrium-logo-new')) {
+      if (currentSrc.includes('final-frames')) {
+        target.src = '/images/Gastrium-logo-new.png';
+      } else if (currentSrc.includes('/images/')) {
+        target.src = '/Gastrium-logo-new.png';
+      } else {
+        target.src = '/images/final-frames/Gastrium-Logo.png';
+      }
+    } else if (currentSrc.includes('Gastrium-Logo')) {
+      if (currentSrc.includes('final-frames')) {
+        target.src = '/images/Gastrium-Logo.png';
+      } else {
+        setGastriumImgError(true);
+      }
+    } else {
+      setGastriumImgError(true);
+    }
+  };
+
+  const handleAcidityError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    const currentSrc = target.getAttribute('src') || '';
+    if (currentSrc.includes('final-frames')) {
+      target.src = '/images/Acidity-ko-bolo-gn.png';
+    } else if (currentSrc.includes('/images/')) {
+      target.src = '/Acidity-ko-bolo-gn.png';
+    } else {
+      setAcidityImgError(true);
+    }
+  };
+
   return (
     <div
       onClick={onAnimationComplete}
-      className="w-full h-full flex items-center justify-center text-center px-4 sm:px-8 md:px-10 bg-white cursor-pointer select-none"
+      className="relative w-full h-full min-h-[170px] xs:min-h-[200px] flex items-center justify-center text-center px-4 sm:px-8 md:px-10 bg-white cursor-pointer select-none overflow-hidden"
     >
-      {!showTagline ? (
-        <div className="flex flex-col items-center justify-center text-center animate-in fade-in duration-300 px-2">
+      {/* Soothing ambient glow transition behind logos */}
+      <div
+        className={`absolute w-72 h-36 xs:w-88 xs:h-44 rounded-full blur-3xl pointer-events-none transition-all duration-1000 ease-out ${
+          showTagline
+            ? 'bg-blue-500/10 scale-110 opacity-100'
+            : 'bg-orange-500/8 scale-95 opacity-80'
+        }`}
+      />
+
+      {/* 1. GASTRIUM LOGO (TOP & BIG) + "IN" (BOTTOM RIGHT CORNER & BIG) */}
+      <div
+        className={`absolute inset-0 flex flex-col items-center justify-center px-4 py-2 sm:py-4 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          !showTagline && mounted
+            ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 scale-90 -translate-y-4 pointer-events-none'
+        }`}
+      >
+        {!gastriumImgError ? (
+          <div className="relative flex flex-col items-end justify-center select-none w-[78%] xs:w-[84%] sm:w-[88%] max-w-[290px] xs:max-w-[340px] sm:max-w-[400px] md:max-w-[450px] mx-auto -translate-y-1">
+            {/* Gastrium Logo */}
+            <img
+              src="/images/final-frames/Gastrium-logo-new.png"
+              alt="Gastrium Suspension"
+              onError={handleGastriumError}
+              className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-xs transition-transform duration-500"
+            />
+            {/* Word "IN" in the logo's bottom right corner & font size BIG */}
+            <div className="w-full flex justify-end -mt-1 xs:-mt-2 sm:-mt-3 pr-1 sm:pr-2">
+              <span className="text-[#E2370A] font-black italic text-4xl xs:text-5xl sm:text-6xl md:text-7xl uppercase tracking-wider leading-none select-none drop-shadow-xs">
+                IN
+              </span>
+            </div>
+          </div>
+        ) : (
           <h1 className="text-[38px] xs:text-[46px] sm:text-[54px] md:text-[58px] lg:text-[64px] font-black tracking-tight leading-none uppercase select-none">
             <span className="text-[#071746]">GASTRIUM</span>{' '}
             <span className="text-[#E2370A]">IN</span>
           </h1>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-600 max-w-md mx-auto px-2">
+        )}
+      </div>
+
+      {/* 2. ACIDITY KO BOLO GOODNIGHT LOGO (Phase 2) */}
+      <div
+        className={`absolute inset-0 flex items-center justify-center px-4 py-2 sm:py-4 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] delay-75 ${
+          showTagline
+            ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 scale-90 translate-y-5 pointer-events-none'
+        }`}
+      >
+        {!acidityImgError ? (
+          <img
+            src="/images/final-frames/Acidity-ko-bolo-gn.png"
+            alt="Acidity ko bolo goodnight"
+            onError={handleAcidityError}
+            className="w-[82%] xs:w-[86%] sm:w-[90%] max-w-[290px] xs:max-w-[340px] sm:max-w-[400px] md:max-w-[450px] h-auto object-contain select-none pointer-events-none drop-shadow-sm transition-transform duration-500"
+          />
+        ) : (
           <h1 className="text-[28px] xs:text-[34px] sm:text-[40px] md:text-[44px] lg:text-[48px] font-black italic tracking-tight text-[#071746] leading-[1.12] select-none text-center">
             Acidity ko bolo<br />
             <span className="text-[#0047BA]">goodnight</span>
           </h1>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
