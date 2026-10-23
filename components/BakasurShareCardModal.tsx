@@ -30,9 +30,8 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   const heroImageSrc = withBasePath('/images/final-frames/food-tour-img-gastrium.jpg');
   const activeImageSrc = heroImageSrc;
 
-  // In-memory preloaded Bhookasur photo and share card assets
+  // In-memory preloaded Bhookasur photo assets
   const preloadedFileRef = useRef<File | null>(null);
-  const preloadedCardFileRef = useRef<File | null>(null);
   const preloadedPngBlobRef = useRef<Blob | null>(null);
 
   const showToast = (msg: string) => {
@@ -50,11 +49,11 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   // Formatted message with live clickable link for WhatsApp and Instagram
   const shareText = `Maine Bhookasur ke saath Food Tour kiya!\nAap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!\n\n👉 Join the Food Tour:\n${shareUrl}`;
 
-  // Preload the Bhookasur image directly as File and PNG blob for mobile & desktop sharing
+  // Preload the pure Bhookasur image directly as File and PNG blob for mobile & desktop sharing
   useEffect(() => {
     let isMounted = true;
     
-    // 1. Raw photo for desktop/WhatsApp
+    // Pure photo (only image, no baked-in message text)
     fetch(activeImageSrc)
       .then((res) => res.blob())
       .then((blob) => {
@@ -83,16 +82,6 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       })
       .catch((err) => console.warn('Preload photo error:', err));
 
-    // 2. Preload high-res card with baked-in text & full link for Instagram (where apps strip caption text)
-    fetch(withBasePath('/images/final-frames/bhookasur-share-card-pass.jpg'))
-      .then((res) => res.blob())
-      .then((blob) => {
-        if (isMounted && blob) {
-          preloadedCardFileRef.current = new File([blob], 'bhookasur-food-tour-pass.jpg', { type: 'image/jpeg' });
-        }
-      })
-      .catch((err) => console.warn('Preload share card error:', err));
-
     return () => {
       isMounted = false;
     };
@@ -105,14 +94,13 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     if (typeof window === 'undefined') return false;
 
     // 1. Physical monitor resolution: On PC/laptops, screen resolution is >= 1024
-    // (DevTools device emulator changes window.innerWidth, but window.screen.width remains monitor resolution)
     if (typeof window.screen !== 'undefined') {
       if (window.screen.width >= 1024 || window.screen.height >= 1024) {
         return true;
       }
     }
 
-    // 2. Hardware platform: On PC/Mac, platform is Win32/MacIntel (even in DevTools mobile mode)
+    // 2. Hardware platform: On PC/Mac, platform is Win32/MacIntel
     const nav = typeof navigator !== 'undefined' ? (navigator as any) : null;
     if (nav) {
       const platform = (nav.platform || '').toLowerCase();
@@ -192,8 +180,8 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       return;
     }
 
-    // 2. MOBILE PHONE: Native App Share
-    let file = preloadedFileRef.current || preloadedCardFileRef.current;
+    // 2. MOBILE PHONE: Native App Share (pure image only + text caption)
+    let file = preloadedFileRef.current;
     if (!file) {
       try {
         const res = await fetch(activeImageSrc);
@@ -222,7 +210,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     window.open(mobileWaUrl, '_blank');
   };
 
-  // Instagram Share Handler
+  // Instagram Share Handler: Shares pure image + copies caption
   const handleShareInstagram = async () => {
     // 1. LAPTOP / TAB / PC (or testing on PC): Open Instagram DM in a new tab immediately
     if (isPCorTablet()) {
@@ -254,23 +242,21 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     // ALWAYS copy full text message and link to clipboard first
     await copyTextToClipboard(shareText);
 
-    // In Instagram mobile app, sharing a file ignores text parameter.
-    // So we share `bhookasur-share-card-pass.jpg` which has the image + headline + link baked into the visual pass card!
-    // AND the exact text message is copied to clipboard so user can simply tap 'Paste' in their Instagram chat.
-    let file = preloadedCardFileRef.current;
+    // Share ONLY the pure image file
+    let file = preloadedFileRef.current;
     if (!file) {
       try {
-        const res = await fetch(withBasePath('/images/final-frames/bhookasur-share-card-pass.jpg'));
+        const res = await fetch(activeImageSrc);
         const blob = await res.blob();
-        file = new File([blob], 'bhookasur-food-tour-pass.jpg', { type: 'image/jpeg' });
+        file = new File([blob], 'bhookasur-food-tour.jpg', { type: 'image/jpeg' });
       } catch {
-        file = preloadedFileRef.current;
+        // ignore
       }
     }
 
     if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        showToast('📸 Pass card ready & 📋 Message copied! Tap "Paste" in Instagram chat.');
+        showToast('📸 Photo ready & 📋 Message copied! Tap "Paste" in Instagram chat.');
         await navigator.share({
           title: 'Bhookasur Ka Food Tour',
           text: shareText,

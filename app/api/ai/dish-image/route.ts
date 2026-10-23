@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
+import { isPureVegRestaurantName } from '@/lib/dishAssets';
 
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v34_accurate_buttermilk_butter_milk_masala_taak';
+const CACHE_VERSION = 'v35_accurate_platters_special_veg_nonveg';
 const imageBufferCache = new Map<string, { buffer: Buffer; contentType: string; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -167,10 +168,20 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   cheesy_fries: 'peri_peri_fries.jpg',
   loaded_fries: 'peri_peri_fries.jpg',
 
-  // Poultry & Tandoori
+  // Poultry, Tandoori & Platters
   butter_chicken: 'butter_chicken.jpg',
   tandoori_chicken: 'tandoori_chicken.jpg',
   chicken_tikka: 'tandoori_chicken.jpg',
+  non_veg_platter: 'non_veg_platter.jpg',
+  tandoori_non_veg_platter: 'non_veg_platter.jpg',
+  kebab_platter: 'non_veg_platter.jpg',
+  chicken_platter: 'non_veg_platter.jpg',
+  special_non_veg_platter: 'non_veg_platter.jpg',
+  veg_platter: 'veg_platter.jpg',
+  tandoori_veg_platter: 'veg_platter.jpg',
+  starter_platter: 'veg_platter.jpg',
+  veg_starter_platter: 'veg_platter.jpg',
+  special_veg_platter: 'veg_platter.jpg',
 
   // Authentic Pune Mastani Varieties
   mango_mastani: 'mango_mastani.jpg',
@@ -358,10 +369,20 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   nuggets: 'https://images.unsplash.com/photo-1562967914-608f82629710?w=800&auto=format&fit=crop&q=85',
   chicken_wings: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=800&auto=format&fit=crop&q=85',
 
-  // Tandoori & Grilled
+  // Tandoori, Grilled & Platters
   tandoori_chicken: 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Tandoorimumbai.jpg',
   chicken_tikka: 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Tandoorimumbai.jpg',
   chicken_lollipop: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&auto=format&fit=crop&q=85',
+  non_veg_platter: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=85',
+  tandoori_non_veg_platter: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=85',
+  kebab_platter: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=85',
+  chicken_platter: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=85',
+  special_non_veg_platter: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=85',
+  veg_platter: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
+  tandoori_veg_platter: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
+  starter_platter: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
+  veg_starter_platter: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
+  special_veg_platter: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
   tandoori_mushroom: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
   hara_bhara_kebab: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
   veg_seekh_kebab: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
@@ -518,8 +539,10 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
  * Dishes will NEVER cross categories or protein types (e.g. veg biryani vs chicken biryani, coffee in cup vs cafe interior).
  */
 function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''): string {
-  const d = (dishName || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const dRaw = (dishName || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
   const r = (restaurantName || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  // Normalize spelling variations (e.g. "plater" -> "platter")
+  const d = dRaw.replace(/\bplater(s)?\b/g, 'platter$1');
 
   // === 0. TRADITIONAL BEVERAGES & COOLERS ===
   if (d.includes('solkadhi') || d.includes('sol kadhi') || d.includes('kokum kadhi')) {
@@ -1004,7 +1027,45 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   if (d.includes('fish') && (d.includes('fry') || d.includes('koliwada') || d.includes('amritsari'))) return 'fish_fry';
   if (d.includes('seafood') || d.includes('bombil') || d.includes('tisreo')) return 'seafood';
 
-  // === 10. TANDOORI, KEBAB & GRILLED FOOD ===
+  // === 10. TANDOORI, KEBAB & PLATTER SPECIALTIES ===
+  // Authentic Platters & Sizzling Assortments (excluding Thalis which are multi-course meal combos)
+  if ((d.includes('platter') || d.includes('plater')) && !d.includes('thali')) {
+    // 1. Seafood Platter
+    if (d.includes('fish') || d.includes('prawn') || d.includes('seafood') || d.includes('surmai') || d.includes('pomfret')) {
+      return 'seafood';
+    }
+
+    // 2. Explicit Veg Platter (Paneer tikka, hara bhara kebab, veg seekh, pure veg restaurant)
+    const isExplicitVeg = (
+      (d.includes('veg') && !d.includes('non veg') && !d.includes('nonveg') && !d.includes('non vegetarian')) ||
+      d.includes('paneer') || d.includes('subz') || d.includes('soya') || d.includes('chaap') ||
+      d.includes('mushroom') || d.includes('hara bhara') || d.includes('dahi ke') ||
+      isPureVegRestaurantName(r)
+    );
+
+    // 3. Explicit Non-Veg Platter (Tandoori chicken, kebabs, chicken tikka, mutton seekh)
+    const isExplicitNonVeg = (
+      d.includes('non veg') || d.includes('nonveg') || d.includes('non vegetarian') ||
+      d.includes('chicken') || d.includes('mutton') || d.includes('meat') ||
+      d.includes('gosht') || d.includes('murgh') || d.includes('tangdi') ||
+      d.includes('boti') || d.includes('seekh') || d.includes('kebab') || d.includes('kabab')
+    );
+
+    if (isExplicitNonVeg && !isExplicitVeg) {
+      return 'non_veg_platter';
+    }
+
+    if (isExplicitVeg) {
+      return 'veg_platter';
+    }
+
+    if (d.includes('non veg') || d.includes('nonveg')) {
+      return 'non_veg_platter';
+    }
+
+    return 'veg_platter';
+  }
+
   if (d.includes('tandoori mushroom') || d.includes('mushroom tikka')) return 'tandoori_mushroom';
   if (d.includes('hara bhara') || d.includes('dahi ke kabab') || d.includes('dahi kebab')) return 'hara_bhara_kebab';
   if ((d.includes('seekh') || d.includes('kebab') || d.includes('kabab')) && (d.includes('veg') || d.includes('subz') || d.includes('paneer') || d.includes('soya'))) return 'veg_seekh_kebab';
@@ -1135,8 +1196,8 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   if (d.includes('alu vadi') || d.includes('aloo vadi') || d.includes('patra')) return 'alu_vadi';
   if (d.includes('shev bhaji') || d.includes('sev bhaji')) return 'shev_bhaji';
 
-  // === 15. THALIS & PLATTERS ===
-  if (d.includes('thali') || d.includes('bhojan') || d.includes('platter')) {
+  // === 15. THALIS & BHOJAN ===
+  if (d.includes('thali') || d.includes('bhojan')) {
     if (d.includes('fish') || d.includes('seafood') || d.includes('malvan')) return 'fish_thali';
     if (d.includes('mutton') || d.includes('chicken') || d.includes('non veg') || d.includes('nonveg') || d.includes('military') || d.includes('gavran')) return 'mutton_thali';
     return 'thali';

@@ -71,7 +71,7 @@ export function inferDishCategory(name: string, description?: string): string {
   }
 
   // 14. Tandoori & Grilled
-  if ((hasWord(nameLower, 'tandoori') || hasWord(nameLower, 'tikka') || hasWord(nameLower, 'kebab') || hasWord(nameLower, 'kabab') || hasWord(nameLower, 'seekh') || hasWord(nameLower, 'tangdi') || hasWord(nameLower, 'grilled') || hasWord(nameLower, 'bbq') || hasWord(nameLower, 'roast chicken') || hasWord(nameLower, 'platter')) && !hasWord(nameLower, 'pizza') && !hasWord(nameLower, 'burger') && !hasWord(nameLower, 'sandwich') && !hasWord(nameLower, 'roll') && !hasWord(nameLower, 'wrap')) {
+  if ((hasWord(nameLower, 'tandoori') || hasWord(nameLower, 'tikka') || hasWord(nameLower, 'kebab') || hasWord(nameLower, 'kabab') || hasWord(nameLower, 'seekh') || hasWord(nameLower, 'tangdi') || hasWord(nameLower, 'grilled') || hasWord(nameLower, 'bbq') || hasWord(nameLower, 'roast chicken') || hasWord(nameLower, 'platter') || hasWord(nameLower, 'plater')) && !hasWord(nameLower, 'pizza') && !hasWord(nameLower, 'burger') && !hasWord(nameLower, 'sandwich') && !hasWord(nameLower, 'roll') && !hasWord(nameLower, 'wrap')) {
     return 'Tandoori & Grilled';
   }
 

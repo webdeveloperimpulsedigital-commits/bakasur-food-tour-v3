@@ -69,11 +69,12 @@ export function isDishVeg(dishName?: string): boolean {
     return false;
   }
 
-  // 4. Vegetarian exceptions for kebabs and seekh
+  // 4. Vegetarian exceptions for kebabs, seekh and platters
   if (
     n.includes('veg kebab') || n.includes('veg seekh') || n.includes('hara bhara') ||
     n.includes('dahi ke') || n.includes('paneer tikka') || n.includes('mushroom tikka') ||
-    n.includes('soya chaap') || n.includes('veg cutlet')
+    n.includes('soya chaap') || n.includes('veg cutlet') || n.includes('veg platter') ||
+    n.includes('veg plater')
   ) {
     return true;
   }
@@ -285,7 +286,9 @@ export function isDishRelevantToSearch(dishTitle?: string, userQuery?: string): 
     biriyani: 'biryani',
     briyani: 'biryani',
     pattice: 'pattice',
-    patties: 'pattice'
+    patties: 'pattice',
+    plater: 'platter',
+    platers: 'platter'
   };
 
   const normalize = (str: string) => {
