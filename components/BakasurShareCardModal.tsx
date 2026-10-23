@@ -45,168 +45,50 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   // Formatted message with live clickable link for WhatsApp and Instagram
   const shareText = `Maine Bhookasur ke saath Food Tour kiya!\nAap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!\n\n👉 Join the Food Tour:\n${shareUrl}`;
 
-  // Preload and render full Food Pass Card canvas (with text message & join link embedded)
+  // Preload the Bhookasur image directly as File and PNG blob for mobile & desktop sharing
   useEffect(() => {
     let isMounted = true;
     fetch(activeImageSrc)
       .then((res) => res.blob())
       .then((blob) => {
-        if (!isMounted || !blob) return;
+        if (isMounted && blob) {
+          preloadedFileRef.current = new File([blob], 'bhookasur-food-tour.jpg', { type: 'image/jpeg' });
 
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          if (!isMounted) return;
-
-          // Render the complete Food Pass Card (photo + text + join link + pass ID)
-          const canvas = document.createElement('canvas');
-          const W = 1080;
-          const H = 1480;
-          canvas.width = W;
-          canvas.height = H;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            // 1. Card Background
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, W, H);
-
-            // 2. Top Header Bar (Deep Navy)
-            ctx.fillStyle = '#0B1B48';
-            ctx.fillRect(0, 0, W, 125);
-
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = '900 36px sans-serif';
-            ctx.fillText('BHOOKASUR KA FOOD TOUR', 50, 68);
-
-            ctx.fillStyle = '#F59E0B';
-            ctx.font = '700 22px sans-serif';
-            ctx.fillText('★ OFFICIAL FOOD PASS', 50, 102);
-
-            // Pass ID Pill Badge on top right
-            const passText = participationId || 'BKT-PASS';
-            ctx.font = '800 24px sans-serif';
-            const passWidth = ctx.measureText(passText).width + 36;
-            const passX = W - passWidth - 50;
-            ctx.fillStyle = '#1D4ED8';
-            ctx.beginPath();
-            if (ctx.roundRect) {
-              ctx.roundRect(passX, 44, passWidth, 48, 12);
-            } else {
-              ctx.rect(passX, 44, passWidth, 48);
+          // Generate PNG blob for desktop clipboard pasting (Ctrl+V) into WhatsApp / Instagram
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || 1080;
+            canvas.height = img.naturalHeight || 1080;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              canvas.toBlob((pngBlob) => {
+                if (isMounted && pngBlob) {
+                  preloadedPngBlobRef.current = pngBlob;
+                }
+              }, 'image/png');
             }
-            ctx.fill();
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillText(passText, passX + 18, 77);
-
-            // 3. Hero Photo Inset
-            const imgX = 50;
-            const imgY = 150;
-            const imgW = 980;
-            const imgH = 740;
-
-            ctx.save();
-            ctx.beginPath();
-            if (ctx.roundRect) {
-              ctx.roundRect(imgX, imgY, imgW, imgH, 20);
-            } else {
-              ctx.rect(imgX, imgY, imgW, imgH);
-            }
-            ctx.clip();
-            ctx.drawImage(img, imgX, imgY, imgW, imgH);
-            ctx.restore();
-
-            // Subtle border around photo
-            ctx.strokeStyle = '#E2E8F0';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            if (ctx.roundRect) {
-              ctx.roundRect(imgX, imgY, imgW, imgH, 20);
-            } else {
-              ctx.rect(imgX, imgY, imgW, imgH);
-            }
-            ctx.stroke();
-
-            // 4. Details
-            let textY = 945;
-            if (restaurantName) {
-              ctx.fillStyle = '#1D4ED8';
-              ctx.font = '800 28px sans-serif';
-              ctx.fillText(`📍 ${restaurantName}${cityName ? ', ' + cityName : ''}`, 55, textY);
-              textY += 46;
-            }
-
-            // Headline
-            ctx.fillStyle = '#0B1B48';
-            ctx.font = '900 38px sans-serif';
-            ctx.fillText('Maine Bhookasur ke saath Food Tour kiya! 🍽️', 55, textY);
-            textY += 46;
-
-            // Subtitle
-            ctx.fillStyle = '#475569';
-            ctx.font = '600 26px sans-serif';
-            ctx.fillText('Aap bhi Bhookasur ke saath Food Tour kijiye aur', 55, textY);
-            textY += 36;
-            ctx.fillText('apna food spot share kijiye!', 55, textY);
-            textY += 48;
-
-            // Join Link Callout Box
-            const boxY = textY;
-            const boxH = 104;
-            ctx.fillStyle = '#F8FAFC';
-            ctx.beginPath();
-            if (ctx.roundRect) {
-              ctx.roundRect(50, boxY, 980, boxH, 18);
-            } else {
-              ctx.rect(50, boxY, 980, boxH);
-            }
-            ctx.fill();
-            ctx.strokeStyle = '#E2E8F0';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.fillStyle = '#0B1B48';
-            ctx.font = '800 26px sans-serif';
-            ctx.fillText('👉 Join the Food Tour:', 80, boxY + 42);
-
-            ctx.fillStyle = '#1D4ED8';
-            ctx.font = '800 30px sans-serif';
-            ctx.fillText(shareUrl, 80, boxY + 80);
-
-            // Footer
-            ctx.fillStyle = '#94A3B8';
-            ctx.font = '800 20px sans-serif';
-            ctx.fillText('POWERED BY GASTRIUM  •  bhookasur.com', 55, H - 45);
-
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            ctx.textAlign = 'right';
-            ctx.fillText(timeStr, W - 55, H - 45);
-            ctx.textAlign = 'left';
-
-            canvas.toBlob((cardBlob) => {
-              if (isMounted && cardBlob) {
-                preloadedPngBlobRef.current = cardBlob;
-                preloadedFileRef.current = new File([cardBlob], 'bhookasur-food-pass.png', { type: 'image/png' });
-              }
-            }, 'image/png');
-          }
-        };
-        img.src = URL.createObjectURL(blob);
+          };
+          img.src = URL.createObjectURL(blob);
+        }
       })
       .catch((err) => console.warn('Preload photo error:', err));
 
     return () => {
       isMounted = false;
     };
-  }, [activeImageSrc, restaurantName, cityName, participationId, shareUrl]);
+  }, [activeImageSrc]);
 
   if (!isOpen) return null;
 
-  // WhatsApp Share Handler: Shares Food Pass card image WITH formatted caption & clickable link
+  // WhatsApp Share Handler: Shares clean photo WITH formatted caption & clickable link
   const handleShareWhatsApp = async () => {
     const file = preloadedFileRef.current;
 
     // 1. Mobile Web Share API:
-    // Shares the Food Pass card image WITH the caption text containing the clickable link!
+    // Shares the clean photo file WITH the caption text containing the clickable link!
     if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
@@ -227,7 +109,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     }, 200);
   };
 
-  // Instagram Share Handler: Copies text message & opens Instagram DM with pass card
+  // Instagram Share Handler: Copies text message & shares photo
   const handleShareInstagram = async () => {
     // 1. ALWAYS copy full text message and link to clipboard first
     try {
@@ -241,10 +123,10 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     const file = preloadedFileRef.current;
 
     // 2. Mobile Web Share API:
-    // Shares the Food Pass Card file (with text embedded on the image)
+    // Shares the clean photo file + text
     if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        showToast('📸 Card ready! 📋 Text copied to clipboard for Instagram chat.');
+        showToast('📋 Message copied to clipboard! Paste in Instagram chat.');
         await navigator.share({
           title: 'Bhookasur Ka Food Tour',
           text: shareText,
