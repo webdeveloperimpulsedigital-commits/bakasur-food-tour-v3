@@ -7,7 +7,7 @@ import { isPureVegRestaurantName } from '@/lib/dishAssets';
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v35_accurate_platters_special_veg_nonveg';
+const CACHE_VERSION = 'v36_fix_latte_platter_substring_trap';
 const imageBufferCache = new Map<string, { buffer: Buffer; contentType: string; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -585,14 +585,14 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   }
 
   // Coffees (All strictly beverage in cup/glass, NO cafe interiors!)
-  if (d.includes('espresso')) return 'espresso';
-  if (d.includes('cappuccino')) return 'cappuccino';
-  if (d.includes('latte')) return 'latte';
-  if (d.includes('americano')) return 'americano';
-  if (d.includes('mocha')) return 'mocha';
-  if (d.includes('cold coffee') || d.includes('frappe')) return 'cold_coffee';
+  if (/\bespresso\b/.test(d)) return 'espresso';
+  if (/\bcappuccino\b/.test(d)) return 'cappuccino';
+  if (/\blatte\b/.test(d)) return 'latte';
+  if (/\bamericano\b/.test(d)) return 'americano';
+  if (/\bmocha\b/.test(d)) return 'mocha';
+  if (d.includes('cold coffee') || /\bfrappe\b/.test(d)) return 'cold_coffee';
   if (d.includes('iced coffee')) return 'iced_coffee';
-  if (d.includes('filter coffee') || d.includes('kaapi') || d.includes('coffee') || d.includes('macchiato')) return 'coffee';
+  if (d.includes('filter coffee') || /\bkaapi\b/.test(d) || /\bcoffee\b/.test(d) || /\bmacchiato\b/.test(d)) return 'coffee';
 
   // Cafe Beverages & Shakes
   if (d.includes('hot chocolate') || d.includes('hot cocoa')) return 'hot_chocolate';
