@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Check, Search, Utensils, X, Sparkles, BookOpen } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName, isDishVeg, isPureVegRestaurantName, isDishRelevantToSearch } from '@/lib/dishAssets';
@@ -16,6 +16,12 @@ interface Frame3DishSelectionProps {
   onBack?: () => void;
 }
 
+const clientMenuCache = new Map<string, Dish[]>();
+
+export function clearClientMenuCache() {
+  clientMenuCache.clear();
+}
+
 export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   restaurant,
   selectedDish,
@@ -24,52 +30,103 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   onManualEntry,
   onBack
 }) => {
-  const [rawDishes, setRawDishes] = useState<Dish[]>([]);
+  const [rawDishes, setRawDishes] = useState<Dish[]>(() => {
+    return clientMenuCache.get(String(restaurant.id)) || [];
+  });
   const [menuSearchQuery, setMenuSearchQuery] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    return !clientMenuCache.has(String(restaurant.id));
+  });
+  const [loadingStatus, setLoadingStatus] = useState<string>('Fetching live menu...');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Fetch Live Menu from API for selected restaurant
-  useEffect(() => {
-    let isCancelled = false;
+  const activeRequestIdRef = useRef<number>(0);
+
+  const loadDishes = useCallback(async () => {
+    const currentReqId = ++activeRequestIdRef.current;
+    const cacheKey = String(restaurant.id);
+
+    // If cached in memory, use it immediately (0ms)
+    if (clientMenuCache.has(cacheKey)) {
+      const cached = clientMenuCache.get(cacheKey)!;
+      setRawDishes(cached);
+      setIsLoading(false);
+      setLoadError(null);
+      return;
+    }
+
     setRawDishes([]);
     setMenuSearchQuery('');
     setIsLoading(true);
+    setLoadError(null);
+    setLoadingStatus('Connecting to verified live menu...');
 
-    async function loadDishes() {
-      try {
-        const isStrictVeg = isPureVegRestaurantName(restaurant.name) || restaurant.is_veg === 1;
-        const queryParams = new URLSearchParams({
-          name: restaurant.name || '',
-          area: restaurant.area || '',
-          city: restaurant.city || '',
-          is_veg: isStrictVeg ? '1' : (restaurant.is_veg ? '1' : '0')
-        });
-        if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
-        if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
-        const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        });
-        const json = await res.json();
-        if (!isCancelled && json.success && Array.isArray(json.data) && json.data.length > 0) {
-          setRawDishes(json.data);
-        }
-      } catch (err) {
-        console.error('Failed to load dishes:', err);
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6500);
+
+    const statusTimer = setTimeout(() => {
+      if (activeRequestIdRef.current === currentReqId) {
+        setLoadingStatus(`Loading verified dishes for ${restaurant.name}...`);
+      }
+    }, 1200);
+
+    try {
+      const isStrictVeg = isPureVegRestaurantName(restaurant.name) || restaurant.is_veg === 1;
+      const queryParams = new URLSearchParams({
+        name: restaurant.name || '',
+        area: restaurant.area || '',
+        city: restaurant.city || '',
+        is_veg: isStrictVeg ? '1' : (restaurant.is_veg ? '1' : '0')
+      });
+      if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
+      if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
+
+      const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
+        signal: controller.signal
+      });
+
+      if (!res.ok) {
+        throw new Error(`Menu service responded with ${res.status}`);
+      }
+
+      const json = await res.json();
+
+      // Guard: strictly ignore stale responses from any previously selected restaurant
+      if (activeRequestIdRef.current !== currentReqId) {
+        return;
+      }
+
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        clientMenuCache.set(cacheKey, json.data);
+        setRawDishes(json.data);
+        setLoadError(null);
+      } else {
+        setRawDishes([]);
+        setLoadError(json.reason || json.message || 'No dishes found on verified menu');
+      }
+    } catch (err: unknown) {
+      if (activeRequestIdRef.current !== currentReqId) {
+        return;
+      }
+      const isAbort = (err as Error)?.name === 'AbortError';
+      setRawDishes([]);
+      setLoadError(isAbort ? 'Menu request timed out. Please retry.' : 'Failed to retrieve live menu data.');
+    } finally {
+      clearTimeout(timeoutId);
+      clearTimeout(statusTimer);
+      if (activeRequestIdRef.current === currentReqId) {
+        setIsLoading(false);
       }
     }
+  }, [restaurant.id, restaurant.name, restaurant.area, restaurant.city, restaurant.is_veg, restaurant.latitude, restaurant.longitude]);
+
+  useEffect(() => {
     loadDishes();
     return () => {
-      isCancelled = true;
+      // Invalidate in-flight requests when unmounting or switching restaurants
+      activeRequestIdRef.current++;
     };
-  }, [restaurant.id, restaurant.name]);
+  }, [loadDishes]);
 
   const isHeritageVeg = isPureVegRestaurantName(restaurant.name);
 
@@ -327,7 +384,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
             <Utensils className="w-6 h-6 animate-bounce text-[#D4380D]" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-sm font-bold text-slate-800">Fetching live menu...</h3>
+            <h3 className="text-sm font-bold text-slate-800">{loadingStatus}</h3>
             <p className="text-[11px] text-slate-400">Loading verified dishes for {restaurant.name}</p>
           </div>
         </div>
@@ -341,18 +398,30 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
               Menu Not Available
             </h3>
             <p className="text-xs text-slate-500 max-w-xs mx-auto">
-              Live menu is currently not available for {restaurant.name}.
+              {loadError ? `${loadError}` : `Live menu is currently not available for ${restaurant.name}.`}
             </p>
           </div>
-          {onBack && (
+          <div className="flex items-center gap-2 mt-2">
             <button
               type="button"
-              onClick={onBack}
-              className="mt-3 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shadow-xs"
+              onClick={() => {
+                clientMenuCache.delete(String(restaurant.id));
+                loadDishes();
+              }}
+              className="px-4 py-2 rounded-xl bg-[#D4380D] hover:bg-[#ba300a] text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
             >
-              ← Choose Different Restaurant
+              Retry Loading Menu
             </button>
-          )}
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shadow-xs"
+              >
+                ← Choose Different Restaurant
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <>

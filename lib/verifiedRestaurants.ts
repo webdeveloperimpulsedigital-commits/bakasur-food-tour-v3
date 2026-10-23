@@ -34,9 +34,9 @@ const SWIGGY_HEADERS = {
   Referer: 'https://www.swiggy.com/'
 };
 
-const REQUEST_TIMEOUT_MS = 6000;
+const REQUEST_TIMEOUT_MS = 2800;
 const MIN_MENU_ITEMS = 3;
-const MAX_VERIFY_CANDIDATES = 8;
+const MAX_VERIFY_CANDIDATES = 5;
 const NEARBY_RESULT_LIMIT = 5;
 const SEARCH_RESULT_LIMIT = 15;
 

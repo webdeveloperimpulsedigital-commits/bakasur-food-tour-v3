@@ -23,36 +23,35 @@ export const StepRestaurant: React.FC<StepRestaurantProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch restaurants for the selected city
-  const fetchRestaurants = useCallback(async (query: string, city: string) => {
-    setIsLoading(true);
-    try {
-      let url = `/api/restaurants/nearby?city=${encodeURIComponent(city)}&lat=${userLocation.lat}&lng=${userLocation.lng}`;
-      if (query.trim()) {
-        url = `/api/restaurants/search?q=${encodeURIComponent(query)}&city=${encodeURIComponent(city)}&lat=${userLocation.lat}&lng=${userLocation.lng}`;
-      }
-      const res = await fetch(url);
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setRestaurants(json.data);
-        // Auto-select first if none selected yet
-        if (!selectedRestaurant && json.data.length > 0) {
-          onSelectRestaurant(json.data[0]);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch restaurants", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userLocation, selectedRestaurant, onSelectRestaurant]);
-
+  // Fetch restaurants for the selected city with AbortController and no auto-select without confirmation
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchRestaurants(searchQuery, userLocation.city);
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [searchQuery, userLocation.city, fetchRestaurants]);
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        let url = `/api/restaurants/nearby?city=${encodeURIComponent(userLocation.city)}&lat=${userLocation.lat}&lng=${userLocation.lng}`;
+        if (searchQuery.trim()) {
+          url = `/api/restaurants/search?q=${encodeURIComponent(searchQuery)}&city=${encodeURIComponent(userLocation.city)}&lat=${userLocation.lat}&lng=${userLocation.lng}`;
+        }
+        const res = await fetch(url, { signal: controller.signal });
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setRestaurants(json.data);
+        }
+      } catch (err: unknown) {
+        if ((err as Error)?.name !== 'AbortError') {
+          console.error("Failed to fetch restaurants", err);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [searchQuery, userLocation.city, userLocation.lat, userLocation.lng]);
 
   return (
     <div className="w-full rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-7 shadow-2xl border border-slate-100 flex flex-col gap-4 sm:gap-5 text-slate-900">

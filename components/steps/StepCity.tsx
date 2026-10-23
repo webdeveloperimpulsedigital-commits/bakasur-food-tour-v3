@@ -83,8 +83,8 @@ export const StepCity: React.FC<StepCityProps> = ({
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setNearbyRestaurants(json.data);
-        // Auto-select first matching restaurant if none is selected
-        if ((!selectedRestaurant || !json.data.some((r: Restaurant) => r.id === selectedRestaurant.id)) && json.data.length > 0) {
+        // Only auto-select default spot on initial load if no search query was entered
+        if (!query.trim() && !selectedRestaurant && json.data.length > 0) {
           handleSelectSpot(json.data[0]);
         }
       }

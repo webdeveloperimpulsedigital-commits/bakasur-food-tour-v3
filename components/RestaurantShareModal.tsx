@@ -56,14 +56,22 @@ export const RestaurantShareModal: React.FC<RestaurantShareModalProps> = ({
     }
   };
 
-  // Instagram share
+  // Instagram share: copies message & opens Instagram Direct inbox
   const handleInstagramShare = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(shareMessage);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     }
-    window.open('https://instagram.com', '_blank');
+    const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    if (isMobile) {
+      window.location.href = 'instagram://direct';
+      setTimeout(() => {
+        window.open('https://www.instagram.com/direct/inbox/', '_blank');
+      }, 1000);
+    } else {
+      window.open('https://www.instagram.com/direct/inbox/', '_blank');
+    }
   };
 
   // Copy link & message

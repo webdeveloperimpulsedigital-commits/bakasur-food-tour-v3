@@ -144,7 +144,7 @@ export function isPureVegRestaurantName(restaurantName?: string): boolean {
   const vegLandmarks = [
     'joshi wadewale', 'rohit wadewale', 'wadewale', 'wade wale', 'wada pav', 'vadapav',
     'shaniwar peth', 'sadashiv peth', 'narayan peth',
-    'poona guest house', 'poona guest', 'durvankur', 'shreyas', 'sukanta',
+    'poona guest house', 'poona guest', 'durvankur', 'phadke', 'phadke dining', 'shreyas', 'sukanta',
     'badshahi', 'shabree', 'sujata mastani', 'sujata', 'chitale bandhu',
     'chitale', 'bedekar tea stall', 'bedekar', 'bipin snacks', 'bipin katta',
     'tilak hotel', 'tilak snacks', 'saraswati misal',

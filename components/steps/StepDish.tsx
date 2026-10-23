@@ -43,10 +43,15 @@ export const StepDish: React.FC<StepDishProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const activeReqIdRef = React.useRef(0);
 
   // Fetch live menu for the selected restaurant
   const fetchDishes = useCallback(async () => {
+    const currentReqId = ++activeReqIdRef.current;
     setIsLoading(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+
     try {
       const queryParams = new URLSearchParams({
         name: restaurant.name || '',
@@ -55,24 +60,35 @@ export const StepDish: React.FC<StepDishProps> = ({
       });
       if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
       if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
-      const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`);
+      const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
+        signal: controller.signal
+      });
       const json = await res.json();
+      if (activeReqIdRef.current !== currentReqId) return;
+
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
         setDishes(json.data);
-        // Auto-select first recommended dish if none selected yet
         if (!selectedDish) {
           onSelectDish(json.data[0]);
         }
       }
-    } catch (err) {
-      console.error("Failed to fetch dishes", err);
+    } catch (err: unknown) {
+      if (activeReqIdRef.current === currentReqId && (err as Error)?.name !== 'AbortError') {
+        console.error("Failed to fetch dishes", err);
+      }
     } finally {
-      setIsLoading(false);
+      clearTimeout(timer);
+      if (activeReqIdRef.current === currentReqId) {
+        setIsLoading(false);
+      }
     }
-  }, [restaurant, selectedDish, onSelectDish]);
+  }, [restaurant.id, restaurant.name, restaurant.area, restaurant.city, restaurant.latitude, restaurant.longitude, selectedDish, onSelectDish]);
 
   useEffect(() => {
     fetchDishes();
+    return () => {
+      activeReqIdRef.current++;
+    };
   }, [fetchDishes]);
 
   // Display ALL dishes from the restaurant; filterable by search and category

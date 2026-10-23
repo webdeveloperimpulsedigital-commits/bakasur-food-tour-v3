@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
+import { isPureVegRestaurantName } from '@/lib/dishAssets';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -225,7 +226,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       } finally {
         setIsSearching(false);
       }
-    }, 350);
+    }, 200);
 
     return () => {
       clearTimeout(timer);
@@ -253,21 +254,68 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         : spot.name
     );
     setShowDropdown(false);
+
+    // Live menu background prefetch so Frame 3 opens instantaneously
+    try {
+      const isStrictVeg = isPureVegRestaurantName(spot.name) || spot.is_veg === 1;
+      const params = new URLSearchParams({
+        name: spot.name || '',
+        area: spot.area || '',
+        city: spot.city || '',
+        is_veg: isStrictVeg ? '1' : (spot.is_veg ? '1' : '0')
+      });
+      if (spot.latitude) params.set('lat', String(spot.latitude));
+      if (spot.longitude) params.set('lng', String(spot.longitude));
+      fetch(`/api/restaurants/${spot.id}/dishes?${params.toString()}`).catch(() => {});
+    } catch {
+      // background prefetch failure can be safely ignored
+    }
   };
 
-  // Find a verified restaurant in the current results that matches the typed text
+  // Find a verified restaurant in the current results that matches the typed text with typo & phonetic tolerance
+  const normalizeSearchKey = (s: string) => {
+    return s
+      .toLowerCase()
+      .replace(/ph/g, 'f')
+      .replace(/w/g, 'v')
+      .replace(/dinning/g, 'dining')
+      .replace(/restaurant|hotel|cafe|dhaba/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  };
+
   const findVerifiedMatch = (text: string): Restaurant | undefined => {
-    const qLower = text.trim().toLowerCase();
-    if (!qLower) return undefined;
-    return searchResults.find(r => {
-      const rNameLower = r.name.toLowerCase();
+    const q = text.trim();
+    if (!q || searchResults.length === 0) return undefined;
+    const qLower = q.toLowerCase();
+    const qNorm = normalizeSearchKey(q);
+
+    // 1. Direct exact or substring match
+    const exact = searchResults.find(r => {
+      const rLower = r.name.toLowerCase();
       return (
-        rNameLower === qLower ||
-        qLower.includes(rNameLower) ||
-        rNameLower.includes(qLower) ||
-        (r.area && `${rNameLower}, ${r.area.toLowerCase()}` === qLower)
+        rLower === qLower ||
+        rLower.includes(qLower) ||
+        qLower.includes(rLower) ||
+        (r.area && `${rLower}, ${r.area.toLowerCase()}` === qLower)
       );
     });
+    if (exact) return exact;
+
+    // 2. Normalized phonetic / spelling match
+    if (qNorm.length >= 3) {
+      const phoneticMatch = searchResults.find(r => {
+        const rNorm = normalizeSearchKey(r.name);
+        return rNorm === qNorm || rNorm.includes(qNorm) || qNorm.includes(rNorm);
+      });
+      if (phoneticMatch) return phoneticMatch;
+    }
+
+    // 3. Fallback to top verified fuzzy result if user typed 3+ chars
+    if (searchResults.length > 0 && q.length >= 3) {
+      return searchResults[0];
+    }
+
+    return undefined;
   };
 
   const ensureRestaurantSelected = () => {
@@ -419,7 +467,9 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                     </div>
                     <div className="min-w-0">
                       <p className="font-black text-xs sm:text-sm text-[#0B1B48] truncate">
-                        Select &ldquo;{verifiedMatch.name}&rdquo;
+                        {verifiedMatch.name.toLowerCase() === searchQuery.trim().toLowerCase()
+                          ? <>Select &ldquo;{verifiedMatch.name}&rdquo;</>
+                          : <>Did you mean: &ldquo;{verifiedMatch.name}&rdquo;?</>}
                       </p>
                       <p className="text-[11px] text-[#1D4ED8] font-bold truncate">
                         📍 {verifiedMatch.area}, {verifiedMatch.city}

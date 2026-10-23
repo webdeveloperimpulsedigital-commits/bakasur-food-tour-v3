@@ -180,6 +180,8 @@ export const INITIAL_RESTAURANTS: Omit<Restaurant, 'id'>[] = [
   { name: "Shivraj Hotel", description: "Warje & Karve Nagar hotspot world-famous for massive Raavan Thali, Bullet Thali, and spicy Kolhapuri mutton.", address: "Warje Flyover, Sinhagad Road Extension", area: "Warje & Karve Nagar", city: "Pune", latitude: 18.4830, longitude: 73.8030, rating: 4.8, image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 1830, status: 'active', is_veg: 0 },
   { name: "Wadeshwar", description: "FC Road & Law College Road landmark renowned for crispy butter Ghee Pudi Dosa, Molgapodi Idli, and filter coffee.", address: "FC Road & Law College Road", area: "FC Road", city: "Pune", latitude: 18.5220, longitude: 73.8400, rating: 4.8, image: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 2100, status: 'active', is_veg: 1 },
   { name: "Durvankur Dining Hall", description: "Tilak Road's legendary unlimited Maharashtrian feast featuring Puran Poli, spiced Amti, and Ukdiche Modak.", address: "Tilak Road, Sadashiv Peth", area: "Sadashiv Peth", city: "Pune", latitude: 18.5080, longitude: 73.8540, rating: 4.9, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 1950, status: 'active', is_veg: 1 },
+  { name: "Phadke Dining Hall", description: "Sadashiv Peth's historic 1930s Maharashtrian khanawal celebrated for authentic unlimited home-style thali, Puran Poli, Masale Bhaat, and Aamti.", address: "1785, Khajina Vihir Chowk, Krantiveer Vasudev Phadke Path, Sadashiv Peth", area: "Sadashiv Peth", city: "Pune", latitude: 18.5086, longitude: 73.8513, rating: 4.8, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 1890, status: 'active', is_veg: 1 },
+  { name: "Badshahi Boarding House", description: "Sadashiv Peth's heritage 1934 boarding house serving authentic homely Maharashtrian vegetarian meals, Puran Poli, and Varan Bhaat.", address: "Tilak Road, Sadashiv Peth", area: "Sadashiv Peth", city: "Pune", latitude: 18.5090, longitude: 73.8530, rating: 4.8, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 1720, status: 'active', is_veg: 1 },
   { name: "Shreyas Dining Hall", description: "Apte Road's heritage Maharashtrian cultural thali hub famous for delicate Kadhi, Puri Bhaji, and Aamras in season.", address: "Apte Road, Deccan Gymkhana", area: "Deccan", city: "Pune", latitude: 18.5195, longitude: 73.8430, rating: 4.8, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 1780, status: 'active', is_veg: 1 },
   { name: "Sukanta Thali", description: "Deccan Gymkhana's royal vegetarian thali destination famous for 25+ unlimited Rajasthani & Gujarati delicacies.", address: "Near Z-Bridge, Deccan Gymkhana", area: "Deccan", city: "Pune", latitude: 18.5175, longitude: 73.8420, rating: 4.8, image: "https://images.unsplash.com/photo-1545247181-516773cae754?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 1870, status: 'active', is_veg: 1 },
   { name: "Hotel Nisarg Seafood", description: "Nal Stop & Karve Road's ultimate coastal seafood destination famous for Surmai Fry, Crab Masala, and fresh Solkadhi.", address: "Karve Road, Near Nal Stop", area: "Kothrud", city: "Pune", latitude: 18.5070, longitude: 73.8290, rating: 4.9, image: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop&q=80", is_campaign_active: 1, total_visits: 2200, status: 'active', is_veg: 0 },
@@ -731,8 +733,13 @@ function getMySQLConfig() {
 
 let mysqlConnectionAttempted = false;
 let isMySQLHealthy = false;
+let lastMySQLFailTime = 0;
+const MYSQL_RETRY_INTERVAL_MS = 30000;
 
 export function getMySQLPool(): mysql.Pool | null {
+  if (Date.now() - lastMySQLFailTime < MYSQL_RETRY_INTERVAL_MS) {
+    return null;
+  }
   if (globalForDB.mysqlPool) return globalForDB.mysqlPool;
   try {
     const config = getMySQLConfig();
@@ -741,11 +748,12 @@ export function getMySQLPool(): mysql.Pool | null {
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
-      connectTimeout: 2000
+      connectTimeout: 1000
     });
     globalForDB.mysqlPool = pool;
     return pool;
   } catch {
+    lastMySQLFailTime = Date.now();
     return null;
   }
 }
@@ -916,7 +924,8 @@ export const db = {
         return [];
       }
     } catch (err) {
-      console.warn('MySQL getRestaurants fallback:', err);
+      lastMySQLFailTime = Date.now();
+      console.warn('MySQL getRestaurants fallback to memoryStore');
     }
 
     let list = [...memoryStore.restaurants].filter(

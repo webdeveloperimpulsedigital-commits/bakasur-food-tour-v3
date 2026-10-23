@@ -2165,6 +2165,50 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       image: "/api/ai/dish-image?dish=Gulab%20Jamun&v=v28",
       popularity: 98,
       rating: 4.9
+    },
+    {
+      name: "Durvankur Spiced Masale Bhaat with Pure Ghee",
+      description: "Fragrant rice tempered in authentic goda masala, tender cashews, coconut and pure desi ghee.",
+      price: 140,
+      image: "/images/food/masala_bhaat.jpg",
+      popularity: 98,
+      rating: 4.9
+    }
+  ],
+
+  // Phadke Dining Hall
+  'phadke': [
+    {
+      name: "Phadke Authentic Puneri Unlimited Thali",
+      description: "Sadashiv Peth legend: Puran Poli with Desi Ghee, Masale Bhaat, Katachi Amti, Batata Bhaji, and seasonal sweet.",
+      price: 310,
+      image: "/api/ai/dish-image?dish=Veg%20Thali&v=v28",
+      popularity: 100,
+      rating: 5.0
+    },
+    {
+      name: "Phadke Traditional Puran Poli with Desi Ghee",
+      description: "Warm homemade puran poli served with generous dollop of pure desi cow ghee.",
+      price: 110,
+      image: "/api/ai/dish-image?dish=Puran%20Poli&v=v28",
+      popularity: 99,
+      rating: 5.0
+    },
+    {
+      name: "Phadke Spiced Masale Bhaat with Pure Ghee",
+      description: "Fragrant rice tempered in goda masala, tender cashews, coconut and pure desi ghee.",
+      price: 140,
+      image: "/images/food/masala_bhaat.jpg",
+      popularity: 98,
+      rating: 4.9
+    },
+    {
+      name: "Phadke Steamed Ukdiche Modak (2 Pcs)",
+      description: "Handcrafted steamed rice flour modak filled with sweet coconut-jaggery stuffing.",
+      price: 120,
+      image: "/images/food/modak.jpg",
+      popularity: 98,
+      rating: 4.9
     }
   ],
 
@@ -5032,7 +5076,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
     keywords: [
       'swayampakghar', 'swayampak', 'swayam', 'khanawal', 'poli bhaji', 'poli', 'bhaji kendra',
       'boarding', 'bhojanalay', 'bhojanalaya', 'dining hall', 'shabree', 'sukanta', 'shreyas',
-      'durvankur', 'badshahi', 'poona boarding', 'poona guest house', 'poona guest', 'guest house', 'aaswad', 'marathi', 'maharashtrian',
+      'durvankur', 'phadke', 'badshahi', 'poona boarding', 'poona guest house', 'poona guest', 'guest house', 'aaswad', 'marathi', 'maharashtrian',
       'puneri', 'kothimbir', 'alu vadi', 'aloo vadi', 'patra', 'puran poli', 'pithla', 'pitla', 'bhakri', 'varan bhat',
       'thecha', 'modak', 'zunka', 'bharli vangi', 'sathe', 'chapati'
     ],
