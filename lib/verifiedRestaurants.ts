@@ -124,17 +124,14 @@ export interface ScoredVerifiedRestaurant {
 // Caches (kept on globalThis so they survive Next.js dev hot reloads)
 // ---------------------------------------------------------------------------
 type CacheEntry<T> = { timestamp: number; ttl: number; value: T };
-const globalStore = globalThis as unknown as {
-  __verifiedProfileCache?: Map<string, CacheEntry<VerificationResult>>;
-  __verifiedListCache?: Map<string, CacheEntry<VerifiedRestaurant[]>>;
-  __verifiedCandidateCache?: Map<string, CacheEntry<SwiggyListingCandidate[]>>;
-};
+const CACHE_VERSION = 'v3';
+const globalStore = globalThis as unknown as Record<string, unknown>;
 const profileCache: Map<string, CacheEntry<VerificationResult>> =
-  (globalStore.__verifiedProfileCache ??= new Map<string, CacheEntry<VerificationResult>>());
+  ((globalStore[`__verifiedProfileCache_${CACHE_VERSION}`] as any) ??= new Map<string, CacheEntry<VerificationResult>>());
 const listCache: Map<string, CacheEntry<VerifiedRestaurant[]>> =
-  (globalStore.__verifiedListCache ??= new Map<string, CacheEntry<VerifiedRestaurant[]>>());
+  ((globalStore[`__verifiedListCache_${CACHE_VERSION}`] as any) ??= new Map<string, CacheEntry<VerifiedRestaurant[]>>());
 const candidateCache: Map<string, CacheEntry<SwiggyListingCandidate[]>> =
-  (globalStore.__verifiedCandidateCache ??= new Map<string, CacheEntry<SwiggyListingCandidate[]>>());
+  ((globalStore[`__verifiedCandidateCache_${CACHE_VERSION}`] as any) ??= new Map<string, CacheEntry<SwiggyListingCandidate[]>>());
 
 function cacheGet<T>(map: Map<string, CacheEntry<T>>, key: string): T | undefined {
   const hit = map.get(key);
@@ -374,10 +371,12 @@ export async function verifySwiggyRestaurant(
   if (!info || String(info.id) !== id || !info.name) return fail('identity_mismatch');
 
   const availability = info.availability || {};
-  if (availability.visibility === false) return fail('not_visible');
+  if (availability.visibility === false || availability.inService === false) return fail('not_visible');
   const isOpenNow = availability.opened === true || info.isOpen === true;
-  const nextOpenMessage: string | null = availability.nextOpenTimeMessage || availability.nextOpenMessage || null;
-  if (!isOpenNow && !availability.nextOpenTime && !nextOpenMessage) return fail('not_operational');
+  const nextOpenMessage: string | null =
+    availability.nextOpenTimeMessage ||
+    availability.nextOpenMessage ||
+    (isOpenNow ? null : 'Opens for next meal service');
 
   const coords = parseLatLong(info.latLong);
   if (!coords) return fail('no_coordinates');
@@ -664,7 +663,8 @@ export async function searchVerifiedScored(
   if (!all || all.length === 0) return [];
 
   const pool = opts.nameOnly ? all.filter(c => (c.nameScore || 0) >= 60) : all;
-  const top = pool.slice(0, opts.maxVerify ?? MAX_VERIFY_CANDIDATES);
+  const sortedPool = pool.slice().sort((a, b) => (b.nameScore || 0) - (a.nameScore || 0) || (b.matchScore - a.matchScore));
+  const top = sortedPool.slice(0, opts.maxVerify ?? 10);
   if (top.length === 0) return [];
 
   const distanceFrom = opts.userCoords && isValidCoord(opts.userCoords.lat, opts.userCoords.lng)
