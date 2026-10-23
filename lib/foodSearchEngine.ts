@@ -108,7 +108,7 @@ export const FOOD_CATEGORIES: FoodCategory[] = [
     name: 'Chai, Coffee & Cafe',
     hindiName: 'चाय, कॉफी और कैफे',
     icon: '☕',
-    keywords: ['bun maska', 'irani chai', 'chai', 'tea', 'cold coffee', 'coffee', 'frappe', 'latte', 'cappuccino', 'lassi', 'milkshake', 'shake'],
+    keywords: ['bun maska', 'irani chai', 'chai', 'tea', 'cold coffee', 'coffee', 'frappe', 'latte', 'cappuccino', 'lassi', 'milkshake', 'shake', 'buttermilk', 'butter milk', 'chaas', 'taak', 'mattha', 'majjiga'],
     signatureImage: '/api/ai/dish-image?dish=Bun%20Maska'
   },
   {
@@ -281,7 +281,17 @@ export const SPELLING_TYPOS_MAP: Record<string, string> = {
   'burgar': 'burger',
   'burgur': 'burger',
   'sandwhich': 'sandwich',
-  'sandwitch': 'sandwich'
+  'sandwitch': 'sandwich',
+
+  // Beverages & Buttermilk
+  'buttermilk': 'butter milk',
+  'butermilk': 'butter milk',
+  'butter-milk': 'butter milk',
+  'chhas': 'chaas',
+  'chhaas': 'chaas',
+  'chhash': 'chaas',
+  'matha': 'mattha',
+  'tak': 'taak'
 };
 
 // ============================================================================

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ArrowLeft, Volume2, VolumeX, ChevronUp, ChevronLeft, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Restaurant } from '@/lib/db';
 import { getDishVisualAssets, getDishExactFlyingImage } from '@/lib/dishAssets';
+import { getPreloadedUrl } from '@/lib/mediaPreloader';
 
 export { getDishVisualAssets };
 
@@ -71,9 +72,11 @@ export const BakasurEatingStage: React.FC<BakasurEatingStageProps> = ({
   ], []);
 
   // Stage 1 uses front-facing video (front-eat-video.mp4), Stage 2 uses side-angle (side-view-final.mp4)
-  const MAIN_VIDEO = isSideAngle
-    ? '/images/final-frames/side-view-final.mp4?v=2'
-    : '/images/final-frames/front-eat-video.mp4';
+  const MAIN_VIDEO = getPreloadedUrl(
+    isSideAngle
+      ? '/images/final-frames/side-view-final.mp4?v=2'
+      : '/images/final-frames/front-eat-video.mp4'
+  );
 
   const [isEatingVideoPlaying, setIsEatingVideoPlaying] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);

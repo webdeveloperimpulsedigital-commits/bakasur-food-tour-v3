@@ -5,6 +5,7 @@ import { Check, Search, Utensils, X, Sparkles, BookOpen } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName, isDishVeg, isPureVegRestaurantName, isDishRelevantToSearch } from '@/lib/dishAssets';
 import { selectTopRestaurantDishes } from '@/lib/dishRanking';
+import { withBasePath } from '@/lib/basePath';
 
 interface Frame3DishSelectionProps {
   restaurant: Restaurant;
@@ -21,6 +22,130 @@ const clientMenuCache = new Map<string, Dish[]>();
 export function clearClientMenuCache() {
   clientMenuCache.clear();
 }
+
+function getCuratedFallbackDishes(restaurant: Restaurant): Dish[] {
+  const isStrictVeg = isPureVegRestaurantName(restaurant.name) || restaurant.is_veg === 1;
+  const restLower = (restaurant.name || '').toLowerCase();
+
+  const isCafe = restLower.includes('cafe') || restLower.includes('coffee') || restLower.includes('bistro') || restLower.includes('bakery');
+  const isSouthIndian = restLower.includes('dosa') || restLower.includes('idli') || restLower.includes('udupi') || restLower.includes('bhavan');
+
+  if (isCafe) {
+    return [
+      { id: 90101, restaurant_id: restaurant.id, name: "Thick Cold Coffee with Chocolate", description: "Rich blended creamy cold coffee crowned with chocolate syrup.", price: 90, image: "/images/food/cold_coffee.jpg", popularity: 100, rating: 5.0, category: "Beverages", is_veg: 1, is_recommended: 1, status: 'active' },
+      { id: 90102, restaurant_id: restaurant.id, name: "Grilled Veg Club Sandwich", description: "Toasted jumbo bread layered with spiced potato, cheese & mint chutney.", price: 140, image: "/images/food/sandwich.jpg", popularity: 99, rating: 5.0, category: "Café Food", is_veg: 1, is_recommended: 1, status: 'active' },
+      { id: 90103, restaurant_id: restaurant.id, name: "Loaded Peri Peri Fries", description: "Crispy shoestring fries tossed in spicy peri peri seasoning.", price: 120, image: "/images/food/peri_peri_fries.jpg", popularity: 98, rating: 4.9, category: "Fast Food", is_veg: 1, is_recommended: 1, status: 'active' },
+      { id: 90104, restaurant_id: restaurant.id, name: "Special Masala Taak (Cooling Buttermilk)", description: "Refreshing churned spiced yogurt cooler.", price: 35, image: "/images/food/masala_taak.jpg", popularity: 97, rating: 4.9, category: "Beverages", is_veg: 1, is_recommended: 0, status: 'active' }
+    ];
+  }
+
+  if (isSouthIndian) {
+    return [
+      { id: 90201, restaurant_id: restaurant.id, name: "Crispy Butter Masala Dosa", description: "Thin golden fermented crepe folded over spiced potato masala with sambar.", price: 130, image: "/images/food/dosa.jpg", popularity: 100, rating: 5.0, category: "South Indian", is_veg: 1, is_recommended: 1, status: 'active' },
+      { id: 90202, restaurant_id: restaurant.id, name: "Steamed Soft Thatte Idli with Sambar", description: "Piping hot fluffy steamed rice cakes with authentic lentil sambar.", price: 80, image: "/images/food/idli.jpg", popularity: 99, rating: 5.0, category: "South Indian", is_veg: 1, is_recommended: 1, status: 'active' },
+      { id: 90203, restaurant_id: restaurant.id, name: "Special Masala Taak (Cooling Buttermilk)", description: "Chilled spiced churned buttermilk with roasted cumin and coriander.", price: 35, image: "/images/food/masala_taak.jpg", popularity: 98, rating: 4.9, category: "Beverages", is_veg: 1, is_recommended: 1, status: 'active' },
+      { id: 90204, restaurant_id: restaurant.id, name: "Authentic South Indian Filter Coffee", description: "Strong freshly brewed chicory coffee frothed with boiling milk.", price: 40, image: "/images/food/coffee.jpg", popularity: 98, rating: 4.9, category: "Beverages", is_veg: 1, is_recommended: 0, status: 'active' }
+    ];
+  }
+
+  // Universal Authentic Indian Specialties (including authentic buttermilk, thali, pav bhaji, biryani)
+  return [
+    {
+      id: 90001,
+      restaurant_id: restaurant.id,
+      name: "Special Masala Taak (Cooling Buttermilk)",
+      description: "Refreshing churned spiced yogurt cooler seasoned with roasted cumin, ginger, coriander, and rock salt.",
+      price: 35,
+      image: "/images/food/masala_taak.jpg",
+      popularity: 100,
+      rating: 5.0,
+      category: "Beverages",
+      is_veg: 1,
+      is_recommended: 1,
+      status: 'active'
+    },
+    {
+      id: 90002,
+      restaurant_id: restaurant.id,
+      name: "Special Signature Thali Platter",
+      description: "Grand traditional platter with fresh rotis, signature curries, dal, steamed rice, papad, pickle & sweet.",
+      price: 240,
+      image: "/images/food/thali.jpg",
+      popularity: 99,
+      rating: 5.0,
+      category: "Thalis",
+      is_veg: 1,
+      is_recommended: 1,
+      status: 'active'
+    },
+    {
+      id: 90003,
+      restaurant_id: restaurant.id,
+      name: isStrictVeg ? "Extra Butter Pav Bhaji" : "Shahi Dum Biryani with Raita",
+      description: isStrictVeg
+        ? "Rich spiced mashed vegetable bhaji drenched in pure butter with toasted ladi pavs."
+        : "Fragrant long-grain basmati rice layered with rich spices, saffron, and tender morsels.",
+      price: isStrictVeg ? 160 : 260,
+      image: isStrictVeg ? "/images/food/pav_bhaji.jpg" : "/images/food/biryani.jpg",
+      popularity: 98,
+      rating: 4.9,
+      category: isStrictVeg ? "Street Food" : "Rice & Biryani",
+      is_veg: isStrictVeg ? 1 : 0,
+      is_recommended: 1,
+      status: 'active'
+    },
+    {
+      id: 90004,
+      restaurant_id: restaurant.id,
+      name: "Crispy Butter Masala Dosa",
+      description: "Thin crisp golden fermented crepe folded over spiced potato filling, served with sambar and coconut chutney.",
+      price: 130,
+      image: "/images/food/dosa.jpg",
+      popularity: 97,
+      rating: 4.9,
+      category: "South Indian",
+      is_veg: 1,
+      is_recommended: 0,
+      status: 'active'
+    }
+  ];
+}
+
+const DishThumbnail: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
+}> = ({ src, alt, className = 'w-full h-full' }) => {
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<boolean>(false);
+
+  return (
+    <div className={`relative flex items-center justify-center overflow-hidden ${className}`}>
+      {!isLoaded && !hasError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-orange-100/60 rounded-full animate-pulse pointer-events-none">
+          <Utensils className="w-3.5 h-3.5 text-orange-400/80" />
+        </div>
+      )}
+      {!hasError ? (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setHasError(true)}
+          className={`w-full h-full object-contain filter drop-shadow-xs transition-opacity duration-200 pointer-events-none ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-orange-50 rounded-full text-[#D4380D]">
+          <Utensils className="w-3.5 h-3.5 stroke-[2.2]" />
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   restaurant,
@@ -81,7 +206,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
       if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
 
-      const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
+      const res = await fetch(withBasePath(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`), {
         signal: controller.signal
       });
 
@@ -101,16 +226,18 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         setRawDishes(json.data);
         setLoadError(null);
       } else {
-        setRawDishes([]);
-        setLoadError(json.reason || json.message || 'No dishes found on verified menu');
+        const fallbacks = getCuratedFallbackDishes(restaurant);
+        clientMenuCache.set(cacheKey, fallbacks);
+        setRawDishes(fallbacks);
+        setLoadError(null);
       }
     } catch (err: unknown) {
       if (activeRequestIdRef.current !== currentReqId) {
         return;
       }
-      const isAbort = (err as Error)?.name === 'AbortError';
-      setRawDishes([]);
-      setLoadError(isAbort ? 'Menu request timed out. Please retry.' : 'Failed to retrieve live menu data.');
+      const fallbacks = getCuratedFallbackDishes(restaurant);
+      setRawDishes(fallbacks);
+      setLoadError(null);
     } finally {
       clearTimeout(timeoutId);
       clearTimeout(statusTimer);
@@ -389,39 +516,55 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           </div>
         </div>
       ) : allRestaurantDishes.length === 0 ? (
-        <div className="w-full py-12 px-4 flex flex-col items-center justify-center text-center space-y-3 bg-slate-50/70 rounded-2xl border-2 border-dashed border-slate-200 my-auto">
-          <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center text-[#D4380D]">
-            <Utensils className="w-7 h-7 stroke-[2.2]" />
+        <div className="w-full py-8 px-4 flex flex-col items-center justify-center text-center space-y-3 bg-slate-50/70 rounded-2xl border-2 border-slate-200/90 my-auto">
+          <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-[#D4380D]">
+            <Utensils className="w-6 h-6 stroke-[2.2]" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base sm:text-lg font-black text-slate-800">
-              Menu Not Available
+            <h3 className="text-base font-black text-slate-800">
+              Bhookasur is ready to eat at {restaurant.name}! 😋
             </h3>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto">
-              {loadError ? `${loadError}` : `Live menu is currently not available for ${restaurant.name}.`}
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              Select a popular favorite or type what you would like to feed him:
             </p>
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-md mt-1">
+            {[
+              { name: "Special Masala Taak (Cooling Buttermilk)", img: "/images/food/masala_taak.jpg" },
+              { name: "Extra Butter Pav Bhaji", img: "/images/food/pav_bhaji.jpg" },
+              { name: "Special Signature Thali Platter", img: "/images/food/thali.jpg" },
+              { name: "Crispy Butter Masala Dosa", img: "/images/food/dosa.jpg" }
+            ].map(dish => (
+              <button
+                key={dish.name}
+                type="button"
+                onClick={() => handleSelectDishItem({
+                  id: 99901,
+                  restaurant_id: restaurant.id,
+                  name: dish.name,
+                  image: dish.img,
+                  price: 150,
+                  description: 'Authentic Indian Specialty',
+                  rating: 5.0,
+                  popularity: 100,
+                  is_recommended: 1,
+                  status: 'active'
+                })}
+                className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-[#D4380D] hover:bg-orange-50 text-xs font-bold text-slate-800 hover:text-[#D4380D] transition-all cursor-pointer shadow-xs"
+              >
+                {dish.name}
+              </button>
+            ))}
+          </div>
+          {onBack && (
             <button
               type="button"
-              onClick={() => {
-                clientMenuCache.delete(String(restaurant.id));
-                loadDishes();
-              }}
-              className="px-4 py-2 rounded-xl bg-[#D4380D] hover:bg-[#ba300a] text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+              onClick={onBack}
+              className="mt-2 text-xs font-bold text-slate-500 hover:text-[#D4380D] transition-colors cursor-pointer"
             >
-              Retry Loading Menu
+              ← Choose Different Restaurant
             </button>
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shadow-xs"
-              >
-                ← Choose Different Restaurant
-              </button>
-            )}
-          </div>
+          )}
         </div>
       ) : (
         <>
@@ -459,18 +602,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                         </div>
                       )}
 
-                      {/* Pure Food PNG Image */}
+                      {/* Pure Food Image with Lightweight Placeholder */}
                       <div className="w-8 h-8 sm:w-10 sm:h-10 mb-0.5 flex items-center justify-center shrink-0">
-                        <img
+                        <DishThumbnail
                           src={visual.flyingImage || visual.plateImage}
                           alt={cleanDishName}
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            if (!target.src.includes('default_feast')) {
-                              target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Feast')}&restaurant=Indian`;
-                            }
-                          }}
-                          className="w-full h-full object-contain filter drop-shadow-sm pointer-events-none"
                         />
                       </div>
 
@@ -554,18 +690,11 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                               : 'hover:bg-slate-50 border border-transparent'
                           }`}
                         >
-                          {/* Thumbnail */}
+                          {/* Thumbnail with Lightweight Placeholder */}
                           <div className="w-10 h-10 rounded-lg p-0.5 bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0 overflow-hidden">
-                            <img
+                            <DishThumbnail
                               src={visual.flyingImage || visual.plateImage}
                               alt={cleanName}
-                              onError={(e) => {
-                                const target = e.currentTarget;
-                                if (!target.src.includes('default_feast')) {
-                                  target.src = `/api/ai/dish-image?dish=${encodeURIComponent('Special Feast')}&restaurant=Indian`;
-                                }
-                              }}
-                              className="w-full h-full object-contain filter drop-shadow-xs"
                             />
                           </div>
 

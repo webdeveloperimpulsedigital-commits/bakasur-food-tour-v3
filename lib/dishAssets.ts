@@ -4,6 +4,8 @@
  * Checks the user-selected restaurant and the chosen menu item dynamically.
  */
 
+import { withBasePath } from './basePath';
+
 export interface DishVisualAssets {
   plateImage: string;
   flyingImage: string;
@@ -99,7 +101,8 @@ export function isDishVeg(dishName?: string): boolean {
     n.includes('katli') || n.includes('ladoo') || n.includes('jalebi') || n.includes('rasmalai') ||
     n.includes('gulab jamun') || n.includes('modak') || n.includes('puran poli') ||
     n.includes('thalipeeth') || n.includes('kothimbir') || n.includes('alu vadi') ||
-    n.includes('solkadhi') || n.includes('taak') || n.includes('lassi') ||
+    n.includes('solkadhi') || n.includes('taak') || n.includes('buttermilk') || n.includes('butter milk') ||
+    n.includes('chaas') || n.includes('chhaas') || n.includes('majjiga') || n.includes('lassi') ||
     n.includes('pithla') || n.includes('pitla') || n.includes('bhakri') ||
     n.includes('bharli vangi') || n.includes('varan bhat') || n.includes('varan') ||
     n.includes('katachi amti') || n.includes('amti') || n.includes('shev bhaji') ||
@@ -210,18 +213,18 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string, resta
   const cleanName = formatCleanDishName(dishName, restaurantName);
 
   // 1. Direct local authentic photographic asset in public/images/food/
-  if (dishImage && dishImage.startsWith('/images/food/')) {
+  if (dishImage && (dishImage.startsWith('/images/food/') || dishImage.includes('/images/food/'))) {
     return {
-      plateImage: dishImage,
-      flyingImage: dishImage
+      plateImage: withBasePath(dishImage),
+      flyingImage: withBasePath(dishImage)
     };
   }
 
   // 2. If dishImage is already a fully formed AI endpoint URL specifically for this dish
-  if (dishImage && dishImage.startsWith('/api/ai/dish-image')) {
+  if (dishImage && (dishImage.startsWith('/api/ai/dish-image') || dishImage.includes('/api/ai/dish-image'))) {
     return {
-      plateImage: dishImage,
-      flyingImage: dishImage
+      plateImage: withBasePath(dishImage),
+      flyingImage: withBasePath(dishImage)
     };
   }
 
@@ -232,8 +235,8 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string, resta
   }
 
   return {
-    plateImage: aiPngUrl,
-    flyingImage: aiPngUrl
+    plateImage: withBasePath(aiPngUrl),
+    flyingImage: withBasePath(aiPngUrl)
   };
 }
 
@@ -428,7 +431,22 @@ export function isDishRelevantToSearch(dishTitle?: string, userQuery?: string): 
     );
   }
 
-  // === 13. General Food Queries (Biryani, Pizza, Burger, Dosa, Idli, Pulao, Mastani, Falooda, etc.) ===
+  // === 13. Buttermilk / Taak / Chaas / Mattha / Majjiga ===
+  const isButtermilkQuery =
+    q.includes('butter milk') || q.includes('buttermilk') || q.includes('chaas') ||
+    q.includes('chhaas') || q.includes('taak') || q.includes('mattha') || q.includes('majjiga');
+
+  if (isButtermilkQuery) {
+    return (
+      (
+        d.includes('butter milk') || d.includes('buttermilk') || d.includes('chaas') ||
+        d.includes('chhaas') || d.includes('taak') || d.includes('mattha') || d.includes('majjiga')
+      ) &&
+      !d.includes('pancake') && !d.includes('waffle') && !d.includes('biscuit')
+    );
+  }
+
+  // === 14. General Food Queries (Biryani, Pizza, Burger, Dosa, Idli, Pulao, Mastani, Falooda, etc.) ===
   // Direct full substring match
   if (d.includes(q)) return true;
 

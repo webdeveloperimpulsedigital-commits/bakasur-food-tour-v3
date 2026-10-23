@@ -174,9 +174,13 @@ export const Frame4ManualDish: React.FC<Frame4ManualDishProps> = ({
                       <img
                         src={visual.flyingImage || visual.plateImage}
                         alt={dish.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-8 h-8 rounded-lg object-contain p-0.5 bg-white border border-slate-200 shrink-0"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = '/api/ai/dish-image?dish=Vada%20Pav';
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23D4380D" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
                         }}
                       />
                       <div className="min-w-0">

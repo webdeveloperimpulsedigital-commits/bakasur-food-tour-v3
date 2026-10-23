@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
+import { getPreloadedUrl } from '@/lib/mediaPreloader';
 
 interface Frame7AcidityAppearsProps {
   onAutoAdvance?: () => void;
@@ -103,7 +104,7 @@ export const Frame7AcidityAppears: React.FC<Frame7AcidityAppearsProps> = ({
         }`}
       >
         <video
-          src="/images/final-frames/Acidity-and-Dakare.mp4"
+          src={getPreloadedUrl('/images/final-frames/Acidity-and-Dakare.mp4')}
           autoPlay
           loop
           muted

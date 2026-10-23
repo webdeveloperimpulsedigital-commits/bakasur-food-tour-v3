@@ -29,8 +29,9 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   const heroImageSrc = '/images/final-frames/food-tour-img-gastrium.jpg';
   const activeImageSrc = heroImageSrc;
 
-  // In-memory preloaded Bhookasur photo assets
+  // In-memory preloaded Bhookasur photo and share card assets
   const preloadedFileRef = useRef<File | null>(null);
+  const preloadedCardFileRef = useRef<File | null>(null);
   const preloadedPngBlobRef = useRef<Blob | null>(null);
 
   const showToast = (msg: string) => {
@@ -38,9 +39,12 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     setTimeout(() => setToastMessage(null), 4500);
   };
 
+  // Full campaign link for food pass sharing
   const shareUrl = typeof window !== 'undefined' && !window.location.origin.includes('localhost')
-    ? window.location.origin
-    : (process.env.NEXT_PUBLIC_APP_URL || 'https://bhookasur.com');
+    ? (window.location.origin.includes('gastrium.in')
+        ? 'https://gastrium.in/bhookasur_ka_food_tour'
+        : `${window.location.origin}/bhookasur_ka_food_tour`)
+    : (process.env.NEXT_PUBLIC_APP_URL || 'https://gastrium.in/bhookasur_ka_food_tour');
 
   // Formatted message with live clickable link for WhatsApp and Instagram
   const shareText = `Maine Bhookasur ke saath Food Tour kiya!\nAap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!\n\n👉 Join the Food Tour:\n${shareUrl}`;
@@ -48,6 +52,8 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   // Preload the Bhookasur image directly as File and PNG blob for mobile & desktop sharing
   useEffect(() => {
     let isMounted = true;
+    
+    // 1. Raw photo for desktop/WhatsApp
     fetch(activeImageSrc)
       .then((res) => res.blob())
       .then((blob) => {
@@ -76,6 +82,16 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       })
       .catch((err) => console.warn('Preload photo error:', err));
 
+    // 2. Preload high-res card with baked-in text & full link for Instagram (where apps strip caption text)
+    fetch('/images/final-frames/bhookasur-share-card-pass.jpg')
+      .then((res) => res.blob())
+      .then((blob) => {
+        if (isMounted && blob) {
+          preloadedCardFileRef.current = new File([blob], 'bhookasur-food-tour-pass.jpg', { type: 'image/jpeg' });
+        }
+      })
+      .catch((err) => console.warn('Preload share card error:', err));
+
     return () => {
       isMounted = false;
     };
@@ -85,10 +101,10 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
 
   // WhatsApp Share Handler: Shares clean photo WITH formatted caption & clickable link
   const handleShareWhatsApp = async () => {
-    const file = preloadedFileRef.current;
+    const file = preloadedCardFileRef.current || preloadedFileRef.current;
 
     // 1. Mobile Web Share API:
-    // Shares the clean photo file WITH the caption text containing the clickable link!
+    // Shares the photo file WITH the caption text containing the clickable link!
     if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
@@ -109,21 +125,32 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
     }, 200);
   };
 
-  // Instagram Share Handler: Copies text message & shares photo
+  // Instagram Share Handler: Copies text message & shares card image with message included
   const handleShareInstagram = async () => {
     // 1. ALWAYS copy full text message and link to clipboard first
     try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(shareText);
+      } else if (typeof document !== 'undefined') {
+        const ta = document.createElement('textarea');
+        ta.value = shareText;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
       }
     } catch (e) {
       console.warn('Clipboard write notice:', e);
     }
 
-    const file = preloadedFileRef.current;
+    // Use the card file which has the photo on top and bottom message with link baked in
+    const file = preloadedCardFileRef.current || preloadedFileRef.current;
 
     // 2. Mobile Web Share API:
-    // Shares the clean photo file + text
+    // Shares the card file + text
     if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         showToast('📋 Message copied to clipboard! Paste in Instagram chat.');

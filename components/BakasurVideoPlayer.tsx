@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Volume2, VolumeX, Sparkles, Flame, Play, Pause, Clapperboard, Video, ArrowLeft } from 'lucide-react';
 import { BakasurEatingStage } from './BakasurEatingStage';
 import { getDishVisualAssets } from '@/lib/dishAssets';
+import { getPreloadedUrl } from '@/lib/mediaPreloader';
 
 export interface SpiceOption {
   id: string;
@@ -277,6 +278,22 @@ export function getDishMomentDetails(dishName?: string, dishImage?: string): Dis
     };
   }
 
+  // 14.5 Buttermilk / Taak / Chaas / Mattha / Majjiga
+  if (
+    (!n.includes('pancake') && !n.includes('waffle')) &&
+    (n.includes('butter milk') || n.includes('buttermilk') || n.includes('taak') || n.includes('chaas') || n.includes('chhaas') || n.includes('mattha') || n.includes('majjiga'))
+  ) {
+    return {
+      category: 'buttermilk',
+      biteEmoji: '🥛',
+      biteLabel: 'Chilled Spiced Buttermilk',
+      munchSound: 'CHILLED COOL GULP! 🥛',
+      actionText: `Bhookasur is gulping chilled spiced ${dishName || 'Buttermilk'}...`,
+      image: resolvedImg,
+      eatingScene: resolvedImg
+    };
+  }
+
   // 15. Bun Maska & Irani Chai
   if (n.includes('bun maska') || (n.includes('maska') && !n.includes('keema')) || n.includes('irani chai') || (n.includes('chai') && !n.includes('samosa'))) {
     return {
@@ -457,22 +474,23 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
   // - Frame 12 (Registration): Pointing Downwards.mp4 (Bakasur points down to registration form)
   // - Frame 13 (Pass Confirmed): Thumbs Up.mp4 (Bakasur thumbs up confirmation)
   const activeVideoSrc = useMemo(() => {
-    if (frameNumber === 1) return '/images/final-frames/1.mp4';
-    if (frameNumber === 2) {
-      return isDesktop
+    let src = videoUrl || '/images/final-frames/1.mp4';
+    if (frameNumber === 1) src = '/images/final-frames/1.mp4';
+    else if (frameNumber === 2) {
+      src = isDesktop
         ? '/images/final-frames/Bakasur-Pointing-Rightside.mp4'
         : '/images/final-frames/2.mp4';
     }
-    if (frameNumber === 3 || frameNumber === 4) return '/images/final-frames/3.mp4';
-    if (frameNumber === 6) return '/images/all-frames/Showing Love.mp4';
-    if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/final-frames/Acidity-and-Dakare.mp4';
-    if (frameNumber === 9) return '/images/final-frames/Bhookasur-Drinking-Gastrium.mp4';
-    if (frameNumber === 10) return '/images/all-frames/Thumbs Up.mp4';
-    if (frameNumber === 11) return '/images/all-frames/Showing Love.mp4';
-    if (frameNumber === 12) return '/images/all-frames/Showing Love.mp4';
-    if (frameNumber === 13) return '/images/all-frames/Thumbs Up.mp4';
+    else if (frameNumber === 3 || frameNumber === 4) src = '/images/final-frames/3.mp4';
+    else if (frameNumber === 6) src = '/images/all-frames/Showing Love.mp4';
+    else if (frameNumber === 7 || frameNumber === 8 || isHeartburn) src = '/images/final-frames/Acidity-and-Dakare.mp4';
+    else if (frameNumber === 9) src = '/images/final-frames/Bhookasur-Drinking-Gastrium.mp4';
+    else if (frameNumber === 10) src = '/images/all-frames/Thumbs Up.mp4';
+    else if (frameNumber === 11) src = '/images/all-frames/Showing Love.mp4';
+    else if (frameNumber === 12) src = '/images/all-frames/Showing Love.mp4';
+    else if (frameNumber === 13) src = '/images/all-frames/Thumbs Up.mp4';
 
-    return videoUrl || '/images/final-frames/1.mp4';
+    return getPreloadedUrl(src);
   }, [frameNumber, isHeartburn, videoUrl, isDesktop]);
 
   // Autoplay video smoothly on source change

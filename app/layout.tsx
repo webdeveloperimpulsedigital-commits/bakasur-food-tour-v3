@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
+import { BasePathProvider } from "@/components/BasePathProvider";
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gastrium.in/bhookasur_ka_food_tour';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://bhookasur.com'),
+  metadataBase: new URL(appUrl),
   title: "Bhookasur Ka Food Tour – Interactive Food Campaign & Contest",
   description: "Travel across iconic Indian restaurants with Bhookasur! Feed his legendary appetite, fill the food meter, experience the Gastrium moment, and participate in the grand campaign.",
   keywords: ["Bhookasur", "Food Tour", "Gastrium", "Indian Food", "Pune", "Mumbai", "Delhi", "Food Campaign"],
@@ -11,11 +14,11 @@ export const metadata: Metadata = {
     title: "Bhookasur Ka Food Tour 🍔🔥",
     description: "Maine Bhookasur ke saath Food Tour kiya! Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!",
     type: "website",
-    url: "https://bhookasur.com",
+    url: appUrl,
     siteName: "Bhookasur Food Tour",
     images: [
       {
-        url: "https://bhookasur.com/images/final-frames/food-tour-img-gastrium.jpg",
+        url: `${appUrl}/images/final-frames/food-tour-img-gastrium.jpg`,
         width: 360,
         height: 360,
         alt: "Bhookasur Ka Food Tour"
@@ -26,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bhookasur Ka Food Tour 🍔🔥",
     description: "Maine Bhookasur ke saath Food Tour kiya! Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!",
-    images: ["https://bhookasur.com/images/final-frames/food-tour-img-gastrium.jpg"]
+    images: [`${appUrl}/images/final-frames/food-tour-img-gastrium.jpg`]
   }
 };
 
@@ -38,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-black text-white antialiased">
-        {children}
+        <BasePathProvider>{children}</BasePathProvider>
       </body>
     </html>
   );

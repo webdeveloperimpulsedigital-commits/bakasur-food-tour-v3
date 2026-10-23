@@ -3,6 +3,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
+import { getPreloadedUrl } from '@/lib/mediaPreloader';
 
 interface Frame6FeedingLoopProps {
   restaurant?: Restaurant | { id?: number; name?: string; city?: string };
@@ -88,7 +89,7 @@ export const Frame6FeedingLoop: React.FC<Frame6FeedingLoopProps> = ({
         )}
         <video
           ref={videoRef}
-          src="/images/final-frames/5.mp4"
+          src={getPreloadedUrl('/images/final-frames/5.mp4')}
           autoPlay
           loop
           muted

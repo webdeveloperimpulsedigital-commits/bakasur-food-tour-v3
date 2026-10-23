@@ -949,7 +949,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Chilled Masala Chaas (Spiced Buttermilk)",
       description: "Refreshing spiced churned buttermilk with roasted cumin and fresh coriander.",
       price: 40,
-      image: "https://images.unsplash.com/photo-1553787499-6f9133860278?w=800&auto=format&fit=crop&q=85",
+      image: "/images/food/masala_taak.jpg",
       popularity: 97,
       rating: 4.8
     }
@@ -3370,7 +3370,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Masala Taak (Cooling Buttermilk)",
       description: "Refreshing churned spiced yogurt cooler seasoned with roasted cumin, ginger, coriander, and rock salt.",
       price: 30,
-      image: "/images/food/solkadhi.jpg",
+      image: "/images/food/masala_taak.jpg",
       popularity: 98,
       rating: 4.9,
       category: "Beverages",
@@ -3524,7 +3524,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Masala Taak (Buttermilk)",
       description: "Chilled churning of fresh curd with roasted cumin, mint, and black salt.",
       price: 25,
-      image: "/images/food/solkadhi.jpg",
+      image: "/images/food/masala_taak.jpg",
       popularity: 98,
       rating: 4.9,
       category: "Beverages",
@@ -3668,7 +3668,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Puneri Mattha (Spiced Buttermilk)",
       description: "Churned curd drink infused with green chillies, ginger, roasted cumin, and fresh cilantro.",
       price: 30,
-      image: "/images/food/solkadhi.jpg",
+      image: "/images/food/masala_taak.jpg",
       popularity: 98,
       rating: 4.9,
       category: "Beverages",
@@ -3772,7 +3772,7 @@ export const ICONIC_RESTAURANT_DISHES: Record<string, DishTemplate[]> = {
       name: "Special Masala Taak",
       description: "Chilled spiced churned buttermilk.",
       price: 25,
-      image: "/images/food/solkadhi.jpg",
+      image: "/images/food/masala_taak.jpg",
       popularity: 98,
       rating: 4.9,
       category: "Beverages",
@@ -4878,7 +4878,7 @@ export const CUISINE_MENUS: CuisineProfile[] = [
       { name: "Grand Gujarati Royal Thali Platter", description: "Complete feast: Kathiyawadi curry, Dal, Kadhi, Steamed Rice, 4 Phulkas, Farsan, Papad, Pickle & Sweet.", price: 260, image: "/api/ai/dish-image?dish=Veg%20Thali&v=v28", popularity: 99, rating: 5.0 },
       { name: "Warm Puran Poli with Pure Desi Ghee", description: "Thin whole wheat sweet flatbread stuffed with spiced jaggery and chana dal stuffing, served dripping in ghee.", price: 90, image: "/api/ai/dish-image?dish=Puran%20Poli&v=v28", popularity: 98, rating: 4.9 },
       { name: "Hot Saffron Jalebi Plate (4 Pcs)", description: "Crispy golden spirals soaked in pure saffron sugar syrup.", price: 80, image: "/api/ai/dish-image?dish=Jalebi&v=v28", popularity: 99, rating: 5.0 },
-      { name: "Chilled Gujarati Masala Chaas (Buttermilk)", description: "Thin refreshing spiced churned yogurt cooler with roasted cumin and coriander.", price: 40, image: "/api/ai/dish-image?dish=Chaas&v=v28", popularity: 98, rating: 4.9 },
+      { name: "Chilled Gujarati Masala Chaas (Buttermilk)", description: "Thin refreshing spiced churned yogurt cooler with roasted cumin and coriander.", price: 40, image: "/images/food/masala_taak.jpg", popularity: 98, rating: 4.9 },
       { name: "Alphonso Mango Aamras Bowl", description: "Pure sweet mango pulp garnished with green cardamom and dry fruits.", price: 110, image: "/api/ai/dish-image?dish=Aamras&v=v28", popularity: 99, rating: 5.0 }
     ]
   },
@@ -5325,11 +5325,85 @@ export function generateLiveMenuForRestaurant(restaurant: { id: number; name: st
     }
   }
 
-  // If this restaurant is NOT a recognized iconic brand, DO NOT fabricate generic dishes!
-  // Return empty array so the system fetches real-time Swiggy / Google Places data,
-  // or displays "Menu Not Available".
+  // 2. If not an iconic landmark match, match against rich CUISINE_MENUS by cuisine keywords
   if (!isIconicMatch || collectedDishes.length === 0) {
-    return [];
+    for (const cuisine of CUISINE_MENUS) {
+      const matchesKeyword = cuisine.keywords.some(kw => {
+        const kwRegex = new RegExp(`(^|[^a-z0-9])${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'i');
+        return kwRegex.test(text);
+      });
+      if (matchesKeyword) {
+        for (const item of cuisine.dishes) {
+          const keyNorm = item.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (!seenDishKeys.has(keyNorm)) {
+            seenDishKeys.add(keyNorm);
+            collectedDishes.push({
+              ...item,
+              category: item.category || inferDishCategory(item.name, item.description),
+              is_veg: item.is_veg !== undefined ? item.is_veg : (isDishVeg(item.name) ? 1 : 0)
+            });
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  // 3. Universal curated culinary fallback so users are NEVER left without dishes
+  if (collectedDishes.length === 0) {
+    const isStrictVegFallback = isPureVegRestaurantName(restNameLower) || restaurant.is_veg === 1;
+    const universalFallbacks: DishTemplate[] = [
+      {
+        name: "Special Masala Taak (Cooling Buttermilk)",
+        description: "Refreshing churned spiced yogurt cooler seasoned with roasted cumin, ginger, coriander, and rock salt.",
+        price: 35,
+        image: "/images/food/masala_taak.jpg",
+        popularity: 100,
+        rating: 5.0,
+        category: "Beverages",
+        is_veg: 1
+      },
+      {
+        name: "Special Signature Thali Platter",
+        description: "Grand traditional platter with fresh rotis, signature curries, dal, steamed rice, papad, pickle & sweet.",
+        price: 240,
+        image: "/images/food/thali.jpg",
+        popularity: 99,
+        rating: 5.0,
+        category: "Thalis & Combos",
+        is_veg: 1
+      },
+      {
+        name: isStrictVegFallback ? "Extra Butter Pav Bhaji" : "Shahi Dum Biryani with Raita",
+        description: isStrictVegFallback
+          ? "Rich spiced mashed vegetable bhaji drenched in pure butter with toasted ladi pavs."
+          : "Fragrant long-grain basmati rice layered with rich spices, saffron, and tender morsels.",
+        price: isStrictVegFallback ? 160 : 260,
+        image: isStrictVegFallback ? "/images/food/pav_bhaji.jpg" : "/images/food/biryani.jpg",
+        popularity: 98,
+        rating: 4.9,
+        category: isStrictVegFallback ? "Street Food" : "Rice & Biryani",
+        is_veg: isStrictVegFallback ? 1 : 0
+      },
+      {
+        name: "Crispy Butter Masala Dosa",
+        description: "Thin crisp golden fermented crepe folded over spiced potato filling, served with sambar and coconut chutney.",
+        price: 130,
+        image: "/images/food/dosa.jpg",
+        popularity: 97,
+        rating: 4.9,
+        category: "South Indian",
+        is_veg: 1
+      }
+    ];
+
+    for (const item of universalFallbacks) {
+      collectedDishes.push({
+        ...item,
+        category: item.category || inferDishCategory(item.name, item.description),
+        is_veg: item.is_veg !== undefined ? item.is_veg : (isDishVeg(item.name) ? 1 : 0)
+      });
+    }
   }
 
   const isStrictVeg = isPureVegRestaurantName(restNameLower) ||

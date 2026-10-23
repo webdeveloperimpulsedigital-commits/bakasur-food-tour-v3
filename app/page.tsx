@@ -23,6 +23,7 @@ import { VideoTransitionOverlay } from '@/components/VideoTransitionOverlay';
 import { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
 import { getOrCreateSessionId, resetSessionId, trackUserStep, getOrCreateUserId, setStoredUserMobile } from '@/lib/tracker';
+import { preloadUpcomingFrameMedia } from '@/lib/mediaPreloader';
 
 export type FrameNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
 
@@ -102,6 +103,11 @@ export default function CampaignPage() {
 
     return () => clearTimeout(timer);
   }, [selectedCity]);
+
+  // Preload upcoming animation frames and media into memory and cache
+  useEffect(() => {
+    preloadUpcomingFrameMedia(currentFrame);
+  }, [currentFrame]);
 
   // Instant Location Detection via IP address + GPS refinement on app mount
   useEffect(() => {

@@ -6,9 +6,8 @@ import path from 'path';
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v32_accurate_search_dish_images_pav_bhaji_ragda_puri';
-const imageBufferCache = new Map<string, { buffer: Buffer; timestamp: number }>();
-imageBufferCache.clear();
+const CACHE_VERSION = 'v34_accurate_buttermilk_butter_milk_masala_taak';
+const imageBufferCache = new Map<string, { buffer: Buffer; contentType: string; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // Local authentic photographic assets stored in public/images/food/
@@ -45,6 +44,12 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   kothimbir_vadi: 'kothimbir_vadi.jpg',
   alu_vadi: 'alu_vadi.jpg',
   masala_taak: 'masala_taak.jpg',
+  taak: 'masala_taak.jpg',
+  chaas: 'masala_taak.jpg',
+  buttermilk: 'masala_taak.jpg',
+  butter_milk: 'masala_taak.jpg',
+  mattha: 'masala_taak.jpg',
+  majjiga: 'masala_taak.jpg',
   solkadhi: 'solkadhi.jpg',
   puran_poli: 'puran_poli.jpg',
   katachi_amti: 'katachi_amti.jpg',
@@ -521,9 +526,13 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
     return 'solkadhi';
   }
   if (
-    d.includes('taak') || d.includes('tak') || d.includes('mattha') ||
-    d.includes('matha') || d.includes('chaas') || d.includes('chhas') ||
-    d.includes('buttermilk') || d.includes('spiced butter milk') || d.includes('masala curd')
+    (!d.includes('pancake') && !d.includes('waffle') && !d.includes('biscuit')) &&
+    (
+      d.includes('taak') || d.includes('tak') || d.includes('mattha') ||
+      d.includes('matha') || d.includes('chaas') || d.includes('chhas') || d.includes('chhaas') ||
+      d.includes('buttermilk') || d.includes('butter milk') || d.includes('masala curd') ||
+      d.includes('majjiga') || d.includes('sambharam') || d.includes('neer mor') || d.includes('moru')
+    )
   ) {
     return 'masala_taak';
   }
@@ -1191,10 +1200,14 @@ function resolveDishPhotoUrl(dishName: string, restaurantName: string = ''): str
 }
 
 /**
- * Produce a clean, transparent PNG cutout of the food dish (Zero background)
+ * Produce a clean, transparent WebP or PNG cutout of the food dish (Zero background)
  */
-async function processFoodImageToPurePng(imageBuffer: Buffer, size = 440): Promise<Buffer> {
-  const radius = size / 2 - 8;
+async function processFoodImageToPureFormat(
+  imageBuffer: Buffer,
+  size = 320,
+  format: 'webp' | 'png' = 'webp'
+): Promise<{ buffer: Buffer; contentType: string }> {
+  const radius = size / 2 - 4;
   const maskSvg = Buffer.from(
     `<svg width="${size}" height="${size}">
       <defs>
@@ -1207,13 +1220,19 @@ async function processFoodImageToPurePng(imageBuffer: Buffer, size = 440): Promi
     </svg>`
   );
 
-  return sharp(imageBuffer)
+  const pipeline = sharp(imageBuffer)
     .resize(size, size, { fit: 'cover', position: 'center' })
     .composite([{ input: maskSvg, blend: 'dest-in' }])
-    .modulate({ saturation: 1.15, brightness: 1.02 })
-    .sharpen({ sigma: 1.2 })
-    .png({ quality: 92, compressionLevel: 8 })
-    .toBuffer();
+    .modulate({ saturation: 1.12, brightness: 1.02 })
+    .sharpen({ sigma: 1.1 });
+
+  if (format === 'webp') {
+    const buffer = await pipeline.webp({ quality: 82, alphaQuality: 90, effort: 4 }).toBuffer();
+    return { buffer, contentType: 'image/webp' };
+  } else {
+    const buffer = await pipeline.png({ quality: 88, compressionLevel: 6 }).toBuffer();
+    return { buffer, contentType: 'image/png' };
+  }
 }
 
 /**
@@ -1228,7 +1247,7 @@ async function getRawFoodImageBuffer(canonicalKey: string, explicitUrl?: string)
     try {
       const res = await fetch(explicitUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) BakasurFoodApp/3.0' },
-        signal: AbortSignal.timeout(6000)
+        signal: AbortSignal.timeout(5000)
       });
       if (res.ok) {
         return Buffer.from(await res.arrayBuffer());
@@ -1238,12 +1257,16 @@ async function getRawFoodImageBuffer(canonicalKey: string, explicitUrl?: string)
     }
   }
 
-  // 2. Local authentic photographic asset in public/images/food/
+  // 2. Local authentic photographic asset in public/images/food/ (check webp then jpg)
   const localFileName = CANONICAL_LOCAL_ASSETS[canonicalKey];
   if (localFileName) {
     try {
+      const baseName = localFileName.replace(/\.(jpg|jpeg)$/i, '');
+      const webpPath = path.join(process.cwd(), 'public', 'images', 'food', `${baseName}.webp`);
       const localFilePath = path.join(process.cwd(), 'public', 'images', 'food', localFileName);
-      if (fs.existsSync(localFilePath)) {
+      if (fs.existsSync(webpPath)) {
+        return await fs.promises.readFile(webpPath);
+      } else if (fs.existsSync(localFilePath)) {
         return await fs.promises.readFile(localFilePath);
       }
     } catch (fsErr) {
@@ -1256,7 +1279,7 @@ async function getRawFoodImageBuffer(canonicalKey: string, explicitUrl?: string)
   try {
     const res = await fetch(remoteUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) BakasurFoodApp/3.0' },
-      signal: AbortSignal.timeout(6000)
+      signal: AbortSignal.timeout(5000)
     });
     if (res.ok) {
       return Buffer.from(await res.arrayBuffer());
@@ -1267,8 +1290,11 @@ async function getRawFoodImageBuffer(canonicalKey: string, explicitUrl?: string)
 
   // 4. Fallback to local default thali feast
   try {
+    const defaultWebpPath = path.join(process.cwd(), 'public', 'images', 'food', 'thali.webp');
     const defaultLocalPath = path.join(process.cwd(), 'public', 'images', 'food', 'thali.jpg');
-    if (fs.existsSync(defaultLocalPath)) {
+    if (fs.existsSync(defaultWebpPath)) {
+      return await fs.promises.readFile(defaultWebpPath);
+    } else if (fs.existsSync(defaultLocalPath)) {
       return await fs.promises.readFile(defaultLocalPath);
     }
   } catch (defErr) {
@@ -1284,20 +1310,38 @@ export async function GET(request: Request) {
     const dish = (searchParams.get('dish') || 'Special Dish').trim();
     const restaurant = (searchParams.get('restaurant') || 'Restaurant').trim();
     const explicitImgUrl = (searchParams.get('imgUrl') || '').trim();
+    const requestedSize = parseInt(searchParams.get('size') || '', 10);
+    const size = (!isNaN(requestedSize) && requestedSize >= 80 && requestedSize <= 600) ? requestedSize : 320;
+
+    const requestedFormat = (searchParams.get('format') || '').toLowerCase();
+    const acceptHeader = request.headers.get('accept') || '';
+    const format: 'webp' | 'png' = requestedFormat === 'png' ? 'png' : (requestedFormat === 'webp' || acceptHeader.includes('image/webp') ? 'webp' : 'png');
 
     const vParam = (searchParams.get('v') || '').trim();
-    const cacheKey = `${CACHE_VERSION}_${dish.toLowerCase()}_${restaurant.toLowerCase()}${vParam ? '_' + vParam : ''}${explicitImgUrl ? '_' + encodeURIComponent(explicitImgUrl).slice(0, 40) : ''}`;
+    const cacheKey = `${CACHE_VERSION}_${dish.toLowerCase()}_${restaurant.toLowerCase()}_${size}_${format}${vParam ? '_' + vParam : ''}${explicitImgUrl ? '_' + encodeURIComponent(explicitImgUrl).slice(0, 40) : ''}`;
+    const etag = `"${Buffer.from(cacheKey).toString('base64url').slice(0, 24)}"`;
+
+    // 1. Conditional GET check (HTTP 304 Not Modified -> 0 bytes transfer)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          'ETag': etag,
+          'Cache-Control': 'public, max-age=604800, stale-while-revalidate=2592000',
+        }
+      });
+    }
+
+    // 2. In-memory cache hit (0ms)
     const cached = imageBufferCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
       return new NextResponse(new Uint8Array(cached.buffer), {
         status: 200,
         headers: {
-          'Content-Type': 'image/png',
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-          'Surrogate-Control': 'no-store',
-          'Clear-Site-Data': '"cache"',
+          'Content-Type': cached.contentType,
+          'Cache-Control': 'public, max-age=604800, stale-while-revalidate=2592000',
+          'ETag': etag,
           'X-AI-Generated': 'cached',
           'X-Food-Dish': encodeURIComponent(dish),
           'X-Food-Restaurant': encodeURIComponent(restaurant)
@@ -1305,38 +1349,38 @@ export async function GET(request: Request) {
       });
     }
 
-    // Identify authentic food source
+    // 3. Identify authentic food source & fetch raw buffer
     const isVerifiedExplicit = Boolean(
       explicitImgUrl &&
       (explicitImgUrl.startsWith('http://') || explicitImgUrl.startsWith('https://')) &&
       (explicitImgUrl.includes('swiggy.com') || explicitImgUrl.includes('cloudinary.com'))
     );
 
-    // Resolve dish name with intelligent semantic matcher
     const canonicalKey = matchDishToCanonicalKey(dish, restaurant);
     const rawBuffer = await getRawFoodImageBuffer(canonicalKey, isVerifiedExplicit ? explicitImgUrl : undefined);
 
-    let finalPngBuffer: Buffer | null = null;
+    let result: { buffer: Buffer; contentType: string } | null = null;
     if (rawBuffer) {
-      finalPngBuffer = await processFoodImageToPurePng(rawBuffer);
+      result = await processFoodImageToPureFormat(rawBuffer, size, format);
     }
 
-    if (!finalPngBuffer) {
-      throw new Error('Unable to process food photo into PNG');
+    if (!result) {
+      throw new Error('Unable to process food photo');
     }
 
-    // Cache the generated PNG buffer
-    imageBufferCache.set(cacheKey, { buffer: finalPngBuffer, timestamp: Date.now() });
+    // Limit in-memory cache size to 500 items to prevent runaway memory usage
+    if (imageBufferCache.size >= 500) {
+      const oldestKey = imageBufferCache.keys().next().value;
+      if (oldestKey) imageBufferCache.delete(oldestKey);
+    }
+    imageBufferCache.set(cacheKey, { buffer: result.buffer, contentType: result.contentType, timestamp: Date.now() });
 
-    return new NextResponse(new Uint8Array(finalPngBuffer), {
+    return new NextResponse(new Uint8Array(result.buffer), {
       status: 200,
       headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Surrogate-Control': 'no-store',
-        'Clear-Site-Data': '"cache"',
+        'Content-Type': result.contentType,
+        'Cache-Control': 'public, max-age=604800, stale-while-revalidate=2592000',
+        'ETag': etag,
         'X-AI-Generated': 'fresh',
         'X-Food-Dish': encodeURIComponent(dish),
         'X-Food-Restaurant': encodeURIComponent(restaurant),
@@ -1347,7 +1391,7 @@ export async function GET(request: Request) {
     console.error('AI Dish Image Generation Error:', error);
     // Emergency pure photographic gradient plate
     const fallbackSvg = Buffer.from(
-      `<svg width="440" height="440" xmlns="http://www.w3.org/2000/svg">
+      `<svg width="320" height="320" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="plate" cx="45%" cy="40%" r="55%">
             <stop offset="0%" stop-color="#D4380D" />
@@ -1355,13 +1399,16 @@ export async function GET(request: Request) {
             <stop offset="100%" stop-color="#5A1502" />
           </radialGradient>
         </defs>
-        <circle cx="220" cy="220" r="210" fill="url(#plate)" />
+        <circle cx="160" cy="160" r="150" fill="url(#plate)" />
       </svg>`
     );
-    const emergencyBuffer = await sharp(fallbackSvg).png().toBuffer();
+    const emergencyBuffer = await sharp(fallbackSvg).webp({ quality: 80 }).toBuffer();
     return new NextResponse(new Uint8Array(emergencyBuffer), {
       status: 200,
-      headers: { 'Content-Type': 'image/png' }
+      headers: {
+        'Content-Type': 'image/webp',
+        'Cache-Control': 'public, max-age=86400'
+      }
     });
   }
 }

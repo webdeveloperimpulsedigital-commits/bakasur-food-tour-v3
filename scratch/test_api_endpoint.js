@@ -1,78 +1,26 @@
-// Test calling the db.getMapData directly in Next.js environment context
-const mysql = require('mysql2/promise');
+async function run() {
+  const url = 'http://localhost:3000/api/ai/dish-image?dish=Vada%20Pav&restaurant=Joshi%20Wadewale';
+  
+  // 1. Initial request
+  const t0 = Date.now();
+  const res1 = await fetch(url, { headers: { 'Accept': 'image/webp' } });
+  const buf1 = await res1.arrayBuffer();
+  const t1 = Date.now();
+  const etag = res1.headers.get('etag');
+  console.log(`First request: ${res1.status} (${res1.headers.get('content-type')}), Size: ${buf1.byteLength} bytes, Time: ${t1 - t0}ms, ETag: ${etag}`);
 
-async function test() {
-  const pool = mysql.createPool({
-    host: '127.0.0.1',
-    port: 3306,
-    user: 'root',
-    password: '',
-    database: 'bakasur_food_tour_1'
-  });
+  // 2. Second request (in-memory cache test)
+  const t2 = Date.now();
+  const res2 = await fetch(url, { headers: { 'Accept': 'image/webp' } });
+  const buf2 = await res2.arrayBuffer();
+  const t3 = Date.now();
+  console.log(`Second request (cached in memory): ${res2.status}, Size: ${buf2.byteLength} bytes, Time: ${t3 - t2}ms`);
 
-  const sessionId = 'bkt_sess_1789123858588_mhgdge9d060';
-
-  // Test the exact SQL and logic used in lib/db.ts
-  const [restRows] = await pool.query(`
-    SELECT r.id, r.name, r.address, r.area, r.city,
-           CAST(r.latitude AS DECIMAL(10,6)) as latitude,
-           CAST(r.longitude AS DECIMAL(10,6)) as longitude,
-           COALESCE(r.rating, 4.8) as rating,
-           COALESCE(r.image, '') as image,
-           COALESCE(r.total_visits, 1) as total_visits,
-           COALESCE(
-             (SELECT d.name FROM dishes d WHERE d.restaurant_id = r.id ORDER BY d.is_recommended DESC, d.popularity DESC LIMIT 1),
-             'Specialty Dish'
-           ) as featured_dish
-    FROM restaurants r
-    WHERE r.status = 'active' AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
-    ORDER BY r.total_visits DESC
-  `);
-
-  const [visitRows] = await pool.query(`
-    SELECT cv.id, cv.session_id, cv.restaurant_id, cv.dish_id, cv.city, cv.round_number,
-           CAST(COALESCE(cv.latitude, r.latitude, 18.5204) AS DECIMAL(10,6)) as latitude, 
-           CAST(COALESCE(cv.longitude, r.longitude, 73.8407) AS DECIMAL(10,6)) as longitude, 
-           cv.visited_at,
-           COALESCE(cv.restaurant_name, r.name) as restaurant_name,
-           COALESCE(cv.dish_name, d.name, 'Specialty Dish') as dish_name,
-           COALESCE(r.rating, 4.8) as rating,
-           COALESCE(r.image, '') as image
-    FROM campaign_visits cv
-    LEFT JOIN restaurants r ON cv.restaurant_id = r.id
-    LEFT JOIN dishes d ON cv.dish_id = d.id
-    WHERE cv.restaurant_name IS NOT NULL AND cv.restaurant_name != ''
-    ORDER BY cv.visited_at ASC, cv.id ASC
-  `);
-
-  const [[rCount]] = await pool.query(`
-    SELECT COUNT(DISTINCT name) as c FROM (
-      SELECT name FROM restaurants WHERE status = 'active'
-      UNION
-      SELECT restaurant_name as name FROM campaign_visits WHERE restaurant_name IS NOT NULL AND restaurant_name != ''
-    ) as all_spots
-  `);
-
-  const [[dCount]] = await pool.query(`
-    SELECT COUNT(*) as c FROM dishes WHERE status = 'active'
-  `);
-
-  const [[cCount]] = await pool.query(`
-    SELECT COUNT(DISTINCT city) as c FROM (
-      SELECT city FROM restaurants WHERE status = 'active' AND city IS NOT NULL AND city != ''
-      UNION
-      SELECT city FROM campaign_visits WHERE city IS NOT NULL AND city != ''
-    ) as all_cities
-  `);
-
-  console.log('API Result Validation:');
-  console.log('Total Active Restaurants from DB:', restRows.length);
-  console.log('Campaign Visits from DB:', visitRows.length);
-  console.log('Food Spots Count (DB):', rCount.c);
-  console.log('Dishes Count (DB):', dCount.c);
-  console.log('Cities Count (DB):', cCount.c);
-
-  await pool.end();
+  // 3. Conditional 304 request
+  const t4 = Date.now();
+  const res3 = await fetch(url, { headers: { 'Accept': 'image/webp', 'if-none-match': etag } });
+  const t5 = Date.now();
+  console.log(`Third request with ETag (304 Not Modified): ${res3.status}, Time: ${t5 - t4}ms`);
 }
 
-test();
+run().catch(console.error);
