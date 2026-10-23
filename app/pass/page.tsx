@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { withBasePath } from '@/lib/basePath';
 
 export const metadata: Metadata = {
   title: 'Maine Bhookasur ke saath Food Tour kiya! 🍔🔥',
@@ -32,7 +33,7 @@ export default function PassPage() {
         {/* Pure Food Tour Photo (No baked-in text) */}
         <div className="w-full rounded-2xl overflow-hidden shadow-md border border-slate-200 aspect-square bg-slate-100">
           <img
-            src="/images/final-frames/food-tour-img-gastrium.jpg"
+            src={withBasePath('/images/final-frames/food-tour-img-gastrium.jpg')}
             alt="Bhookasur Food Tour"
             className="w-full h-full object-cover block"
           />

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { withBasePath } from '@/lib/basePath';
 
 interface BakasurTransitionLoaderProps {
   isOpen: boolean;
@@ -69,11 +70,11 @@ export const BakasurTransitionLoader: React.FC<BakasurTransitionLoaderProps> = (
         {/* Full Natural Standing/Walking Bhookasur GIF */}
         <div className="relative w-52 h-72 sm:w-60 sm:h-80 flex items-center justify-center pointer-events-none">
           <img
-            src="/images/bhookasur_walk.gif"
+            src={withBasePath('/images/bhookasur_walk.gif')}
             alt="Bhookasur Walking Loop"
             className="w-full h-full object-contain filter drop-shadow-[0_12px_30px_rgba(0,0,0,0.9)]"
             onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = '/images/eating/bakasur_eating_head_clean.png';
+              (e.currentTarget as HTMLImageElement).src = withBasePath('/images/eating/bakasur_eating_head_clean.png');
             }}
           />
         </div>

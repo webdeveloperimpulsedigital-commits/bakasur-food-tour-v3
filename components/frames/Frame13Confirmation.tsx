@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Camera, MapPin } from 'lucide-react';
 import { Restaurant, Dish } from '@/lib/db';
 import { BakasurShareCardModal } from '../BakasurShareCardModal';
+import { withBasePath } from '@/lib/basePath';
 
 interface Frame13ConfirmationProps {
   participationId?: string;
@@ -31,7 +32,7 @@ export const Frame13Confirmation: React.FC<Frame13ConfirmationProps> = ({
       <div className="w-full lg:w-1/2 h-[62%] xs:h-[65%] sm:h-[60%] lg:h-full bg-[#0B1B48] flex items-center justify-center relative overflow-hidden shrink-0 p-0">
         {/* Character Illustration showing Bhookasur holding smartphone with verified pass */}
         <img
-          src="/images/final-frames/Bhookasur-holding-smartphone.png"
+          src={withBasePath('/images/final-frames/Bhookasur-holding-smartphone.png')}
           alt="Bhookasur holding smartphone"
           className="w-full h-full object-cover object-top pointer-events-none select-none relative z-10"
         />

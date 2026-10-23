@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { withBasePath } from '@/lib/basePath';
 
 interface Frame6PostEatingProps {
   onWatchVideo: () => void;
@@ -81,7 +82,7 @@ export const Frame6PostEating: React.FC<Frame6PostEatingProps> = ({
         )}
         <video
           ref={videoRef}
-          src="/images/final-frames/Bhookasur-Imagining-About-Food.mp4"
+          src={withBasePath('/images/final-frames/Bhookasur-Imagining-About-Food.mp4')}
           autoPlay
           loop
           muted

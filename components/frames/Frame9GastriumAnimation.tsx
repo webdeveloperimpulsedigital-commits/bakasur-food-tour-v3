@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { withBasePath } from '@/lib/basePath';
 
 interface Frame9GastriumAnimationProps {
   onAnimationComplete: () => void;
@@ -12,13 +13,13 @@ export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = (
   const [gastriumImgError, setGastriumImgError] = useState<boolean>(false);
   const [acidityImgError, setAcidityImgError] = useState<boolean>(false);
 
-  // Preload both logo images immediately on mount so transitions are instant
+  // Preload both logo images immediately on mount with proper basePath
   useEffect(() => {
     setMounted(true);
     const img1 = new Image();
-    img1.src = '/images/final-frames/Gastrium-logo-new.png';
+    img1.src = withBasePath('/images/final-frames/Gastrium-logo-new.png');
     const img2 = new Image();
-    img2.src = '/images/final-frames/Acidity-ko-bolo-gn.png';
+    img2.src = withBasePath('/images/final-frames/Acidity-ko-bolo-gn.png');
   }, []);
 
   useEffect(() => {
@@ -51,39 +52,19 @@ export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = (
     return () => clearTimeout(timer);
   }, [showTagline, onAnimationComplete]);
 
-  // Robust path fallbacks in case user places logos in /images/final-frames/, /images/, or root
+  // Robust path fallbacks in case user places logos in /images/final-frames/ or alternate locations
   const handleGastriumError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.currentTarget;
     const currentSrc = target.getAttribute('src') || '';
     if (currentSrc.includes('Gastrium-logo-new')) {
-      if (currentSrc.includes('final-frames')) {
-        target.src = '/images/Gastrium-logo-new.png';
-      } else if (currentSrc.includes('/images/')) {
-        target.src = '/Gastrium-logo-new.png';
-      } else {
-        target.src = '/images/final-frames/Gastrium-Logo.png';
-      }
-    } else if (currentSrc.includes('Gastrium-Logo')) {
-      if (currentSrc.includes('final-frames')) {
-        target.src = '/images/Gastrium-Logo.png';
-      } else {
-        setGastriumImgError(true);
-      }
+      target.src = withBasePath('/images/final-frames/Gastrium-Logo.png');
     } else {
       setGastriumImgError(true);
     }
   };
 
-  const handleAcidityError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const target = e.currentTarget;
-    const currentSrc = target.getAttribute('src') || '';
-    if (currentSrc.includes('final-frames')) {
-      target.src = '/images/Acidity-ko-bolo-gn.png';
-    } else if (currentSrc.includes('/images/')) {
-      target.src = '/Acidity-ko-bolo-gn.png';
-    } else {
-      setAcidityImgError(true);
-    }
+  const handleAcidityError = () => {
+    setAcidityImgError(true);
   };
 
   return (
@@ -112,7 +93,7 @@ export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = (
           <div className="relative flex flex-col items-end justify-center select-none w-[78%] xs:w-[84%] sm:w-[88%] max-w-[290px] xs:max-w-[340px] sm:max-w-[400px] md:max-w-[450px] mx-auto -translate-y-1">
             {/* Gastrium Logo */}
             <img
-              src="/images/final-frames/Gastrium-logo-new.png"
+              src={withBasePath('/images/final-frames/Gastrium-logo-new.png')}
               alt="Gastrium Suspension"
               onError={handleGastriumError}
               className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-xs transition-transform duration-500"
@@ -142,7 +123,7 @@ export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = (
       >
         {!acidityImgError ? (
           <img
-            src="/images/final-frames/Acidity-ko-bolo-gn.png"
+            src={withBasePath('/images/final-frames/Acidity-ko-bolo-gn.png')}
             alt="Acidity ko bolo goodnight"
             onError={handleAcidityError}
             className="w-[82%] xs:w-[86%] sm:w-[90%] max-w-[290px] xs:max-w-[340px] sm:max-w-[400px] md:max-w-[450px] h-auto object-contain select-none pointer-events-none drop-shadow-sm transition-transform duration-500"

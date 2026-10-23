@@ -5,6 +5,7 @@ import { Volume2, VolumeX, Sparkles, Flame, Play, Pause, Clapperboard, Video, Ar
 import { BakasurEatingStage } from './BakasurEatingStage';
 import { getDishVisualAssets } from '@/lib/dishAssets';
 import { getPreloadedUrl } from '@/lib/mediaPreloader';
+import { withBasePath } from '@/lib/basePath';
 
 export interface SpiceOption {
   id: string;
@@ -569,7 +570,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
       {frameNumber === 10 ? (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-[#062c97]">
           <img
-            src="/images/final-frames/thank-you-frame.jpg"
+            src={withBasePath('/images/final-frames/thank-you-frame.jpg')}
             alt="Bhookasur Shukriya"
             className="w-full h-full object-contain object-center relative z-10"
           />
@@ -597,7 +598,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             }}
             onError={() => {
               if (videoRef.current && !videoRef.current.src.includes('1.mp4')) {
-                videoRef.current.src = '/images/final-frames/1.mp4';
+                videoRef.current.src = withBasePath('/images/final-frames/1.mp4');
                 videoRef.current.load();
                 videoRef.current.play().catch(() => {});
               }

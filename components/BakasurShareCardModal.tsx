@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Instagram, MessageCircle, Ticket, Check } from 'lucide-react';
+import { withBasePath } from '@/lib/basePath';
 
 interface BakasurShareCardModalProps {
   isOpen: boolean;
@@ -26,7 +27,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Strictly use the official existing Bhookasur Food Tour image only
-  const heroImageSrc = '/images/final-frames/food-tour-img-gastrium.jpg';
+  const heroImageSrc = withBasePath('/images/final-frames/food-tour-img-gastrium.jpg');
   const activeImageSrc = heroImageSrc;
 
   // In-memory preloaded Bhookasur photo and share card assets
@@ -83,7 +84,7 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       .catch((err) => console.warn('Preload photo error:', err));
 
     // 2. Preload high-res card with baked-in text & full link for Instagram (where apps strip caption text)
-    fetch('/images/final-frames/bhookasur-share-card-pass.jpg')
+    fetch(withBasePath('/images/final-frames/bhookasur-share-card-pass.jpg'))
       .then((res) => res.blob())
       .then((blob) => {
         if (isMounted && blob) {
@@ -99,61 +100,112 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
 
   if (!isOpen) return null;
 
-  // WhatsApp Share Handler: Shares clean photo WITH formatted caption & clickable link
-  const handleShareWhatsApp = async () => {
-    const file = preloadedCardFileRef.current || preloadedFileRef.current;
+  // Check if device is Laptop, Desktop PC, or Tablet (including when tested in DevTools mobile mode on PC)
+  const isPCorTablet = () => {
+    if (typeof window === 'undefined') return false;
 
-    // 1. Mobile Web Share API:
-    // Shares the photo file WITH the caption text containing the clickable link!
-    if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          title: 'Bhookasur Ka Food Tour',
-          text: shareText,
-          files: [file]
-        });
-        return;
-      } catch (err) {
-        if ((err as Error)?.name === 'AbortError') return;
+    // 1. Physical monitor resolution: On PC/laptops, screen resolution is >= 1024
+    // (DevTools device emulator changes window.innerWidth, but window.screen.width remains monitor resolution)
+    if (typeof window.screen !== 'undefined') {
+      if (window.screen.width >= 1024 || window.screen.height >= 1024) {
+        return true;
       }
     }
 
-    // 2. Desktop WhatsApp Web
-    const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-    setTimeout(() => {
-      window.open(waUrl, '_blank');
-    }, 200);
+    // 2. Hardware platform: On PC/Mac, platform is Win32/MacIntel (even in DevTools mobile mode)
+    const nav = typeof navigator !== 'undefined' ? (navigator as any) : null;
+    if (nav) {
+      const platform = (nav.platform || '').toLowerCase();
+      if (
+        platform.includes('win') ||
+        platform.includes('mac') ||
+        (platform.includes('linux') && !platform.includes('arm') && !platform.includes('android'))
+      ) {
+        return true;
+      }
+      const uaPlatform = (nav.userAgentData?.platform || '').toLowerCase();
+      if (uaPlatform.includes('win') || uaPlatform.includes('mac') || uaPlatform.includes('linux')) {
+        return true;
+      }
+    }
+
+    // 3. User agent string
+    const ua = (typeof navigator !== 'undefined' ? navigator.userAgent || '' : '').toLowerCase();
+    if (
+      ua.includes('windows') ||
+      ua.includes('macintosh') ||
+      ua.includes('cros') ||
+      (ua.includes('linux') && !ua.includes('android')) ||
+      ua.includes('ipad') ||
+      ua.includes('tablet') ||
+      (ua.includes('android') && !ua.includes('mobile'))
+    ) {
+      return true;
+    }
+
+    // 4. Viewport width
+    if (window.innerWidth >= 768) {
+      return true;
+    }
+
+    return false;
   };
 
-  // Instagram Share Handler: Copies text message & shares card image with message included
-  const handleShareInstagram = async () => {
-    // 1. ALWAYS copy full text message and link to clipboard first
+  // Helper to copy text to clipboard reliably across all devices
+  const copyTextToClipboard = async (text: string): Promise<boolean> => {
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(shareText);
-      } else if (typeof document !== 'undefined') {
-        const ta = document.createElement('textarea');
-        ta.value = shareText;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
+        await navigator.clipboard.writeText(text);
+        return true;
       }
-    } catch (e) {
-      console.warn('Clipboard write notice:', e);
+    } catch {
+      // Fallback below
+    }
+    try {
+      if (typeof document !== 'undefined') {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '-9999px';
+        ta.setAttribute('readonly', '');
+        document.body.appendChild(ta);
+        ta.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return success;
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  };
+
+  // WhatsApp Share Handler
+  const handleShareWhatsApp = async () => {
+    // 1. LAPTOP / TAB / PC (or testing on PC): Open WhatsApp Web in a new tab immediately
+    if (isPCorTablet()) {
+      const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      copyTextToClipboard(shareText);
+      showToast('Opening WhatsApp Web in a new tab! Message ready.');
+      return;
     }
 
-    // Use the card file which has the photo on top and bottom message with link baked in
-    const file = preloadedCardFileRef.current || preloadedFileRef.current;
+    // 2. MOBILE PHONE: Native App Share
+    let file = preloadedFileRef.current || preloadedCardFileRef.current;
+    if (!file) {
+      try {
+        const res = await fetch(activeImageSrc);
+        const blob = await res.blob();
+        file = new File([blob], 'bhookasur-food-tour.jpg', { type: 'image/jpeg' });
+      } catch {
+        // ignore
+      }
+    }
 
-    // 2. Mobile Web Share API:
-    // Shares the card file + text
     if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        showToast('📋 Message copied to clipboard! Paste in Instagram chat.');
         await navigator.share({
           title: 'Bhookasur Ka Food Tour',
           text: shareText,
@@ -165,19 +217,77 @@ export const BakasurShareCardModal: React.FC<BakasurShareCardModalProps> = ({
       }
     }
 
-    // 3. Desktop / Mobile Web / App deep link fallback:
-    showToast('📋 Message & link copied! In Instagram, paste (Ctrl+V) into your chat.');
-    setTimeout(() => {
-      const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-      if (isMobile) {
-        window.location.href = 'instagram://direct';
-        setTimeout(() => {
-          window.open('https://www.instagram.com/direct/inbox/', '_blank');
-        }, 1200);
-      } else {
-        window.open('https://www.instagram.com/direct/inbox/', '_blank');
+    // Mobile fallback if Web Share is unavailable
+    const mobileWaUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+    window.open(mobileWaUrl, '_blank');
+  };
+
+  // Instagram Share Handler
+  const handleShareInstagram = async () => {
+    // 1. LAPTOP / TAB / PC (or testing on PC): Open Instagram DM in a new tab immediately
+    if (isPCorTablet()) {
+      window.open('https://www.instagram.com/direct/inbox/', '_blank', 'noopener,noreferrer');
+      copyTextToClipboard(shareText);
+      showToast('Opening Instagram in a new tab! Message copied — paste (Ctrl+V) in chat.');
+
+      // Also copy PNG blob to clipboard if supported so user can paste both image & text
+      if (
+        preloadedPngBlobRef.current &&
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        'write' in navigator.clipboard &&
+        typeof ClipboardItem !== 'undefined'
+      ) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': preloadedPngBlobRef.current })
+          ]);
+          showToast('Instagram DM opened! Card & message copied — press Ctrl+V to paste.');
+        } catch {
+          // ignore
+        }
       }
-    }, 400);
+      return;
+    }
+
+    // 2. MOBILE PHONE:
+    // ALWAYS copy full text message and link to clipboard first
+    await copyTextToClipboard(shareText);
+
+    // In Instagram mobile app, sharing a file ignores text parameter.
+    // So we share `bhookasur-share-card-pass.jpg` which has the image + headline + link baked into the visual pass card!
+    // AND the exact text message is copied to clipboard so user can simply tap 'Paste' in their Instagram chat.
+    let file = preloadedCardFileRef.current;
+    if (!file) {
+      try {
+        const res = await fetch(withBasePath('/images/final-frames/bhookasur-share-card-pass.jpg'));
+        const blob = await res.blob();
+        file = new File([blob], 'bhookasur-food-tour-pass.jpg', { type: 'image/jpeg' });
+      } catch {
+        file = preloadedFileRef.current;
+      }
+    }
+
+    if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        showToast('📸 Pass card ready & 📋 Message copied! Tap "Paste" in Instagram chat.');
+        await navigator.share({
+          title: 'Bhookasur Ka Food Tour',
+          text: shareText,
+          files: [file]
+        });
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === 'AbortError') return;
+      }
+    }
+
+    // Mobile fallback if Web Share is unavailable
+    showToast('📋 Message copied! Opening Instagram DM...');
+    window.location.href = 'instagram://direct';
+    setTimeout(() => {
+      window.open('https://www.instagram.com/direct/inbox/', '_blank');
+    }, 1200);
   };
 
   return (

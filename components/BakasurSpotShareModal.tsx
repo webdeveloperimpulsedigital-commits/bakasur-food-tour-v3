@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Share2, Copy, Check, MessageCircle, Instagram, Facebook, Sparkles, ExternalLink } from 'lucide-react';
 import { BakasurShareCardModal } from './BakasurShareCardModal';
+import { withBasePath } from '@/lib/basePath';
 
 interface BakasurSpotShareModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export const BakasurSpotShareModal: React.FC<BakasurSpotShareModalProps> = ({
 
   React.useEffect(() => {
     let isMounted = true;
-    fetch('/images/final-frames/food-tour-img-gastrium.jpg')
+    fetch(withBasePath('/images/final-frames/food-tour-img-gastrium.jpg'))
       .then(res => res.blob())
       .then(blob => {
         if (isMounted && blob && blob.size > 1000) {
@@ -51,6 +52,21 @@ export const BakasurSpotShareModal: React.FC<BakasurSpotShareModalProps> = ({
 
   // WhatsApp share link
   const handleShareWhatsApp = async () => {
+    // If on Laptop, Desktop PC, or Tablet (including when tested in DevTools mobile mode on PC)
+    const isDesktopOrTablet = typeof window !== 'undefined' && (
+      (typeof window.screen !== 'undefined' && (window.screen.width >= 1024 || window.screen.height >= 1024)) ||
+      (typeof navigator !== 'undefined' && ((navigator as any).platform || '').toLowerCase().includes('win')) ||
+      (typeof navigator !== 'undefined' && ((navigator as any).platform || '').toLowerCase().includes('mac')) ||
+      window.innerWidth >= 768 ||
+      /windows|macintosh|cros|ipad|tablet/i.test(navigator?.userAgent || '')
+    );
+
+    if (isDesktopOrTablet) {
+      const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     const file = preloadedFileRef.current;
     if (file && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {

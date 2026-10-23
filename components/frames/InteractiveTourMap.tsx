@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { MapPin, Navigation, Compass, Layers } from 'lucide-react';
 import { getOrCreateUserId, getUserSessionsHistory, getStoredUserMobile } from '@/lib/tracker';
+import { withBasePath } from '@/lib/basePath';
 
 export interface TourMapPoint {
   id: number;
@@ -546,7 +547,7 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
       {/* Cute Bakasur Mascot Peek (Bottom-Right) */}
       <div className="absolute bottom-1 right-2 z-30 pointer-events-none opacity-90 hidden xs:block">
         <img
-          src="/images/food_tour/shukriya_map_photo.png"
+          src={withBasePath('/images/food_tour/shukriya_map_photo.png')}
           alt="Bakasur Map"
           className="w-12 h-12 sm:w-14 sm:h-14 object-contain filter drop-shadow-md"
         />
