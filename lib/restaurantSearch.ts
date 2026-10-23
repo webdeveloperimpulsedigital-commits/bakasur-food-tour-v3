@@ -95,7 +95,8 @@ const VENUE_NOISE_WORDS = new Set([
   'hotel', 'restaurant', 'restaurants', 'rest', 'cafe', 'dhaba', 'canteen', 'dining',
   'hall', 'house', 'bhojanalay', 'bhojanalaya', 'khanawal', 'kitchen', 'foods', 'food',
   'joint', 'corner', 'center', 'centre', 'pure', 'veg', 'nonveg', 'non-veg', 'family',
-  'bar', 'stall', 'adda', 'the', 'and', '&', 'by', 'of', 'shree', 'shri', 'sri', 'new'
+  'bar', 'stall', 'stalls', 'tapri', 'thela', 'cart', 'street', 'streetfood', 'adda',
+  'the', 'and', '&', 'by', 'of', 'shree', 'shri', 'sri', 'new'
 ]);
 
 function normalizeText(text: string): string {
@@ -198,8 +199,12 @@ export function calculateFuzzyRestaurantScore(
   const qDistinctive = qTokens.filter(t => !isVenueWord(t) && !localityMatchedQueryTokens.has(t));
   const nameDistinctive = nameTokens.filter(t => !isVenueWord(t));
 
-  const effectiveQDistinctive = qDistinctive.length > 0 ? qDistinctive : qTokens.filter(t => !isVenueWord(t));
+  const nonLocTokens = qTokens.filter(t => !localityMatchedQueryTokens.has(t));
+  const effectiveQDistinctive = qDistinctive.length > 0
+    ? qDistinctive
+    : (nonLocTokens.length > 0 ? nonLocTokens : qTokens);
   const effectiveNameDistinctive = nameDistinctive.length > 0 ? nameDistinctive : nameTokens;
+  const isGenericCategoryQuery = qDistinctive.length === 0;
 
   let matchedDistinctiveCount = 0;
   let totalDistinctiveScore = 0;
@@ -241,10 +246,10 @@ export function calculateFuzzyRestaurantScore(
   }
 
   const baseScore = distinctiveRatio * avgDistinctiveScore;
-  const finalScore = Math.min(100, Math.round(baseScore * 0.85 + venueBonus + locBonus));
-  const nameScore = Math.min(100, Math.round(baseScore * 0.9 + venueBonus));
+  const finalScore = Math.min(100, Math.round(baseScore + venueBonus + locBonus));
+  const nameScore = Math.min(100, Math.round(baseScore + venueBonus));
 
-  const isMatch = distinctiveRatio >= 0.5 && finalScore >= 50;
+  const isMatch = (distinctiveRatio >= 0.5 && finalScore >= (isGenericCategoryQuery ? 40 : 45)) || (baseScore >= 50);
 
   return {
     score: isMatch ? finalScore : 0,
@@ -399,20 +404,35 @@ async function searchLivePoiRestaurants(
       const osmKey = String(p.osm_key || '').toLowerCase();
       const lowerName = rawName.toLowerCase();
 
-      const isFoodTag = osmKey === 'amenity' && ['restaurant', 'cafe', 'fast_food', 'food_court', 'bar'].includes(osmVal);
-      const hasFoodName = /(hotel|restaurant|cafe|dhaba|bhojanalay|dining|hall|canteen|bhel|misal|sweets|bakery|snacks|kitchen|paratha|biryani|dosa|thali|punjabi|khanawal|corner|eatery|mastani)/i.test(lowerName);
+      const isFoodTag =
+        (osmKey === 'amenity' && ['restaurant', 'cafe', 'fast_food', 'food_court', 'bar', 'pub', 'ice_cream', 'biergarten'].includes(osmVal)) ||
+        (osmKey === 'shop' && ['bakery', 'confectionery', 'pastry', 'coffee', 'tea', 'ice_cream', 'deli', 'street_vendor', 'food'].includes(osmVal)) ||
+        (osmKey === 'tourism' && ['hotel', 'guest_house'].includes(osmVal));
 
-      if (!isFoodTag && !hasFoodName) continue;
+      const hasFoodName = /(hotel|restaurant|cafe|dhaba|bhojanalay|bhojanalaya|dining|hall|canteen|bhel|misal|sweets|bakery|snacks|kitchen|paratha|biryani|dosa|thali|punjabi|khanawal|corner|eatery|mastani|street\s*food|stall|tapri|thela|chaat|chat|pani\s*puri|vada\s*pav|vadapav|dabeli|samosa|kachori|sandwich|frankie|roll|shawarma|momo|momos|pav\s*bhaji|pavbhaji|juice|shake|falooda|kulfi|chai|tea|amruttulya|amrittulya|rasoi|bhandar|mithai|farsan|tiffin|mess|chole|kulcha|bhature|idli|vada|uttapam|kebab|kabab|tandoor|roti|naan|curry|chinese|pizza|burger|grill|ice\s*cream)/i.test(lowerName);
+
+      const queryMatchesName = lowerName.includes(normalizeText(query));
+
+      if (!isFoodTag && !hasFoodName && !queryMatchesName) continue;
 
       const [itemLon, itemLat] = f.geometry.coordinates;
       if (!Number.isFinite(itemLat) || !Number.isFinite(itemLon)) continue;
 
-      const area = String(p.suburb || p.district || p.neighbourhood || p.quarter || p.locality || p.street || '').trim();
+      // Restrict strictly to India boundaries (prevents overseas POI leakage)
+      if (itemLat < 6.0 || itemLat > 38.0 || itemLon < 68.0 || itemLon > 98.0) continue;
+      // If searching around a specific location, reject candidates beyond 40km
+      if (searchCoords && Number.isFinite(searchCoords.lat) && Number.isFinite(searchCoords.lng)) {
+        if (haversineKm(searchCoords.lat, searchCoords.lng, itemLat, itemLon) > 40) continue;
+      }
+
+      const allLocParts = [p.suburb, p.neighbourhood, p.quarter, p.locality, p.street, p.district, p.city, p.county, p.state].filter(Boolean);
+      const allLocText = allLocParts.join(' ');
+      const area = String(p.suburb || p.neighbourhood || p.quarter || p.locality || p.district || p.street || '').trim();
       const city = String(p.city || p.county || p.state || 'Pune').trim();
       const street = String(p.street || '').trim();
       const address = street ? `${street}, ${area || city}` : `${area || city}, ${city}`;
 
-      const { score, nameScore, isMatch } = calculateFuzzyRestaurantScore(query, rawName, area, city);
+      const { score, nameScore, isMatch } = calculateFuzzyRestaurantScore(query, rawName, allLocText, city);
       if (!isMatch) continue;
 
       const id = getDeterministicPlaceId(rawName, city, area);
@@ -523,11 +543,13 @@ export async function searchRestaurantsAnywhere(
 
       const jobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
         searchDbVerified(query, userCoords, loc),
-        searchLivePoiRestaurants(parsed.nameQuery || query, loc, userCoords, 8)
+        searchLivePoiRestaurants(parsed.nameQuery || query, loc, userCoords, 10),
+        searchLivePoiRestaurants(query, loc, userCoords, 10)
       ];
 
       if (!isGenericSearch(parsed.nameQuery)) {
         jobs.push(searchVerifiedScored(parsed.nameQuery, loc, { userCoords, maxDistanceKm: radius }));
+        jobs.push(searchVerifiedScored(query, loc, { userCoords, maxDistanceKm: radius }));
       } else {
         const nearby = await fetchVerifiedNearbyRestaurants(loc.lat, loc.lng, 10);
         nearby.forEach(r => {
@@ -541,6 +563,12 @@ export async function searchRestaurantsAnywhere(
 
       const results = await Promise.all(jobs);
       results.forEach(list => mergeScored(merged, list));
+
+      // Fallback: If still no results around loc, also search nationwide POIs with full query
+      if (merged.size === 0) {
+        const nationwide = await searchLivePoiRestaurants(query, null, userCoords, 10);
+        mergeScored(merged, nationwide);
+      }
 
       const filtered = filterResults(Array.from(merged.values()), query);
       const data = rank(filtered, loc);

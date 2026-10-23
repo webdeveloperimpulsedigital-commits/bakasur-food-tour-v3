@@ -258,10 +258,14 @@ export function scoreNameMatch(query: string, name: string): number {
   const n = tokenize(name).join(' ');
   if (!q || !n) return 0;
   if (n === q) return 100;
-  if (n.startsWith(q)) return 80;
+  if (n.startsWith(q) || q.startsWith(n)) return 80;
   const qTokens = meaningfulTokens(query);
   const nTokens = tokenize(name);
   if (qTokens.length > 0 && qTokens.every(t => tokenMatches(t, nTokens))) return 60;
+  const matchCount = qTokens.filter(t => tokenMatches(t, nTokens)).length;
+  if (matchCount >= 1 && (matchCount / qTokens.length >= 0.5 || matchCount >= nTokens.length)) {
+    return 55;
+  }
   return 0;
 }
 
@@ -584,7 +588,8 @@ function parseSearchCandidates(responses: any[], q: string): SwiggyListingCandid
   const considerRestaurant = (info: any) => {
     if (!info?.id || !info?.name || info?.availability?.visibility === false) return;
     const cuisines: string[] = Array.isArray(info.cuisines) ? info.cuisines : [];
-    const nameScore = scoreNameMatch(q, String(info.name));
+    const fullNameAndLoc = `${info.name} ${info.locality || ''} ${info.areaName || ''} ${info.city || ''}`;
+    const nameScore = Math.max(scoreNameMatch(q, String(info.name)), scoreNameMatch(q, fullNameAndLoc));
     const score = Math.max(nameScore, scoreCuisineMatch(q, cuisines));
     if (score > 0) upsert(toCandidate(info, score, nameScore));
   };
