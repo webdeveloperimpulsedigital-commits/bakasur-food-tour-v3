@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 
 interface Frame10SubmittedProps {
   restaurant?: Partial<Restaurant> | { name: string; city?: string };

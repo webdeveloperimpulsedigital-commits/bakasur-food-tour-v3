@@ -1,6 +1,7 @@
-import { INITIAL_RESTAURANTS, type Restaurant } from './db';
+import type { Restaurant } from './db';
 import { getDishVisualAssets, isPureVegRestaurantName } from './dishAssets';
-import { parseRestaurantQuery } from './locationParser';
+import { parseRestaurantQuery, getDeterministicPlaceId } from './locationParser';
+export { getDeterministicPlaceId };
 import { isGooglePlacesConfigured, searchGoogleNearbyRestaurants } from './googlePlaces';
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -96,16 +97,6 @@ const CACHE_TTL_MS = 60 * 1000; // 1 minute
 
 export function clearPlacesCache(): void {
   placesCache.clear();
-}
-
-export function getDeterministicPlaceId(name: string, city: string = '', area: string = ''): number {
-  let hash = 0;
-  const str = `${(name || '').toLowerCase().trim()}_${(city || 'pune').toLowerCase().trim()}_${(area || '').toLowerCase().trim()}`;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return 850000 + Math.abs(hash % 40000);
 }
 
 

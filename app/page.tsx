@@ -19,7 +19,7 @@ import { Frame11LiveMap } from '@/components/frames/Frame11LiveMap';
 import { Frame12Registration } from '@/components/frames/Frame12Registration';
 import { Frame13Confirmation } from '@/components/frames/Frame13Confirmation';
 import { VideoTransitionOverlay } from '@/components/VideoTransitionOverlay';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
 import { getOrCreateSessionId, resetSessionId, trackUserStep, getOrCreateUserId, setStoredUserMobile } from '@/lib/tracker';
 import { preloadUpcomingFrameMedia } from '@/lib/mediaPreloader';

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, MapPin, ArrowRight, Check } from 'lucide-react';
-import { Restaurant } from '@/lib/db';
+import type { Restaurant } from '@/lib/db';
 
 interface StepRestaurantProps {
   userLocation: { city: string; lat: number; lng: number };

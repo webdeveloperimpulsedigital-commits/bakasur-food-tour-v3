@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { SpiceOption } from './StepDish';
 
 interface StepReliefProps {

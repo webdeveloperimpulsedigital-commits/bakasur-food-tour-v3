@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, ArrowRight, MapPin, Crosshair, X, Check, Building2, Sparkles, Navigation } from 'lucide-react';
-import { Restaurant } from '@/lib/db';
+import type { Restaurant } from '@/lib/db';
 import { PUNE_AREAS, AreaInfo } from '@/lib/areas';
 
 export interface CityItem {

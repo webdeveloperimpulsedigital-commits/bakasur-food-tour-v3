@@ -331,3 +331,14 @@ export function parseRestaurantQuery(
     displayName: `${finalName}, ${resolvedArea}`
   };
 }
+
+export function getDeterministicPlaceId(name: string, city: string = '', area: string = ''): number {
+  let hash = 0;
+  const str = `${(name || '').toLowerCase().trim()}_${(city || 'pune').toLowerCase().trim()}_${(area || '').toLowerCase().trim()}`;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return 850000 + Math.abs(hash % 40000);
+}
+

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Share2, RotateCcw, Check, Sparkles, Trophy, ShieldCheck, ArrowRight, User, Phone, Mail, CheckCircle2, Ticket } from 'lucide-react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { SpiceOption } from './StepDish';
 
 interface StepContestProps {

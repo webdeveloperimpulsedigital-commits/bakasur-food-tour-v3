@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Check, Search, Utensils, X, Sparkles, BookOpen } from 'lucide-react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName, isDishVeg, isPureVegRestaurantName, isDishRelevantToSearch } from '@/lib/dishAssets';
 import { selectTopRestaurantDishes } from '@/lib/dishRanking';
 import { withBasePath } from '@/lib/basePath';

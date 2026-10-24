@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ArrowLeft, Volume2, VolumeX, ChevronUp, ChevronLeft, Sparkles, CheckCircle2 } from 'lucide-react';
-import { Restaurant } from '@/lib/db';
+import type { Restaurant } from '@/lib/db';
 import { getDishVisualAssets, getDishExactFlyingImage } from '@/lib/dishAssets';
 import { getPreloadedUrl } from '@/lib/mediaPreloader';
 

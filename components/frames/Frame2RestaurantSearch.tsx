@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
 import { isPureVegRestaurantName } from '@/lib/dishAssets';
-import { getDeterministicPlaceId } from '@/lib/livePlaces';
+import { getDeterministicPlaceId } from '@/lib/locationParser';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
