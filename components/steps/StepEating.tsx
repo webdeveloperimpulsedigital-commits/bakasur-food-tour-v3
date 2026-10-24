@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Flame, ShieldAlert, Utensils, Zap } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { SpiceOption } from './StepDish';
 
 interface StepEatingProps {

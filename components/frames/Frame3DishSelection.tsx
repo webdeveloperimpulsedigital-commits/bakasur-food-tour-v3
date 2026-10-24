@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Check, Search, Utensils, X, Sparkles, BookOpen } from 'lucide-react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName, isDishVeg, isPureVegRestaurantName, isDishRelevantToSearch } from '@/lib/dishAssets';
 import { selectTopRestaurantDishes } from '@/lib/dishRanking';
 import { withBasePath } from '@/lib/basePath';
@@ -13,7 +13,6 @@ interface Frame3DishSelectionProps {
   isSecondRound?: boolean;
   onSelectDish: (dish: Dish | { name: string; id?: number; price?: number; image?: string }) => void;
   onConfirmDish: (dishName?: string, dishImage?: string) => void;
-  onManualEntry?: () => void;
   onBack?: () => void;
 }
 
@@ -65,7 +64,6 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   selectedDish,
   onSelectDish,
   onConfirmDish,
-  onManualEntry,
   onBack
 }) => {
   const currentKey = `${restaurant.id}_${(restaurant.name || '').trim().toLowerCase()}`;
@@ -442,21 +440,12 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
               The live menu for <span className="font-semibold text-slate-700">{restaurant.name}</span> could not be retrieved from delivery partners.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full max-w-xs mt-1">
-            {onManualEntry && (
-              <button
-                type="button"
-                onClick={onManualEntry}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#D4380D] hover:bg-[#b8300b] text-white text-xs font-bold transition-all shadow-sm hover:shadow cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>✍️</span> Enter Dish Manually
-              </button>
-            )}
+          <div className="flex flex-col items-center justify-center gap-2.5 w-full max-w-xs mt-1">
             {onBack && (
               <button
                 type="button"
                 onClick={onBack}
-                className="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#D4380D] hover:bg-[#b8300b] text-white text-xs font-bold transition-all shadow-sm hover:shadow cursor-pointer flex items-center justify-center gap-1.5"
               >
                 ← Choose Different Restaurant
               </button>

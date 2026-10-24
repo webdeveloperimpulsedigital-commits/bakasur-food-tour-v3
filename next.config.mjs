@@ -7,7 +7,6 @@ const basePath = (
 
 const nextConfig = {
   basePath: basePath || undefined,
-  output: 'standalone',
   reactStrictMode: false,
   eslint: {
     ignoreDuringBuilds: true,
@@ -62,6 +61,21 @@ const nextConfig = {
         ],
       },
     ];
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        net: false,
+        tls: false,
+        fs: false,
+        dns: false,
+        child_process: false,
+        buffer: false,
+        diagnostics_channel: false,
+      };
+    }
+    return config;
   },
 };
 

@@ -29,7 +29,7 @@ import {
   Eye,
   LogOut
 } from 'lucide-react';
-import { Restaurant, Dish, BakasurVideo, Participant } from '@/lib/db';
+import type { Restaurant, Dish, BakasurVideo, Participant } from '@/lib/db';
 
 type AdminTab = 'analytics' | 'journeys' | 'videos' | 'restaurants' | 'dishes' | 'participants' | 'database';
 

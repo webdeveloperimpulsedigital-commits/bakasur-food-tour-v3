@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Bhookasur Ka Food Tour – Interactive Food Campaign & Contest",
   description: "Travel across iconic Indian restaurants with Bhookasur! Feed his legendary appetite, fill the food meter, experience the Gastrium moment, and participate in the grand campaign.",
   keywords: ["Bhookasur", "Food Tour", "Gastrium", "Indian Food", "Pune", "Mumbai", "Delhi", "Food Campaign"],
+  icons: {
+    icon: '/favicon.ico',
+  },
   openGraph: {
     title: "Bhookasur Ka Food Tour 🍔🔥",
     description: "Maine Bhookasur ke saath Food Tour kiya! Aap bhi Bhookasur ke saath Food Tour kijiye aur apna food spot share kijiye!",

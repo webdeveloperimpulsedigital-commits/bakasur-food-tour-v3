@@ -6,7 +6,6 @@ import { BakasurEatingStage } from '@/components/BakasurEatingStage';
 import { Frame1Welcome } from '@/components/frames/Frame1Welcome';
 import { Frame2RestaurantSearch } from '@/components/frames/Frame2RestaurantSearch';
 import { Frame3DishSelection } from '@/components/frames/Frame3DishSelection';
-import { Frame4ManualDish } from '@/components/frames/Frame4ManualDish';
 import { Frame5EatingBegins } from '@/components/frames/Frame5EatingBegins';
 import { Frame6FeedingLoop } from '@/components/frames/Frame6FeedingLoop';
 import { Frame6PostEating } from '@/components/frames/Frame6PostEating';
@@ -20,7 +19,7 @@ import { Frame11LiveMap } from '@/components/frames/Frame11LiveMap';
 import { Frame12Registration } from '@/components/frames/Frame12Registration';
 import { Frame13Confirmation } from '@/components/frames/Frame13Confirmation';
 import { VideoTransitionOverlay } from '@/components/VideoTransitionOverlay';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { getDishVisualAssets, formatCleanDishName } from '@/lib/dishAssets';
 import { getOrCreateSessionId, resetSessionId, trackUserStep, getOrCreateUserId, setStoredUserMobile } from '@/lib/tracker';
 import { preloadUpcomingFrameMedia } from '@/lib/mediaPreloader';
@@ -252,21 +251,7 @@ export default function CampaignPage() {
     });
   };
 
-  // Frame 3 -> Frame 4 (Manual Dish Entry clicked)
-  const handleGoToManualDish = () => {
-    playSound('click');
-    triggerFrameTransition(4);
-    const activeSession = sessionId || getOrCreateSessionId();
-    trackUserStep({
-      sessionId: activeSession,
-      stepName: 'frame_4_manual_dish',
-      stepTitle: `Frame 4: Manual Dish Entry Opened for ${selectedRestaurant?.name || 'Restaurant'}`,
-      stepNumber: 4,
-      restaurantId: selectedRestaurant?.id
-    });
-  };
-
-  // Frame 3 / 4 -> Frame 5 (Dish Chosen -> Eating Begins)
+  // Frame 3 -> Frame 5 (Dish Chosen -> Eating Begins)
   const handleDishConfirmed = async (customDishName?: string, customDishImage?: string) => {
     playSound('bite');
     const rawDishName = customDishName || selectedDish?.name || 'Signature Food';
@@ -674,7 +659,6 @@ export default function CampaignPage() {
     playSound('click');
     if (currentFrame === 2) triggerFrameTransition(1);
     else if (currentFrame === 3) triggerFrameTransition(2);
-    else if (currentFrame === 4) triggerFrameTransition(3);
     else if (currentFrame === 5) triggerFrameTransition(3);
     else if (currentFrame === 6) {
       if (tourSpotRound > 0) setTourSpotRound(0);
@@ -797,7 +781,7 @@ export default function CampaignPage() {
     if (frame === 8) {
       return 'h-[66%] xs:h-[68%] sm:h-[62%] lg:h-full';
     }
-    if (frame === 3 || frame === 4) {
+    if (frame === 3) {
       return 'h-[65%] xs:h-[67%] sm:h-[60%] lg:h-full';
     }
     if (frame === 10) {
@@ -992,7 +976,7 @@ export default function CampaignPage() {
                     ? isDesktop
                       ? "/images/final-frames/Bakasur-Pointing-Rightside.mp4"
                       : "/images/final-frames/2.mp4"
-                    : currentFrame === 3 || currentFrame === 4
+                    : currentFrame === 3
                       ? "/images/final-frames/3.mp4"
                       : currentFrame === 6
                         ? "/images/all-frames/Showing Love.mp4"
@@ -1009,7 +993,7 @@ export default function CampaignPage() {
               stageName={
                 currentFrame === 1 ? 'welcome' :
                   currentFrame === 2 ? 'restaurant' :
-                    currentFrame === 3 || currentFrame === 4 ? 'dish' :
+                    currentFrame === 3 ? 'dish' :
                       currentFrame === 6 ? 'trailer' :
                         (currentFrame as number) === 8 ? 'heartburn' :
                           currentFrame === 9 ? 'relief' :
@@ -1072,17 +1056,7 @@ export default function CampaignPage() {
                   isSecondRound={feastingStage === 2}
                   onSelectDish={(d) => setSelectedDish(d)}
                   onConfirmDish={(name, img) => handleDishConfirmed(name, img)}
-                  onManualEntry={handleGoToManualDish}
                   onBack={() => setCurrentFrame(2)}
-                />
-              )}
-
-              {/* Frame 4: Manual Dish Entry */}
-              {currentFrame === 4 && selectedRestaurant && (
-                <Frame4ManualDish
-                  restaurant={selectedRestaurant}
-                  onCustomDishSubmit={(dishName, dishImage) => handleDishConfirmed(dishName, dishImage)}
-                  onBackToOptions={() => setCurrentFrame(3)}
                 />
               )}
 
@@ -1175,7 +1149,7 @@ export default function CampaignPage() {
             <video src="/images/final-frames/front-eat-video.mp4" preload="auto" muted />
           </>
         )}
-        {(currentFrame === 3 || currentFrame === 4) && (
+        {currentFrame === 3 && (
           <>
             <video src="/images/final-frames/front-eat-video.mp4" preload="auto" muted />
             <video src="/images/final-frames/side-view-final.mp4?v=2" preload="auto" muted />

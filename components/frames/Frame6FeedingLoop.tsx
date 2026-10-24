@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { getPreloadedUrl } from '@/lib/mediaPreloader';
 
 interface Frame6FeedingLoopProps {

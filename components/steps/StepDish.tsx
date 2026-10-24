@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search, ArrowRight, ArrowLeft, PlusCircle, Check, Flame, Sparkles } from 'lucide-react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { getDishImage } from '../BakasurVideoPlayer';
 
 export interface SpiceOption {

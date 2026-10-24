@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Flame, ArrowRight } from 'lucide-react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { FrameFooter } from './FrameFooter';
 import { getFlyingDishAsset } from '../BakasurEatingStage';
 

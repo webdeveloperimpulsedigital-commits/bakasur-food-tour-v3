@@ -409,8 +409,32 @@ export async function fetchLiveZomatoMenu(
   }
 }
 
+const COMMON_CITY_AREAS: Record<string, string[]> = {
+  pune: [
+    'dange-chowk', 'sinhgad-road', 'ravet', 'hinjewadi', 'wakad', 'kothrud', 'fc-road',
+    'viman-nagar', 'kharadi', 'ambegaon', 'narhe', 'camp', 'baner', 'bhosari',
+    'chinchwad', 'nigdi', 'hadapsar', 'kondhwa', 'sadashiv-peth', 'swargate', 'aundh', 'deccan-gymkhana'
+  ],
+  mumbai: [
+    'bandra-west', 'andheri-west', 'andheri-east', 'juhu', 'colaba', 'lower-parel',
+    'dadar', 'borivali-west', 'malad-west', 'thane-west', 'powai', 'chembur', 'vashi', 'kandivali-west', 'fort'
+  ],
+  bangalore: [
+    'koramangala', 'indiranagar', 'hsr', 'whitefield', 'jayanagar', 'jp-nagar',
+    'marathahalli', 'electronic-city', 'malleshwaram', 'mg-road', 'btm', 'bellandur'
+  ],
+  bengaluru: [
+    'koramangala', 'indiranagar', 'hsr', 'whitefield', 'jayanagar', 'jp-nagar',
+    'marathahalli', 'electronic-city', 'malleshwaram', 'mg-road', 'btm', 'bellandur'
+  ],
+  delhi: [
+    'connaught-place', 'hauz-khas', 'karol-bagh', 'chandni-chowk', 'south-extension',
+    'saket', 'rajouri-garden', 'lajpat-nagar', 'nehru-place', 'dwarka', 'rohini'
+  ]
+};
+
 /**
- * Fetch verified dishes for a restaurant from Zomato (Live web extraction + verified heritage fallback)
+ * Fetch verified dishes for a restaurant from Zomato (Live web extraction + outlet permutations + verified heritage fallback)
  */
 export async function fetchZomatoDishesForRestaurant(
   restaurantName: string,
@@ -423,6 +447,7 @@ export async function fetchZomatoDishesForRestaurant(
 ): Promise<Dish[]> {
   const city = options?.city || 'Pune';
   const area = options?.area || '';
+  const normCity = city.toLowerCase().trim();
 
   // 1. Check if it's an iconic Zomato heritage restaurant (e.g. Badshahi Boarding House)
   const heritageKey = getZomatoHeritageKey(restaurantName);
@@ -452,12 +477,37 @@ export async function fetchZomatoDishesForRestaurant(
     }
   }
 
-  // 3. Try constructing canonical Zomato slug: /{city}/{name}-{area}/order
-  const slug = toZomatoSlug(restaurantName, area, city);
-  const guessedUrl = `https://www.zomato.com/${city.toLowerCase()}/${slug}/order`;
-  const dishes = await fetchLiveZomatoMenu(guessedUrl, city);
-  if (dishes.length > 0) {
-    return dishes;
+  // 3. Build candidate slug permutations:
+  // e.g. "Rayba Biryani" in Pune -> rayba-biryani, rayba-biryani-dange-chowk, rayba-dum-biryani-sinhgad-road, etc.
+  const baseSlug = toZomatoSlug(restaurantName, '', normCity);
+  const candidateSlugs = new Set<string>();
+
+  if (area) {
+    candidateSlugs.add(toZomatoSlug(restaurantName, area, normCity));
+  }
+  candidateSlugs.add(baseSlug);
+
+  if (baseSlug.includes('biryani') && !baseSlug.includes('dum-biryani')) {
+    candidateSlugs.add(baseSlug.replace('biryani', 'dum-biryani'));
+  }
+  if (!baseSlug.includes('house') && !baseSlug.includes('hotel')) {
+    candidateSlugs.add(`${baseSlug}-house`);
+  }
+
+  const cityAreas = COMMON_CITY_AREAS[normCity] || [];
+  for (const a of cityAreas.slice(0, 10)) {
+    candidateSlugs.add(`${baseSlug}-${a}`);
+    if (baseSlug.includes('biryani') && !baseSlug.includes('dum-biryani')) {
+      candidateSlugs.add(`${baseSlug.replace('biryani', 'dum-biryani')}-${a}`);
+    }
+  }
+
+  for (const slug of candidateSlugs) {
+    const guessedUrl = `https://www.zomato.com/${normCity}/${slug}/order`;
+    const dishes = await fetchLiveZomatoMenu(guessedUrl, city);
+    if (dishes.length > 0) {
+      return dishes;
+    }
   }
 
   return [];

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Camera, MapPin } from 'lucide-react';
-import { Restaurant, Dish } from '@/lib/db';
+import type { Restaurant, Dish } from '@/lib/db';
 import { BakasurShareCardModal } from '../BakasurShareCardModal';
 import { withBasePath } from '@/lib/basePath';
 

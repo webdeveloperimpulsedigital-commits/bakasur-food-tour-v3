@@ -903,7 +903,7 @@ export async function searchRestaurantsAnywhere(
   const query = (rawQuery || '').trim();
   if (query.length < 2) return { data: [], scope: 'none', searchedLocation: null };
 
-  const cacheKey = `${query.toLowerCase()}_${userCoords?.lat.toFixed(2) || 'n'}_${userCoords?.lng.toFixed(2) || 'n'}_${options.selectedCity || ''}`;
+  const cacheKey = `${query.toLowerCase()}_${userCoords?.lat != null ? userCoords.lat.toFixed(2) : 'n'}_${userCoords?.lng != null ? userCoords.lng.toFixed(2) : 'n'}_${options.selectedCity || ''}`;
   const cachedHit = searchCache.get(cacheKey);
   if (cachedHit && Date.now() - cachedHit.timestamp < SEARCH_CACHE_TTL_MS) {
     return cachedHit.result;
