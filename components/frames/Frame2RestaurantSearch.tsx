@@ -4,10 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
 import { isPureVegRestaurantName } from '@/lib/dishAssets';
-<<<<<<< HEAD
-=======
 import { parseRestaurantQuery, getDeterministicPlaceId } from '@/lib/locationParser';
->>>>>>> cee22f710f7c95f4dc6db8e1cf3ff482005084b3
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -325,17 +322,6 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     return undefined;
   };
 
-  const getDeterministicPlaceId = (name: string, city: string = '', area: string = ''): number => {
-    const str = `${name.toLowerCase().trim()}_${city.toLowerCase().trim()}_${area.toLowerCase().trim()}`;
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash;
-    }
-    return 900000 + (Math.abs(hash) % 90000);
-  };
-
   const createCustomRestaurant = (name: string): Restaurant => {
     const locArea = locationLabel || selectedCity || 'Local';
     const cleanTitle = name
@@ -504,13 +490,11 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
           <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#0047BA] shrink-0 stroke-[2.5]" />
         </div>
 
-        <div className="text-[10px] sm:text-xs text-[#64748B] font-medium mt-1 ml-1 text-left flex items-center justify-between">
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Live Place & Dining Search
-          </span>
-          {searchQuery && <span className="text-[#0047BA] font-semibold">Press Enter to select</span>}
-        </div>
+        {searchQuery ? (
+          <div className="text-[10px] sm:text-xs text-[#0047BA] font-semibold mt-1 ml-1 text-right">
+            Press Enter to select
+          </div>
+        ) : null}
 
         {/* Live Search Autocomplete Dropdown */}
         {showDropdown && (
