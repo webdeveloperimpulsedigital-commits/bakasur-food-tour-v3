@@ -3,7 +3,7 @@ import type { Restaurant, Dish } from '@/lib/db';
 import { db } from '@/lib/db';
 import { searchDishesSwiggyZomato } from '@/lib/foodSearchEngine';
 import { formatCleanDishName, isDishVeg, isPureVegRestaurantName } from '@/lib/dishAssets';
-import { verifySwiggyRestaurant, toVerifiedRestaurant } from '@/lib/verifiedRestaurants';
+import { verifySwiggyRestaurant, toVerifiedRestaurant, searchSwiggyDirectForMenu } from '@/lib/verifiedRestaurants';
 import { fetchSwiggyDishesViaApify } from '@/lib/apifySwiggy';
 import { inferDishCategory } from '@/lib/liveMenu';
 import { fetchZomatoDishesForRestaurant } from '@/lib/zomatoEngine';
@@ -113,6 +113,23 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         }
       } catch {
         // Swiggy numeric ID lookup failed
+      }
+    }
+
+    // Direct multi-zone Swiggy search by restaurant name
+    if (baseDishes.length === 0 && restName) {
+      try {
+        const swiggyDishes = await searchSwiggyDirectForMenu(restName, restCity, {
+          lat: !isNaN(lat) ? lat : undefined,
+          lng: !isNaN(lng) ? lng : undefined,
+          area: restArea
+        });
+        if (swiggyDishes && swiggyDishes.length > 0) {
+          baseDishes = swiggyDishes;
+          source = 'swiggy';
+        }
+      } catch (err) {
+        console.warn('Direct Swiggy multi-zone search notice for', restName, err);
       }
     }
 
