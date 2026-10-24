@@ -32,111 +32,166 @@ export interface FoodCategory {
 export const FOOD_CATEGORIES: FoodCategory[] = [
   {
     id: 1,
-    slug: 'biryani-rice',
-    name: 'Biryani & Rice',
-    hindiName: 'बिरयानी और चावल',
-    icon: '🍚',
-    keywords: ['biryani', 'biriyani', 'briyani', 'pulao', 'pulav', 'jeera rice', 'geera rice', 'jeera', 'geera', 'fried rice', 'schezwan rice', 'tahari', 'khichdi', 'curd rice'],
-    signatureImage: '/api/ai/dish-image?dish=Biryani'
+    slug: 'maharashtrian-thali',
+    name: 'Maharashtrian Thali',
+    hindiName: 'महाराष्ट्रीयन थाली',
+    icon: '🍽️',
+    keywords: ['thali', 'maharashtrian thali', 'gavran thali', 'bharli vangi thali', 'shev bhaji thali', 'matki usal thali', 'poli bhaji', 'amti bhat', 'varan bhat tup'],
+    signatureImage: '/api/ai/dish-image?dish=Special%20Signature%20Thali%20Platter'
   },
   {
     id: 2,
+    slug: 'bhaji-and-usal',
+    name: 'Bhaji and Usal',
+    hindiName: 'भाजी और उसळ',
+    icon: '🍲',
+    keywords: ['bhaji', 'usal', 'aloo chi bhaji', 'batata bhaji', 'batata rassa', 'bharli vangi', 'shev bhaji', 'pithla', 'zunka', 'patodi rassa', 'matki usal', 'moong usal', 'chawli usal', 'valachi usal'],
+    signatureImage: '/api/ai/dish-image?dish=Shev%20Bhaji'
+  },
+  {
+    id: 3,
+    slug: 'rice-and-bhat',
+    name: 'Rice and Bhat',
+    hindiName: 'भात और खिचड़ी',
+    icon: '🍚',
+    keywords: ['masale bhat', 'varan bhat', 'amti bhat', 'tup bhat', 'vangi masale bhat', 'tondli bhat', 'khichdi', 'dal khichdi', 'indrayani rice', 'biryani', 'pulao'],
+    signatureImage: '/api/ai/dish-image?dish=Masale%20Bhat'
+  },
+  {
+    id: 4,
+    slug: 'dal-varan-and-amti',
+    name: 'Dal, Varan and Amti',
+    hindiName: 'डाळ, वरण और आमटी',
+    icon: '🥣',
+    keywords: ['varan', 'amti', 'katachi amti', 'goda amti', 'takachi kadhi', 'danyachi amti', 'solkadhi', 'sadha varan', 'ambat varan', 'dal'],
+    signatureImage: '/api/ai/dish-image?dish=Katachi%20Amti'
+  },
+  {
+    id: 5,
+    slug: 'bhakri-poli-and-roti',
+    name: 'Bhakri, Poli and Roti',
+    hindiName: 'भाकरी और पोळी',
+    icon: '🫓',
+    keywords: ['bhakri', 'jwarichi bhakri', 'bajrichi bhakri', 'nachni bhakri', 'tandulachi bhakri', 'poli', 'chapati', 'ghavan', 'thalipeeth', 'dhirde', 'puran poli', 'roti'],
+    signatureImage: '/api/ai/dish-image?dish=Pithla%20Bhakri'
+  },
+  {
+    id: 6,
+    slug: 'breakfast',
+    name: 'Breakfast',
+    hindiName: 'नाश्ता',
+    icon: '🍳',
+    keywords: ['poha', 'kanda poha', 'batata poha', 'dadpe pohe', 'tarri poha', 'upma', 'sheera', 'tomato omelette', 'dosa', 'idli'],
+    signatureImage: '/api/ai/dish-image?dish=Kanda%20Poha'
+  },
+  {
+    id: 7,
+    slug: 'snacks-and-farsan',
+    name: 'Snacks and Farsan',
+    hindiName: 'स्नैक्स और फरसाण',
+    icon: '🥟',
+    keywords: ['kothimbir vadi', 'alu vadi', 'suralichi vadi', 'kanda bhaji', 'batata vada', 'sabudana vada', 'chakli', 'bhakarwadi', 'samosa'],
+    signatureImage: '/api/ai/dish-image?dish=Kothimbir%20Vadi'
+  },
+  {
+    id: 8,
+    slug: 'street-food-and-chaat',
+    name: 'Street Food and Chaat',
+    hindiName: 'स्ट्रीट फूड और चाट',
+    icon: '🥪',
+    keywords: ['misal pav', 'kolhapuri misal', 'puneri misal', 'vada pav', 'pav bhaji', 'cheese pav bhaji', 'masala pav', 'ragda pattice', 'pani puri', 'bhel'],
+    signatureImage: '/api/ai/dish-image?dish=Misal%20Pav'
+  },
+  {
+    id: 9,
+    slug: 'chicken-mutton-and-seafood',
+    name: 'Chicken, Mutton and Seafood',
+    hindiName: 'नॉन-वेज आणि सीफूड',
+    icon: '🍗',
+    keywords: ['chicken', 'mutton', 'kombdi vade', 'gavran chicken rassa', 'tambda rassa', 'pandhra rassa', 'sukha mutton', 'mutton saoji', 'malvani fish curry', 'surmai fry', 'bangda fry', 'bombil fry'],
+    signatureImage: '/api/ai/dish-image?dish=Sukha%20Mutton%20with%20Bhakri'
+  },
+  {
+    id: 10,
+    slug: 'chutney-and-sides',
+    name: 'Chutney and Sides',
+    hindiName: 'चटणी आणि तोंडी लावणे',
+    icon: '🥗',
+    keywords: ['thecha', 'mirchi thecha', 'lasun chutney', 'shengdana chutney', 'koshimbir', 'metkut', 'loncha', 'papad', 'kurdai', 'taak', 'mattha', 'chaas'],
+    signatureImage: '/api/ai/dish-image?dish=Masala%20Taak'
+  },
+  {
+    id: 11,
+    slug: 'sweets-and-desserts',
+    name: 'Sweets and Desserts',
+    hindiName: 'मिठाई और मिष्ठान्न',
+    icon: '🍨',
+    keywords: ['puran poli', 'modak', 'ukadiche modak', 'shrikhand', 'amrakhand', 'basundi', 'aamras', 'kharvas', 'kheer', 'ladoo', 'mastani', 'ice cream'],
+    signatureImage: '/api/ai/dish-image?dish=Puran%20Poli'
+  },
+  {
+    id: 12,
+    slug: 'upvas-special',
+    name: 'Upvas Special',
+    hindiName: 'उपवास स्पेशल',
+    icon: '🥥',
+    keywords: ['sabudana khichdi', 'sabudana vada', 'upvas thalipeeth', 'bhagar', 'varai bhat', 'danyachi amti', 'ratalyacha kees', 'rajgira', 'farali pattice'],
+    signatureImage: '/api/ai/dish-image?dish=Sabudana%20Khichdi'
+  },
+  {
+    id: 13,
+    slug: 'regional-specialties',
+    name: 'Regional Specialties',
+    hindiName: 'प्रादेशिक वैशिष्ट्ये',
+    icon: '👑',
+    keywords: ['puneri misal', 'kolhapuri misal', 'tambda rassa', 'pandhra rassa', 'saoji chicken', 'saoji mutton', 'tarri poha', 'kombdi vade', 'varhadi rassa', 'khandeshi shev bhaji', 'naan qalia'],
+    signatureImage: '/api/ai/dish-image?dish=Kolhapuri%20Misal'
+  },
+  // National & Pan-Indian Categories
+  {
+    id: 14,
     slug: 'north-indian-curries',
     name: 'North Indian & Mughlai',
     hindiName: 'उत्तर भारतीय और मुगलई',
     icon: '🥘',
-    keywords: ['butter chicken', 'paneer butter masala', 'paneer', 'dal makhani', 'korma', 'rogan josh', 'kadai', 'handi', 'tikka masala', 'naan', 'roti', 'paratha', 'parantha', 'aloo paratha', 'lachha paratha'],
+    keywords: ['butter chicken', 'paneer butter masala', 'paneer', 'dal makhani', 'korma', 'rogan josh', 'naan', 'paratha'],
     signatureImage: '/api/ai/dish-image?dish=Butter%20Chicken'
   },
   {
-    id: 3,
-    slug: 'maharashtrian-local',
-    name: 'Maharashtrian Special',
-    hindiName: 'महाराष्ट्रीयन स्पेशल',
-    icon: '🍲',
-    keywords: ['misal', 'misal pav', 'katakirr', 'tarri', 'rassa', 'tambda pandhra rassa', 'pithla bhakri', 'bhakri', 'puran poli', 'thalipeeth', 'modak', 'kothimbir vadi', 'shaniwar peth', 'sadashiv peth', 'narayan peth', 'bipin'],
-    signatureImage: '/api/ai/dish-image?dish=Misal%20Pav'
-  },
-  {
-    id: 4,
-    slug: 'street-food-chaat',
-    name: 'Street Food & Chaat',
-    hindiName: 'स्ट्रीट फूड और चाट',
-    icon: '🥪',
-    keywords: ['vada pav', 'vadapav', 'wada pav', 'batata vada', 'wadewale', 'wade wale', 'joshi wadewale', 'rohit wadewale', 'pav bhaji', 'pavbhaji', 'samosa', 'pani puri', 'golgappe', 'puchka', 'spdp', 'bhel', 'sev puri', 'dahi samosa'],
-    signatureImage: '/api/ai/dish-image?dish=Vada%20Pav'
-  },
-  {
-    id: 5,
+    id: 15,
     slug: 'south-indian-tiffin',
     name: 'South Indian & Tiffin',
     hindiName: 'साउथ इंडियन और नाश्ता',
     icon: '🥞',
-    keywords: ['dosa', 'masala dosa', 'benne dosa', 'idli', 'thatte idli', 'medu vada', 'uttapam', 'appam', 'podi', 'sambar', 'filter coffee', 'upma', 'sheera'],
+    keywords: ['dosa', 'masala dosa', 'idli', 'medu vada', 'uttapam', 'sambar', 'filter coffee'],
     signatureImage: '/api/ai/dish-image?dish=Masala%20Dosa'
   },
   {
-    id: 6,
-    slug: 'kebabs-tandoori',
-    name: 'Kebabs & Tandoor',
-    hindiName: 'कबाब और तंदूरी',
-    icon: '🍢',
-    keywords: ['tandoori', 'tikka', 'kebab', 'kabab', 'seekh', 'galouti', 'lollipop', 'chicken lollipop', 'baida roti', 'shawarma', 'rolls', 'kathi roll'],
-    signatureImage: '/api/ai/dish-image?dish=Tandoori%20Chicken'
-  },
-  {
-    id: 7,
-    slug: 'chinese-asian',
-    name: 'Chinese & Momos',
-    hindiName: 'चाइनीज और मोमोज',
-    icon: '🥟',
-    keywords: ['momos', 'momo', 'dimsum', 'dumpling', 'triple schezwan', 'manchurian', 'noodles', 'chowmein', 'chilli chicken', 'spring roll'],
-    signatureImage: '/api/ai/dish-image?dish=Momos'
-  },
-  {
-    id: 8,
+    id: 16,
     slug: 'burgers-pizzas',
     name: 'Pizzas & Burgers',
     hindiName: 'पिज़्ज़ा और बर्गर',
     icon: '🍕',
-    keywords: ['pizza', 'burger', 'pasta', 'fries', 'french fries', 'sandwich', 'garlic bread', 'cheese burst', 'wrap'],
+    keywords: ['pizza', 'burger', 'pasta', 'fries', 'sandwich', 'garlic bread', 'wrap'],
     signatureImage: '/api/ai/dish-image?dish=Pizza'
   },
   {
-    id: 9,
+    id: 17,
+    slug: 'chinese-asian',
+    name: 'Chinese & Momos',
+    hindiName: 'चाइनीज और मोमोज',
+    icon: '🥟',
+    keywords: ['momos', 'manchurian', 'noodles', 'chilli chicken', 'fried rice', 'spring roll'],
+    signatureImage: '/api/ai/dish-image?dish=Momos'
+  },
+  {
+    id: 18,
     slug: 'chai-cafe-beverages',
     name: 'Chai, Coffee & Cafe',
     hindiName: 'चाय, कॉफी और कैफे',
     icon: '☕',
-    keywords: ['bun maska', 'irani chai', 'chai', 'tea', 'cold coffee', 'coffee', 'frappe', 'latte', 'cappuccino', 'lassi', 'milkshake', 'shake', 'buttermilk', 'butter milk', 'chaas', 'taak', 'mattha', 'majjiga'],
+    keywords: ['bun maska', 'chai', 'tea', 'cold coffee', 'coffee', 'latte', 'cappuccino', 'frappe'],
     signatureImage: '/api/ai/dish-image?dish=Bun%20Maska'
-  },
-  {
-    id: 10,
-    slug: 'desserts-sweets',
-    name: 'Desserts & Sweets',
-    hindiName: 'मिठाई और आइसक्रीम',
-    icon: '🍨',
-    keywords: ['mastani', 'falooda', 'faluda', 'kulfi', 'ice cream', 'gulab jamun', 'rasgulla', 'jalebi', 'kheer', 'rabdi', 'halwa', 'pastry', 'waffle'],
-    signatureImage: '/api/ai/dish-image?dish=Falooda'
-  },
-  {
-    id: 11,
-    slug: 'coastal-seafood',
-    name: 'Coastal & Seafood',
-    hindiName: 'सीफूड और फिश',
-    icon: '🐟',
-    keywords: ['fish', 'fish fry', 'surmai', 'pomfret', 'prawns', 'crab', 'malvani', 'solkadhi', 'seafood thali'],
-    signatureImage: '/api/ai/dish-image?dish=Seafood'
-  },
-  {
-    id: 12,
-    slug: 'traditional-thali',
-    name: 'Grand Indian Thalis',
-    hindiName: 'शाही थाली',
-    icon: '🍽️',
-    keywords: ['thali', 'veg thali', 'maharaja thali', 'deluxe thali', 'maharashtrian thali', 'mutton thali', 'gavran thali', 'punjabi thali', 'rajasthani thali', 'gujarati thali', 'shahi thali'],
-    signatureImage: '/api/ai/dish-image?dish=Veg%20Thali'
   }
 ];
 
@@ -207,9 +262,29 @@ export const SPELLING_TYPOS_MAP: Record<string, string> = {
   'golgappa': 'pani puri',
   'golgappe': 'pani puri',
   'puchka': 'pani puri',
-  'poochka': 'pani puri',
   'bhel puri': 'bhel',
   'bhelpuri': 'bhel',
+
+  // Maharashtrian Specialties
+  'bhaat': 'bhat',
+  'masala bhat': 'masale bhat',
+  'masala bhaat': 'masale bhat',
+  'masale bhaat': 'masale bhat',
+  'varan bhaat': 'varan bhat',
+  'pitla': 'pithla',
+  'jhunka': 'zunka',
+  'pithla bhakar': 'pithla bhakri',
+  'zunka bhakar': 'zunka bhakri',
+  'kombadi': 'kombdi',
+  'kombadi vade': 'kombdi vade',
+  'tamda rassa': 'tambda rassa',
+  'pandra rassa': 'pandhra rassa',
+  'sukka mutton': 'sukha mutton',
+  'mutton sukka': 'sukha mutton',
+  'shev bhaji': 'shev bhaji',
+  'khandeshi shev bhaji': 'shev bhaji',
+  'bharli vangi': 'bharli vangi',
+  'patodi rassa': 'patodi rassa',
 
   // South Indian
   'dhosa': 'dosa',

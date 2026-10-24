@@ -20,135 +20,171 @@ export function inferDishCategory(name: string, description?: string): string {
   const hasWord = (str: string, pattern: string) =>
     new RegExp(`(^|[^a-z0-9])${pattern}([^a-z0-9]|$)`, 'i').test(str);
 
-  // 15. Thalis & Combos (priority check on dish name)
-  if (hasWord(nameLower, 'thali') || hasWord(nameLower, 'combo') || hasWord(nameLower, 'bhojan') || hasWord(nameLower, 'meals') || hasWord(nameLower, 'mini meal')) {
-    return 'Thalis & Combos';
+  // 1. Upvas Special (Fasting Food)
+  if (
+    hasWord(nameLower, 'sabudana') || hasWord(nameLower, 'upvas') || hasWord(nameLower, 'upwas') ||
+    hasWord(nameLower, 'bhagar') || hasWord(nameLower, 'varai') || hasWord(nameLower, 'farali') ||
+    hasWord(nameLower, 'ratalyacha') || hasWord(nameLower, 'rajgira') || hasWord(nameLower, 'sweet potato chaat')
+  ) {
+    return 'Upvas Special';
   }
 
-  // 19. Ice Cream & Frozen Desserts
-  if (hasWord(nameLower, 'ice cream') || hasWord(nameLower, 'gelato') || hasWord(nameLower, 'sorbet') || hasWord(nameLower, 'sundae') || hasWord(nameLower, 'kulfi') || hasWord(nameLower, 'matka kulfi')) {
-    return 'Ice Cream';
+  // 2. Maharashtrian Thali & Traditional Meals
+  if (
+    hasWord(nameLower, 'thali') || hasWord(nameLower, 'bhojan') || hasWord(nameLower, 'meals') ||
+    hasWord(nameLower, 'gavran thali') || hasWord(nameLower, 'combo') || hasWord(nameLower, 'mini meal')
+  ) {
+    return 'Maharashtrian Thali';
   }
 
-  // 18. Cakes, Pastries & Western Desserts
-  if (hasWord(nameLower, 'brownie') || hasWord(nameLower, 'cheesecake') || hasWord(nameLower, 'cake') || hasWord(nameLower, 'pastry') || hasWord(nameLower, 'lava cake') || hasWord(nameLower, 'tiramisu') || hasWord(nameLower, 'cupcake') || hasWord(nameLower, 'donut') || hasWord(nameLower, 'doughnut') || hasWord(nameLower, 'churros') || hasWord(nameLower, 'muffin') || hasWord(nameLower, 'éclair') || hasWord(nameLower, 'eclair') || hasWord(nameLower, 'tart') || hasWord(nameLower, 'mousse') || hasWord(nameLower, 'loaf cake')) {
-    return 'Cakes & Pastries';
+  // 3. Dal, Varan and Amti
+  if (
+    hasWord(nameLower, 'varan') || hasWord(nameLower, 'amti') || hasWord(nameLower, 'aamti') ||
+    hasWord(nameLower, 'katachi amti') || hasWord(nameLower, 'goda amti') || hasWord(nameLower, 'kadhi') ||
+    hasWord(nameLower, 'takachi kadhi') || hasWord(nameLower, 'danyachi amti') || hasWord(nameLower, 'shengdana amti') ||
+    hasWord(nameLower, 'solkadhi') || hasWord(nameLower, 'sol kadhi') || hasWord(nameLower, 'kairichi dal') ||
+    hasWord(nameLower, 'ambat varan') || hasWord(nameLower, 'toor dal') || hasWord(nameLower, 'sadha varan')
+  ) {
+    return 'Dal, Varan and Amti';
   }
 
-  // 26. Bakery & Confectionery
-  if (hasWord(nameLower, 'croissant') || hasWord(nameLower, 'bun maska') || hasWord(nameLower, 'khari') || hasWord(nameLower, 'rusk') || hasWord(nameLower, 'nankhatai') || hasWord(nameLower, 'cookies') || hasWord(nameLower, 'puff') || hasWord(nameLower, 'patties') || hasWord(nameLower, 'cinnamon roll') || hasWord(nameLower, 'danish') || hasWord(nameLower, 'pinwheel')) {
-    return 'Bakery';
+  // 4. Rice and Bhat
+  if (
+    hasWord(nameLower, 'masale bhat') || hasWord(nameLower, 'masale bhaat') || hasWord(nameLower, 'masala bhat') ||
+    hasWord(nameLower, 'masala bhaat') || hasWord(nameLower, 'varan bhat') || hasWord(nameLower, 'amti bhat') ||
+    hasWord(nameLower, 'tup bhat') || hasWord(nameLower, 'fodnicha bhat') || hasWord(nameLower, 'phodnicha bhat') ||
+    hasWord(nameLower, 'vangi bhat') || hasWord(nameLower, 'tondli bhat') || hasWord(nameLower, 'matki bhat') ||
+    hasWord(nameLower, 'valache bhat') || hasWord(nameLower, 'matar bhat') || hasWord(nameLower, 'goda masale bhat') ||
+    hasWord(nameLower, 'indrayani') || hasWord(nameLower, 'ambemohar') || hasWord(nameLower, 'kolam') ||
+    hasWord(nameLower, 'khichdi') || hasWord(nameLower, 'biryani') || hasWord(nameLower, 'pulao') ||
+    hasWord(nameLower, 'pulav') || hasWord(nameLower, 'curd rice') || hasWord(nameLower, 'lemon rice') ||
+    hasWord(nameLower, 'dahi bhat') || hasWord(nameLower, 'bhat') || hasWord(nameLower, 'bhaat') ||
+    hasWord(nameLower, 'rice')
+  ) {
+    return 'Rice and Bhat';
   }
 
-  // 17. Indian Sweets
-  if (hasWord(nameLower, 'gulab jamun') || hasWord(nameLower, 'kala jamun') || hasWord(nameLower, 'rasgulla') || hasWord(nameLower, 'rasmalai') || hasWord(nameLower, 'jalebi') || hasWord(nameLower, 'rabri') || hasWord(nameLower, 'rabdi') || hasWord(nameLower, 'kheer') || hasWord(nameLower, 'phirni') || hasWord(nameLower, 'halwa') || hasWord(nameLower, 'sheera') || hasWord(nameLower, 'shahi tukda') || hasWord(nameLower, 'shrikhand') || hasWord(nameLower, 'basundi') || hasWord(nameLower, 'kaju katli') || hasWord(nameLower, 'ladoo') || hasWord(nameLower, 'laddu') || hasWord(nameLower, 'modak') || hasWord(nameLower, 'puran poli') || hasWord(nameLower, 'mithai') || hasWord(nameLower, 'peda') || hasWord(nameLower, 'barfi') || hasWord(nameLower, 'ghevar') || hasWord(nameLower, 'mysore pak')) {
-    return 'Indian Sweets';
+  // 5. Bhakri, Poli and Roti
+  if (
+    hasWord(nameLower, 'bhakri') || hasWord(nameLower, 'bhakar') || hasWord(nameLower, 'jwarichi') ||
+    hasWord(nameLower, 'bajrichi') || hasWord(nameLower, 'nachni') || hasWord(nameLower, 'poli') ||
+    hasWord(nameLower, 'chapati') || hasWord(nameLower, 'ghavan') || hasWord(nameLower, 'amboli') ||
+    hasWord(nameLower, 'thalipeeth') || hasWord(nameLower, 'dhirde') || hasWord(nameLower, 'roti') ||
+    hasWord(nameLower, 'naan') || hasWord(nameLower, 'paratha') || hasWord(nameLower, 'kulcha') ||
+    hasWord(nameLower, 'phulka')
+  ) {
+    return 'Bhakri, Poli and Roti';
   }
 
-  // 20. Juices, Shakes & Smoothies
-  if (hasWord(nameLower, 'juice') || hasWord(nameLower, 'shake') || hasWord(nameLower, 'milkshake') || hasWord(nameLower, 'smoothie') || hasWord(nameLower, 'mastani') || hasWord(nameLower, 'lassi') || hasWord(nameLower, 'chaas') || hasWord(nameLower, 'buttermilk') || hasWord(nameLower, 'coconut water') || hasWord(nameLower, 'falooda')) {
-    return 'Juices & Shakes';
+  // 6. Chicken, Mutton and Seafood
+  if (
+    hasWord(nameLower, 'chicken') || hasWord(nameLower, 'mutton') || hasWord(nameLower, 'fish') ||
+    hasWord(nameLower, 'prawn') || hasWord(nameLower, 'prawns') || hasWord(nameLower, 'surmai') ||
+    hasWord(nameLower, 'bombil') || hasWord(nameLower, 'pomfret') || hasWord(nameLower, 'bangda') ||
+    hasWord(nameLower, 'kolambi') || hasWord(nameLower, 'crab') || hasWord(nameLower, 'seafood') ||
+    hasWord(nameLower, 'kombdi') || hasWord(nameLower, 'tambda') || hasWord(nameLower, 'pandhra') ||
+    hasWord(nameLower, 'sukka') || hasWord(nameLower, 'sukha') || hasWord(nameLower, 'saoji') ||
+    hasWord(nameLower, 'keema') || hasWord(nameLower, 'kheema') || hasWord(nameLower, 'boti') ||
+    hasWord(nameLower, 'handi') || hasWord(nameLower, 'tangdi') || hasWord(nameLower, 'roast chicken')
+  ) {
+    return 'Chicken, Mutton and Seafood';
   }
 
-  // 21. Tea & Coffee / Café Beverages
-  if (hasWord(nameLower, 'frappuccino') || hasWord(nameLower, 'frappe') || hasWord(nameLower, 'cappuccino') || hasWord(nameLower, 'espresso') || hasWord(nameLower, 'latte') || hasWord(nameLower, 'macchiato') || hasWord(nameLower, 'mocha') || hasWord(nameLower, 'cold brew') || hasWord(nameLower, 'iced americano') || hasWord(nameLower, 'americano') || hasWord(nameLower, 'flat white') || hasWord(nameLower, 'chai') || hasWord(nameLower, 'coffee') || hasWord(nameLower, 'hot chocolate') || hasWord(nameLower, 'iced tea') || hasWord(nameLower, 'mojito') || hasWord(nameLower, 'lemonade') || hasWord(nameLower, 'solkadhi') || hasWord(nameLower, 'sol kadhi') || hasWord(nameLower, 'taak') || hasWord(nameLower, 'jaljeera') || hasWord(nameLower, 'aam panna') || hasWord(nameLower, 'tea') || hasWord(nameLower, 'kadak')) {
-    return 'Tea & Coffee';
+  // 7. Chutney and Sides
+  if (
+    hasWord(nameLower, 'thecha') || hasWord(nameLower, 'kharda') || hasWord(nameLower, 'chutney') ||
+    hasWord(nameLower, 'metkut') || hasWord(nameLower, 'loncha') || hasWord(nameLower, 'lonche') ||
+    hasWord(nameLower, 'koshimbir') || hasWord(nameLower, 'kakdi') || hasWord(nameLower, 'papad') ||
+    hasWord(nameLower, 'sandge') || hasWord(nameLower, 'kurdai') || hasWord(nameLower, 'taak') ||
+    hasWord(nameLower, 'mattha') || hasWord(nameLower, 'chaas') || hasWord(nameLower, 'buttermilk')
+  ) {
+    return 'Chutney and Sides';
   }
 
-  // 23. Soups
-  if (hasWord(nameLower, 'soup') || hasWord(nameLower, 'shorba') || hasWord(nameLower, 'manchow') || hasWord(nameLower, 'tom yum') || hasWord(nameLower, 'minestrone') || hasWord(nameLower, 'thukpa')) {
-    return 'Soups';
+  // 8. Bhaji and Usal
+  if (
+    hasWord(nameLower, 'bhaji') || hasWord(nameLower, 'usal') || hasWord(nameLower, 'pithla') ||
+    hasWord(nameLower, 'pitla') || hasWord(nameLower, 'zunka') || hasWord(nameLower, 'jhunka') ||
+    hasWord(nameLower, 'bharli vangi') || hasWord(nameLower, 'vangi') || hasWord(nameLower, 'patodi') ||
+    hasWord(nameLower, 'matki') || hasWord(nameLower, 'chawli') || hasWord(nameLower, 'valachi') ||
+    hasWord(nameLower, 'pavta') || hasWord(nameLower, 'kobi') || hasWord(nameLower, 'bhendi') ||
+    hasWord(nameLower, 'flower') || hasWord(nameLower, 'dodka') || hasWord(nameLower, 'dudhi') ||
+    hasWord(nameLower, 'padwal') || hasWord(nameLower, 'tondli') || hasWord(nameLower, 'gavar') ||
+    hasWord(nameLower, 'shevga') || hasWord(nameLower, 'lal math') || hasWord(nameLower, 'palak') ||
+    hasWord(nameLower, 'methi') || hasWord(nameLower, 'suran') || hasWord(nameLower, 'farasbi') ||
+    hasWord(nameLower, 'karla') || hasWord(nameLower, 'bhopla') || hasWord(nameLower, 'paneer') ||
+    hasWord(nameLower, 'batata') || hasWord(nameLower, 'rassa') ||
+    hasWord(nameLower, 'sabzi') || hasWord(nameLower, 'curry')
+  ) {
+    return 'Bhaji and Usal';
   }
 
-  // 22. Salads & Healthy Food
-  if (hasWord(nameLower, 'salad') || hasWord(nameLower, 'buddha bowl') || hasWord(nameLower, 'quinoa') || hasWord(nameLower, 'sprouts') || hasWord(nameLower, 'avocado toast') || hasWord(nameLower, 'granola') || hasWord(nameLower, 'oats')) {
-    return 'Salads & Healthy Food';
-  }
-
-  // 25. Seafood
-  if (hasWord(nameLower, 'fish') || hasWord(nameLower, 'prawn') || hasWord(nameLower, 'prawns') || hasWord(nameLower, 'surmai') || hasWord(nameLower, 'bombil') || hasWord(nameLower, 'pomfret') || hasWord(nameLower, 'crab') || hasWord(nameLower, 'lobster') || hasWord(nameLower, 'seafood') || hasWord(nameLower, 'bangda') || hasWord(nameLower, 'kolambi') || hasWord(nameLower, 'rawas') || hasWord(nameLower, 'tisrya') || hasWord(nameLower, 'clams')) {
-    return 'Seafood';
-  }
-
-  // 14. Tandoori & Grilled
-  if ((hasWord(nameLower, 'tandoori') || hasWord(nameLower, 'tikka') || hasWord(nameLower, 'kebab') || hasWord(nameLower, 'kabab') || hasWord(nameLower, 'seekh') || hasWord(nameLower, 'tangdi') || hasWord(nameLower, 'grilled') || hasWord(nameLower, 'bbq') || hasWord(nameLower, 'roast chicken') || hasWord(nameLower, 'platter') || hasWord(nameLower, 'plater')) && !hasWord(nameLower, 'pizza') && !hasWord(nameLower, 'burger') && !hasWord(nameLower, 'sandwich') && !hasWord(nameLower, 'roll') && !hasWord(nameLower, 'wrap')) {
-    return 'Tandoori & Grilled';
-  }
-
-  // 13. Momos & Rolls
-  if (hasWord(nameLower, 'momo') || hasWord(nameLower, 'momos') || hasWord(nameLower, 'dimsum') || hasWord(nameLower, 'dumpling') || hasWord(nameLower, 'roll') || hasWord(nameLower, 'kathi') || hasWord(nameLower, 'frankie') || hasWord(nameLower, 'shawarma') || hasWord(nameLower, 'wrap') || hasWord(nameLower, 'burrito')) {
-    return 'Momos & Rolls';
-  }
-
-  // 24. Italian Food & Pasta
-  if (hasWord(nameLower, 'pasta') || hasWord(nameLower, 'spaghetti') || hasWord(nameLower, 'lasagna') || hasWord(nameLower, 'ravioli') || hasWord(nameLower, 'penne') || hasWord(nameLower, 'alfredo') || hasWord(nameLower, 'arrabiata') || hasWord(nameLower, 'mac and cheese') || hasWord(nameLower, 'risotto') || hasWord(nameLower, 'calzone') || hasWord(nameLower, 'bruschetta')) {
-    return 'Italian Food';
-  }
-
-  // 12. Chinese & Indo-Chinese
-  if (hasWord(nameLower, 'noodle') || hasWord(nameLower, 'noodles') || hasWord(nameLower, 'manchurian') || hasWord(nameLower, 'chilli paneer') || hasWord(nameLower, 'chilli chicken') || hasWord(nameLower, 'fried rice') || hasWord(nameLower, 'schezwan') || hasWord(nameLower, 'chopsuey') || hasWord(nameLower, 'lollipop') || hasWord(nameLower, 'spring roll') || hasWord(nameLower, 'hakka') || hasWord(nameLower, 'crispy corn') || hasWord(nameLower, 'honey chilli')) {
-    return 'Chinese';
-  }
-
-  // 10. Rice, Biryani & Pulao
-  if (hasWord(nameLower, 'biryani') || hasWord(nameLower, 'pulao') || hasWord(nameLower, 'pulav') || hasWord(nameLower, 'jeera rice') || hasWord(nameLower, 'steamed rice') || hasWord(nameLower, 'curd rice') || hasWord(nameLower, 'lemon rice') || hasWord(nameLower, 'khichdi') || hasWord(nameLower, 'masale bhaat') || hasWord(nameLower, 'varan bhat') || hasWord(nameLower, 'ghee rice') || hasWord(nameLower, 'rice')) {
-    return 'Rice & Biryani';
-  }
-
-  // 11. Indian Breads
-  if (hasWord(nameLower, 'naan') || hasWord(nameLower, 'roti') || hasWord(nameLower, 'bhakri') || hasWord(nameLower, 'paratha') || hasWord(nameLower, 'parotta') || hasWord(nameLower, 'kulcha') || hasWord(nameLower, 'bhatura') || hasWord(nameLower, 'rumali') || hasWord(nameLower, 'chapati') || hasWord(nameLower, 'phulka')) {
-    return 'Indian Breads';
-  }
-
-  // 4. Café Food
-  if (hasWord(nameLower, 'waffle') || hasWord(nameLower, 'waffles') || hasWord(nameLower, 'pancake') || hasWord(nameLower, 'pancakes') || hasWord(nameLower, 'quesadilla') || hasWord(nameLower, 'nachos') || hasWord(nameLower, 'french toast') || hasWord(nameLower, 'sandwich') || hasWord(nameLower, 'panini') || hasWord(nameLower, 'toast') || hasWord(nameLower, 'wedges')) {
-    return 'Café Food';
-  }
-
-  // 6. Fast Food
-  if (hasWord(nameLower, 'pizza') || hasWord(nameLower, 'burger') || hasWord(nameLower, 'whopper') || hasWord(nameLower, 'fries') || hasWord(nameLower, 'hot dog') || hasWord(nameLower, 'nuggets') || hasWord(nameLower, 'onion rings') || hasWord(nameLower, 'garlic bread') || hasWord(nameLower, 'strips') || hasWord(nameLower, 'wings')) {
-    return 'Fast Food';
-  }
-
-  // 7. South Indian Food
-  if (hasWord(nameLower, 'dosa') || hasWord(nameLower, 'idli') || hasWord(nameLower, 'uttapam') || hasWord(nameLower, 'medu vada') || hasWord(nameLower, 'sambar') || hasWord(nameLower, 'appam') || hasWord(nameLower, 'pongal') || hasWord(nameLower, 'pesarattu') || hasWord(nameLower, 'bisi bele bath')) {
-    return 'South Indian';
-  }
-
-  // 3. Maharashtrian Food
-  if (hasWord(nameLower, 'misal') || hasWord(nameLower, 'vada pav') || hasWord(nameLower, 'poha') || hasWord(nameLower, 'thalipeeth') || hasWord(nameLower, 'pithla') || hasWord(nameLower, 'zunka') || hasWord(nameLower, 'kothimbir') || hasWord(nameLower, 'alu vadi') || hasWord(nameLower, 'shev bhaji') || hasWord(nameLower, 'rassa') || hasWord(nameLower, 'sukka') || hasWord(nameLower, 'bharli vangi') || hasWord(nameLower, 'kombdi vade')) {
-    return 'Maharashtrian';
-  }
-
-  // 2. Indian Street Food
-  if (hasWord(nameLower, 'pani puri') || hasWord(nameLower, 'golgappa') || hasWord(nameLower, 'sev puri') || hasWord(nameLower, 'dahi puri') || hasWord(nameLower, 'bhel') || hasWord(nameLower, 'chaat') || hasWord(nameLower, 'samosa') || hasWord(nameLower, 'kachori') || hasWord(nameLower, 'dabeli') || hasWord(nameLower, 'pakoda') || hasWord(nameLower, 'bhajiya') || hasWord(nameLower, 'ragda') || hasWord(nameLower, 'batata vada')) {
-    return 'Street Food';
-  }
-
-  // 1. Breakfast Items
-  if (hasWord(nameLower, 'breakfast') || hasWord(nameLower, 'upma') || hasWord(nameLower, 'sabudana') || hasWord(nameLower, 'omelette') || hasWord(nameLower, 'omelet') || hasWord(nameLower, 'omlet') || hasWord(nameLower, 'boiled eggs') || hasWord(nameLower, 'scrambled eggs') || hasWord(nameLower, 'puri bhaji') || hasWord(nameLower, 'poori bhaji')) {
+  // 9. Breakfast Items
+  if (
+    hasWord(nameLower, 'poha') || hasWord(nameLower, 'pohe') || hasWord(nameLower, 'upma') ||
+    hasWord(nameLower, 'sheera') || hasWord(nameLower, 'breakfast') || hasWord(nameLower, 'omelette') ||
+    hasWord(nameLower, 'omelet') || hasWord(nameLower, 'omlet') || hasWord(nameLower, 'dosa') ||
+    hasWord(nameLower, 'idli') || hasWord(nameLower, 'medu vada')
+  ) {
     return 'Breakfast';
   }
 
-  // 9. Non-Veg Main Course
-  if (hasWord(nameLower, 'chicken') || hasWord(nameLower, 'mutton') || hasWord(nameLower, 'egg curry') || hasWord(nameLower, 'keema') || hasWord(nameLower, 'kheema') || hasWord(nameLower, 'gosht') || hasWord(nameLower, 'handi') || hasWord(nameLower, 'bokud') || hasWord(nameLower, 'bolai') || hasWord(nameLower, 'ukkhar')) {
-    return 'Non-Veg Main Course';
+  // 10. Snacks and Farsan
+  if (
+    hasWord(nameLower, 'vadi') || hasWord(nameLower, 'kothimbir') || hasWord(nameLower, 'alu vadi') ||
+    hasWord(nameLower, 'suralichi') || hasWord(nameLower, 'appe') || hasWord(nameLower, 'kanda bhaji') ||
+    hasWord(nameLower, 'bhajiya') || hasWord(nameLower, 'pakoda') || hasWord(nameLower, 'chakli') ||
+    hasWord(nameLower, 'bhakarwadi') || hasWord(nameLower, 'shankarpali') || hasWord(nameLower, 'batata vada') ||
+    hasWord(nameLower, 'samosa') || hasWord(nameLower, 'kachori') || hasWord(nameLower, 'dabeli')
+  ) {
+    return 'Snacks and Farsan';
   }
 
-  // 8. North Indian Veg Main Course
-  if (hasWord(nameLower, 'paneer') || hasWord(nameLower, 'dal') || hasWord(nameLower, 'kofta') || hasWord(nameLower, 'aloo gobi') || hasWord(nameLower, 'chole') || hasWord(nameLower, 'rajma') || hasWord(nameLower, 'korma') || hasWord(nameLower, 'curry') || hasWord(nameLower, 'gravy') || hasWord(nameLower, 'sabzi') || hasWord(nameLower, 'bhaji') || hasWord(nameLower, 'kaju kari')) {
-    return 'North Indian Veg';
+  // 11. Street Food and Chaat
+  if (
+    hasWord(nameLower, 'misal') || hasWord(nameLower, 'vada pav') || hasWord(nameLower, 'pav bhaji') ||
+    hasWord(nameLower, 'masala pav') || hasWord(nameLower, 'ragda') || hasWord(nameLower, 'pani puri') ||
+    hasWord(nameLower, 'sev puri') || hasWord(nameLower, 'bhel') || hasWord(nameLower, 'chaat') ||
+    hasWord(nameLower, 'frankie') || hasWord(nameLower, 'tawa pulao')
+  ) {
+    return 'Street Food and Chaat';
   }
 
-  // Fallback checks on description if name had generic label
-  if (hasWord(descLower, 'thali') || hasWord(descLower, 'combo')) return 'Thalis & Combos';
-  if (hasWord(descLower, 'ice cream') || hasWord(descLower, 'sundae')) return 'Ice Cream';
-  if (hasWord(descLower, 'cake') || hasWord(descLower, 'brownie') || hasWord(descLower, 'pastry')) return 'Cakes & Pastries';
-  if (hasWord(descLower, 'coffee') || hasWord(descLower, 'chai') || hasWord(descLower, 'latte')) return 'Tea & Coffee';
-  if (hasWord(descLower, 'juice') || hasWord(descLower, 'shake') || hasWord(descLower, 'smoothie')) return 'Juices & Shakes';
-  if (hasWord(descLower, 'fish') || hasWord(descLower, 'prawn') || hasWord(descLower, 'seafood')) return 'Seafood';
-  if (hasWord(descLower, 'chicken') || hasWord(descLower, 'mutton') || hasWord(descLower, 'meat')) return 'Non-Veg Main Course';
-  if (hasWord(descLower, 'paneer') || hasWord(descLower, 'dal') || hasWord(descLower, 'curry')) return 'North Indian Veg';
+  // 12. Sweets and Desserts
+  if (
+    hasWord(nameLower, 'puran poli') || hasWord(nameLower, 'modak') || hasWord(nameLower, 'karanji') ||
+    hasWord(nameLower, 'shrikhand') || hasWord(nameLower, 'amrakhand') || hasWord(nameLower, 'basundi') ||
+    hasWord(nameLower, 'aamras') || hasWord(nameLower, 'kharvas') || hasWord(nameLower, 'kheer') ||
+    hasWord(nameLower, 'halwa') || hasWord(nameLower, 'ladoo') || hasWord(nameLower, 'laddu') ||
+    hasWord(nameLower, 'gulab jamun') || hasWord(nameLower, 'jalebi') || hasWord(nameLower, 'rasmalai') ||
+    hasWord(nameLower, 'ice cream') || hasWord(nameLower, 'kulfi') || hasWord(nameLower, 'mastani') ||
+    hasWord(nameLower, 'falooda') || hasWord(nameLower, 'barfi') || hasWord(nameLower, 'peda') ||
+    hasWord(nameLower, 'anarse') || hasWord(nameLower, 'chirote') || hasWord(nameLower, 'sweet')
+  ) {
+    return 'Sweets and Desserts';
+  }
+
+  // 13. Regional Specialties
+  if (
+    hasWord(nameLower, 'saoji') || hasWord(nameLower, 'varhadi') || hasWord(nameLower, 'khandeshi') ||
+    hasWord(nameLower, 'malvani') || hasWord(nameLower, 'kolhapuri') || hasWord(nameLower, 'puneri') ||
+    hasWord(nameLower, 'naan qalia') || hasWord(nameLower, 'gavran')
+  ) {
+    return 'Regional Specialties';
+  }
+
+  // Modern / Café / Western fallbacks for non-Maharashtrian menus
+  if (hasWord(nameLower, 'pizza') || hasWord(nameLower, 'burger') || hasWord(nameLower, 'fries')) return 'Fast Food';
+  if (hasWord(nameLower, 'noodle') || hasWord(nameLower, 'manchurian') || hasWord(nameLower, 'momos')) return 'Chinese';
+  if (hasWord(nameLower, 'cake') || hasWord(nameLower, 'pastry') || hasWord(nameLower, 'brownie')) return 'Cakes & Pastries';
+  if (hasWord(nameLower, 'coffee') || hasWord(nameLower, 'tea') || hasWord(nameLower, 'chai')) return 'Tea & Coffee';
+  if (hasWord(nameLower, 'juice') || hasWord(nameLower, 'shake')) return 'Juices & Shakes';
+
+  // Description fallbacks
+  if (hasWord(descLower, 'thali')) return 'Maharashtrian Thali';
+  if (hasWord(descLower, 'rice') || hasWord(descLower, 'bhat')) return 'Rice and Bhat';
+  if (hasWord(descLower, 'amti') || hasWord(descLower, 'dal')) return 'Dal, Varan and Amti';
+  if (hasWord(descLower, 'chicken') || hasWord(descLower, 'mutton') || hasWord(descLower, 'fish')) return 'Chicken, Mutton and Seafood';
 
   return 'Recommended';
 }

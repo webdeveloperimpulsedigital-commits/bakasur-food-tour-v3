@@ -57,19 +57,44 @@ export function isDishVeg(dishName?: string): boolean {
     return false;
   }
 
-  // 3. Non-veg meats, eggs, poultry, seafood ALWAYS make a dish non-veg
+  // 3. Explicitly protected Maharashtrian vegetarian specialties with "rassa", "sukhi", "gavran" or traditional names
+  if (
+    n.includes('patodi rassa') || n.includes('batata rassa') || n.includes('kanda batata rassa') ||
+    n.includes('kanda-batata rassa') || n.includes('vangi batata rassa') || n.includes('shev bhaji') ||
+    n.includes('pithla') || n.includes('pitla') || n.includes('zunka') || n.includes('jhunka') ||
+    n.includes('bharli vangi') || n.includes('vangyache bharit') || n.includes('matki usal') ||
+    n.includes('moong usal') || n.includes('chawli usal') || n.includes('kala vatana') ||
+    n.includes('valachi usal') || n.includes('pavta usal') || n.includes('varan bhat') ||
+    n.includes('varan-bhat') || n.includes('masale bhat') || n.includes('masale bhaat') ||
+    n.includes('katachi amti') || n.includes('goda amti') || n.includes('takachi kadhi') ||
+    n.includes('danyachi amti') || n.includes('shengdanayachi amti') || n.includes('solkadhi') ||
+    n.includes('puran poli') || n.includes('modak') || n.includes('ukadiche modak') ||
+    n.includes('thalipeeth') || n.includes('kothimbir vadi') || n.includes('alu vadi') ||
+    n.includes('suralichi vadi') || n.includes('shrikhand') || n.includes('amrakhand') ||
+    n.includes('basundi') || n.includes('aamras') || n.includes('kharvas') ||
+    n.includes('thecha') || n.includes('mirchi thecha') || n.includes('lasun chutney') ||
+    n.includes('shengdana chutney') || n.includes('metkut') || n.includes('sabudana khichdi') ||
+    n.includes('sabudana vada') || n.includes('upvas') || n.includes('bhagar') ||
+    n.includes('ratalyacha kees') || n.includes('rajgira') || n.includes('farali pattice') ||
+    n.includes('shev bhaji thali') || n.includes('matki usal thali') || n.includes('bharli vangi thali') ||
+    (n.includes('gavran thali') && !n.includes('chicken') && !n.includes('mutton'))
+  ) {
+    return true;
+  }
+
+  // 4. Non-veg meats, eggs, poultry, seafood ALWAYS make a dish non-veg
   const meatKeywords = [
     'chicken', 'mutton', 'egg', 'eggs', 'anda', 'ande', 'fish', 'prawn', 'prawns', 'crab',
-    'bombil', 'surmai', 'pomfret', 'meat', 'gosht', 'bokud', 'bolai',
-    'tangdi', 'lamb', 'beef', 'pork', 'bacon', 'nihari', 'paya',
-    'seafood', 'duck', 'turkey', 'rawas', 'kolambi', 'clams', 'lobster',
+    'bombil', 'surmai', 'pomfret', 'bangda', 'kolambi', 'meat', 'gosht', 'bokud', 'bolai',
+    'kombdi', 'kombadi', 'tangdi', 'lamb', 'beef', 'pork', 'bacon', 'nihari', 'paya',
+    'seafood', 'duck', 'turkey', 'rawas', 'clams', 'lobster',
     'zinger', 'fried chicken', 'kfc', 'baida roti', 'boti'
   ];
   if (meatKeywords.some(kw => new RegExp(`(^|[^a-z0-9])${kw}([^a-z0-9]|$)`, 'i').test(n))) {
     return false;
   }
 
-  // 4. Vegetarian exceptions for kebabs, seekh and platters
+  // 5. Vegetarian exceptions for kebabs, seekh and platters
   if (
     n.includes('veg kebab') || n.includes('veg seekh') || n.includes('hara bhara') ||
     n.includes('dahi ke') || n.includes('paneer tikka') || n.includes('mushroom tikka') ||
@@ -79,10 +104,14 @@ export function isDishVeg(dishName?: string): boolean {
     return true;
   }
 
-  // 5. Other non-veg keywords
+  // 6. Other non-veg keywords (Maharashtrian Non-Veg Curries, Rassa & Preparations)
   const otherNonVegKeywords = [
     'keema', 'kheema', 'galouti', 'seekh', 'non veg', 'non-veg', 'nonveg',
-    'tandoori chicken', 'kebab', 'kabab', 'shawarma', 'sukka', 'gavran', 'tambda', 'pandhra'
+    'tandoori chicken', 'kebab', 'kabab', 'shawarma', 'tambda rassa', 'pandhra rassa',
+    'sukka mutton', 'sukha mutton', 'mutton sukka', 'mutton sukha', 'chicken sukka', 'chicken sukha',
+    'mutton saoji', 'chicken saoji', 'saoji mutton', 'saoji chicken',
+    'mutton bhuna', 'mutton handi', 'mutton kharda', 'malvani fish', 'fish thali',
+    'gavran chicken', 'tambda', 'pandhra', 'varhadi chicken', 'varhadi mutton'
   ];
   if (otherNonVegKeywords.some(kw => n.includes(kw))) {
     return false;
@@ -285,7 +314,17 @@ export function isDishRelevantToSearch(dishTitle?: string, userQuery?: string): 
     bhakari: 'bhakri',
     sambhar: 'sambar',
     medhu: 'medu',
-    vadai: 'vada'
+    vadai: 'vada',
+    bhaat: 'bhat',
+    masala: 'masale',
+    pitla: 'pithla',
+    jhunka: 'zunka',
+    kombadi: 'kombdi',
+    wade: 'vade',
+    tamda: 'tambda',
+    pandra: 'pandhra',
+    chawal: 'rice',
+    chaawal: 'rice'
   };
 
   const normalize = (str: string) => {
@@ -299,7 +338,93 @@ export function isDishRelevantToSearch(dishTitle?: string, userQuery?: string): 
   const d = normalize(dRaw);
   const q = normalize(qRaw);
 
-  // === 1. Pav Bhaji & Variations (Strict Isolation) ===
+  // === 1. Masale Bhat & Variations (Strict Isolation) ===
+  const isMasaleBhatQuery =
+    (q.includes('masale bhat') || (q.includes('masale') && (q.includes('bhat') || q.includes('rice')))) &&
+    !q.includes('pav') && !q.includes('biryani') && !q.includes('pulao');
+
+  if (isMasaleBhatQuery) {
+    const isDishMasaleBhat =
+      d.includes('masale bhat') ||
+      (d.includes('masale') && (d.includes('bhat') || d.includes('rice'))) ||
+      d.includes('vangi bhat') || d.includes('tondli bhat') || d.includes('matki bhat') ||
+      d.includes('valache bhat') || d.includes('goda masale bhat');
+
+    if (!isDishMasaleBhat) return false;
+    // Disqualify Biryani, Pulao, Varan Bhat, or non-masale rice
+    if (d.includes('biryani') || d.includes('varan') || d.includes('fried rice') || d.includes('curd rice')) {
+      return false;
+    }
+    return true;
+  }
+
+  // === 2. Varan Bhat / Varan-Bhat-Tup ===
+  const isVaranBhatQuery =
+    (q.includes('varan bhat') || (q.includes('varan') && (q.includes('bhat') || q.includes('tup') || q.includes('rice')))) &&
+    !q.includes('biryani');
+
+  if (isVaranBhatQuery) {
+    return (
+      (d.includes('varan bhat') || (d.includes('varan') && (d.includes('bhat') || d.includes('rice') || d.includes('tup')))) &&
+      !d.includes('biryani') && !d.includes('fried rice') && !d.includes('masale')
+    );
+  }
+
+  // === 3. Pithla Bhakri & Zunka Bhakri ===
+  const isPithlaZunkaQuery =
+    q.includes('pithla') || q.includes('zunka') || (q.includes('bhakri') && !q.includes('mutton') && !q.includes('chicken'));
+
+  if (isPithlaZunkaQuery) {
+    if (q.includes('pithla') && !d.includes('pithla') && !d.includes('zunka')) return false;
+    if (q.includes('zunka') && !d.includes('zunka') && !d.includes('pithla')) return false;
+    return d.includes('pithla') || d.includes('zunka') || d.includes('bhakri');
+  }
+
+  // === 4. Shev Bhaji / Khandeshi Shev Bhaji ===
+  const isShevBhajiQuery =
+    q.includes('shev bhaji') || q.includes('sev bhaji');
+
+  if (isShevBhajiQuery) {
+    return (d.includes('shev bhaji') || d.includes('sev bhaji')) && !d.includes('pav bhaji');
+  }
+
+  // === 5. Bharli Vangi & Eggplant Preparations ===
+  const isBharliVangiQuery =
+    q.includes('bharli vangi') || q.includes('vangi') || q.includes('vangyache bharit');
+
+  if (isBharliVangiQuery) {
+    return d.includes('vangi') || d.includes('vangyache');
+  }
+
+  // === 6. Patodi Rassa ===
+  const isPatodiRassaQuery = q.includes('patodi');
+  if (isPatodiRassaQuery) {
+    return d.includes('patodi');
+  }
+
+  // === 7. Kombdi Vade ===
+  const isKombdiVadeQuery = q.includes('kombdi') || (q.includes('chicken') && q.includes('vade'));
+  if (isKombdiVadeQuery) {
+    return d.includes('kombdi') || (d.includes('chicken') && d.includes('vade'));
+  }
+
+  // === 8. Tambda / Pandhra Rassa ===
+  if (q.includes('tambda')) {
+    return d.includes('tambda');
+  }
+  if (q.includes('pandhra')) {
+    return d.includes('pandhra');
+  }
+
+  // === 9. Sukha / Sukka Mutton with Bhakri ===
+  const isSukhaMuttonQuery =
+    (q.includes('sukha') || q.includes('sukka')) && (q.includes('mutton') || q.includes('bhakri'));
+
+  if (isSukhaMuttonQuery) {
+    return (d.includes('sukha') || d.includes('sukka')) && d.includes('mutton');
+  }
+
+  // === 10. Pav Bhaji & Variations (Strict Isolation) ===
   const isPavBhajiQuery =
     q.includes('pav bhaji') ||
     (q.includes('pav') && q.includes('bhaji') && !q.includes('masala pav') && !q.includes('vada pav') && !q.includes('misal'));
