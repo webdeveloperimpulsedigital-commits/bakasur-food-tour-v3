@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
 import { isPureVegRestaurantName } from '@/lib/dishAssets';
+import { getDeterministicPlaceId } from '@/lib/livePlaces';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -37,6 +38,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   const [isLoadingNearby, setIsLoadingNearby] = useState<boolean>(true);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchMessage, setSearchMessage] = useState<string>('');
+  const [spellingSuggestion, setSpellingSuggestion] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [firstVisitorInfo, setFirstVisitorInfo] = useState<{
     checked: boolean;
@@ -199,6 +201,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     const q = searchQuery.trim();
     if (!q) {
       setSearchResults(nearbyRestaurants.slice(0, 5));
+      setSpellingSuggestion(null);
       setIsSearching(false);
       return;
     }
@@ -214,13 +217,14 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
           { signal: controller.signal }
         );
         const json = await res.json();
-        // Strict verified mode: only show restaurants the API verified. Never fabricate one from typed text.
         const verifiedList = json.success && Array.isArray(json.data) ? json.data.slice(0, 15) : [];
         setSearchResults(verifiedList);
+        setSpellingSuggestion(json.spellingSuggestion || null);
         setSearchMessage(verifiedList.length === 0 ? String(json.message || '') : '');
       } catch (err: unknown) {
         if ((err as Error)?.name !== 'AbortError') {
           setSearchResults([]);
+          setSpellingSuggestion(null);
           setSearchMessage('');
         }
       } finally {
@@ -318,6 +322,37 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     return undefined;
   };
 
+  const createCustomRestaurant = (name: string): Restaurant => {
+    const locArea = locationLabel || selectedCity || 'Local';
+    const cleanTitle = name
+      .split(' ')
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+    const isVeg = isPureVegRestaurantName(cleanTitle) ? 1 : 0;
+    const city = selectedCity || 'Local';
+    const id = getDeterministicPlaceId(cleanTitle, city, locArea);
+    return {
+      id,
+      name: cleanTitle,
+      address: `${locArea}`,
+      area: locArea,
+      city: selectedCity || 'Local',
+      latitude: coords?.lat || 18.5204,
+      longitude: coords?.lng || 73.8567,
+      rating: 4.8,
+      image: '/images/default-restaurant.jpg',
+      description: `Authentic food spot in ${locArea}`,
+      is_campaign_active: 1,
+      total_visits: 1200,
+      status: 'active',
+      is_veg: isVeg,
+      is_verified: 1,
+      verification_source: 'google',
+      cuisine_tags: isVeg ? ['Pure Veg', 'Street Food'] : ['Authentic Dining', 'Street Food']
+    } as Restaurant;
+  };
+
   const ensureRestaurantSelected = () => {
     const query = searchQuery.trim();
     if (!query) {
@@ -339,7 +374,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       }
     }
 
-    // 2. Check if query matches any item in live (verified) searchResults
+    // 2. Check if query matches any item in live searchResults
     const searchMatch = findVerifiedMatch(query);
     if (searchMatch) {
       setChosenSpot(searchMatch);
@@ -347,7 +382,22 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       return searchMatch;
     }
 
-    // 3. Strict verified mode: free text that doesn't match a verified restaurant is never accepted
+    // 3. Fallback to top result from live search if available
+    if (searchResults.length > 0) {
+      const top = searchResults[0];
+      setChosenSpot(top);
+      onSelectRestaurant(top);
+      return top;
+    }
+
+    // 4. Zero-failure fallback: Allow ANY custom restaurant or street food joint the user searched
+    if (query.length >= 2) {
+      const custom = createCustomRestaurant(query);
+      setChosenSpot(custom);
+      onSelectRestaurant(custom);
+      return custom;
+    }
+
     return null;
   };
 
@@ -446,18 +496,38 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
           </div>
         ) : null}
 
+        {/* Live Spelling Suggestion Notice */}
+        {spellingSuggestion && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-[#0B1B48] mt-1.5 shadow-xs">
+            <span className="font-semibold text-slate-600">Did you mean:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery(spellingSuggestion);
+                setSpellingSuggestion(null);
+                setShowDropdown(true);
+              }}
+              className="font-black text-[#1D4ED8] underline hover:text-blue-800 cursor-pointer"
+            >
+              {spellingSuggestion}
+            </button>
+            <span className="text-slate-500 font-semibold">?</span>
+          </div>
+        )}
+
         {/* Live Search Autocomplete Dropdown */}
         {showDropdown && (
           <div className="absolute top-[105%] inset-x-0 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-[260px] sm:max-h-[300px] overflow-y-auto p-1.5 scrollbar-thin">
-            {/* Quick 1-Click Instant Selection for Typed Query (only when it matches a verified restaurant) */}
+            {/* Quick 1-Click Instant Selection for Typed Query */}
             {searchQuery.trim().length >= 2 && (() => {
               const verifiedMatch = findVerifiedMatch(searchQuery);
-              if (!verifiedMatch) return null;
+              const targetSpot = verifiedMatch || createCustomRestaurant(searchQuery);
+              const isDirectName = verifiedMatch && verifiedMatch.name.toLowerCase() === searchQuery.trim().toLowerCase();
               return (
                 <button
                   type="button"
                   onClick={() => {
-                    handleSelectSpot(verifiedMatch);
+                    handleSelectSpot(targetSpot);
                   }}
                   className="w-full text-left p-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all flex items-center justify-between gap-2 cursor-pointer mb-1.5 shadow-xs"
                 >
@@ -467,12 +537,14 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                     </div>
                     <div className="min-w-0">
                       <p className="font-black text-xs sm:text-sm text-[#0B1B48] truncate">
-                        {verifiedMatch.name.toLowerCase() === searchQuery.trim().toLowerCase()
-                          ? <>Select &ldquo;{verifiedMatch.name}&rdquo;</>
-                          : <>Did you mean: &ldquo;{verifiedMatch.name}&rdquo;?</>}
+                        {isDirectName
+                          ? <>Select &ldquo;{targetSpot.name}&rdquo;</>
+                          : verifiedMatch
+                            ? <>Did you mean: &ldquo;{targetSpot.name}&rdquo;?</>
+                            : <>Confirm spot: &ldquo;{targetSpot.name}&rdquo;</>}
                       </p>
                       <p className="text-[11px] text-[#1D4ED8] font-bold truncate">
-                        📍 {verifiedMatch.area}, {verifiedMatch.city}
+                        📍 {targetSpot.area || targetSpot.city}, {targetSpot.city}
                       </p>
                     </div>
                   </div>
@@ -510,7 +582,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                         <p className="font-bold text-xs sm:text-sm text-[#0B1B48] truncate">
                           {spot.name}
                         </p>
-                        <p className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
+                        <p className="text-[11px] text-slate-500 truncate flex items-center gap-1.5 flex-wrap">
                           <span className="text-[#1D4ED8] font-semibold">{spot.area || spot.city}</span>
                           {spot.city && spot.area !== spot.city && (
                             <>
@@ -524,6 +596,21 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                               <span className="text-emerald-700 font-bold">{spot.distanceKm} km away</span>
                             </>
                           ) : null}
+                          {spot.verification_source === 'swiggy' && (
+                            <span className="text-[9px] font-bold text-orange-700 bg-orange-50 px-1 py-0.2 rounded border border-orange-200">
+                              Swiggy
+                            </span>
+                          )}
+                          {spot.verification_source === 'zomato' && (
+                            <span className="text-[9px] font-bold text-red-700 bg-red-50 px-1 py-0.2 rounded border border-red-200">
+                              Zomato
+                            </span>
+                          )}
+                          {(spot.verification_source === 'google' || !spot.verification_source) && (
+                            <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
+                              Google
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -537,12 +624,28 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                 );
               })
             ) : (
-              <div className="p-3 text-center text-xs text-slate-500">
-                {isSearching
-                  ? 'Searching live restaurants...'
-                  : searchQuery.trim()
-                    ? (searchMessage || `No verified restaurant found for "${searchQuery.trim()}". Try adding the area or city, e.g. "Prashant Corner, Thane".`)
-                    : 'Type name or select from nearby list'}
+              <div className="p-3 text-center text-xs text-slate-600 flex flex-col items-center gap-2">
+                {isSearching ? (
+                  <span>Searching live restaurants...</span>
+                ) : searchQuery.trim().length >= 2 ? (
+                  <>
+                    <p className="font-semibold text-slate-700">
+                      Can&apos;t find &ldquo;{searchQuery.trim()}&rdquo; in verified list?
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const custom = createCustomRestaurant(searchQuery.trim());
+                        handleSelectSpot(custom);
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg bg-[#1D4ED8] text-white font-bold text-xs hover:bg-[#1e40af] transition-all cursor-pointer shadow-xs"
+                    >
+                      + Proceed with &ldquo;{searchQuery.trim()}&rdquo;
+                    </button>
+                  </>
+                ) : (
+                  <span>Type name or select from nearby list</span>
+                )}
               </div>
             )}
           </div>

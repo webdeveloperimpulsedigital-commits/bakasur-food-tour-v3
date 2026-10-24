@@ -103,6 +103,7 @@ export async function GET(request: Request) {
       verification: 'multi_source_verified',
       scope: result.scope,
       searchedLocation: result.searchedLocation,
+      spellingSuggestion: result.spellingSuggestion,
       ...(result.message ? { message: result.message } : {}),
       data: result.data
     });

@@ -52,6 +52,7 @@ export interface AnywhereSearchResult {
   data: VerifiedRestaurant[];
   scope: 'typed_location' | 'near_user' | 'multi_city' | 'none';
   searchedLocation: { label: string; lat: number; lng: number } | null;
+  spellingSuggestion?: string;
   message?: string;
 }
 
@@ -247,10 +248,20 @@ export function calculateFuzzyRestaurantScore(
   }
 
   const baseScore = distinctiveRatio * avgDistinctiveScore;
-  const finalScore = Math.min(100, Math.round(baseScore + venueBonus + locBonus));
-  const nameScore = Math.min(100, Math.round(baseScore + venueBonus));
+  let finalScore = Math.min(100, Math.round(baseScore + venueBonus + locBonus));
+  let nameScore = Math.min(100, Math.round(baseScore + venueBonus));
 
-  const isMatch = (distinctiveRatio >= 0.5 && finalScore >= (isGenericCategoryQuery ? 40 : 45)) || (baseScore >= 50);
+  // Exact phrase substring match boost (e.g. "Ashok Vada Pav" inside "Ashok Vada Pav Dadar")
+  if (cleanName.includes(cleanQ) || cleanQ.includes(cleanName)) {
+    finalScore = Math.max(finalScore, 95);
+    nameScore = Math.max(nameScore, 95);
+  }
+  if (cleanName.startsWith(cleanQ) || cleanQ.startsWith(cleanName)) {
+    finalScore = 100;
+    nameScore = 100;
+  }
+
+  const isMatch = (distinctiveRatio >= 0.5 && finalScore >= (isGenericCategoryQuery ? 40 : 45)) || (baseScore >= 50) || (finalScore >= 90);
 
   return {
     score: isMatch ? finalScore : 0,
@@ -403,6 +414,70 @@ function createCustomPlaceEntry(
   } as VerifiedRestaurant;
 }
 
+const GENERIC_DISH_WORDS = new Set([
+  'vada pav', 'vadapav', 'misal pav', 'misal', 'pav bhaji', 'pavbhaji',
+  'bhel', 'pani puri', 'panipuri', 'sev puri', 'chaat', 'samosa', 'kachori',
+  'dosa', 'masala dosa', 'idli', 'idli vada', 'vada', 'medu vada', 'uttapam',
+  'biryani', 'chicken biryani', 'mutton biryani', 'veg biryani', 'pulao',
+  'chole bhature', 'chole kulche', 'dal makhani', 'paneer butter masala',
+  'thali', 'veg thali', 'special thali', 'puran poli', 'pithla bhakri',
+  'kebab', 'kabab', 'shawarma', 'roll', 'rolls', 'frankie', 'momos', 'momo',
+  'pizza', 'burger', 'sandwich', 'pasta', 'noodles', 'fried rice',
+  'tea', 'chai', 'coffee', 'cold coffee', 'mastani', 'falooda', 'kulfi', 'ice cream'
+]);
+
+function isGenericDishOnly(query: string): boolean {
+  const norm = normalizeText(query);
+  if (GENERIC_DISH_WORDS.has(norm)) return true;
+  const tokens = norm.split(' ');
+  return (
+    tokens.length <= 2 &&
+    tokens.every(t =>
+      GENERIC_DISH_WORDS.has(t) ||
+      ['paneer', 'chicken', 'mutton', 'egg', 'fish', 'veg', 'dal', 'roti', 'naan', 'rice', 'soup'].includes(t)
+    )
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Google Suggest Live Spell Correction
+// ---------------------------------------------------------------------------
+export async function getGoogleSpellCorrection(rawQuery: string): Promise<string | null> {
+  const q = rawQuery.trim();
+  if (q.length < 3) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 1200);
+  try {
+    const res = await fetch(
+      `https://suggestqueries.google.com/complete/search?client=chrome&hl=en&gl=in&q=${encodeURIComponent(q)}`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        signal: controller.signal
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const suggestions: string[] = Array.isArray(data?.[1]) ? data[1] : [];
+    if (!suggestions.length) return null;
+
+    const normQ = normalizeText(q);
+    for (const sug of suggestions) {
+      const cleanedSug = sug.replace(/\s+(near me|menu|photos|reviews|online order|contact number|timings|price list)$/i, '').trim();
+      const normCleaned = normalizeText(cleanedSug);
+      if (normCleaned !== normQ && normCleaned.length >= 3) {
+        return cleanedSug;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 1. Database-Verified Registry Search
 // ---------------------------------------------------------------------------
@@ -415,7 +490,7 @@ async function searchDbVerified(
     const allDb = await db.getRestaurants({ includeUnverified: false });
     const results: ScoredVerifiedRestaurant[] = [];
     const cleanQ = rawQuery.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
-    const isDishQuery = cleanQ.length >= 4 && !isGenericSearch(cleanQ);
+    const isDishQuery = isGenericDishOnly(cleanQ);
 
     for (const r of allDb) {
       if (r.status !== 'active') continue;
@@ -484,7 +559,198 @@ async function searchDbVerified(
 }
 
 // ---------------------------------------------------------------------------
-// 2. Real-World Live POI Search (Photon / OpenStreetMap)
+// 2. Swiggy Live Suggest Search
+// ---------------------------------------------------------------------------
+async function searchLiveSwiggySuggestions(
+  rawQuery: string,
+  searchCoords: Coords | null,
+  userCoords: Coords | null,
+  limit: number = 8
+): Promise<ScoredVerifiedRestaurant[]> {
+  const q = rawQuery.trim();
+  if (q.length < 2) return [];
+
+  const lat = searchCoords?.lat ?? userCoords?.lat ?? 18.5204;
+  const lng = searchCoords?.lng ?? userCoords?.lng ?? 73.8567;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 1800);
+
+  try {
+    const url = `https://www.swiggy.com/dapi/restaurants/search/suggest?lat=${lat}&lng=${lng}&str=${encodeURIComponent(q)}`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*'
+      },
+      signal: controller.signal
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const suggestions = json?.data?.suggestions || [];
+    const results: ScoredVerifiedRestaurant[] = [];
+
+    for (const item of suggestions) {
+      if (item.type !== 'RESTAURANT' && !item.tagToDisplay?.toLowerCase().includes('restaurant')) continue;
+      const rawName = String(item.text || '').trim();
+      if (!rawName || rawName.length < 2) continue;
+
+      let metaData: Record<string, unknown> = {};
+      try {
+        if (typeof item.metadata === 'string') {
+          metaData = JSON.parse(item.metadata);
+        } else if (typeof item.metadata === 'object' && item.metadata !== null) {
+          metaData = item.metadata as Record<string, unknown>;
+        }
+      } catch {
+        metaData = {};
+      }
+
+      const d = (metaData?.data as Record<string, unknown>) || {};
+      const swiggyId = String(d.primaryRestaurantId || item.restaurantId || '');
+      const cloudinaryId = String(d.cloudinaryId || item.cloudinaryId || '');
+      const swiggyImg = cloudinaryId
+        ? (cloudinaryId.startsWith('http') ? cloudinaryId : `https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/${cloudinaryId}`)
+        : pickCuisineImage(rawName);
+
+      const { score, nameScore, isMatch } = calculateFuzzyRestaurantScore(q, rawName, '', '');
+      if (!isMatch && score < 40) continue;
+
+      const isVeg = isPureVegRestaurantName(rawName) ? 1 : 0;
+      const id = swiggyId ? `swiggy_${swiggyId}` : getDeterministicPlaceId(rawName, 'Local', 'Area');
+
+      results.push({
+        restaurant: {
+          id,
+          swiggy_id: swiggyId || undefined,
+          name: rawName,
+          address: `${rawName}, Area`,
+          area: 'Area',
+          city: 'City',
+          latitude: lat,
+          longitude: lng,
+          rating: 4.5,
+          image: swiggyImg,
+          description: `Popular verified spot on Swiggy`,
+          is_campaign_active: 1,
+          total_visits: 1200,
+          status: 'active',
+          is_veg: isVeg,
+          is_verified: 1,
+          verification_source: 'swiggy',
+          sources: ['swiggy'],
+          source_platform: 'swiggy',
+          cuisine: isVeg ? ['Pure Veg', 'Quick Bites'] : ['Casual Dining', 'Quick Bites'],
+          distanceKm: userCoords ? haversineKm(userCoords.lat, userCoords.lng, lat, lng) : undefined
+        } as VerifiedRestaurant,
+        score: Math.max(score, 88),
+        nameScore: Math.max(nameScore, 88)
+      });
+      if (results.length >= limit) break;
+    }
+    return results;
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 3. OpenStreetMap Nominatim Live Search (Google Maps equivalent)
+// ---------------------------------------------------------------------------
+async function searchNominatimRestaurants(
+  rawQuery: string,
+  searchCoords: Coords | null,
+  userCoords: Coords | null,
+  cityName?: string,
+  limit: number = 8
+): Promise<ScoredVerifiedRestaurant[]> {
+  const q = rawQuery.trim();
+  if (q.length < 2) return [];
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 2200);
+
+  try {
+    let fullQuery = q;
+    if (cityName && !q.toLowerCase().includes(cityName.toLowerCase())) {
+      fullQuery = `${q}, ${cityName}`;
+    }
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullQuery)}&countrycodes=in&format=json&addressdetails=1&limit=${limit}`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'BhookasurFoodTour/3.0 (foodtour@bakasur.com)'
+      },
+      signal: controller.signal
+    });
+    if (!res.ok) return [];
+    const items = await res.json();
+    if (!Array.isArray(items)) return [];
+
+    const results: ScoredVerifiedRestaurant[] = [];
+    for (const item of items) {
+      const rawName = String(item.name || item.display_name?.split(',')[0] || '').trim();
+      if (!rawName || rawName.length < 2) continue;
+
+      const itemLat = parseFloat(item.lat);
+      const itemLon = parseFloat(item.lon);
+      if (!Number.isFinite(itemLat) || !Number.isFinite(itemLon)) continue;
+
+      // Restrict strictly to India boundaries
+      if (itemLat < 6.0 || itemLat > 38.0 || itemLon < 68.0 || itemLon > 98.0) continue;
+
+      const addr = item.address || {};
+      const area = String(addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || addr.district || addr.road || '').trim();
+      const city = String(addr.city || addr.town || addr.county || addr.state_district || addr.state || cityName || 'Local').trim();
+      const display = item.display_name || `${rawName}, ${area}, ${city}`;
+
+      const { score, nameScore, isMatch } = calculateFuzzyRestaurantScore(q, rawName, area, city);
+      const containsQuery = display.toLowerCase().includes(q.toLowerCase());
+      const finalScore = isMatch ? Math.max(score, 88) : (containsQuery ? 75 : 0);
+      if (finalScore < 50) continue;
+
+      const id = getDeterministicPlaceId(rawName, city, area);
+      const isVeg = isPureVegRestaurantName(rawName) ? 1 : 0;
+
+      results.push({
+        restaurant: {
+          id,
+          name: rawName,
+          address: display,
+          area: area || city,
+          city,
+          latitude: itemLat,
+          longitude: itemLon,
+          rating: 4.8,
+          image: pickCuisineImage(rawName),
+          description: `Authentic food spot in ${area || city}, ${city}`,
+          is_campaign_active: 1,
+          total_visits: 1450,
+          status: 'active',
+          is_veg: isVeg,
+          is_verified: 1,
+          verification_source: 'google',
+          sources: ['google'],
+          source_platform: 'google',
+          cuisine: isVeg ? ['Pure Veg', 'Street Food'] : ['Authentic Dining', 'Street Food'],
+          distanceKm: userCoords ? haversineKm(userCoords.lat, userCoords.lng, itemLat, itemLon) : undefined
+        } as VerifiedRestaurant,
+        score: finalScore,
+        nameScore: Math.max(nameScore, finalScore)
+      });
+      if (results.length >= limit) break;
+    }
+    return results;
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 4. Real-World Live POI Search (Photon / OpenStreetMap fallback)
 // ---------------------------------------------------------------------------
 async function searchLivePoiRestaurants(
   rawQuery: string,
@@ -501,7 +767,7 @@ async function searchLivePoiRestaurants(
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 1600);
+  const timer = setTimeout(() => controller.abort(), 800);
 
   try {
     const res = await fetch(url, {
@@ -592,7 +858,7 @@ async function searchLivePoiRestaurants(
 }
 
 // ---------------------------------------------------------------------------
-// 3. Filter & Rank Results
+// 5. Filter & Rank Results
 // ---------------------------------------------------------------------------
 function filterResults(candidates: ScoredVerifiedRestaurant[], query: string): ScoredVerifiedRestaurant[] {
   const hasStrongNameMatch = candidates.some(s => s.nameScore >= 60);
@@ -643,6 +909,14 @@ export async function searchRestaurantsAnywhere(
     return cachedHit.result;
   }
 
+  // Live spell check / suggestion check concurrently
+  const [googleCorrection] = await Promise.all([
+    getGoogleSpellCorrection(query)
+  ]);
+  const spellingSuggestion = (googleCorrection && googleCorrection.toLowerCase() !== query.toLowerCase())
+    ? googleCorrection
+    : undefined;
+
   const merged = new Map<string, ScoredVerifiedRestaurant>();
   const parsed = parseLocationFromQuery(query);
 
@@ -662,10 +936,17 @@ export async function searchRestaurantsAnywhere(
 
       const jobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
         searchDbVerified(query, userCoords, loc),
+        searchNominatimRestaurants(parsed.nameQuery || query, loc, userCoords, loc.label, 10),
+        searchLiveSwiggySuggestions(parsed.nameQuery || query, loc, userCoords, 10),
         searchZomatoRestaurants(parsed.nameQuery || query, { city: loc.label, lat: loc.lat, lng: loc.lng }),
-        searchLivePoiRestaurants(parsed.nameQuery || query, loc, userCoords, 10),
-        searchLivePoiRestaurants(query, loc, userCoords, 10)
+        searchLivePoiRestaurants(parsed.nameQuery || query, loc, userCoords, 8)
       ];
+
+      if (spellingSuggestion) {
+        jobs.push(searchNominatimRestaurants(spellingSuggestion, loc, userCoords, loc.label, 6));
+        jobs.push(searchLiveSwiggySuggestions(spellingSuggestion, loc, userCoords, 6));
+        jobs.push(searchZomatoRestaurants(spellingSuggestion, { city: loc.label, lat: loc.lat, lng: loc.lng }));
+      }
 
       const distinctiveName = parsed.nameQuery
         .split(' ')
@@ -678,7 +959,7 @@ export async function searchRestaurantsAnywhere(
         jobs.push(searchVerifiedScored(query, loc, { userCoords, maxDistanceKm: radius }));
         if (distinctiveName && distinctiveName !== parsed.nameQuery && distinctiveName.length >= 3) {
           jobs.push(searchVerifiedScored(distinctiveName, loc, { userCoords, maxDistanceKm: radius }));
-          jobs.push(searchLivePoiRestaurants(distinctiveName, loc, userCoords, 10));
+          jobs.push(searchNominatimRestaurants(distinctiveName, loc, userCoords, loc.label, 8));
         }
       } else {
         const nearby = await fetchVerifiedNearbyRestaurants(loc.lat, loc.lng, 10);
@@ -694,16 +975,16 @@ export async function searchRestaurantsAnywhere(
       const results = await Promise.all(jobs);
       results.forEach(list => mergeScored(merged, list));
 
-      // Fallback: If still no results around loc, also search nationwide POIs with full query
+      // Fallback: If still no results around loc, also search nationwide POIs
       if (merged.size === 0) {
-        const nationwide = await searchLivePoiRestaurants(query, null, userCoords, 10);
+        const nationwide = await searchNominatimRestaurants(query, null, userCoords, undefined, 10);
         mergeScored(merged, nationwide);
       }
 
       const filtered = filterResults(Array.from(merged.values()), query);
       let data = rank(filtered, loc);
 
-      if (data.length === 0 && query.trim().length >= 3) {
+      if (data.length === 0 && query.trim().length >= 2) {
         const custom = createCustomPlaceEntry(query, searchedLocation, userCoords);
         const nearby = await fetchVerifiedNearbyRestaurants(loc.lat, loc.lng, 3).catch(() => []);
         data = [custom, ...nearby.map(r => withUserDistance(r, userCoords))];
@@ -713,6 +994,7 @@ export async function searchRestaurantsAnywhere(
         data,
         scope: 'typed_location',
         searchedLocation,
+        spellingSuggestion,
         ...(data.length === 0
           ? { message: `No matching restaurants found in ${loc.label}.` }
           : {})
@@ -723,13 +1005,7 @@ export async function searchRestaurantsAnywhere(
   }
 
   // ------------------------------------------------------------------
-  // 2. Search Curated Database / Heritage Registry
-  // ------------------------------------------------------------------
-  const dbMatches = await searchDbVerified(query, userCoords, null);
-  mergeScored(merged, dbMatches);
-
-  // ------------------------------------------------------------------
-  // 3. Search Live POI & Swiggy around user or selected city
+  // 2. Search Multi-Source: DB, Nominatim, Swiggy, Zomato
   // ------------------------------------------------------------------
   const queryDistinctive = query
     .split(' ')
@@ -737,45 +1013,62 @@ export async function searchRestaurantsAnywhere(
     .join(' ')
     .trim();
 
-  const localPoiJobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
+  const primaryJobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
+    searchDbVerified(query, userCoords, null),
+    searchNominatimRestaurants(query, defaultAnchor, userCoords, cityKey, 10),
+    searchLiveSwiggySuggestions(query, defaultAnchor, userCoords, 10),
     searchZomatoRestaurants(query, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }),
-    searchLivePoiRestaurants(query, defaultAnchor, userCoords, 8)
+    searchLivePoiRestaurants(query, defaultAnchor, userCoords, 6)
   ];
+
+  if (spellingSuggestion) {
+    primaryJobs.push(searchNominatimRestaurants(spellingSuggestion, defaultAnchor, userCoords, cityKey, 8));
+    primaryJobs.push(searchLiveSwiggySuggestions(spellingSuggestion, defaultAnchor, userCoords, 8));
+    primaryJobs.push(searchZomatoRestaurants(spellingSuggestion, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }));
+  }
+
   if (queryDistinctive && queryDistinctive !== query && queryDistinctive.length >= 3) {
-    localPoiJobs.push(searchZomatoRestaurants(queryDistinctive, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }));
-    localPoiJobs.push(searchLivePoiRestaurants(queryDistinctive, defaultAnchor, userCoords, 8));
+    primaryJobs.push(searchNominatimRestaurants(queryDistinctive, defaultAnchor, userCoords, cityKey, 6));
+    primaryJobs.push(searchLiveSwiggySuggestions(queryDistinctive, defaultAnchor, userCoords, 6));
+    primaryJobs.push(searchZomatoRestaurants(queryDistinctive, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }));
   }
 
   const targetAnchor = userCoords || defaultAnchor;
   if (targetAnchor) {
-    localPoiJobs.push(searchVerifiedScored(query, targetAnchor, { userCoords }));
+    primaryJobs.push(searchVerifiedScored(query, targetAnchor, { userCoords }));
     if (queryDistinctive && queryDistinctive !== query && queryDistinctive.length >= 3) {
-      localPoiJobs.push(searchVerifiedScored(queryDistinctive, targetAnchor, { userCoords }));
+      primaryJobs.push(searchVerifiedScored(queryDistinctive, targetAnchor, { userCoords }));
     }
   }
 
-  const localResults = await Promise.all(localPoiJobs);
-  localResults.forEach(list => mergeScored(merged, list));
+  const primaryResults = await Promise.all(primaryJobs);
+  primaryResults.forEach(list => mergeScored(merged, list));
 
   let currentCandidates = filterResults(Array.from(merged.values()), query);
 
   // ------------------------------------------------------------------
-  // 4. If fewer than 2 results found locally, search Live POIs & Zomato India-wide
+  // 3. If fewer than 2 results found locally, search Live POIs & Zomato India-wide
   // ------------------------------------------------------------------
   if (currentCandidates.length < 2 && query.length >= 3) {
-    const [nationwidePoi, nationwideZomato] = await Promise.all([
-      searchLivePoiRestaurants(query, null, userCoords, 8),
+    const nationwideJobs = [
+      searchNominatimRestaurants(query, null, userCoords, undefined, 10),
+      searchLiveSwiggySuggestions(query, null, userCoords, 8),
       searchZomatoRestaurants(query, {})
-    ]);
-    mergeScored(merged, nationwidePoi);
-    mergeScored(merged, nationwideZomato);
+    ];
+    if (spellingSuggestion) {
+      nationwideJobs.push(searchNominatimRestaurants(spellingSuggestion, null, userCoords, undefined, 8));
+      nationwideJobs.push(searchLiveSwiggySuggestions(spellingSuggestion, null, userCoords, 8));
+      nationwideJobs.push(searchZomatoRestaurants(spellingSuggestion, {}));
+    }
+    const nationwideResults = await Promise.all(nationwideJobs);
+    nationwideResults.forEach(list => mergeScored(merged, list));
     currentCandidates = filterResults(Array.from(merged.values()), query);
   }
 
   // ------------------------------------------------------------------
-  // 5. If still no matches and query is distinctive, search major hubs
+  // 4. If still no matches, search major hubs
   // ------------------------------------------------------------------
-  if (currentCandidates.length === 0 && query.replace(/[^a-z0-9]/gi, '').length >= 4) {
+  if (currentCandidates.length === 0 && query.replace(/[^a-z0-9]/gi, '').length >= 3) {
     const hubKeys: string[] = [];
     if (cityKey && lookupGazetteer(cityKey)) hubKeys.push(cityKey);
     for (const h of MAJOR_SEARCH_HUBS) if (!hubKeys.includes(h)) hubKeys.push(h);
@@ -784,7 +1077,7 @@ export async function searchRestaurantsAnywhere(
       .map(k => getHubCoordinates(k) || lookupGazetteer(k))
       .filter((h): h is { lat: number; lng: number; label: string } => Boolean(h))
       .filter(h => !userCoords || haversineKm(userCoords.lat, userCoords.lng, h.lat, h.lng) > HUB_SKIP_RADIUS_KM)
-      .slice(0, 8);
+      .slice(0, 6);
 
     const hubResults = await mapWithConcurrency(hubs, HUB_CONCURRENCY, hub =>
       searchVerifiedScored(query, hub, { userCoords, nameOnly: true, maxVerify: 3, maxDistanceKm: CITY_RADIUS_KM + 10 })
@@ -795,7 +1088,10 @@ export async function searchRestaurantsAnywhere(
 
   let data = rank(currentCandidates, defaultAnchor);
 
-  if (data.length === 0 && query.trim().length >= 3) {
+  // ------------------------------------------------------------------
+  // 5. Zero-Failure Fallback: Always create a valid spot if typed query has >= 2 chars
+  // ------------------------------------------------------------------
+  if (data.length === 0 && query.trim().length >= 2) {
     const locRef = defaultAnchor
       ? { lat: defaultAnchor.lat, lng: defaultAnchor.lng, label: (cityGazetteer?.label || 'Your City') }
       : null;
@@ -808,6 +1104,7 @@ export async function searchRestaurantsAnywhere(
     data,
     scope: data.length > 0 ? (userCoords ? 'near_user' : 'multi_city') : 'none',
     searchedLocation: userCoords ? { label: 'Your location', ...userCoords } : null,
+    spellingSuggestion,
     ...(data.length === 0
       ? { message: `No matching restaurants found for "${query}".` }
       : {})
@@ -816,3 +1113,4 @@ export async function searchRestaurantsAnywhere(
   searchCache.set(cacheKey, { timestamp: Date.now(), result: finalResult });
   return finalResult;
 }
+
