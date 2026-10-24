@@ -13,7 +13,7 @@ import { searchRestaurantsAnywhere } from '@/lib/restaurantSearch';
 export const dynamic = 'force-dynamic';
 
 /**
- * Multi-Source Restaurant Search across Zomato, Swiggy, and Google.
+ * Multi-Source Restaurant Search across Zomato, Swiggy, Google, and verified registry.
  *
  * - No query      -> verified restaurants nearest to the user.
  * - With a query  -> searches across Zomato, Swiggy, Google, and verified registry.

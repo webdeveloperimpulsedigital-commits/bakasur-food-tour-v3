@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
 import { isPureVegRestaurantName } from '@/lib/dishAssets';
-import { getDeterministicPlaceId } from '@/lib/livePlaces';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -320,6 +319,17 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     }
 
     return undefined;
+  };
+
+  const getDeterministicPlaceId = (name: string, city: string = '', area: string = ''): number => {
+    const str = `${name.toLowerCase().trim()}_${city.toLowerCase().trim()}_${area.toLowerCase().trim()}`;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    return 900000 + (Math.abs(hash) % 90000);
   };
 
   const createCustomRestaurant = (name: string): Restaurant => {

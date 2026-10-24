@@ -15,7 +15,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  serverExternalPackages: ['mysql2'],
+  serverExternalPackages: ['mysql2', 'sharp'],
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
