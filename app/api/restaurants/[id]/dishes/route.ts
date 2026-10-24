@@ -6,6 +6,8 @@ import { formatCleanDishName, isDishVeg, isPureVegRestaurantName } from '@/lib/d
 import { verifySwiggyRestaurant, toVerifiedRestaurant } from '@/lib/verifiedRestaurants';
 import { fetchSwiggyDishesViaApify } from '@/lib/apifySwiggy';
 import { inferDishCategory } from '@/lib/liveMenu';
+import { fetchZomatoDishesForRestaurant } from '@/lib/zomatoEngine';
+import { isGooglePlacesConfigured, fetchGooglePlaceDetails, extractDishesFromGoogleDetails } from '@/lib/googlePlaces';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,9 +30,12 @@ const CACHE_HEADERS = {
 
 /**
  * Restaurant menu (strict authentic mode).
- * Fetches real menus from Swiggy or verified database registry.
- * If a restaurant's actual menu cannot be found, it strictly returns an empty
- * list with "Menu currently unavailable" rather than displaying synthetic or fallback items.
+ * Multi-Source Menu Priority:
+ *  1. Zomato: Fetch actual menu if available
+ *  2. Swiggy: Fetch actual menu if available
+ *  3. Google Search: Discover official website, published menu, or customer-reviewed dishes
+ *  4. Other verified sources: Database registry
+ * If no verified source has menu data, strictly returns "Menu currently unavailable".
  */
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -54,82 +59,133 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     let baseDishes: Dish[] = [];
     let fssaiLicense: string | null = null;
     let verifiedAt: string | null = null;
-    let source = 'live_swiggy_menu_verified';
-    let failReason = 'Restaurant not found or unverified';
+    let source = 'live_menu_verified';
 
     const numId = parseInt(params.id, 10);
     const isOsmOrPoiId = !isNaN(numId) && numId >= 850000;
 
-    // 1. Check database verified registry first (instant, 0ms)
+    // Load preliminary DB restaurant info if available
     if (!isNaN(numId) && !isOsmOrPoiId) {
-      const dbRest = await db.getRestaurantById(numId);
+      const dbRest = await db.getRestaurantById(numId).catch(() => null);
       if (dbRest) {
         restInfo = dbRest;
         fssaiLicense = dbRest.fssai_license || null;
         verifiedAt = dbRest.verified_at || new Date().toISOString();
-        source = 'verified_registry';
-
-        const dbDishes = await db.getDishesByRestaurant(dbRest.id).catch(() => []);
-        if (dbDishes.length > 0) {
-          baseDishes = dbDishes;
-        }
       }
     }
 
-    // 2. If not found in DB or DB has no dishes, and id is not a synthetic POI id, try Swiggy by numeric ID
+    const restName = paramName || restInfo?.name || '';
+    const restCity = paramCity || restInfo?.city || (lat && lng ? 'current' : 'pune');
+    const restArea = paramArea || restInfo?.area || '';
+
+    // =========================================================================
+    // PRIORITY 1: ZOMATO (Fetch the restaurant's actual menu if available)
+    // =========================================================================
+    if (baseDishes.length === 0 && restName) {
+      try {
+        const zomatoDishes = await fetchZomatoDishesForRestaurant(restName, {
+          city: restCity,
+          area: restArea,
+          restaurantId: params.id
+        });
+        if (zomatoDishes && zomatoDishes.length > 0) {
+          baseDishes = zomatoDishes;
+          source = 'zomato';
+        }
+      } catch (zomErr) {
+        console.warn('Zomato menu fetch notice for', restName, zomErr);
+      }
+    }
+
+    // =========================================================================
+    // PRIORITY 2: SWIGGY (Fetch the actual menu if available)
+    // =========================================================================
     if (baseDishes.length === 0 && !isOsmOrPoiId && /^\d{2,10}$/.test(params.id)) {
       try {
         const swiggyResult = await verifySwiggyRestaurant(params.id, { lat, lng });
         if (swiggyResult.verified) {
           const profile = swiggyResult.profile;
-          restInfo = toVerifiedRestaurant(profile);
+          if (!restInfo) restInfo = toVerifiedRestaurant(profile);
           baseDishes = profile.vegOnly ? profile.dishes.filter(d => d.is_veg !== 0) : profile.dishes;
           fssaiLicense = profile.fssaiLicense || null;
           verifiedAt = profile.verifiedAt || null;
-          source = 'live_swiggy_menu_verified';
-        } else {
-          failReason = swiggyResult.reason;
+          source = 'swiggy';
         }
       } catch {
-        failReason = 'swiggy_unreachable';
+        // Swiggy numeric ID lookup failed
       }
     }
 
-    // 3. If still no dishes and paramName provided (e.g. from POI or live search across India),
-    // query Swiggy's live menu endpoint by restaurant name & city coordinates
-    if (baseDishes.length === 0 && paramName) {
+    if (baseDishes.length === 0 && restName) {
       try {
-        const searchCity = paramCity || (lat && lng ? 'current' : 'pune');
-        const liveDishes = await fetchSwiggyDishesViaApify(paramName, searchCity, { lat, lng });
+        const liveDishes = await fetchSwiggyDishesViaApify(restName, restCity, { lat, lng });
         if (liveDishes && liveDishes.length > 0) {
           baseDishes = liveDishes;
-          source = 'live_swiggy_menu_verified';
+          source = 'swiggy';
         }
       } catch (err) {
-        console.warn('Live Swiggy menu fetch notice for', paramName, err);
+        console.warn('Live Swiggy menu fetch notice for', restName, err);
+      }
+    }
+
+    // =========================================================================
+    // PRIORITY 3: GOOGLE SEARCH / GOOGLE PLACES (Official site / customer dishes)
+    // =========================================================================
+    if (baseDishes.length === 0 && restName && isGooglePlacesConfigured()) {
+      try {
+        const placeDetails = await fetchGooglePlaceDetails(restName, restCity);
+        if (placeDetails) {
+          const googleDishes = extractDishesFromGoogleDetails(placeDetails, restInfo || {
+            id: !isNaN(numId) ? numId : 850000,
+            name: restName,
+            area: restArea,
+            city: restCity
+          } as Restaurant);
+          if (googleDishes.length > 0) {
+            baseDishes = googleDishes;
+            source = 'google';
+          }
+        }
+      } catch (googleErr) {
+        console.warn('Google Places dish lookup notice for', restName, googleErr);
+      }
+    }
+
+    // =========================================================================
+    // PRIORITY 4: OTHER VERIFIED SOURCES (Database verified registry)
+    // =========================================================================
+    if (baseDishes.length === 0 && !isNaN(numId) && !isOsmOrPoiId) {
+      try {
+        const dbDishes = await db.getDishesByRestaurant(numId).catch(() => []);
+        if (dbDishes.length > 0) {
+          baseDishes = dbDishes;
+          source = 'verified_registry';
+        }
+      } catch {
+        // DB dishes notice
       }
     }
 
     // Build restInfo metadata if not yet assigned
-    if (!restInfo && paramName) {
-      const isPureVeg = paramIsVeg === '1' || isPureVegRestaurantName(paramName);
+    if (!restInfo && restName) {
+      const isPureVeg = paramIsVeg === '1' || isPureVegRestaurantName(restName);
       restInfo = {
         id: !isNaN(numId) ? numId : 850000,
-        name: paramName,
-        area: paramArea || paramCity || '',
-        city: paramCity || '',
-        address: paramArea ? `${paramArea}, ${paramCity || ''}` : paramCity || '',
+        name: restName,
+        area: restArea || restCity || '',
+        city: restCity || '',
+        address: restArea ? `${restArea}, ${restCity || ''}` : restCity || '',
         latitude: !isNaN(lat) ? lat : 18.5204,
         longitude: !isNaN(lng) ? lng : 73.8567,
         rating: 4.8,
         image: '',
-        description: `Authentic dining spot in ${paramArea || paramCity || 'India'}`,
+        description: `Authentic dining spot in ${restArea || restCity || 'India'}`,
         is_campaign_active: 1,
         total_visits: 1850,
         status: 'active',
         is_veg: isPureVeg ? 1 : 0,
         is_verified: 1,
-        verification_source: 'verified_registry',
+        verification_source: source,
         cuisine_tags: isPureVeg ? ['Pure Veg', 'Authentic Dining'] : ['Authentic Dining']
       };
     }

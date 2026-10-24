@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchLocationFromIP } from '@/lib/ipLocation';
 import { parseSwiggyRestaurantUrl, CITY_COORDINATES } from '@/lib/apifySwiggy';
+import { parseZomatoUrl } from '@/lib/zomatoEngine';
 import { lookupGazetteer } from '@/lib/locationResolver';
 import {
   fetchVerifiedNearbyRestaurants,
@@ -12,16 +13,12 @@ import { searchRestaurantsAnywhere } from '@/lib/restaurantSearch';
 export const dynamic = 'force-dynamic';
 
 /**
- * Restaurant search (strict verified mode, location-independent).
+ * Multi-Source Restaurant Search across Zomato, Swiggy, and Google.
  *
- * - No query      -> verified restaurants nearest to the user (default list).
- * - With a query  -> any restaurant in any city: a typed location ("Prashant Corner Thane",
- *                    "Misal in Thane", "Vaishali, FC Road Pune") is searched at that place;
- *                    otherwise around the user, then across major cities by restaurant name.
- *
- * Only restaurants that pass full Swiggy verification are returned
- * (see lib/verifiedRestaurants.ts). No restaurant is ever synthesized from the
- * user's typed text, autocomplete suggestions, OpenStreetMap, or seed data.
+ * - No query      -> verified restaurants nearest to the user.
+ * - With a query  -> searches across Zomato, Swiggy, Google, and verified registry.
+ * - Handles exclusive Zomato restaurants (e.g. Badshahi Boarding House),
+ *   exclusive Swiggy restaurants, and Google discoveries.
  */
 export async function GET(request: Request) {
   try {
@@ -54,41 +51,56 @@ export async function GET(request: Request) {
 
     const userCoords = hasUserCoords ? { lat, lng } : null;
 
-    // 1. No query -> closest verified restaurants to the user (the ONLY place user location limits results)
+    // 1. No query -> closest verified restaurants to the user
     if (!query) {
       const nearby = userCoords ? await fetchVerifiedNearbyRestaurants(lat, lng, 5) : [];
       return NextResponse.json({
         success: true,
         count: nearby.length,
         isLiveAPI: true,
-        verification: 'swiggy_strict',
+        verification: 'multi_source_verified',
         userCoords,
         data: nearby
       });
     }
 
     // 2. Pasted Swiggy URL / id -> verify that exact restaurant only (works for any city)
-    const parsedUrl = parseSwiggyRestaurantUrl(query);
-    if (parsedUrl.isSwiggyUrl && parsedUrl.restaurantId) {
-      const result = await verifySwiggyRestaurant(parsedUrl.restaurantId, userCoords || undefined);
+    const parsedSwiggy = parseSwiggyRestaurantUrl(query);
+    if (parsedSwiggy.isSwiggyUrl && parsedSwiggy.restaurantId) {
+      const result = await verifySwiggyRestaurant(parsedSwiggy.restaurantId, userCoords || undefined);
       const data = result.verified ? [toVerifiedRestaurant(result.profile, userCoords)] : [];
       return NextResponse.json({
         success: true,
         count: data.length,
         isLiveAPI: true,
-        verification: 'swiggy_strict',
+        verification: 'multi_source_verified',
         data,
         ...(data.length === 0 ? { message: 'This Swiggy restaurant could not be verified.' } : {})
       });
     }
 
-    // 3. Name / cuisine / dish search in any location -> verified matches only
+    // 3. Pasted Zomato URL -> search that exact restaurant by name and city
+    const parsedZomato = parseZomatoUrl(query);
+    if (parsedZomato.isZomatoUrl && parsedZomato.name) {
+      const result = await searchRestaurantsAnywhere(parsedZomato.name, userCoords, { selectedCity: parsedZomato.city || city });
+      return NextResponse.json({
+        success: true,
+        count: result.data.length,
+        isLiveAPI: true,
+        verification: 'multi_source_verified',
+        scope: result.scope,
+        searchedLocation: result.searchedLocation,
+        data: result.data
+      });
+    }
+
+    // 4. Name / cuisine / dish search across Zomato, Swiggy, and Google in any location
     const result = await searchRestaurantsAnywhere(query, userCoords, { selectedCity: city });
     return NextResponse.json({
       success: true,
       count: result.data.length,
       isLiveAPI: true,
-      verification: 'swiggy_strict',
+      verification: 'multi_source_verified',
       scope: result.scope,
       searchedLocation: result.searchedLocation,
       ...(result.message ? { message: result.message } : {}),

@@ -38,6 +38,7 @@ import { db, type Restaurant } from './db';
 import { generateLiveMenuForRestaurant } from './liveMenu';
 import { isDishRelevantToSearch, isPureVegRestaurantName } from './dishAssets';
 import { pickCuisineImage, getDeterministicPlaceId } from './livePlaces';
+import { searchZomatoRestaurants, getZomatoHeritageKey } from './zomatoEngine';
 
 const RESULT_LIMIT = 15;
 const HUB_CONCURRENCY = 6;
@@ -271,7 +272,11 @@ function mergeScored(target: Map<string, ScoredVerifiedRestaurant>, list: Scored
     const key = getRestaurantKey(s.restaurant.name);
     let existingKey: string | null = null;
     for (const [k, existing] of target.entries()) {
-      const sameId = String(existing.restaurant.swiggy_id || existing.restaurant.id) === String(s.restaurant.swiggy_id || s.restaurant.id);
+      const sameId =
+        (s.restaurant.swiggy_id && existing.restaurant.swiggy_id && s.restaurant.swiggy_id === existing.restaurant.swiggy_id) ||
+        (s.restaurant.zomato_id && existing.restaurant.zomato_id && s.restaurant.zomato_id === existing.restaurant.zomato_id) ||
+        String(existing.restaurant.id) === String(s.restaurant.id);
+
       const sameNameAndClose =
         getRestaurantKey(existing.restaurant.name) === key &&
         haversineKm(existing.restaurant.latitude, existing.restaurant.longitude, s.restaurant.latitude, s.restaurant.longitude) <= 1.5;
@@ -284,15 +289,70 @@ function mergeScored(target: Map<string, ScoredVerifiedRestaurant>, list: Scored
 
     if (existingKey) {
       const prev = target.get(existingKey)!;
-      if (
-        s.score > prev.score ||
-        (s.restaurant.verification_source === 'verified_registry' && prev.restaurant.verification_source !== 'verified_registry')
-      ) {
-        target.delete(existingKey);
-        target.set(String(s.restaurant.swiggy_id || s.restaurant.id), s);
-      }
+      const combinedSources = Array.from(new Set([
+        ...(prev.restaurant.sources || [prev.restaurant.verification_source || 'swiggy']),
+        ...(s.restaurant.sources || [s.restaurant.verification_source || 'zomato'])
+      ]));
+      const hasZomato = combinedSources.includes('zomato');
+      const hasSwiggy = combinedSources.includes('swiggy');
+      const hasGoogle = combinedSources.includes('google');
+      const sourcePlatform =
+        hasZomato && hasSwiggy
+          ? 'both'
+          : hasZomato
+            ? 'zomato'
+            : hasSwiggy
+              ? 'swiggy'
+              : hasGoogle
+                ? 'google'
+                : 'verified';
+
+      const mergedRest: VerifiedRestaurant = {
+        ...(prev.score >= s.score ? prev.restaurant : s.restaurant),
+        sources: combinedSources,
+        source_platform: sourcePlatform,
+        verification_source: hasZomato ? 'zomato' : (hasSwiggy ? 'swiggy' : (hasGoogle ? 'google' : 'verified_registry')),
+        swiggy_id: prev.restaurant.swiggy_id || s.restaurant.swiggy_id,
+        swiggy_url: prev.restaurant.swiggy_url || s.restaurant.swiggy_url,
+        zomato_id: prev.restaurant.zomato_id || s.restaurant.zomato_id,
+        zomato_url: prev.restaurant.zomato_url || s.restaurant.zomato_url,
+        google_place_id: prev.restaurant.google_place_id || s.restaurant.google_place_id,
+        website_url: prev.restaurant.website_url || s.restaurant.website_url
+      };
+
+      const finalScore = Math.max(prev.score, s.score);
+      const finalNameScore = Math.max(prev.nameScore, s.nameScore);
+
+      target.delete(existingKey);
+      target.set(String(mergedRest.zomato_id || mergedRest.swiggy_id || mergedRest.id), {
+        restaurant: mergedRest,
+        score: finalScore,
+        nameScore: finalNameScore
+      });
     } else {
-      target.set(String(s.restaurant.swiggy_id || s.restaurant.id), s);
+      const initSources = s.restaurant.sources || [s.restaurant.verification_source || 'swiggy'];
+      const hasZomato = initSources.includes('zomato');
+      const hasSwiggy = initSources.includes('swiggy');
+      const hasGoogle = initSources.includes('google');
+      const sourcePlatform =
+        hasZomato && hasSwiggy
+          ? 'both'
+          : hasZomato
+            ? 'zomato'
+            : hasSwiggy
+              ? 'swiggy'
+              : hasGoogle
+                ? 'google'
+                : 'verified';
+
+      target.set(String(s.restaurant.zomato_id || s.restaurant.swiggy_id || s.restaurant.id), {
+        ...s,
+        restaurant: {
+          ...s.restaurant,
+          sources: initSources,
+          source_platform: s.restaurant.source_platform || sourcePlatform
+        }
+      });
     }
   }
 }
@@ -335,7 +395,9 @@ function createCustomPlaceEntry(
     status: 'active',
     is_veg: isVeg,
     is_verified: 1,
-    verification_source: 'verified_registry',
+    verification_source: 'google',
+    sources: ['google'],
+    source_platform: 'google',
     cuisine: isVeg ? ['Pure Veg', 'Street Food'] : ['Authentic Dining', 'Street Food'],
     distanceKm: userCoords ? haversineKm(userCoords.lat, userCoords.lng, lat, lng) : undefined
   } as VerifiedRestaurant;
@@ -390,11 +452,22 @@ async function searchDbVerified(
       }
 
       if (finalScore >= 50) {
+        const heritageKey = getZomatoHeritageKey(r.name);
+        const sources: string[] = ['verified_registry'];
+        if (heritageKey) {
+          sources.unshift('zomato');
+        }
+        const sourcePlatform = heritageKey ? 'zomato' : 'verified';
+
         results.push({
           restaurant: {
             ...r,
             is_verified: 1,
-            verification_source: 'verified_registry',
+            verification_source: heritageKey ? 'zomato' : 'verified_registry',
+            sources,
+            source_platform: sourcePlatform,
+            zomato_id: heritageKey ? `zom_${heritageKey}` : undefined,
+            zomato_url: heritageKey ? `https://www.zomato.com/${(r.city || 'pune').toLowerCase()}/${heritageKey}` : undefined,
             cuisine: r.cuisine_tags || ['Heritage Landmark', 'Authentic Dining'],
             distanceKm: userCoords ? haversineKm(userCoords.lat, userCoords.lng, r.latitude, r.longitude) : undefined
           } as VerifiedRestaurant,
@@ -499,7 +572,9 @@ async function searchLivePoiRestaurants(
           status: 'active',
           is_veg: isVeg,
           is_verified: 1,
-          verification_source: 'verified_registry',
+          verification_source: 'google',
+          sources: ['google'],
+          source_platform: 'google',
           cuisine: isVeg ? ['Pure Veg', 'Authentic Dining'] : ['Authentic Dining'],
           distanceKm: userCoords ? haversineKm(userCoords.lat, userCoords.lng, itemLat, itemLon) : undefined
         } as VerifiedRestaurant,
@@ -587,6 +662,7 @@ export async function searchRestaurantsAnywhere(
 
       const jobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
         searchDbVerified(query, userCoords, loc),
+        searchZomatoRestaurants(parsed.nameQuery || query, { city: loc.label, lat: loc.lat, lng: loc.lng }),
         searchLivePoiRestaurants(parsed.nameQuery || query, loc, userCoords, 10),
         searchLivePoiRestaurants(query, loc, userCoords, 10)
       ];
@@ -662,9 +738,11 @@ export async function searchRestaurantsAnywhere(
     .trim();
 
   const localPoiJobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
+    searchZomatoRestaurants(query, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }),
     searchLivePoiRestaurants(query, defaultAnchor, userCoords, 8)
   ];
   if (queryDistinctive && queryDistinctive !== query && queryDistinctive.length >= 3) {
+    localPoiJobs.push(searchZomatoRestaurants(queryDistinctive, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }));
     localPoiJobs.push(searchLivePoiRestaurants(queryDistinctive, defaultAnchor, userCoords, 8));
   }
 
@@ -682,11 +760,15 @@ export async function searchRestaurantsAnywhere(
   let currentCandidates = filterResults(Array.from(merged.values()), query);
 
   // ------------------------------------------------------------------
-  // 4. If fewer than 2 results found locally, search Live POIs India-wide
+  // 4. If fewer than 2 results found locally, search Live POIs & Zomato India-wide
   // ------------------------------------------------------------------
   if (currentCandidates.length < 2 && query.length >= 3) {
-    const nationwidePoi = await searchLivePoiRestaurants(query, null, userCoords, 8);
+    const [nationwidePoi, nationwideZomato] = await Promise.all([
+      searchLivePoiRestaurants(query, null, userCoords, 8),
+      searchZomatoRestaurants(query, {})
+    ]);
     mergeScored(merged, nationwidePoi);
+    mergeScored(merged, nationwideZomato);
     currentCandidates = filterResults(Array.from(merged.values()), query);
   }
 

@@ -91,8 +91,12 @@ export type VerificationResult =
 /** Restaurant shape returned to the frontend (superset of db.Restaurant). */
 export type VerifiedRestaurant = Restaurant & {
   swiggy_id?: string | null;
+  zomato_id?: string | null;
+  google_place_id?: string | null;
   is_verified: 1;
-  verification_source: 'swiggy' | 'verified_registry';
+  verification_source: 'swiggy' | 'zomato' | 'google' | 'verified_registry' | string;
+  sources?: string[];
+  source_platform?: 'zomato' | 'swiggy' | 'both' | 'google' | 'verified' | string;
   fssai_license: string | null;
   verified_at: string;
   is_open_now?: boolean;
@@ -101,6 +105,8 @@ export type VerifiedRestaurant = Restaurant & {
   cost_for_two?: string | null;
   rating_count?: string | null;
   swiggy_url?: string;
+  zomato_url?: string;
+  website_url?: string;
 };
 
 interface SwiggyListingCandidate {
@@ -464,6 +470,8 @@ export function toVerifiedRestaurant(
     ...(distanceKm !== undefined ? { distanceKm } : {}),
     is_verified: 1,
     verification_source: 'swiggy',
+    sources: ['swiggy'],
+    source_platform: 'swiggy',
     fssai_license: profile.fssaiLicense,
     verified_at: profile.verifiedAt,
     is_open_now: profile.isOpenNow,
