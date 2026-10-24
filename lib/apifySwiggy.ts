@@ -276,20 +276,94 @@ export function parseSwiggyPrice(rawPrice: any): number {
  * City default coordinates mapping for Indian metropolitan hubs
  */
 export const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  // Karnataka
   bangalore: { lat: 12.9716, lng: 77.5946 },
   bengaluru: { lat: 12.9716, lng: 77.5946 },
+  mysore: { lat: 12.2958, lng: 76.6394 },
+  mangalore: { lat: 12.9141, lng: 74.8560 },
+  hubli: { lat: 15.3647, lng: 75.1240 },
+  belgaum: { lat: 15.8497, lng: 74.4977 },
+
+  // Maharashtra
   pune: { lat: 18.5204, lng: 73.8567 },
-  mumbai: { lat: 19.076, lng: 72.8777 },
-  delhi: { lat: 28.6139, lng: 77.209 },
-  hyderabad: { lat: 17.385, lng: 78.4867 },
-  kolkata: { lat: 22.5726, lng: 88.3639 },
-  chennai: { lat: 13.0827, lng: 80.2707 },
-  ahmedabad: { lat: 23.0225, lng: 72.5714 },
-  jaipur: { lat: 26.9124, lng: 75.7873 },
-  lucknow: { lat: 26.8467, lng: 80.9462 },
+  mumbai: { lat: 19.0760, lng: 72.8777 },
+  bombay: { lat: 19.0760, lng: 72.8777 },
+  thane: { lat: 19.2183, lng: 72.9781 },
+  'navi mumbai': { lat: 19.0330, lng: 73.0297 },
+  vashi: { lat: 19.0771, lng: 72.9986 },
+  panvel: { lat: 18.9894, lng: 73.1175 },
+  kalyan: { lat: 19.2437, lng: 73.1355 },
+  dombivli: { lat: 19.2094, lng: 73.0939 },
+  'mira road': { lat: 19.2813, lng: 72.8561 },
+  vasai: { lat: 19.3919, lng: 72.8397 },
+  virar: { lat: 19.4559, lng: 72.8114 },
+  nashik: { lat: 19.9975, lng: 73.7898 },
+  nagpur: { lat: 21.1458, lng: 79.0882 },
+  aurangabad: { lat: 19.8762, lng: 75.3433 },
+  sambhajinagar: { lat: 19.8762, lng: 75.3433 },
+  'sambhaji nagar': { lat: 19.8762, lng: 75.3433 },
+  'chhatrapati sambhajinagar': { lat: 19.8762, lng: 75.3433 },
+  'chhatrapati sambhaji nagar': { lat: 19.8762, lng: 75.3433 },
+  kolhapur: { lat: 16.7050, lng: 74.2433 },
+  solapur: { lat: 17.6599, lng: 75.9064 },
+  satara: { lat: 17.6805, lng: 74.0183 },
+  sangli: { lat: 16.8524, lng: 74.5815 },
+  lonavala: { lat: 18.7546, lng: 73.4062 },
+
+  // Delhi NCR & North
+  delhi: { lat: 28.6139, lng: 77.2090 },
+  'new delhi': { lat: 28.6139, lng: 77.2090 },
+  gurgaon: { lat: 28.4595, lng: 77.0266 },
+  gurugram: { lat: 28.4595, lng: 77.0266 },
+  noida: { lat: 28.5355, lng: 77.3910 },
+  'greater noida': { lat: 28.4744, lng: 77.5040 },
+  ghaziabad: { lat: 28.6692, lng: 77.4538 },
+  faridabad: { lat: 28.4089, lng: 77.3178 },
+  dehradun: { lat: 30.3165, lng: 78.0322 },
+
+  // Punjab, Chandigarh & Haryana
+  punjab: { lat: 30.9010, lng: 75.8573 },
   chandigarh: { lat: 30.7333, lng: 76.7794 },
+  mohali: { lat: 30.7046, lng: 76.7179 },
+  panchkula: { lat: 30.6942, lng: 76.8606 },
+  ludhiana: { lat: 30.9010, lng: 75.8573 },
+  amritsar: { lat: 31.6340, lng: 74.8723 },
+  jalandhar: { lat: 31.3260, lng: 75.5762 },
+  patiala: { lat: 30.3398, lng: 76.3869 },
+  bathinda: { lat: 30.2110, lng: 74.9455 },
+
+  // Other Major Metros & States
+  hyderabad: { lat: 17.3850, lng: 78.4867 },
+  secunderabad: { lat: 17.4399, lng: 78.4983 },
+  visakhapatnam: { lat: 17.6868, lng: 83.2185 },
+  vijayawada: { lat: 16.5062, lng: 80.6480 },
+  chennai: { lat: 13.0827, lng: 80.2707 },
+  madras: { lat: 13.0827, lng: 80.2707 },
+  coimbatore: { lat: 11.0168, lng: 76.9558 },
+  madurai: { lat: 9.9252, lng: 78.1198 },
+  kochi: { lat: 9.9312, lng: 76.2673 },
+  trivandrum: { lat: 8.5241, lng: 76.9366 },
+  kolkata: { lat: 22.5726, lng: 88.3639 },
+  calcutta: { lat: 22.5726, lng: 88.3639 },
+  ahmedabad: { lat: 23.0225, lng: 72.5714 },
+  surat: { lat: 21.1702, lng: 72.8311 },
+  vadodara: { lat: 22.3072, lng: 73.1812 },
+  rajkot: { lat: 22.3039, lng: 70.8022 },
+  jaipur: { lat: 26.9124, lng: 75.7873 },
+  udaipur: { lat: 24.5854, lng: 73.7125 },
+  jodhpur: { lat: 26.2389, lng: 73.0243 },
+  lucknow: { lat: 26.8467, lng: 80.9462 },
+  kanpur: { lat: 26.4499, lng: 80.3319 },
+  varanasi: { lat: 25.3176, lng: 82.9739 },
+  agra: { lat: 27.1767, lng: 78.0081 },
   indore: { lat: 22.7196, lng: 75.8577 },
-  goa: { lat: 15.2993, lng: 74.124 }
+  bhopal: { lat: 23.2599, lng: 77.4126 },
+  patna: { lat: 25.5941, lng: 85.1376 },
+  ranchi: { lat: 23.3441, lng: 85.3096 },
+  bhubaneswar: { lat: 20.2961, lng: 85.8245 },
+  goa: { lat: 15.2993, lng: 74.1240 },
+  panaji: { lat: 15.4909, lng: 73.8278 },
+  guwahati: { lat: 26.1445, lng: 91.7362 }
 };
 
 /**
@@ -704,7 +778,7 @@ export async function fetchSwiggyRestaurantMenu(
  * Strict name equality check between a requested restaurant name and a Swiggy listing
  * (normalised; generic words like "hotel"/"restaurant" ignored).
  */
-function isSameRestaurantName(requested: string, candidate: string): boolean {
+export function isSameRestaurantName(requested: string, candidate: string): boolean {
   const norm = (s: string) =>
     (s || '')
       .toLowerCase()
@@ -714,7 +788,13 @@ function isSameRestaurantName(requested: string, candidate: string): boolean {
   const a = norm(requested);
   const b = norm(candidate);
   if (!a || !b) return false;
-  return a === b || (a.length >= 5 && b.startsWith(a)) || (b.length >= 5 && a.startsWith(b));
+  return (
+    a === b ||
+    (a.length >= 5 && b.startsWith(a)) ||
+    (b.length >= 5 && a.startsWith(b)) ||
+    (a.length >= 5 && b.includes(a)) ||
+    (b.length >= 5 && a.includes(b))
+  );
 }
 
 /**

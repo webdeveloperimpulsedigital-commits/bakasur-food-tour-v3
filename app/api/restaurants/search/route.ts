@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchLocationFromIP } from '@/lib/ipLocation';
 import { parseSwiggyRestaurantUrl, CITY_COORDINATES } from '@/lib/apifySwiggy';
+import { lookupGazetteer } from '@/lib/locationResolver';
 import {
   fetchVerifiedNearbyRestaurants,
   verifySwiggyRestaurant,
@@ -33,9 +34,10 @@ export async function GET(request: Request) {
 
     // Resolve the user's position: explicit coords -> selected city centre -> IP geolocation
     const cityKey = city.toLowerCase();
-    if (!hasUserCoords && cityKey && CITY_COORDINATES[cityKey]) {
-      lat = CITY_COORDINATES[cityKey].lat;
-      lng = CITY_COORDINATES[cityKey].lng;
+    const gazetteerMatch = cityKey ? (CITY_COORDINATES[cityKey] || lookupGazetteer(cityKey)) : null;
+    if (!hasUserCoords && gazetteerMatch) {
+      lat = gazetteerMatch.lat;
+      lng = gazetteerMatch.lng;
       hasUserCoords = true;
     } else if (!hasUserCoords) {
       const forwarded = request.headers.get('x-forwarded-for');

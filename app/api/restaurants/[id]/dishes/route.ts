@@ -4,7 +4,8 @@ import { db } from '@/lib/db';
 import { searchDishesSwiggyZomato } from '@/lib/foodSearchEngine';
 import { formatCleanDishName, isDishVeg, isPureVegRestaurantName } from '@/lib/dishAssets';
 import { verifySwiggyRestaurant, toVerifiedRestaurant } from '@/lib/verifiedRestaurants';
-import { generateLiveMenuForRestaurant, inferDishCategory } from '@/lib/liveMenu';
+import { fetchSwiggyDishesViaApify } from '@/lib/apifySwiggy';
+import { inferDishCategory } from '@/lib/liveMenu';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,9 +27,10 @@ const CACHE_HEADERS = {
 };
 
 /**
- * Restaurant menu (optimized verified mode).
- * Supports live Swiggy restaurants, database-verified heritage restaurants,
- * and verified live POIs with high-speed in-memory caching.
+ * Restaurant menu (strict authentic mode).
+ * Fetches real menus from Swiggy or verified database registry.
+ * If a restaurant's actual menu cannot be found, it strictly returns an empty
+ * list with "Menu currently unavailable" rather than displaying synthetic or fallback items.
  */
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -42,7 +44,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const paramCity = (searchParams.get('city') || '').trim();
     const paramIsVeg = searchParams.get('is_veg');
 
-    const cacheKey = `${params.id}_${searchQuery.toLowerCase()}_${paramName.toLowerCase()}`;
+    const cacheKey = `${params.id}_${paramCity.toLowerCase()}_${paramName.toLowerCase()}_${searchQuery.toLowerCase()}`;
     const cached = dishesCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < MENU_CACHE_TTL_MS) {
       return NextResponse.json(cached.response, { headers: CACHE_HEADERS });
@@ -67,30 +69,15 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         verifiedAt = dbRest.verified_at || new Date().toISOString();
         source = 'verified_registry';
 
-        const liveDishes = generateLiveMenuForRestaurant({
-          id: dbRest.id,
-          name: dbRest.name,
-          description: dbRest.description,
-          area: dbRest.area,
-          city: dbRest.city,
-          is_veg: dbRest.is_veg
-        });
-
         const dbDishes = await db.getDishesByRestaurant(dbRest.id).catch(() => []);
-        const combined = [...liveDishes];
-        const seenNames = new Set(liveDishes.map(d => d.name.toLowerCase().trim()));
-        for (const d of dbDishes) {
-          if (!seenNames.has(d.name.toLowerCase().trim())) {
-            combined.push(d);
-            seenNames.add(d.name.toLowerCase().trim());
-          }
+        if (dbDishes.length > 0) {
+          baseDishes = dbDishes;
         }
-        baseDishes = combined;
       }
     }
 
-    // 2. If not found in DB and id is not a synthetic POI id, try Swiggy
-    if (!restInfo && !isOsmOrPoiId && /^\d{2,10}$/.test(params.id)) {
+    // 2. If not found in DB or DB has no dishes, and id is not a synthetic POI id, try Swiggy by numeric ID
+    if (baseDishes.length === 0 && !isOsmOrPoiId && /^\d{2,10}$/.test(params.id)) {
       try {
         const swiggyResult = await verifySwiggyRestaurant(params.id, { lat, lng });
         if (swiggyResult.verified) {
@@ -108,20 +95,35 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       }
     }
 
-    // 3. Fallback to restaurant metadata passed from search/POI (instant, authentic dishes)
+    // 3. If still no dishes and paramName provided (e.g. from POI or live search across India),
+    // query Swiggy's live menu endpoint by restaurant name & city coordinates
+    if (baseDishes.length === 0 && paramName) {
+      try {
+        const searchCity = paramCity || (lat && lng ? 'current' : 'pune');
+        const liveDishes = await fetchSwiggyDishesViaApify(paramName, searchCity, { lat, lng });
+        if (liveDishes && liveDishes.length > 0) {
+          baseDishes = liveDishes;
+          source = 'live_swiggy_menu_verified';
+        }
+      } catch (err) {
+        console.warn('Live Swiggy menu fetch notice for', paramName, err);
+      }
+    }
+
+    // Build restInfo metadata if not yet assigned
     if (!restInfo && paramName) {
       const isPureVeg = paramIsVeg === '1' || isPureVegRestaurantName(paramName);
       restInfo = {
         id: !isNaN(numId) ? numId : 850000,
         name: paramName,
-        area: paramArea || paramCity || 'Pune',
-        city: paramCity || 'Pune',
-        address: paramArea ? `${paramArea}, ${paramCity || 'Pune'}` : paramCity || 'Pune',
+        area: paramArea || paramCity || '',
+        city: paramCity || '',
+        address: paramArea ? `${paramArea}, ${paramCity || ''}` : paramCity || '',
         latitude: !isNaN(lat) ? lat : 18.5204,
         longitude: !isNaN(lng) ? lng : 73.8567,
         rating: 4.8,
         image: '',
-        description: `Authentic dining spot in ${paramArea || paramCity || 'Pune'}`,
+        description: `Authentic dining spot in ${paramArea || paramCity || 'India'}`,
         is_campaign_active: 1,
         total_visits: 1850,
         status: 'active',
@@ -130,68 +132,88 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         verification_source: 'verified_registry',
         cuisine_tags: isPureVeg ? ['Pure Veg', 'Authentic Dining'] : ['Authentic Dining']
       };
-
-      baseDishes = generateLiveMenuForRestaurant({
-        id: restInfo.id,
-        name: restInfo.name,
-        description: restInfo.description,
-        area: restInfo.area,
-        city: restInfo.city,
-        is_veg: restInfo.is_veg
-      });
-      source = 'verified_registry';
     }
 
-    if (!restInfo) {
-      const fallbackName = paramName || 'Special Food Joint';
-      const isPureVeg = paramIsVeg === '1' || isPureVegRestaurantName(fallbackName);
-      restInfo = {
-        id: !isNaN(numId) ? numId : 850000,
-        name: fallbackName,
-        area: paramArea || paramCity || 'Pune',
-        city: paramCity || 'Pune',
-        address: paramArea ? `${paramArea}, ${paramCity || 'Pune'}` : paramCity || 'Pune',
-        latitude: !isNaN(lat) ? lat : 18.5204,
-        longitude: !isNaN(lng) ? lng : 73.8567,
-        rating: 4.8,
-        image: '',
-        description: `Authentic dining spot in ${paramArea || paramCity || 'Pune'}`,
-        is_campaign_active: 1,
-        total_visits: 1850,
-        status: 'active',
-        is_veg: isPureVeg ? 1 : 0,
-        is_verified: 1,
-        verification_source: 'verified_registry',
-        cuisine_tags: isPureVeg ? ['Pure Veg', 'Authentic Dining'] : ['Authentic Dining']
+    // 4. Strict Requirement: If no dishes could be retrieved from real sources,
+    // clearly report "Menu currently unavailable" instead of showing hardcoded, generic, or fake items.
+    if (baseDishes.length === 0) {
+      const payload = {
+        success: true,
+        count: 0,
+        isLiveAPI: true,
+        source: 'menu_unavailable',
+        menu_unavailable: true,
+        message: 'Menu currently unavailable',
+        restaurant: restInfo ? {
+          id: restInfo.id,
+          name: restInfo.name,
+          area: restInfo.area,
+          city: restInfo.city,
+          rating: restInfo.rating,
+          image: restInfo.image,
+          is_veg: restInfo.is_veg,
+          fssai_license: fssaiLicense,
+          verified_at: verifiedAt
+        } : {
+          id: !isNaN(numId) ? numId : 850000,
+          name: paramName || 'Selected Restaurant',
+          area: paramArea || paramCity || '',
+          city: paramCity || '',
+          rating: 4.5,
+          image: '',
+          is_veg: paramIsVeg === '1' ? 1 : 0
+        },
+        categories: [],
+        data: []
       };
-      baseDishes = generateLiveMenuForRestaurant(restInfo);
-      source = 'verified_registry';
+      dishesCache.set(cacheKey, { timestamp: Date.now(), response: payload });
+      return NextResponse.json(payload, { headers: CACHE_HEADERS });
     }
+
+    const activeRestInfo: Restaurant = restInfo ?? {
+      id: !isNaN(numId) ? numId : 850000,
+      name: paramName || 'Restaurant',
+      area: paramArea || paramCity || '',
+      city: paramCity || '',
+      address: paramArea ? `${paramArea}, ${paramCity || ''}` : paramCity || '',
+      latitude: !isNaN(lat) ? lat : 18.5204,
+      longitude: !isNaN(lng) ? lng : 73.8567,
+      rating: 4.8,
+      image: '',
+      description: `Authentic dining spot in ${paramArea || paramCity || 'India'}`,
+      is_campaign_active: 1,
+      total_visits: 1850,
+      status: 'active',
+      is_veg: paramIsVeg === '1' ? 1 : 0,
+      is_verified: 1,
+      verification_source: 'verified_registry',
+      cuisine_tags: ['Authentic Dining']
+    };
 
     const filteredDishes = searchQuery
-      ? searchDishesSwiggyZomato(restInfo, searchQuery, baseDishes)
+      ? searchDishesSwiggyZomato(activeRestInfo, searchQuery, baseDishes)
       : baseDishes;
 
     const finalDishes = filteredDishes.map(d => {
-      const name = formatCleanDishName(d.name, restInfo!.name);
-      const isLocalPhoto = typeof d.image === 'string' && d.image.startsWith('/images/food/');
+      const name = formatCleanDishName(d.name, activeRestInfo.name);
       const hasRealPhoto =
         typeof d.image === 'string' &&
-        d.image.startsWith('https://') &&
-        d.image.includes('swiggy.com') &&
+        (d.image.startsWith('https://') || d.image.startsWith('http://')) &&
+        (d.image.includes('swiggy.com') || d.image.includes('cloudinary.com') || d.image.includes('media-assets.swiggy.com')) &&
         !d.image.includes('placeholder');
 
       let resolvedImage: string;
       if (hasRealPhoto) {
-        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(restInfo!.name)}&imgUrl=${encodeURIComponent(d.image)}&v=v37`;
+        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(activeRestInfo.name)}&imgUrl=${encodeURIComponent(d.image)}&v=v37`;
       } else {
-        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(restInfo!.name)}&v=v37`;
+        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(activeRestInfo.name)}&v=v37`;
       }
 
       let isVeg = d.is_veg !== undefined ? Number(d.is_veg) : (isDishVeg(name) ? 1 : 0);
-      if (restInfo?.is_veg === 1 || isPureVegRestaurantName(restInfo?.name)) isVeg = 1;
+      if (activeRestInfo.is_veg === 1 || isPureVegRestaurantName(activeRestInfo.name)) isVeg = 1;
 
       const category = d.category || inferDishCategory(name, d.description);
+      const customDish = d as unknown as { proxy_image?: string };
 
       return {
         id: d.id,
@@ -205,8 +227,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         is_recommended: d.is_recommended ? 1 : 0,
         category,
         image: resolvedImage,
-        proxy_image: hasRealPhoto ? `/api/swiggy-image?url=${encodeURIComponent(d.image)}` : resolvedImage,
-        flying_image: resolvedImage
+        proxy_image: hasRealPhoto ? (customDish.proxy_image || `/api/swiggy-image?url=${encodeURIComponent(d.image)}`) : resolvedImage,
+        flying_image: resolvedImage,
+        has_original_photo: hasRealPhoto,
+        image_source: hasRealPhoto ? 'restaurant_photo' : 'ai_generated'
       };
     });
 
@@ -218,13 +242,13 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       isLiveAPI: true,
       source,
       restaurant: {
-        id: restInfo.id,
-        name: restInfo.name,
-        area: restInfo.area,
-        city: restInfo.city,
-        rating: restInfo.rating,
-        image: restInfo.image,
-        is_veg: restInfo.is_veg,
+        id: activeRestInfo.id,
+        name: activeRestInfo.name,
+        area: activeRestInfo.area,
+        city: activeRestInfo.city,
+        rating: activeRestInfo.rating,
+        image: activeRestInfo.image,
+        is_veg: activeRestInfo.is_veg,
         fssai_license: fssaiLicense,
         verified_at: verifiedAt
       },

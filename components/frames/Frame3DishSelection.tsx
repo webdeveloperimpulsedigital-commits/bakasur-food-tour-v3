@@ -17,98 +17,11 @@ interface Frame3DishSelectionProps {
   onBack?: () => void;
 }
 
+// Client-side menu cache to avoid redundant network round-trips
 const clientMenuCache = new Map<string, Dish[]>();
 
 export function clearClientMenuCache() {
   clientMenuCache.clear();
-}
-
-function getCuratedFallbackDishes(restaurant: Restaurant): Dish[] {
-  const isStrictVeg = isPureVegRestaurantName(restaurant.name) || restaurant.is_veg === 1;
-  const restLower = (restaurant.name || '').toLowerCase();
-
-  const isCafe = restLower.includes('cafe') || restLower.includes('coffee') || restLower.includes('bistro') || restLower.includes('bakery');
-  const isSouthIndian = restLower.includes('dosa') || restLower.includes('idli') || restLower.includes('udupi') || restLower.includes('bhavan');
-
-  if (isCafe) {
-    return [
-      { id: 90101, restaurant_id: restaurant.id, name: "Thick Cold Coffee with Chocolate", description: "Rich blended creamy cold coffee crowned with chocolate syrup.", price: 90, image: "/images/food/cold_coffee.jpg", popularity: 100, rating: 5.0, category: "Beverages", is_veg: 1, is_recommended: 1, status: 'active' },
-      { id: 90102, restaurant_id: restaurant.id, name: "Grilled Veg Club Sandwich", description: "Toasted jumbo bread layered with spiced potato, cheese & mint chutney.", price: 140, image: "/images/food/sandwich.jpg", popularity: 99, rating: 5.0, category: "Café Food", is_veg: 1, is_recommended: 1, status: 'active' },
-      { id: 90103, restaurant_id: restaurant.id, name: "Loaded Peri Peri Fries", description: "Crispy shoestring fries tossed in spicy peri peri seasoning.", price: 120, image: "/images/food/peri_peri_fries.jpg", popularity: 98, rating: 4.9, category: "Fast Food", is_veg: 1, is_recommended: 1, status: 'active' },
-      { id: 90104, restaurant_id: restaurant.id, name: "Special Masala Taak (Cooling Buttermilk)", description: "Refreshing churned spiced yogurt cooler.", price: 35, image: "/images/food/masala_taak.jpg", popularity: 97, rating: 4.9, category: "Beverages", is_veg: 1, is_recommended: 0, status: 'active' }
-    ];
-  }
-
-  if (isSouthIndian) {
-    return [
-      { id: 90201, restaurant_id: restaurant.id, name: "Crispy Butter Masala Dosa", description: "Thin golden fermented crepe folded over spiced potato masala with sambar.", price: 130, image: "/images/food/dosa.jpg", popularity: 100, rating: 5.0, category: "South Indian", is_veg: 1, is_recommended: 1, status: 'active' },
-      { id: 90202, restaurant_id: restaurant.id, name: "Steamed Soft Thatte Idli with Sambar", description: "Piping hot fluffy steamed rice cakes with authentic lentil sambar.", price: 80, image: "/images/food/idli.jpg", popularity: 99, rating: 5.0, category: "South Indian", is_veg: 1, is_recommended: 1, status: 'active' },
-      { id: 90203, restaurant_id: restaurant.id, name: "Special Masala Taak (Cooling Buttermilk)", description: "Chilled spiced churned buttermilk with roasted cumin and coriander.", price: 35, image: "/images/food/masala_taak.jpg", popularity: 98, rating: 4.9, category: "Beverages", is_veg: 1, is_recommended: 1, status: 'active' },
-      { id: 90204, restaurant_id: restaurant.id, name: "Authentic South Indian Filter Coffee", description: "Strong freshly brewed chicory coffee frothed with boiling milk.", price: 40, image: "/images/food/coffee.jpg", popularity: 98, rating: 4.9, category: "Beverages", is_veg: 1, is_recommended: 0, status: 'active' }
-    ];
-  }
-
-  // Universal Authentic Indian Specialties (including authentic buttermilk, thali, pav bhaji, biryani)
-  return [
-    {
-      id: 90001,
-      restaurant_id: restaurant.id,
-      name: "Special Masala Taak (Cooling Buttermilk)",
-      description: "Refreshing churned spiced yogurt cooler seasoned with roasted cumin, ginger, coriander, and rock salt.",
-      price: 35,
-      image: "/images/food/masala_taak.jpg",
-      popularity: 100,
-      rating: 5.0,
-      category: "Beverages",
-      is_veg: 1,
-      is_recommended: 1,
-      status: 'active'
-    },
-    {
-      id: 90002,
-      restaurant_id: restaurant.id,
-      name: "Special Signature Thali Platter",
-      description: "Grand traditional platter with fresh rotis, signature curries, dal, steamed rice, papad, pickle & sweet.",
-      price: 240,
-      image: "/images/food/thali.jpg",
-      popularity: 99,
-      rating: 5.0,
-      category: "Thalis",
-      is_veg: 1,
-      is_recommended: 1,
-      status: 'active'
-    },
-    {
-      id: 90003,
-      restaurant_id: restaurant.id,
-      name: isStrictVeg ? "Extra Butter Pav Bhaji" : "Shahi Dum Biryani with Raita",
-      description: isStrictVeg
-        ? "Rich spiced mashed vegetable bhaji drenched in pure butter with toasted ladi pavs."
-        : "Fragrant long-grain basmati rice layered with rich spices, saffron, and tender morsels.",
-      price: isStrictVeg ? 160 : 260,
-      image: isStrictVeg ? "/images/food/pav_bhaji.jpg" : "/images/food/biryani.jpg",
-      popularity: 98,
-      rating: 4.9,
-      category: isStrictVeg ? "Street Food" : "Rice & Biryani",
-      is_veg: isStrictVeg ? 1 : 0,
-      is_recommended: 1,
-      status: 'active'
-    },
-    {
-      id: 90004,
-      restaurant_id: restaurant.id,
-      name: "Crispy Butter Masala Dosa",
-      description: "Thin crisp golden fermented crepe folded over spiced potato filling, served with sambar and coconut chutney.",
-      price: 130,
-      image: "/images/food/dosa.jpg",
-      popularity: 97,
-      rating: 4.9,
-      category: "South Indian",
-      is_veg: 1,
-      is_recommended: 0,
-      status: 'active'
-    }
-  ];
 }
 
 const DishThumbnail: React.FC<{
@@ -155,12 +68,13 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   onManualEntry,
   onBack
 }) => {
+  const currentKey = `${restaurant.id}_${(restaurant.name || '').trim().toLowerCase()}`;
   const [rawDishes, setRawDishes] = useState<Dish[]>(() => {
-    return clientMenuCache.get(String(restaurant.id)) || [];
+    return clientMenuCache.get(currentKey) || [];
   });
   const [menuSearchQuery, setMenuSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(() => {
-    return !clientMenuCache.has(String(restaurant.id));
+    return !clientMenuCache.has(currentKey);
   });
   const [loadingStatus, setLoadingStatus] = useState<string>('Fetching live menu...');
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -169,14 +83,14 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
   const loadDishes = useCallback(async () => {
     const currentReqId = ++activeRequestIdRef.current;
-    const cacheKey = String(restaurant.id);
+    const cacheKey = `${restaurant.id}_${(restaurant.name || '').trim().toLowerCase()}`;
 
     // If cached in memory, use it immediately (0ms)
     if (clientMenuCache.has(cacheKey)) {
       const cached = clientMenuCache.get(cacheKey)!;
       setRawDishes(cached);
       setIsLoading(false);
-      setLoadError(null);
+      setLoadError(cached.length === 0 ? 'Menu currently unavailable' : null);
       return;
     }
 
@@ -226,18 +140,18 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         setRawDishes(json.data);
         setLoadError(null);
       } else {
-        const fallbacks = getCuratedFallbackDishes(restaurant);
-        clientMenuCache.set(cacheKey, fallbacks);
-        setRawDishes(fallbacks);
-        setLoadError(null);
+        // Strict compliance: never display hardcoded, generic, or fake menu items
+        clientMenuCache.set(cacheKey, []);
+        setRawDishes([]);
+        setLoadError(json.message || 'Menu currently unavailable');
       }
     } catch (err: unknown) {
       if (activeRequestIdRef.current !== currentReqId) {
         return;
       }
-      const fallbacks = getCuratedFallbackDishes(restaurant);
-      setRawDishes(fallbacks);
-      setLoadError(null);
+      clientMenuCache.set(cacheKey, []);
+      setRawDishes([]);
+      setLoadError('Menu currently unavailable');
     } finally {
       clearTimeout(timeoutId);
       clearTimeout(statusTimer);
@@ -516,55 +430,38 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
           </div>
         </div>
       ) : allRestaurantDishes.length === 0 ? (
-        <div className="w-full py-8 px-4 flex flex-col items-center justify-center text-center space-y-3 bg-slate-50/70 rounded-2xl border-2 border-slate-200/90 my-auto">
-          <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-[#D4380D]">
+        <div className="w-full py-8 px-4 flex flex-col items-center justify-center text-center space-y-4 bg-slate-50/70 rounded-2xl border-2 border-slate-200/90 my-auto">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100/80 flex items-center justify-center text-amber-600">
             <Utensils className="w-6 h-6 stroke-[2.2]" />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5 max-w-sm mx-auto">
             <h3 className="text-base font-black text-slate-800">
-              Bhookasur is ready to eat at {restaurant.name}! 😋
+              Menu currently unavailable
             </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Select a popular favorite or type what you would like to feed him:
+            <p className="text-xs text-slate-500">
+              The live menu for <span className="font-semibold text-slate-700">{restaurant.name}</span> could not be retrieved from delivery partners.
             </p>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2 max-w-md mt-1">
-            {[
-              { name: "Special Masala Taak (Cooling Buttermilk)", img: "/images/food/masala_taak.jpg" },
-              { name: "Extra Butter Pav Bhaji", img: "/images/food/pav_bhaji.jpg" },
-              { name: "Special Signature Thali Platter", img: "/images/food/thali.jpg" },
-              { name: "Crispy Butter Masala Dosa", img: "/images/food/dosa.jpg" }
-            ].map(dish => (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full max-w-xs mt-1">
+            {onManualEntry && (
               <button
-                key={dish.name}
                 type="button"
-                onClick={() => handleSelectDishItem({
-                  id: 99901,
-                  restaurant_id: restaurant.id,
-                  name: dish.name,
-                  image: dish.img,
-                  price: 150,
-                  description: 'Authentic Indian Specialty',
-                  rating: 5.0,
-                  popularity: 100,
-                  is_recommended: 1,
-                  status: 'active'
-                })}
-                className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-[#D4380D] hover:bg-orange-50 text-xs font-bold text-slate-800 hover:text-[#D4380D] transition-all cursor-pointer shadow-xs"
+                onClick={onManualEntry}
+                className="w-full py-2.5 px-4 rounded-xl bg-[#D4380D] hover:bg-[#b8300b] text-white text-xs font-bold transition-all shadow-sm hover:shadow cursor-pointer flex items-center justify-center gap-1.5"
               >
-                {dish.name}
+                <span>✍️</span> Enter Dish Manually
               </button>
-            ))}
+            )}
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+              >
+                ← Choose Different Restaurant
+              </button>
+            )}
           </div>
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="mt-2 text-xs font-bold text-slate-500 hover:text-[#D4380D] transition-colors cursor-pointer"
-            >
-              ← Choose Different Restaurant
-            </button>
-          )}
         </div>
       ) : (
         <>
@@ -719,7 +616,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <span
                                   className={`text-xs font-black truncate ${
                                     isSelected ? 'text-[#D4380D]' : 'text-slate-900'
@@ -730,6 +627,15 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                                 {dish.is_recommended === 1 && (
                                   <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded shrink-0">
                                     ★ Top Pick
+                                  </span>
+                                )}
+                                {(dish as any).has_original_photo ? (
+                                  <span className="text-[8px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded shrink-0" title="Authentic restaurant photo from Swiggy">
+                                    📷 Original
+                                  </span>
+                                ) : (
+                                  <span className="text-[8px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-1 py-0.2 rounded shrink-0" title="Representative AI dish visual">
+                                    ✨ AI Visual
                                   </span>
                                 )}
                               </div>

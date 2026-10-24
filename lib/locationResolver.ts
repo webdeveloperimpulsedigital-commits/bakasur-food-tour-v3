@@ -161,7 +161,10 @@ const CITY_GAZETTEER: Record<string, { lat: number; lng: number; label: string }
   nasik: { lat: 19.9975, lng: 73.7898, label: 'Nashik' },
   nagpur: { lat: 21.1458, lng: 79.0882, label: 'Nagpur' },
   aurangabad: { lat: 19.8762, lng: 75.3433, label: 'Aurangabad' },
+  sambhajinagar: { lat: 19.8762, lng: 75.3433, label: 'Chhatrapati Sambhajinagar' },
+  'sambhaji nagar': { lat: 19.8762, lng: 75.3433, label: 'Chhatrapati Sambhajinagar' },
   'chhatrapati sambhajinagar': { lat: 19.8762, lng: 75.3433, label: 'Chhatrapati Sambhajinagar' },
+  'chhatrapati sambhaji nagar': { lat: 19.8762, lng: 75.3433, label: 'Chhatrapati Sambhajinagar' },
   kolhapur: { lat: 16.705, lng: 74.2433, label: 'Kolhapur' },
   solapur: { lat: 17.6599, lng: 75.9064, label: 'Solapur' },
   satara: { lat: 17.6805, lng: 74.0183, label: 'Satara' },
@@ -226,9 +229,14 @@ const CITY_GAZETTEER: Record<string, { lat: number; lng: number; label: string }
   chandigarh: { lat: 30.7333, lng: 76.7794, label: 'Chandigarh' },
   mohali: { lat: 30.7046, lng: 76.7179, label: 'Mohali' },
   panchkula: { lat: 30.6942, lng: 76.8606, label: 'Panchkula' },
+  punjab: { lat: 30.901, lng: 75.8573, label: 'Punjab' },
   ludhiana: { lat: 30.901, lng: 75.8573, label: 'Ludhiana' },
   amritsar: { lat: 31.634, lng: 74.8723, label: 'Amritsar' },
   jalandhar: { lat: 31.326, lng: 75.5762, label: 'Jalandhar' },
+  patiala: { lat: 30.3398, lng: 76.3869, label: 'Patiala, Punjab' },
+  bathinda: { lat: 30.211, lng: 74.9455, label: 'Bathinda, Punjab' },
+  pathankot: { lat: 32.2686, lng: 75.6499, label: 'Pathankot, Punjab' },
+  hoshiarpur: { lat: 31.5273, lng: 75.9149, label: 'Hoshiarpur, Punjab' },
   dehradun: { lat: 30.3165, lng: 78.0322, label: 'Dehradun' },
   rishikesh: { lat: 30.0869, lng: 78.2676, label: 'Rishikesh' },
   haridwar: { lat: 29.9457, lng: 78.1642, label: 'Haridwar' },
@@ -284,8 +292,9 @@ const CITY_GAZETTEER: Record<string, { lat: number; lng: number; label: string }
 /** Cities searched when a restaurant name isn't found near the user and no location was typed. */
 export const MAJOR_SEARCH_HUBS: string[] = [
   'mumbai', 'thane', 'navi mumbai', 'pune', 'bengaluru', 'delhi', 'gurugram', 'noida',
-  'hyderabad', 'chennai', 'kolkata', 'ahmedabad', 'jaipur', 'nashik', 'nagpur', 'goa',
-  'chandigarh', 'lucknow', 'indore', 'surat', 'kochi', 'varanasi', 'agra', 'amritsar',
+  'hyderabad', 'chennai', 'kolkata', 'ahmedabad', 'jaipur', 'nashik', 'nagpur', 'aurangabad',
+  'sambhajinagar', 'amritsar', 'ludhiana', 'chandigarh', 'punjab', 'goa',
+  'lucknow', 'indore', 'surat', 'kochi', 'varanasi', 'agra',
   'bhopal', 'vadodara', 'visakhapatnam', 'patna', 'bhubaneswar', 'dehradun'
 ];
 
