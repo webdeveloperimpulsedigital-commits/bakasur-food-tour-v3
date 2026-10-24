@@ -213,15 +213,7 @@ export function isPureVegRestaurantName(restaurantName?: string): boolean {
 export function getDishVisualAssets(dishName?: string, dishImage?: string, restaurantName?: string): DishVisualAssets {
   const cleanName = formatCleanDishName(dishName, restaurantName);
 
-  // 1. Direct local authentic photographic asset in public/images/food/
-  if (dishImage && (dishImage.startsWith('/images/food/') || dishImage.includes('/images/food/'))) {
-    return {
-      plateImage: withBasePath(dishImage),
-      flyingImage: withBasePath(dishImage)
-    };
-  }
-
-  // 2. If dishImage is already a fully formed AI endpoint URL specifically for this dish
+  // 1. If dishImage is already a fully formed AI endpoint URL specifically for this dish
   if (dishImage && (dishImage.startsWith('/api/ai/dish-image') || dishImage.includes('/api/ai/dish-image'))) {
     return {
       plateImage: withBasePath(dishImage),
@@ -229,7 +221,7 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string, resta
     };
   }
 
-  let aiPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName || '')}&v=v32`;
+  let aiPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName || '')}&v=v37`;
   // Only forward verified remote Swiggy CDN or Cloudinary API images, never generic placeholders
   if (dishImage && (dishImage.startsWith('http://') || dishImage.startsWith('https://')) && (dishImage.includes('swiggy.com') || dishImage.includes('cloudinary.com'))) {
     aiPngUrl += `&imgUrl=${encodeURIComponent(dishImage)}`;
@@ -288,7 +280,12 @@ export function isDishRelevantToSearch(dishTitle?: string, userQuery?: string): 
     pattice: 'pattice',
     patties: 'pattice',
     plater: 'platter',
-    platers: 'platter'
+    platers: 'platter',
+    bhkari: 'bhakri',
+    bhakari: 'bhakri',
+    sambhar: 'sambar',
+    medhu: 'medu',
+    vadai: 'vada'
   };
 
   const normalize = (str: string) => {

@@ -7,7 +7,7 @@ import { isPureVegRestaurantName } from '@/lib/dishAssets';
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v36_fix_latte_platter_substring_trap';
+const CACHE_VERSION = 'v37_accurate_thali_vada_sample_sambar_sukha_mutton';
 const imageBufferCache = new Map<string, { buffer: Buffer; contentType: string; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -182,6 +182,19 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   starter_platter: 'veg_platter.jpg',
   veg_starter_platter: 'veg_platter.jpg',
   special_veg_platter: 'veg_platter.jpg',
+  special_signature_thali_platter: 'special_signature_thali_platter.jpg',
+  signature_thali: 'special_signature_thali_platter.jpg',
+  vada_sample: 'vada_sample.jpg',
+  wada_sample: 'vada_sample.jpg',
+  kat_vada: 'vada_sample.jpg',
+  sample_vada: 'vada_sample.jpg',
+  medu_vada: 'medu_vada.jpg',
+  vada_sambar: 'medu_vada.jpg',
+  sambar_vada: 'medu_vada.jpg',
+  crispy_medu_vada: 'medu_vada.jpg',
+  sukha_mutton_bhakri: 'sukha_mutton_bhakri.jpg',
+  mutton_sukka_bhakri: 'sukha_mutton_bhakri.jpg',
+  mutton_bhakri: 'sukha_mutton_bhakri.jpg',
 
   // Authentic Pune Mastani Varieties
   mango_mastani: 'mango_mastani.jpg',
@@ -325,7 +338,9 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   uttapam: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
   idli: 'https://images.unsplash.com/photo-1741376509047-66dae5df90f9?w=800&auto=format&fit=crop&q=85',
   medu_vada: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
+  vada_sambar: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
   sambar_vada: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
+  crispy_medu_vada: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
   upma: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=85',
   appam: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
   puttu: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
@@ -383,6 +398,15 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   starter_platter: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
   veg_starter_platter: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
   special_veg_platter: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
+  special_signature_thali_platter: 'https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?w=800&auto=format&fit=crop&q=85',
+  signature_thali: 'https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?w=800&auto=format&fit=crop&q=85',
+  vada_sample: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&auto=format&fit=crop&q=85',
+  wada_sample: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&auto=format&fit=crop&q=85',
+  kat_vada: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&auto=format&fit=crop&q=85',
+  sample_vada: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&auto=format&fit=crop&q=85',
+  sukha_mutton_bhakri: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&auto=format&fit=crop&q=85',
+  mutton_sukka_bhakri: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&auto=format&fit=crop&q=85',
+  mutton_bhakri: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&auto=format&fit=crop&q=85',
   tandoori_mushroom: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
   hara_bhara_kebab: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
   veg_seekh_kebab: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&auto=format&fit=crop&q=85',
@@ -541,8 +565,14 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
 function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''): string {
   const dRaw = (dishName || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
   const r = (restaurantName || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-  // Normalize spelling variations (e.g. "plater" -> "platter")
-  const d = dRaw.replace(/\bplater(s)?\b/g, 'platter$1');
+  // Normalize spelling variations (e.g. "plater" -> "platter", "bhkari" -> "bhakri")
+  const d = dRaw
+    .replace(/\bplater(s)?\b/g, 'platter$1')
+    .replace(/\bbhkari(s)?\b/g, 'bhakri$1')
+    .replace(/\bbhakari(s)?\b/g, 'bhakri$1')
+    .replace(/\bsambhar\b/g, 'sambar')
+    .replace(/\bmedhu\b/g, 'medu')
+    .replace(/\bvadai\b/g, 'vada');
 
   // === 0. TRADITIONAL BEVERAGES & COOLERS ===
   if (d.includes('solkadhi') || d.includes('sol kadhi') || d.includes('kokum kadhi')) {
@@ -770,6 +800,18 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
     return 'masala_pav';
   }
 
+  // Vada Sample / Kat Vada / Sample Vada (Batata Vada submerged in spicy Kat Rassa)
+  if (
+    d.includes('vada sample') || d.includes('wada sample') ||
+    d.includes('sample vada') || d.includes('sample wada') ||
+    d.includes('kat vada') || d.includes('vada kat') ||
+    d.includes('vada rassa') || d.includes('wada rassa') ||
+    (d.includes('vada') && d.includes('sample')) ||
+    (d.includes('wada') && d.includes('sample'))
+  ) {
+    return 'vada_sample';
+  }
+
   // Vada Pav
   if (d.includes('vada pav') || d.includes('vadapav') || d.includes('wada pav') || d.includes('batata vada') || d.includes('batatavada')) {
     return 'vada_pav';
@@ -968,8 +1010,15 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
     return 'dosa';
   }
   if (d.includes('uttapam') || d.includes('uthappam') || d.includes('oothappam')) return 'uttapam';
-  if (d.includes('sambar vada') || d.includes('sambar wada')) return 'sambar_vada';
-  if (d.includes('medu vada') || d.includes('vada sambar') || d.includes('wada sambar')) return 'medu_vada';
+  if (
+    d.includes('sambar vada') || d.includes('sambar wada') ||
+    d.includes('vada sambar') || d.includes('wada sambar') ||
+    d.includes('medu vada') || d.includes('medu wada') ||
+    ((d.includes('vada') || d.includes('wada')) && d.includes('sambar')) ||
+    d.includes('medu')
+  ) {
+    return 'medu_vada';
+  }
   if (d.includes('idli') || d.includes('idly') || d.includes('thatte idli')) return 'idli';
   if (d.includes('upma') || d.includes('uppittu')) return 'upma';
   if (d.includes('appam') && !d.includes('idiyappam')) return 'appam';
@@ -1013,6 +1062,20 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   if (d.includes('butter chicken') || d.includes('murgh makhani')) return 'butter_chicken';
   if (d.includes('chicken tikka masala') || d.includes('murgh tikka masala')) return 'chicken_tikka_masala';
   if (d.includes('chicken curry') || d.includes('chicken handi') || d.includes('chicken masala') || d.includes('chicken rassa') || d.includes('chicken kadai') || d.includes('kadhai chicken') || d.includes('murgh handi') || d.includes('chicken korma') || d.includes('chicken kolhapuri')) return 'chicken_curry';
+  // Sukha Mutton with Bhakri / Mutton Sukka specialties
+  if (
+    (d.includes('sukha mutton') || d.includes('mutton sukka') || d.includes('sukka mutton') || d.includes('mutton fry')) &&
+    (d.includes('bhakri') || d.includes('bhkari') || d.includes('roti') || d.includes('plate') || d.includes('thali') || d.includes('combo'))
+  ) {
+    return 'sukha_mutton_bhakri';
+  }
+  if (
+    d.includes('sukha mutton') || d.includes('mutton sukka') || d.includes('sukka mutton') ||
+    (d.includes('mutton') && (d.includes('bhakri') || d.includes('bhkari')))
+  ) {
+    return 'sukha_mutton_bhakri';
+  }
+
   if (d.includes('mutton') || d.includes('gosht') || d.includes('rogan josh') || d.includes('nihari') || d.includes('tambda') || d.includes('pandhra') || d.includes('sukka') || d.includes('laal maas')) return 'mutton_curry';
   if ((d.includes('fish') || d.includes('surmai') || d.includes('pomfret')) && (d.includes('curry') || d.includes('rassa') || d.includes('gravy') || d.includes('caldin'))) return 'fish_curry';
   if (d.includes('egg curry') || d.includes('anda curry') || d.includes('anda rassa')) return 'egg_curry';
@@ -1197,6 +1260,10 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   if (d.includes('shev bhaji') || d.includes('sev bhaji')) return 'shev_bhaji';
 
   // === 15. THALIS & BHOJAN ===
+  if (d.includes('signature thali') || d.includes('special thali') || d.includes('thali platter') || d.includes('royal thali')) {
+    if (d.includes('non veg') || d.includes('chicken') || d.includes('mutton')) return 'mutton_thali';
+    return 'special_signature_thali_platter';
+  }
   if (d.includes('thali') || d.includes('bhojan')) {
     if (d.includes('fish') || d.includes('seafood') || d.includes('malvan')) return 'fish_thali';
     if (d.includes('mutton') || d.includes('chicken') || d.includes('non veg') || d.includes('nonveg') || d.includes('military') || d.includes('gavran')) return 'mutton_thali';

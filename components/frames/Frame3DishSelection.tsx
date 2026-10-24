@@ -120,7 +120,7 @@ const DishThumbnail: React.FC<{
   const [hasError, setHasError] = useState<boolean>(false);
 
   return (
-    <div className={`relative flex items-center justify-center overflow-hidden ${className}`}>
+    <div className={`relative flex items-center justify-center overflow-hidden rounded-full ${className}`}>
       {!isLoaded && !hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-orange-100/60 rounded-full animate-pulse pointer-events-none">
           <Utensils className="w-3.5 h-3.5 text-orange-400/80" />
@@ -134,7 +134,7 @@ const DishThumbnail: React.FC<{
           decoding="async"
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
-          className={`w-full h-full object-contain filter drop-shadow-xs transition-opacity duration-200 pointer-events-none ${
+          className={`w-full h-full object-contain filter drop-shadow-xs transition-opacity duration-200 pointer-events-none rounded-full ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         />
@@ -691,7 +691,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                           }`}
                         >
                           {/* Thumbnail with Lightweight Placeholder */}
-                          <div className="w-10 h-10 rounded-lg p-0.5 bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 rounded-full p-0.5 bg-slate-50 border border-slate-200/80 flex items-center justify-center shrink-0 overflow-hidden">
                             <DishThumbnail
                               src={visual.flyingImage || visual.plateImage}
                               alt={cleanName}

@@ -182,12 +182,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         !d.image.includes('placeholder');
 
       let resolvedImage: string;
-      if (isLocalPhoto) {
-        resolvedImage = d.image;
-      } else if (hasRealPhoto) {
-        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(restInfo!.name)}&imgUrl=${encodeURIComponent(d.image)}&v=v30`;
+      if (hasRealPhoto) {
+        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(restInfo!.name)}&imgUrl=${encodeURIComponent(d.image)}&v=v37`;
       } else {
-        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(restInfo!.name)}&v=v30`;
+        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(restInfo!.name)}&v=v37`;
       }
 
       let isVeg = d.is_veg !== undefined ? Number(d.is_veg) : (isDishVeg(name) ? 1 : 0);
