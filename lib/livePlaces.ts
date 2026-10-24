@@ -1,4 +1,4 @@
-import type { Restaurant } from './db';
+import { INITIAL_RESTAURANTS, type Restaurant } from './db';
 import { getDishVisualAssets, isPureVegRestaurantName } from './dishAssets';
 import { parseRestaurantQuery, getDeterministicPlaceId } from './locationParser';
 export { getDeterministicPlaceId };
