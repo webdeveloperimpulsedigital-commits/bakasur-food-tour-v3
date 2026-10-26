@@ -90,23 +90,21 @@ export const Frame9GastriumAnimation: React.FC<Frame9GastriumAnimationProps> = (
         }`}
       >
         {!gastriumImgError ? (
-          <div className="relative flex flex-col items-end justify-center select-none w-[78%] xs:w-[84%] sm:w-[88%] max-w-[290px] xs:max-w-[340px] sm:max-w-[400px] md:max-w-[450px] mx-auto -translate-y-1">
+          <div className="flex items-center justify-center gap-3 xs:gap-4 sm:gap-6 md:gap-7 select-none w-full max-w-[86%] xs:max-w-[80%] sm:max-w-[420px] md:max-w-[480px] mx-auto">
             {/* Gastrium Logo */}
             <img
               src={withBasePath('/images/final-frames/Gastrium-logo-new.png')}
               alt="Gastrium Suspension"
               onError={handleGastriumError}
-              className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-xs transition-transform duration-500"
+              className="h-14 xs:h-16 sm:h-20 md:h-24 lg:h-26 w-auto max-w-[70%] object-contain select-none pointer-events-none drop-shadow-xs transition-transform duration-500 shrink-0"
             />
-            {/* Word "IN" in the logo's bottom right corner & font size BIG */}
-            <div className="w-full flex justify-end -mt-1 xs:-mt-2 sm:-mt-3 pr-1 sm:pr-2">
-              <span className="text-[#E2370A] font-black italic text-4xl xs:text-5xl sm:text-6xl md:text-7xl uppercase tracking-wider leading-none select-none drop-shadow-xs">
-                IN
-              </span>
-            </div>
+            {/* Word "IN" matched in height and visual weight with the logo */}
+            <span className="text-[#E2370A] font-black italic text-4xl xs:text-5xl sm:text-6xl md:text-7xl uppercase tracking-wider leading-none select-none drop-shadow-xs shrink-0 flex items-center">
+              IN
+            </span>
           </div>
         ) : (
-          <h1 className="text-[38px] xs:text-[46px] sm:text-[54px] md:text-[58px] lg:text-[64px] font-black tracking-tight leading-none uppercase select-none">
+          <h1 className="text-[34px] xs:text-[42px] sm:text-[50px] md:text-[58px] font-black tracking-tight leading-none uppercase select-none">
             <span className="text-[#071746]">GASTRIUM</span>{' '}
             <span className="text-[#E2370A]">IN</span>
           </h1>

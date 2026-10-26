@@ -144,6 +144,9 @@ export async function preloadMedia(url: string): Promise<string | null> {
  */
 export function getPreloadedUrl(originalUrl: string): string {
   if (!originalUrl) return originalUrl;
+  if (originalUrl.endsWith('.mp4') || originalUrl.includes('.mp4?')) {
+    return withBasePath(originalUrl);
+  }
   return blobUrlCache.get(originalUrl) || withBasePath(originalUrl);
 }
 

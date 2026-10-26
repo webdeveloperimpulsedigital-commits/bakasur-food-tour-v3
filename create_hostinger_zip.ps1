@@ -47,7 +47,22 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $zipArchive = [System.IO.Compression.ZipFile]::Open($zipFilePath, [System.IO.Compression.ZipArchiveMode]::Create)
 
-$allFiles = Get-ChildItem -Path $projectDir -Recurse -File -Force
+$allFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+$topItems = Get-ChildItem -Path $projectDir -Force
+foreach ($item in $topItems) {
+    if ($item.PSIsContainer) {
+        if ($excludedFolders -contains $item.Name) {
+            Write-Host "Skipping directory: $($item.Name)" -ForegroundColor DarkGray
+            continue
+        }
+        $subFiles = Get-ChildItem -Path $item.FullName -Recurse -File -Force
+        foreach ($sf in $subFiles) {
+            $allFiles.Add($sf)
+        }
+    } else {
+        $allFiles.Add($item)
+    }
+}
 
 $totalFilesAdded = 0
 $securityViolationsBlocked = 0

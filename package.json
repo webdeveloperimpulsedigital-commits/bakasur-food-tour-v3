@@ -35,5 +35,7 @@
     "postcss": "8.5.31",
     "source-map-js": "1.2.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0"
+  }
 }

@@ -2,6 +2,14 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+/* Leaflet Custom Marker Resets */
+.custom-user-blue-pin,
+.custom-existing-red-pin {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+}
+
 :root {
   --font-outfit: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;

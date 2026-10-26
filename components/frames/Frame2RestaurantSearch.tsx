@@ -4,7 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, X, Check } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
 import { isPureVegRestaurantName } from '@/lib/dishAssets';
+<<<<<<< HEAD
 import { getDeterministicPlaceId } from '@/lib/locationParser';
+=======
+import { parseRestaurantQuery, getDeterministicPlaceId } from '@/lib/locationParser';
+import { withBasePath } from '@/lib/basePath';
+>>>>>>> dcdca7da92c19fe7a36e2ae8a0c11b749a82d04c
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -64,6 +69,64 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       if (!searchQuery.trim()) {
         setSearchResults([]);
       }
+<<<<<<< HEAD
+=======
+      return;
+    }
+
+    async function fetchNearbyForGrantedLocation() {
+      setIsLoadingNearby(true);
+      try {
+        const cityParam = selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : '';
+        const res = await fetch(withBasePath(`/api/restaurants/search?lat=${coords!.lat}&lng=${coords!.lng}${cityParam}`));
+        const data = await res.json();
+        if (!isCancelled && data.success && Array.isArray(data.data)) {
+          const limitedSpots = data.data.slice(0, 5);
+          setNearbyRestaurants(limitedSpots);
+          if (!searchQuery.trim()) {
+            setSearchResults(limitedSpots);
+          }
+        }
+      } catch (err) {
+        console.warn('Nearby restaurants fetch notice:', err);
+      } finally {
+        if (!isCancelled) setIsLoadingNearby(false);
+      }
+
+      // Fetch location label for display
+      if (!locationLabel) {
+        try {
+          const locRes = await fetch(withBasePath(`/api/location?lat=${coords!.lat}&lng=${coords!.lng}`));
+          const locData = await locRes.json();
+          if (!isCancelled && locData.success) {
+            const label = locData.locationDisplay || (locData.detectedCity?.name ? `${locData.detectedCity.name}` : selectedCity);
+            if (label) setLocationLabel(label);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    fetchNearbyForGrantedLocation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [coords?.lat, coords?.lng, selectedCity]);
+
+  // Show dropdown when user focuses on search box
+  const handleFocus = () => {
+    if (searchQuery.trim()) {
+      setShowDropdown(true);
+    } else if (coords && nearbyRestaurants.length > 0) {
+      setShowDropdown(true);
+      setSearchResults(nearbyRestaurants.slice(0, 5));
+    } else {
+      // User has not allowed location and search query is empty -> show blank!
+      setShowDropdown(false);
+      setSearchResults([]);
+>>>>>>> dcdca7da92c19fe7a36e2ae8a0c11b749a82d04c
     }
   };
 
@@ -96,7 +159,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     const timer = setTimeout(async () => {
       try {
         const idParam = selectedRestaurant?.id ? `&id=${selectedRestaurant.id}` : '';
-        const res = await fetch(`/api/restaurants/check-visits?name=${encodeURIComponent(candidateName)}${idParam}`);
+        const res = await fetch(withBasePath(`/api/restaurants/check-visits?name=${encodeURIComponent(candidateName)}${idParam}`));
         const data = await res.json();
         if (data.success) {
           setFirstVisitorInfo({
@@ -133,7 +196,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         const lngParam = coords?.lng ? `&lng=${coords.lng}` : '';
         const cityParam = selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : '';
         const res = await fetch(
-          `/api/restaurants/search?q=${encodeURIComponent(q)}${cityParam}${latParam}${lngParam}`,
+          withBasePath(`/api/restaurants/search?q=${encodeURIComponent(q)}${cityParam}${latParam}${lngParam}`),
           { signal: controller.signal }
         );
         const json = await res.json();
@@ -191,7 +254,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       });
       if (spot.latitude) params.set('lat', String(spot.latitude));
       if (spot.longitude) params.set('lng', String(spot.longitude));
-      fetch(`/api/restaurants/${spot.id}/dishes?${params.toString()}`).catch(() => {});
+      fetch(withBasePath(`/api/restaurants/${spot.id}/dishes?${params.toString()}`)).catch(() => {});
     } catch {
       // background prefetch failure can be safely ignored
     }
@@ -253,14 +316,31 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     const isVeg = isPureVegRestaurantName(cleanTitle) ? 1 : 0;
     const city = selectedCity || '';
     const id = getDeterministicPlaceId(cleanTitle, city, locArea);
+    const parsed = parseRestaurantQuery(cleanTitle, selectedCity || 'Pune', coords);
+    let finalLat = coords?.lat || (parsed.latitude !== 0 ? parsed.latitude : 0);
+    let finalLng = coords?.lng || (parsed.longitude !== 0 ? parsed.longitude : 0);
+    if (!finalLat || !finalLng || (finalLat >= 18.8 && finalLat <= 19.5 && finalLng < 72.80)) {
+      const cityLower = (selectedCity || '').toLowerCase();
+      const titleLower = cleanTitle.toLowerCase();
+      if (cityLower.includes('thane') || titleLower.includes('thane')) {
+        finalLat = 19.2183;
+        finalLng = 72.9781;
+      } else if (cityLower.includes('mumbai') || titleLower.includes('mumbai')) {
+        finalLat = 19.0760;
+        finalLng = 72.8777;
+      } else {
+        finalLat = 18.5204;
+        finalLng = 73.8567;
+      }
+    }
     return {
       id,
       name: cleanTitle,
       address: locArea ? `${locArea}${city && city !== locArea ? `, ${city}` : ''}` : (cleanTitle || 'Food Spot'),
       area: locArea || city || 'Local',
       city: city || 'Local',
-      latitude: coords?.lat || 0,
-      longitude: coords?.lng || 0,
+      latitude: finalLat,
+      longitude: finalLng,
       rating: 4.8,
       image: '/images/default-restaurant.jpg',
       description: `Authentic food spot${locArea ? ` in ${locArea}` : ''}`,
