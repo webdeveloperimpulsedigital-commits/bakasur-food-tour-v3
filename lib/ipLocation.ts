@@ -47,8 +47,8 @@ export async function fetchLocationFromIP(clientIp?: string): Promise<IpLocation
         const result: IpLocationResult = {
           lat: data.lat,
           lng: data.lon,
-          city: data.city || 'Pune',
-          state: data.regionName || 'Maharashtra',
+          city: data.city || '',
+          state: data.regionName || '',
           country: data.country || 'India',
           queryIp: data.query
         };
@@ -72,8 +72,8 @@ export async function fetchLocationFromIP(clientIp?: string): Promise<IpLocation
         return {
           lat: data.latitude,
           lng: data.longitude,
-          city: data.city || 'Pune',
-          state: data.region || 'Maharashtra',
+          city: data.city || '',
+          state: data.region || '',
           country: data.country || 'India',
           queryIp: data.ip
         };

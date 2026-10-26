@@ -811,7 +811,7 @@ async function searchLivePoiRestaurants(
       const allLocParts = [p.suburb, p.neighbourhood, p.quarter, p.locality, p.street, p.district, p.city, p.county, p.state].filter(Boolean);
       const allLocText = allLocParts.join(' ');
       const area = String(p.suburb || p.neighbourhood || p.quarter || p.locality || p.district || p.street || '').trim();
-      const city = String(p.city || p.county || p.state || 'Pune').trim();
+      const city = String(p.city || p.county || p.state || 'India').trim();
       const street = String(p.street || '').trim();
       const address = street ? `${street}, ${area || city}` : `${area || city}, ${city}`;
 
@@ -921,9 +921,9 @@ export async function searchRestaurantsAnywhere(
   const parsed = parseLocationFromQuery(query);
 
   // Resolve reference coordinates: user coordinates or selected city
-  const cityKey = (options.selectedCity || 'pune').toLowerCase().trim();
-  const cityGazetteer = lookupGazetteer(cityKey);
-  const defaultAnchor = userCoords || (cityGazetteer ? { lat: cityGazetteer.lat, lng: cityGazetteer.lng } : { lat: 18.5204, lng: 73.8567 });
+  const cityKey = (options.selectedCity || '').toLowerCase().trim();
+  const cityGazetteer = cityKey ? lookupGazetteer(cityKey) : null;
+  const defaultAnchor = userCoords || (cityGazetteer ? { lat: cityGazetteer.lat, lng: cityGazetteer.lng } : null);
 
   // ------------------------------------------------------------------
   // 1. Query explicitly names a location -> search AT that location

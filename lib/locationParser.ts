@@ -302,19 +302,19 @@ export function parseRestaurantQuery(
   // 5. Determine correct Area and City
   const resolvedArea = detectedLocality
     ? detectedLocality.area
-    : fallbackCity || 'Local';
+    : fallbackCity || '';
 
   const resolvedCity = detectedLocality
     ? detectedLocality.city
-    : fallbackCity || 'Pune';
+    : fallbackCity || '';
 
   const resolvedLat = detectedLocality
     ? detectedLocality.lat
-    : userCoords?.lat || 18.5204;
+    : userCoords?.lat || 0;
 
   const resolvedLng = detectedLocality
     ? detectedLocality.lng
-    : userCoords?.lng || 73.8407;
+    : userCoords?.lng || 0;
 
   const address =
     resolvedArea && resolvedCity && resolvedArea.toLowerCase() !== resolvedCity.toLowerCase()
