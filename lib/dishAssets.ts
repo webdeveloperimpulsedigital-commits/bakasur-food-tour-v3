@@ -324,7 +324,21 @@ export function isDishRelevantToSearch(dishTitle?: string, userQuery?: string): 
     tamda: 'tambda',
     pandra: 'pandhra',
     chawal: 'rice',
-    chaawal: 'rice'
+    chaawal: 'rice',
+    onioun: 'onion',
+    onionn: 'onion',
+    ooli: 'oli',
+    ovli: 'oli',
+    olya: 'oli',
+    bhadanga: 'bhadang',
+    bhadangaa: 'bhadang',
+    uttapa: 'uttapam',
+    uthappa: 'uttapam',
+    oothappa: 'uttapam',
+    utappa: 'uttapam',
+    utpam: 'uttapam',
+    dhosa: 'dosa',
+    dosai: 'dosa'
   };
 
   const normalize = (str: string) => {

@@ -7,7 +7,7 @@ import { isPureVegRestaurantName } from '@/lib/dishAssets';
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v37_accurate_thali_vada_sample_sambar_sukha_mutton';
+const CACHE_VERSION = 'v38_accurate_bhel_dosa_uttapam_all_types';
 const imageBufferCache = new Map<string, { buffer: Buffer; contentType: string; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -141,6 +141,21 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   kanda_pakoda: 'kanda_bhaji.jpg',
   onion_pakoda: 'kanda_bhaji.jpg',
 
+  // Authentic Bhel, Chaat & Farsan Specialties
+  bhel_puri: 'oli_bhel.jpg',
+  bhel: 'oli_bhel.jpg',
+  oli_bhel: 'oli_bhel.jpg',
+  special_oli_bhel: 'oli_bhel.jpg',
+  dahi_bhel: 'dahi_bhel.jpg',
+  dahi_oli_bhel: 'dahi_bhel.jpg',
+  bhadang_bhel: 'bhadang_bhel.jpg',
+  masala_bhadang_bhel: 'bhadang_bhel.jpg',
+  sukha_bhel: 'oli_bhel.jpg',
+  matki_bhel: 'oli_bhel.jpg',
+  sev_puri: 'ragda_puri.jpg',
+  dahi_puri: 'dahi_bhel.jpg',
+  chaat: 'oli_bhel.jpg',
+
   garlic_naan: 'garlic_naan.jpg',
   butter_naan: 'butter_naan.jpg',
   paratha: 'paratha.jpg',
@@ -187,7 +202,36 @@ const CANONICAL_LOCAL_ASSETS: Record<string, string> = {
   pav_bhaji: 'pav_bhaji.jpg',
   vada_pav: 'vada_pav.jpg',
   samosa: 'samosa.jpg',
+  // South Indian Dosa & Uttapam Specialties
   dosa: 'dosa.jpg',
+  plain_dosa: 'dosa.jpg',
+  sada_dosa: 'dosa.jpg',
+  paper_dosa: 'dosa.jpg',
+  ghee_roast_dosa: 'dosa.jpg',
+  loni_sponge_dosa: 'loni_sponge_dosa.jpg',
+  sponge_dosa: 'loni_sponge_dosa.jpg',
+  benne_dosa: 'loni_sponge_dosa.jpg',
+  loni_dosa: 'loni_sponge_dosa.jpg',
+  davangere_benne_dosa: 'loni_sponge_dosa.jpg',
+  set_dosa: 'loni_sponge_dosa.jpg',
+  masala_dosa: 'masala_dosa.jpg',
+  mysore_masala_dosa: 'masala_dosa.jpg',
+  rava_dosa: 'rava_dosa.jpg',
+  rava_masala_dosa: 'rava_dosa.jpg',
+  onion_rava_dosa: 'rava_dosa.jpg',
+  cheese_dosa: 'masala_dosa.jpg',
+  paneer_dosa: 'masala_dosa.jpg',
+  spring_dosa: 'masala_dosa.jpg',
+  onion_dosa: 'dosa.jpg',
+  chicken_dosa: 'dosa.jpg',
+  uttapam: 'uttapam.jpg',
+  uttapa: 'uttapam.jpg',
+  onion_uttapam: 'onion_uttapam.jpg',
+  onion_uttapa: 'onion_uttapam.jpg',
+  tomato_uttapam: 'uttapam.jpg',
+  tomato_uttapa: 'uttapam.jpg',
+  veg_uttapam: 'uttapam.jpg',
+  mix_veg_uttapam: 'uttapam.jpg',
   idli: 'idli.jpg',
   momos: 'momos.jpg',
   // Pizza, Wood-Fired & Italian
@@ -384,6 +428,10 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   sev_puri: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=85',
   dahi_puri: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
   bhel_puri: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
+  bhel: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
+  oli_bhel: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
+  dahi_bhel: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
+  bhadang_bhel: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=85',
   dabeli: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&auto=format&fit=crop&q=85',
   ragda_pattice: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=85',
   chaat: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop&q=85',
@@ -395,9 +443,15 @@ const CANONICAL_REMOTE_PHOTOS: Record<string, string> = {
   // South Indian
   dosa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
   plain_dosa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
+  loni_sponge_dosa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
+  sponge_dosa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
+  masala_dosa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
   rava_dosa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
   set_dosa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
-  uttapam: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
+  uttapam: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
+  onion_uttapam: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
+  uttapa: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
+  tomato_uttapam: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=85',
   idli: 'https://images.unsplash.com/photo-1741376509047-66dae5df90f9?w=800&auto=format&fit=crop&q=85',
   medu_vada: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
   vada_sambar: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=800&auto=format&fit=crop&q=85',
@@ -634,7 +688,21 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
     .replace(/\bbhakari(s)?\b/g, 'bhakri$1')
     .replace(/\bsambhar\b/g, 'sambar')
     .replace(/\bmedhu\b/g, 'medu')
-    .replace(/\bvadai\b/g, 'vada');
+    .replace(/\bvadai\b/g, 'vada')
+    .replace(/\bonioun\b/g, 'onion')
+    .replace(/\bonionn\b/g, 'onion')
+    .replace(/\booli\b/g, 'oli')
+    .replace(/\bovli\b/g, 'oli')
+    .replace(/\bolya\b/g, 'oli')
+    .replace(/\bbhadanga\b/g, 'bhadang')
+    .replace(/\bbhadangaa\b/g, 'bhadang')
+    .replace(/\buthappa(m)?\b/g, 'uttapam')
+    .replace(/\boothappa(m)?\b/g, 'uttapam')
+    .replace(/\buttapa(m)?\b/g, 'uttapam')
+    .replace(/\butappa(m)?\b/g, 'uttapam')
+    .replace(/\butpam\b/g, 'uttapam')
+    .replace(/\bdhosa\b/g, 'dosa')
+    .replace(/\bdosai\b/g, 'dosa');
 
   // === 0. TRADITIONAL BEVERAGES & COOLERS ===
   if (d.includes('solkadhi') || d.includes('sol kadhi') || d.includes('kokum kadhi')) {
@@ -900,10 +968,20 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
     return 'pani_puri';
   }
 
-  // Sev Puri & SPDP & Dahi Puri & Bhel
+  // Sev Puri & SPDP & Dahi Puri
   if (d.includes('sev puri') || d.includes('shev puri') || d.includes('sev batata')) return 'sev_puri';
   if (d.includes('dahi puri') || d.includes('spdp') || d.includes('dahi batata') || d.includes('dahi papdi')) return 'dahi_puri';
-  if (d.includes('bhel') || d.includes('bhelpuri') || d.includes('sukha bhel') || d.includes('oli bhel') || d.includes('matki bhel')) return 'bhel_puri';
+
+  // Authentic Bhel Varieties (Kolhapuri Bhadang Bhel, Dahi Oli Bhel, Special Oli Bhel, Matki Bhel)
+  if (d.includes('bhadang') || d.includes('bhadanga')) return 'bhadang_bhel';
+  if ((d.includes('dahi') || d.includes('curd') || d.includes('yogurt')) && d.includes('bhel')) return 'dahi_bhel';
+  if (
+    d.includes('oli bhel') || d.includes('special bhel') || d.includes('matki bhel') ||
+    d.includes('sukha bhel') || d.includes('bhelpuri') || d.includes('bhel puri') ||
+    d.includes('bhel')
+  ) {
+    return 'oli_bhel';
+  }
   if (d.includes('dabeli') || d.includes('kutchi dabeli')) return 'dabeli';
 
   // Kanda Bhaji / Onion Pakoda (Strictly crispy onion fritters)
@@ -1064,14 +1142,49 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   }
 
   // === 6. SOUTH INDIAN ===
+  // Uttapam / Uttapa Varieties (Must precede generic fallbacks)
+  if (
+    d.includes('uttapam') || d.includes('uttapa') ||
+    d.includes('uthappam') || d.includes('uthappa') ||
+    d.includes('oothappam') || d.includes('oothappa') ||
+    d.includes('utappa') || d.includes('utpam')
+  ) {
+    if (d.includes('onion') || d.includes('kanda') || d.includes('pyaz') || d.includes('pyaaz')) {
+      return 'onion_uttapam';
+    }
+    if (d.includes('tomato')) {
+      return 'tomato_uttapam';
+    }
+    return 'uttapam';
+  }
+
+  // Dosa Varieties (Loni Sponge Dosa, Mysore Masala Dosa, Rava Dosa, Benne Dosa, Set Dosa, etc.)
   if (d.includes('dosa') || d.includes('dosai')) {
     if (d.includes('chicken') || d.includes('mutton') || d.includes('keema')) return 'chicken_dosa';
-    if (d.includes('rava') || d.includes('ravva')) return 'rava_dosa';
-    if (d.includes('set dosa')) return 'set_dosa';
-    if (d.includes('plain dosa') || d.includes('sada dosa')) return 'plain_dosa';
+    if (
+      d.includes('sponge') || d.includes('loni') || d.includes('benne') ||
+      d.includes('set dosa') || d.includes('podi sponge')
+    ) {
+      return 'loni_sponge_dosa';
+    }
+    if (d.includes('rava') || d.includes('ravva') || d.includes('suji') || d.includes('sooji')) {
+      return 'rava_dosa';
+    }
+    if (
+      d.includes('masala') || d.includes('mysore') || d.includes('mysuru') ||
+      d.includes('aloo dosa') || d.includes('cheese') || d.includes('paneer') ||
+      d.includes('spring') || d.includes('jini')
+    ) {
+      return 'masala_dosa';
+    }
+    if (
+      d.includes('plain') || d.includes('sada') || d.includes('paper') ||
+      d.includes('ghee roast') || d.includes('roast')
+    ) {
+      return 'plain_dosa';
+    }
     return 'dosa';
   }
-  if (d.includes('uttapam') || d.includes('uthappam') || d.includes('oothappam')) return 'uttapam';
   if (
     d.includes('sambar vada') || d.includes('sambar wada') ||
     d.includes('vada sambar') || d.includes('wada sambar') ||
