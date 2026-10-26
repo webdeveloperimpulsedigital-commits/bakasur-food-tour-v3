@@ -4,12 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, X, Check } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
 import { isPureVegRestaurantName } from '@/lib/dishAssets';
-<<<<<<< HEAD
-import { getDeterministicPlaceId } from '@/lib/locationParser';
-=======
 import { parseRestaurantQuery, getDeterministicPlaceId } from '@/lib/locationParser';
 import { withBasePath } from '@/lib/basePath';
->>>>>>> dcdca7da92c19fe7a36e2ae8a0c11b749a82d04c
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -69,64 +65,6 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       if (!searchQuery.trim()) {
         setSearchResults([]);
       }
-<<<<<<< HEAD
-=======
-      return;
-    }
-
-    async function fetchNearbyForGrantedLocation() {
-      setIsLoadingNearby(true);
-      try {
-        const cityParam = selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : '';
-        const res = await fetch(withBasePath(`/api/restaurants/search?lat=${coords!.lat}&lng=${coords!.lng}${cityParam}`));
-        const data = await res.json();
-        if (!isCancelled && data.success && Array.isArray(data.data)) {
-          const limitedSpots = data.data.slice(0, 5);
-          setNearbyRestaurants(limitedSpots);
-          if (!searchQuery.trim()) {
-            setSearchResults(limitedSpots);
-          }
-        }
-      } catch (err) {
-        console.warn('Nearby restaurants fetch notice:', err);
-      } finally {
-        if (!isCancelled) setIsLoadingNearby(false);
-      }
-
-      // Fetch location label for display
-      if (!locationLabel) {
-        try {
-          const locRes = await fetch(withBasePath(`/api/location?lat=${coords!.lat}&lng=${coords!.lng}`));
-          const locData = await locRes.json();
-          if (!isCancelled && locData.success) {
-            const label = locData.locationDisplay || (locData.detectedCity?.name ? `${locData.detectedCity.name}` : selectedCity);
-            if (label) setLocationLabel(label);
-          }
-        } catch {
-          // ignore
-        }
-      }
-    }
-
-    fetchNearbyForGrantedLocation();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [coords?.lat, coords?.lng, selectedCity]);
-
-  // Show dropdown when user focuses on search box
-  const handleFocus = () => {
-    if (searchQuery.trim()) {
-      setShowDropdown(true);
-    } else if (coords && nearbyRestaurants.length > 0) {
-      setShowDropdown(true);
-      setSearchResults(nearbyRestaurants.slice(0, 5));
-    } else {
-      // User has not allowed location and search query is empty -> show blank!
-      setShowDropdown(false);
-      setSearchResults([]);
->>>>>>> dcdca7da92c19fe7a36e2ae8a0c11b749a82d04c
     }
   };
 
