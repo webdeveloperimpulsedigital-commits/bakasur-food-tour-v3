@@ -102,29 +102,17 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       return;
     }
 
-<<<<<<< HEAD
-      const fetchNearby = async (latToUse: number, lngToUse: number) => {
-        setIsLoadingNearby(true);
-        try {
-          const res = await fetch(withBasePath(`/api/restaurants/search?city=${encodeURIComponent(selectedCity || 'Pune')}&lat=${latToUse}&lng=${lngToUse}`));
-          const data = await res.json();
-          if (!isCancelled && data.success && Array.isArray(data.data)) {
-            const limitedSpots = data.data.slice(0, 5);
-            setNearbyRestaurants(limitedSpots);
-            setSearchResults((prev) => (!searchQuery.trim() ? limitedSpots : prev));
-=======
     async function fetchNearbyForGrantedLocation() {
       setIsLoadingNearby(true);
       try {
         const cityParam = selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : '';
-        const res = await fetch(`/api/restaurants/search?lat=${coords!.lat}&lng=${coords!.lng}${cityParam}`);
+        const res = await fetch(withBasePath(`/api/restaurants/search?lat=${coords!.lat}&lng=${coords!.lng}${cityParam}`));
         const data = await res.json();
         if (!isCancelled && data.success && Array.isArray(data.data)) {
           const limitedSpots = data.data.slice(0, 5);
           setNearbyRestaurants(limitedSpots);
           if (!searchQuery.trim()) {
             setSearchResults(limitedSpots);
->>>>>>> bcf20f972e2d02924ad781a1fa7ba7ced58c77a6
           }
         }
       } catch (err) {
@@ -136,11 +124,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       // Fetch location label for display
       if (!locationLabel) {
         try {
-<<<<<<< HEAD
-          const locRes = await fetch(withBasePath('/api/location'));
-=======
-          const locRes = await fetch(`/api/location?lat=${coords!.lat}&lng=${coords!.lng}`);
->>>>>>> bcf20f972e2d02924ad781a1fa7ba7ced58c77a6
+          const locRes = await fetch(withBasePath(`/api/location?lat=${coords!.lat}&lng=${coords!.lng}`));
           const locData = await locRes.json();
           if (!isCancelled && locData.success) {
             const label = locData.locationDisplay || (locData.detectedCity?.name ? `${locData.detectedCity.name}` : selectedCity);
@@ -243,11 +227,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         const lngParam = coords?.lng ? `&lng=${coords.lng}` : '';
         const cityParam = selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : '';
         const res = await fetch(
-<<<<<<< HEAD
-          withBasePath(`/api/restaurants/search?q=${encodeURIComponent(q)}&city=${encodeURIComponent(selectedCity || 'Pune')}${latParam}${lngParam}`),
-=======
-          `/api/restaurants/search?q=${encodeURIComponent(q)}${cityParam}${latParam}${lngParam}`,
->>>>>>> bcf20f972e2d02924ad781a1fa7ba7ced58c77a6
+          withBasePath(`/api/restaurants/search?q=${encodeURIComponent(q)}${cityParam}${latParam}${lngParam}`),
           { signal: controller.signal }
         );
         const json = await res.json();
