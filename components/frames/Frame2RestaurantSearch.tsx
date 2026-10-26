@@ -5,6 +5,7 @@ import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-
 import type { Restaurant } from '@/lib/db';
 import { isPureVegRestaurantName } from '@/lib/dishAssets';
 import { parseRestaurantQuery, getDeterministicPlaceId } from '@/lib/locationParser';
+import { withBasePath } from '@/lib/basePath';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -88,7 +89,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       const fetchNearby = async (latToUse: number, lngToUse: number) => {
         setIsLoadingNearby(true);
         try {
-          const res = await fetch(`/api/restaurants/search?city=${encodeURIComponent(selectedCity || 'Pune')}&lat=${latToUse}&lng=${lngToUse}`);
+          const res = await fetch(withBasePath(`/api/restaurants/search?city=${encodeURIComponent(selectedCity || 'Pune')}&lat=${latToUse}&lng=${lngToUse}`));
           const data = await res.json();
           if (!isCancelled && data.success && Array.isArray(data.data)) {
             const limitedSpots = data.data.slice(0, 5);
@@ -111,7 +112,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       if (!activeCoords) {
         setIsDetectingLocation(true);
         try {
-          const locRes = await fetch('/api/location');
+          const locRes = await fetch(withBasePath('/api/location'));
           const locData = await locRes.json();
           if (!isCancelled && locData.success) {
             const detected = locData.userCoords || { lat: 18.5204, lng: 73.8407 };
@@ -178,7 +179,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     const timer = setTimeout(async () => {
       try {
         const idParam = selectedRestaurant?.id ? `&id=${selectedRestaurant.id}` : '';
-        const res = await fetch(`/api/restaurants/check-visits?name=${encodeURIComponent(candidateName)}${idParam}`);
+        const res = await fetch(withBasePath(`/api/restaurants/check-visits?name=${encodeURIComponent(candidateName)}${idParam}`));
         const data = await res.json();
         if (data.success) {
           setFirstVisitorInfo({
@@ -213,7 +214,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         const latParam = coords?.lat ? `&lat=${coords.lat}` : '';
         const lngParam = coords?.lng ? `&lng=${coords.lng}` : '';
         const res = await fetch(
-          `/api/restaurants/search?q=${encodeURIComponent(q)}&city=${encodeURIComponent(selectedCity || 'Pune')}${latParam}${lngParam}`,
+          withBasePath(`/api/restaurants/search?q=${encodeURIComponent(q)}&city=${encodeURIComponent(selectedCity || 'Pune')}${latParam}${lngParam}`),
           { signal: controller.signal }
         );
         const json = await res.json();
@@ -270,7 +271,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       });
       if (spot.latitude) params.set('lat', String(spot.latitude));
       if (spot.longitude) params.set('lng', String(spot.longitude));
-      fetch(`/api/restaurants/${spot.id}/dishes?${params.toString()}`).catch(() => {});
+      fetch(withBasePath(`/api/restaurants/${spot.id}/dishes?${params.toString()}`)).catch(() => {});
     } catch {
       // background prefetch failure can be safely ignored
     }

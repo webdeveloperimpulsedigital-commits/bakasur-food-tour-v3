@@ -494,6 +494,16 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
     return getPreloadedUrl(src);
   }, [frameNumber, isHeartburn, videoUrl, isDesktop]);
 
+  const activePosterSrc = useMemo(() => {
+    if (posterImage && posterImage !== '/images/bakasur_pass.jpg') return posterImage;
+    if (frameNumber === 1) return '/images/final-frames/1_poster.jpg';
+    if (frameNumber === 2) return '/images/final-frames/2_poster.jpg';
+    if (frameNumber === 3 || frameNumber === 4) return '/images/final-frames/3_poster.jpg';
+    if (frameNumber === 5) return '/images/final-frames/5_poster.jpg';
+    if (frameNumber === 7 || frameNumber === 8 || isHeartburn) return '/images/final-frames/Acidity-and-Dakare_poster.jpg';
+    return '/images/final-frames/1_poster.jpg';
+  }, [frameNumber, isHeartburn, posterImage]);
+
   // Autoplay video smoothly on source change
   useEffect(() => {
     const video = videoRef.current;
@@ -581,6 +591,7 @@ export const BakasurVideoPlayer: React.FC<BakasurVideoPlayerProps> = ({
             ref={videoRef}
             key={activeVideoSrc}
             src={activeVideoSrc}
+            poster={withBasePath(activePosterSrc)}
             playsInline
             autoPlay
             loop
