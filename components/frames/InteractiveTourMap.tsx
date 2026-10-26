@@ -203,61 +203,28 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
             p.stopNumber = undefined;
           });
 
-          // Each user stop (Stop 1, Stop 2) claims EXACTLY ONE marker in list
-          const claimedPointIds = new Set<number>();
+          // Visited places must always show their own exact name and proper city name.
+          // NEVER match against or overwrite with DB restaurant names or cities!
           cleanUserSpots.forEach(s => {
-            let chosenPoint: TourMapPoint | undefined = undefined;
-
-            // 1. Try matching by exact coordinates (within 100 meters)
             if (s.latitude && s.longitude) {
-              chosenPoint = list.find(p => !claimedPointIds.has(p.id) &&
-                Math.abs(p.latitude - s.latitude!) < 0.001 &&
-                Math.abs(p.longitude - s.longitude!) < 0.001
-              );
-            }
+              // Suppress any existing historical red marker that overlaps (within 300m)
+              list = list.filter(p => {
+                const dist = Math.hypot(p.latitude - s.latitude!, p.longitude - s.longitude!);
+                return dist > 0.003;
+              });
 
-            // 2. Try matching by normalized name, picking the geographically closest point
-            if (!chosenPoint) {
-              const nameKey = normalizeKey(s.name);
-              const candidates = list.filter(p => !claimedPointIds.has(p.id) && normalizeKey(p.name) === nameKey);
-              if (candidates.length > 0) {
-                if (s.latitude && s.longitude) {
-                  const sLat = s.latitude;
-                  const sLng = s.longitude;
-                  candidates.sort((a, b) => {
-                    const distA = Math.hypot(a.latitude - sLat, a.longitude - sLng);
-                    const distB = Math.hypot(b.latitude - sLat, b.longitude - sLng);
-                    return distA - distB;
-                  });
-                }
-                chosenPoint = candidates[0];
-              }
-            }
-
-            if (chosenPoint) {
-              claimedPointIds.add(chosenPoint.id);
-              chosenPoint.isCurrentUserSpot = true;
-              chosenPoint.stopNumber = s.stopNumber;
-              if (s.dishName) chosenPoint.featured_dish = s.dishName;
-              if (s.latitude && s.longitude && (!chosenPoint.latitude || !chosenPoint.longitude)) {
-                chosenPoint.latitude = s.latitude;
-                chosenPoint.longitude = s.longitude;
-              }
-            } else if (s.latitude && s.longitude && s.latitude !== 0 && s.longitude !== 0) {
-              // Only insert if completely absent from list
-              const newPointId = 999990 + s.stopNumber!;
-              claimedPointIds.add(newPointId);
+              const newPointId = 999990 + (s.stopNumber || 1);
               list.unshift({
                 id: newPointId,
                 name: s.name,
-                city: s.city,
+                city: s.city || 'Thane',
                 latitude: s.latitude,
                 longitude: s.longitude,
                 rating: 4.8,
                 total_visits: 1,
-                featured_dish: s.dishName,
+                featured_dish: s.dishName || 'Specialty Dish',
                 isCurrentUserSpot: true,
-                stopNumber: s.stopNumber
+                stopNumber: s.stopNumber || 1
               });
             }
           });

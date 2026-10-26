@@ -236,33 +236,32 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       if (phoneticMatch) return phoneticMatch;
     }
 
-    // 3. Fallback to top verified fuzzy result if user typed 3+ chars
-    if (searchResults.length > 0 && q.length >= 3) {
-      return searchResults[0];
-    }
-
     return undefined;
   };
 
   const createCustomRestaurant = (name: string): Restaurant => {
-    const locArea = locationLabel || selectedCity || '';
     const cleanTitle = name
       .split(' ')
       .filter(Boolean)
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(' ');
     const isVeg = isPureVegRestaurantName(cleanTitle) ? 1 : 0;
-    const city = selectedCity || '';
-    const id = getDeterministicPlaceId(cleanTitle, city, locArea);
-    const parsed = parseRestaurantQuery(cleanTitle, selectedCity || 'Pune', coords);
+    const parsed = parseRestaurantQuery(cleanTitle, selectedCity || '', coords);
+    const resolvedCity = parsed.city || selectedCity || (cleanTitle.toLowerCase().includes('thane') ? 'Thane' : 'Local');
+    const locArea = locationLabel || parsed.area || resolvedCity;
+    const id = getDeterministicPlaceId(cleanTitle, resolvedCity, locArea);
+
     let finalLat = coords?.lat || (parsed.latitude !== 0 ? parsed.latitude : 0);
     let finalLng = coords?.lng || (parsed.longitude !== 0 ? parsed.longitude : 0);
     if (!finalLat || !finalLng || (finalLat >= 18.8 && finalLat <= 19.5 && finalLng < 72.80)) {
-      const cityLower = (selectedCity || '').toLowerCase();
+      const cityLower = resolvedCity.toLowerCase();
       const titleLower = cleanTitle.toLowerCase();
       if (cityLower.includes('thane') || titleLower.includes('thane')) {
         finalLat = 19.2183;
         finalLng = 72.9781;
+      } else if (cityLower.includes('navi mumbai') || titleLower.includes('navi mumbai') || cityLower.includes('airoli')) {
+        finalLat = 19.0330;
+        finalLng = 73.0297;
       } else if (cityLower.includes('mumbai') || titleLower.includes('mumbai')) {
         finalLat = 19.0760;
         finalLng = 72.8777;
@@ -274,16 +273,16 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     return {
       id,
       name: cleanTitle,
-      address: locArea ? `${locArea}${city && city !== locArea ? `, ${city}` : ''}` : (cleanTitle || 'Food Spot'),
-      area: locArea || city || 'Local',
-      city: city || 'Local',
+      address: locArea ? `${locArea}${resolvedCity && resolvedCity !== locArea ? `, ${resolvedCity}` : ''}` : (cleanTitle || 'Food Spot'),
+      area: locArea || resolvedCity,
+      city: resolvedCity,
       latitude: finalLat,
       longitude: finalLng,
       rating: 4.8,
       image: '/images/default-restaurant.jpg',
       description: `Authentic food spot${locArea ? ` in ${locArea}` : ''}`,
       is_campaign_active: 1,
-      total_visits: 1200,
+      total_visits: 1,
       status: 'active',
       is_veg: isVeg,
       is_verified: 1,
@@ -504,23 +503,16 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                               ) : (
                                 <span className="text-[#1D4ED8] font-semibold">{cuisineTag}</span>
                               )}
-                              {spot.distanceKm ? (
-                                <>
-                                  <span className="text-slate-300">•</span>
-                                  <span className="text-emerald-700 font-bold">{spot.distanceKm} km away</span>
-                                </>
-                              ) : null}
                             </p>
                           );
                         })()}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                        ⭐ {spot.rating || 4.8}
-                      </span>
-                      {isSelected && <Check className="w-4 h-4 text-[#0047BA] stroke-[3]" />}
-                    </div>
+                    {isSelected && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Check className="w-4 h-4 text-[#0047BA] stroke-[3]" />
+                      </div>
+                    )}
                   </button>
                 );
               })
@@ -551,7 +543,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                 const locStr = [cleanArea, cleanCity && cleanCity !== cleanArea ? cleanCity : ''].filter(Boolean).join(', ');
                 return (
                   <p className="text-[10px] sm:text-xs text-emerald-700 font-medium truncate">
-                    {locStr ? `📍 ${locStr} • ` : ''}⭐ {selectedRestaurant.rating || 4.8}
+                    {locStr ? `📍 ${locStr}` : '📍 Selected Spot'}
                   </p>
                 );
               })()}

@@ -181,7 +181,7 @@ export async function searchGoogleNearbyRestaurants(
         rating: p.rating || 4.7,
         image: photoUrl || `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(name)}`,
         is_campaign_active: 1,
-        total_visits: p.userRatingCount || 500,
+        total_visits: 1,
         status: 'active' as const,
         is_veg: isVeg ? 1 : 0
       };
@@ -301,4 +301,101 @@ export function extractDishesFromGoogleDetails(
   }
 
   return extractedDishes;
+}
+
+/**
+ * Text search for restaurants anywhere in India using Google Places API (New)
+ */
+export async function searchGoogleRestaurantsByText(
+  query: string,
+  coords?: { lat: number; lng: number } | null,
+  limit = 8
+): Promise<Array<{
+  restaurant: any;
+  score: number;
+  nameScore: number;
+}>> {
+  if (!isGooglePlacesConfigured()) return [];
+
+  try {
+    const url = 'https://places.googleapis.com/v1/places:searchText';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1800);
+
+    const body: Record<string, unknown> = {
+      textQuery: query,
+      maxResultCount: limit
+    };
+
+    if (coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lng)) {
+      body.locationBias = {
+        circle: {
+          center: { latitude: coords.lat, longitude: coords.lng },
+          radius: 35000.0
+        }
+      };
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GOOGLE_API_KEY,
+        'X-Goog-FieldMask':
+          'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.primaryType,places.types,places.photos,places.servesVegetarianFood'
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeout);
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const places = data.places || [];
+
+    return places.map((p: any, idx: number) => {
+      const name = p.displayName?.text || 'Restaurant';
+      const address = p.formattedAddress || '';
+      const parts = address.split(',').map((s: string) => s.trim());
+      const city = parts.length > 2 ? parts[parts.length - 2] : (parts[1] || 'India');
+      const area = parts.length > 1 ? parts[0] : city;
+      const isVeg = p.servesVegetarianFood || name.toLowerCase().includes('veg');
+
+      let photoUrl = '';
+      if (p.photos && p.photos.length > 0 && p.photos[0].name) {
+        photoUrl = `https://places.googleapis.com/v1/${p.photos[0].name}/media?maxHeightPx=600&maxWidthPx=800&key=${GOOGLE_API_KEY}`;
+      }
+
+      return {
+        restaurant: {
+          id: 750000 + idx + 1,
+          name,
+          address,
+          area,
+          city,
+          latitude: p.location?.latitude,
+          longitude: p.location?.longitude,
+          rating: p.rating || 4.7,
+          rating_count: p.userRatingCount ? `${p.userRatingCount}+ Google reviews` : 'Verified on Google',
+          image: photoUrl || `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(name)}`,
+          description: `Google Maps verified culinary spot in ${area}, ${city}`,
+          is_campaign_active: 1,
+          total_visits: 1,
+          status: 'active',
+          is_veg: isVeg ? 1 : 0,
+          is_verified: 1,
+          verification_source: 'google',
+          sources: ['google'],
+          source_platform: 'google',
+          cuisine: isVeg ? ['Pure Veg', 'Authentic Dining'] : ['Authentic Dining']
+        },
+        score: 95,
+        nameScore: 95
+      };
+    });
+  } catch (err) {
+    console.warn('Google Places text search notice:', err);
+    return [];
+  }
 }

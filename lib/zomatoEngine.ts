@@ -933,6 +933,372 @@ export const ICONIC_ZOMATO_RESTAURANTS: Array<{
     zomato_slug: "kesar-da-dhaba-amritsar-cantt",
     zomato_id: "zom_kesar_asr",
     description: "Century-old 1916 legendary Punjabi dhaba world-famous for Dal Makhani simmered for 12 hours in pure desi ghee, Lachha Paratha, and Firni."
+  },
+  // Mumbai
+  {
+    name: "Prithvi Cafe",
+    aliases: ["prithvi cafe", "prithvi juhu", "prithvi theatre cafe", "prithvi"],
+    area: "Juhu",
+    city: "Mumbai",
+    address: "Prithvi Theatre, 20 Janki Kutir, Juhu Church Road, Mumbai",
+    latitude: 19.1065,
+    longitude: 72.8260,
+    rating: 4.9,
+    rating_count: "22K+ reviews on Zomato",
+    cost_for_two: "₹400 for two",
+    is_veg: 0,
+    cuisine: ["Cafe", "Irish Coffee", "Parathas", "Fast Food"],
+    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "prithvi-cafe-juhu-mumbai",
+    zomato_id: "zom_prithvi_bom",
+    description: "Legendary open-air cultural cafe at Prithvi Theatre famous for Irish Coffee, stuffed Aloo Parathas, and cutting chai."
+  },
+  {
+    name: "Bademiya",
+    aliases: ["bademiya", "bademiya colaba", "bademiya kebabs", "bademiya mumbai"],
+    area: "Colaba",
+    city: "Mumbai",
+    address: "Tulloch Road, Behind Taj Mahal Hotel, Colaba, Mumbai",
+    latitude: 18.9220,
+    longitude: 72.8320,
+    rating: 4.8,
+    rating_count: "18K+ reviews on Zomato",
+    cost_for_two: "₹500 for two",
+    is_veg: 0,
+    cuisine: ["Mughlai", "Kebabs", "Street Food"],
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "bademiya-colaba-mumbai",
+    zomato_id: "zom_bademiya_bom",
+    description: "World-famous midnight street food institution behind the Taj Hotel celebrated for Seekh Kebabs, Baida Roti & Chicken Roll."
+  },
+  {
+    name: "Leopold Cafe & Bar",
+    aliases: ["leopold", "leopold cafe", "leopold colaba", "leopold mumbai"],
+    area: "Colaba",
+    city: "Mumbai",
+    address: "Shahid Bhagat Singh Road, Colaba Causeway, Mumbai",
+    latitude: 18.9229,
+    longitude: 72.8317,
+    rating: 4.7,
+    rating_count: "14K+ reviews on Zomato",
+    cost_for_two: "₹1000 for two",
+    is_veg: 0,
+    cuisine: ["Cafe", "Continental", "Bar", "Multi-Cuisine"],
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "leopold-cafe-colaba-mumbai",
+    zomato_id: "zom_leopold_bom",
+    description: "Iconic 1871 heritage cafe on Colaba Causeway immortalized in Shantaram, serving chilled beer, Chilli Chicken, and cheesecakes."
+  },
+  {
+    name: "Cafe Mondegar",
+    aliases: ["mondegar", "cafe mondegar", "mondies"],
+    area: "Colaba",
+    city: "Mumbai",
+    address: "Metro House, 5A Shahid Bhagat Singh Road, Colaba, Mumbai",
+    latitude: 18.9248,
+    longitude: 72.8320,
+    rating: 4.7,
+    rating_count: "11K+ reviews on Zomato",
+    cost_for_two: "₹900 for two",
+    is_veg: 0,
+    cuisine: ["Cafe", "Continental", "Beer"],
+    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "cafe-mondegar-colaba-mumbai",
+    zomato_id: "zom_mondegar_bom",
+    description: "Mumbai's 1932 heritage jukebox cafe famous for Mario Miranda hand-painted wall murals, draft beer, and cheese garlic bread."
+  },
+  {
+    name: "Britannia & Co. Restaurant",
+    aliases: ["britannia", "britannia and co", "britannia cafe", "britannia berry pulao"],
+    area: "Fort",
+    city: "Mumbai",
+    address: "Wakefield House, 11 Sprott Road, Ballard Estate, Fort, Mumbai",
+    latitude: 18.9355,
+    longitude: 72.8400,
+    rating: 4.8,
+    rating_count: "9.5K+ reviews on Zomato",
+    cost_for_two: "₹800 for two",
+    is_veg: 0,
+    cuisine: ["Parsi", "Iranian", "Heritage"],
+    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "britannia-company-restaurant-fort-mumbai",
+    zomato_id: "zom_britannia_bom",
+    description: "Ballard Estate's century-old 1923 Parsi institution famous worldwide for sweet and tangy Mutton Berry Pulao and Salli Boti."
+  },
+  {
+    name: "Trishna",
+    aliases: ["trishna", "trishna mumbai", "trishna seafood", "trishna kala ghoda"],
+    area: "Fort",
+    city: "Mumbai",
+    address: "7, Sai Baba Marg, Kala Ghoda, Fort, Mumbai",
+    latitude: 18.9280,
+    longitude: 72.8325,
+    rating: 4.9,
+    rating_count: "12K+ reviews on Zomato",
+    cost_for_two: "₹1800 for two",
+    is_veg: 0,
+    cuisine: ["Seafood", "Mangalorean", "Coastal"],
+    image: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "trishna-fort-mumbai",
+    zomato_id: "zom_trishna_bom",
+    description: "World-renowned coastal seafood temple celebrated for Butter Pepper Garlic King Crab, Jumbo Prawns, and Hyderabadi Pomfret."
+  },
+  {
+    name: "Mahesh Lunch Home",
+    aliases: ["mahesh lunch home", "mahesh seafood"],
+    area: "Fort",
+    city: "Mumbai",
+    address: "8-B, Cawasji Patel Street, Fort, Mumbai",
+    latitude: 18.9330,
+    longitude: 72.8335,
+    rating: 4.8,
+    rating_count: "10K+ reviews on Zomato",
+    cost_for_two: "₹1200 for two",
+    is_veg: 0,
+    cuisine: ["Seafood", "Mangalorean", "Coastal"],
+    image: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "mahesh-lunch-home-fort-mumbai",
+    zomato_id: "zom_mahesh_bom",
+    description: "Mangalorean coastal seafood institution operating since 1977, famous for Surmai Rava Fry, Crab Gassi & Neer Dosa."
+  },
+  {
+    name: "Ashok Vada Pav",
+    aliases: ["ashok vada pav", "kirti college vada pav", "ashok vadapav"],
+    area: "Dadar",
+    city: "Mumbai",
+    address: "Off Cadel Road, Kirti College Lane, Dadar West, Mumbai",
+    latitude: 19.0220,
+    longitude: 72.8360,
+    rating: 4.9,
+    rating_count: "16K+ reviews on Zomato",
+    cost_for_two: "₹100 for two",
+    is_veg: 1,
+    cuisine: ["Street Food", "Vada Pav", "Pure Veg"],
+    image: "/images/food/vada_pav.jpg",
+    zomato_slug: "ashok-vada-pav-stall-dadar-west-mumbai",
+    zomato_id: "zom_ashok_vadapav",
+    description: "Mumbai's most legendary vada pav destination near Kirti College, famous for crispy batter chura topping and secret garlic chutney."
+  },
+  // Delhi NCR
+  {
+    name: "Karim's",
+    aliases: ["karim", "karims", "karim hotel", "karim's delhi", "karim jama masjid"],
+    area: "Jama Masjid",
+    city: "Delhi",
+    address: "16, Gali Kababian, Jama Masjid, Old Delhi",
+    latitude: 28.6507,
+    longitude: 77.2334,
+    rating: 4.9,
+    rating_count: "28K+ reviews on Zomato",
+    cost_for_two: "₹700 for two",
+    is_veg: 0,
+    cuisine: ["Mughlai", "North Indian", "Kebabs"],
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "karims-jama-masjid-new-delhi",
+    zomato_id: "zom_karim_del",
+    description: "Royal Mughal culinary lineage since 1913 world-famous for Mutton Burra Kebab, Shahi Mutton Korma & Khamiri Roti."
+  },
+  {
+    name: "Al Jawahar",
+    aliases: ["al jawahar", "al jawahar jama masjid", "al jawahar delhi"],
+    area: "Jama Masjid",
+    city: "Delhi",
+    address: "Opposite Gate 1, Jama Masjid, Old Delhi",
+    latitude: 28.6505,
+    longitude: 77.2330,
+    rating: 4.8,
+    rating_count: "19K+ reviews on Zomato",
+    cost_for_two: "₹650 for two",
+    is_veg: 0,
+    cuisine: ["Mughlai", "Nihari", "North Indian"],
+    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "al-jawahar-jama-masjid-new-delhi",
+    zomato_id: "zom_jawahar_del",
+    description: "Inaugurated by Pandit Jawaharlal Nehru, famous for slow-simmered Mutton Nihari, Changezi Chicken & Badam Pasanda."
+  },
+  {
+    name: "Bukhara",
+    aliases: ["bukhara", "bukhara itc", "bukhara delhi"],
+    area: "Chanakyapuri",
+    city: "Delhi",
+    address: "ITC Maurya, Sardar Patel Marg, Diplomatic Enclave, Chanakyapuri, New Delhi",
+    latitude: 28.5975,
+    longitude: 77.1735,
+    rating: 4.9,
+    rating_count: "15K+ reviews on Zomato",
+    cost_for_two: "₹5000 for two",
+    is_veg: 0,
+    cuisine: ["North Western Frontier", "Tandoor", "Luxury Dining"],
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "bukhara-itc-maurya-chanakyapuri-new-delhi",
+    zomato_id: "zom_bukhara_del",
+    description: "World-famous culinary icon celebrated for Dal Bukhara slow-cooked for 18 hours in tandoor, Sikandari Raan, and giant Naan Bukhara."
+  },
+  {
+    name: "Gulati Restaurant",
+    aliases: ["gulati", "gulati pandara road", "gulati butter chicken"],
+    area: "Pandara Road",
+    city: "Delhi",
+    address: "6, Pandara Road Market, New Delhi",
+    latitude: 28.6080,
+    longitude: 77.2340,
+    rating: 4.8,
+    rating_count: "21K+ reviews on Zomato",
+    cost_for_two: "₹1200 for two",
+    is_veg: 0,
+    cuisine: ["North Indian", "Mughlai", "Butter Chicken"],
+    image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "gulati-pandara-road-new-delhi",
+    zomato_id: "zom_gulati_del",
+    description: "Pandara Road landmark celebrated as the gold standard of rich velvet Butter Chicken, Dal Makhani & Kakori Kebabs."
+  },
+  // Kolkata
+  {
+    name: "Peter Cat",
+    aliases: ["peter cat", "peter cat kolkata", "peter cat park street"],
+    area: "Park Street",
+    city: "Kolkata",
+    address: "18A, Park Street, Park Street Area, Kolkata",
+    latitude: 22.5530,
+    longitude: 77.3530,
+    rating: 4.9,
+    rating_count: "26K+ reviews on Zomato",
+    cost_for_two: "₹1000 for two",
+    is_veg: 0,
+    cuisine: ["Continental", "Chelo Kebab", "Heritage"],
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "peter-cat-park-street-area-kolkata",
+    zomato_id: "zom_petercat_ccu",
+    description: "Park Street's timeless 1975 institution world-renowned for signature Iranian Chelo Kebabs served with butter rice and poached egg."
+  },
+  {
+    name: "Flurys",
+    aliases: ["flurys", "flurys kolkata", "flurys park street"],
+    area: "Park Street",
+    city: "Kolkata",
+    address: "18, Park Street, Kolkata",
+    latitude: 22.5532,
+    longitude: 88.3535,
+    rating: 4.7,
+    rating_count: "14K+ reviews on Zomato",
+    cost_for_two: "₹600 for two",
+    is_veg: 0,
+    cuisine: ["Bakery", "European", "Breakfast"],
+    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "flurys-park-street-area-kolkata",
+    zomato_id: "zom_flurys_ccu",
+    description: "Colonial 1927 Swiss confectionery tearoom famous for English Breakfast, Rum Balls, Baba Cake, and Darjeeling Tea."
+  },
+  // Lucknow
+  {
+    name: "Tunday Kababi",
+    aliases: ["tunday kababi", "tunday", "tunday lucknow", "tunday aminabad"],
+    area: "Aminabad",
+    city: "Lucknow",
+    address: "168/6, Nazirabad Rd, Khayali Ganj, Aminabad, Lucknow",
+    latitude: 26.8490,
+    longitude: 80.9250,
+    rating: 4.9,
+    rating_count: "25K+ reviews on Zomato",
+    cost_for_two: "₹350 for two",
+    is_veg: 0,
+    cuisine: ["Awadhi", "Mughlai", "Galouti Kebab"],
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "tunday-kababi-aminabad-lucknow",
+    zomato_id: "zom_tunday_lko",
+    description: "Historic 1905 royal Awadhi kebab institution world-famous for 160-spice melt-in-mouth Galouti Kebabs and Mughlai Parathas."
+  },
+  // Hyderabad
+  {
+    name: "Paradise Biryani",
+    aliases: ["paradise biryani", "paradise hyderabad", "paradise secunderabad"],
+    area: "Secunderabad",
+    city: "Hyderabad",
+    address: "Paradise Circle, MG Road, Secunderabad, Hyderabad",
+    latitude: 17.4416,
+    longitude: 78.4983,
+    rating: 4.8,
+    rating_count: "35K+ reviews on Zomato",
+    cost_for_two: "₹600 for two",
+    is_veg: 0,
+    cuisine: ["Biryani", "Hyderabadi", "Mughlai"],
+    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "paradise-secunderabad-hyderabad",
+    zomato_id: "zom_paradise_hyd",
+    description: "The world's most recognized Hyderabadi Dum Biryani icon since 1953, famous for aromatic saffron rice and tender mutton."
+  },
+  {
+    name: "Bawarchi Restaurant",
+    aliases: ["bawarchi", "bawarchi hyderabad", "bawarchi rtc x roads"],
+    area: "RTC X Roads",
+    city: "Hyderabad",
+    address: "Beside Sandhya Theatre, RTC X Roads, Chikkadpally, Hyderabad",
+    latitude: 17.4045,
+    longitude: 78.4980,
+    rating: 4.9,
+    rating_count: "40K+ reviews on Zomato",
+    cost_for_two: "₹500 for two",
+    is_veg: 0,
+    cuisine: ["Biryani", "Hyderabadi", "Mughlai"],
+    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "bawarchi-restaurant-rtc-x-roads-hyderabad",
+    zomato_id: "zom_bawarchi_hyd",
+    description: "RTC X Roads legendary culinary landmark known for intensely flavorful slow-cooked Hyderabadi Mutton Dum Biryani."
+  },
+  // Goa
+  {
+    name: "Fisherman's Wharf",
+    aliases: ["fisherman's wharf", "fishermans wharf", "fishermans wharf goa", "fisherman wharf"],
+    area: "Cavelossim",
+    city: "Goa",
+    address: "At the River Sal, Mobor Beach, Cavelossim, Goa",
+    latitude: 15.1760,
+    longitude: 73.9450,
+    rating: 4.9,
+    rating_count: "18K+ reviews on Zomato",
+    cost_for_two: "₹1200 for two",
+    is_veg: 0,
+    cuisine: ["Goan", "Seafood", "Riverside Dining"],
+    image: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "the-fishermans-wharf-cavelossim-goa",
+    zomato_id: "zom_fishermans_goa",
+    description: "Salcette riverside paradise world-famous for King Crab Peri Peri, Prawn Balchão, Goan Fish Curry, and Bebinca."
+  },
+  {
+    name: "Britto's Baga Beach",
+    aliases: ["britto", "brittos", "britto's", "brittos goa", "britto baga"],
+    area: "Baga",
+    city: "Goa",
+    address: "House No. 7/171, Saunta Vaddo, Baga Beach, Goa",
+    latitude: 15.5560,
+    longitude: 73.7515,
+    rating: 4.8,
+    rating_count: "22K+ reviews on Zomato",
+    cost_for_two: "₹1000 for two",
+    is_veg: 0,
+    cuisine: ["Goan", "Seafood", "Beach Shack"],
+    image: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "brittos-baga-goa",
+    zomato_id: "zom_brittos_goa",
+    description: "Iconic 1965 Baga Beach shack landmark celebrated for Butter Garlic Jumbo Crab, Goan Prawn Curry, and Pork Vindaloo."
+  },
+  {
+    name: "Gunpowder",
+    aliases: ["gunpowder", "gunpowder goa", "gunpowder assagao"],
+    area: "Assagao",
+    city: "Goa",
+    address: "Saanto Vaddo, Assagao, Goa",
+    latitude: 15.5920,
+    longitude: 73.7760,
+    rating: 4.9,
+    rating_count: "12K+ reviews on Zomato",
+    cost_for_two: "₹1100 for two",
+    is_veg: 0,
+    cuisine: ["South Indian", "Coastal", "Kerala"],
+    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80",
+    zomato_slug: "gunpowder-assagao-goa",
+    zomato_id: "zom_gunpowder_goa",
+    description: "Assagao heritage villa serving exquisite South Indian coastal food: spicy Kerala beef fry, appams, and Malabar fish curry."
   }
 ];
 
@@ -953,7 +1319,7 @@ export async function searchZomatoRestaurants(
 }>> {
   const qClean = query.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
   const qTokens = qClean.split(/\s+/).filter(Boolean);
-  const cityKey = (options?.city || 'pune').toLowerCase().trim();
+  const cityKey = options?.city ? options.city.toLowerCase().trim() : '';
   const results: Array<{ restaurant: any; score: number; nameScore: number }> = [];
 
   for (const item of ICONIC_ZOMATO_RESTAURANTS) {
@@ -962,7 +1328,8 @@ export async function searchZomatoRestaurants(
     const itemName = item.name.toLowerCase();
 
     // Check city / area match if query contains location or options.city provided
-    const matchesCity = itemCity.includes(cityKey) || cityKey.includes(itemCity);
+    const matchesCity = !cityKey || itemCity.includes(cityKey) || cityKey.includes(itemCity);
+    if (cityKey && !matchesCity) continue;
 
     // Check name tokens
     const allSearchable = [
@@ -980,12 +1347,13 @@ export async function searchZomatoRestaurants(
     }
 
     const tokenRatio = qTokens.length > 0 ? matchedTokens / qTokens.length : 0;
-    const isDirectMatch = itemName.includes(qClean) || (item.aliases || []).some(a => a.includes(qClean));
+    const isExactName = itemName === qClean || (item.aliases || []).some(a => a === qClean);
+    const isDirectMatch = isExactName || itemName.includes(qClean) || (item.aliases || []).some(a => a.includes(qClean) || qClean.includes(a));
 
     if (isDirectMatch || tokenRatio >= 0.5) {
-      const baseScore = isDirectMatch ? 95 : Math.round(tokenRatio * 85);
+      const baseScore = isExactName ? 100 : (isDirectMatch ? 95 : Math.round(tokenRatio * 85));
       const score = matchesCity ? baseScore : Math.max(50, baseScore - 15);
-      const nameScore = isDirectMatch ? 95 : 80;
+      const nameScore = isExactName ? 100 : (isDirectMatch ? 95 : 80);
 
       results.push({
         restaurant: {
@@ -1002,7 +1370,7 @@ export async function searchZomatoRestaurants(
           image: item.image,
           description: item.description,
           is_campaign_active: 1,
-          total_visits: 1950,
+          total_visits: 1,
           status: 'active',
           is_veg: item.is_veg,
           is_verified: 1,

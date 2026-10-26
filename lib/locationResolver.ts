@@ -178,6 +178,13 @@ const CITY_GAZETTEER: Record<string, { lat: number; lng: number; label: string }
   calangute: { lat: 15.5439, lng: 73.7553, label: 'Calangute, Goa' },
   baga: { lat: 15.5553, lng: 73.7517, label: 'Baga, Goa' },
   candolim: { lat: 15.5178, lng: 73.7632, label: 'Candolim, Goa' },
+  cavelossim: { lat: 15.1760, lng: 73.9450, label: 'Cavelossim, Goa' },
+  mobor: { lat: 15.1630, lng: 73.9480, label: 'Mobor Beach, Goa' },
+  assagao: { lat: 15.5900, lng: 73.7780, label: 'Assagao, Goa' },
+  anjuna: { lat: 15.5733, lng: 73.7411, label: 'Anjuna, Goa' },
+  vagator: { lat: 15.6028, lng: 73.7336, label: 'Vagator, Goa' },
+  colva: { lat: 15.2797, lng: 73.9117, label: 'Colva, Goa' },
+  benaulim: { lat: 15.2583, lng: 73.9197, label: 'Benaulim, Goa' },
   mapusa: { lat: 15.5937, lng: 73.8142, label: 'Mapusa, Goa' },
   vasco: { lat: 15.3982, lng: 73.8113, label: 'Vasco da Gama, Goa' },
   // Karnataka
@@ -353,13 +360,18 @@ export function parseLocationFromQuery(raw: string): ParsedLocationQuery {
   const query = (raw || '').trim().replace(/\s+/g, ' ');
   if (!query) return { nameQuery: '', locationText: null, via: null };
 
-  // 1. Explicit separators: "X in Y", "X at Y", "X near Y", "X @ Y"
+  // 1. Standalone known city / locality: "Thane", "Mumbai", "Goa", "Delhi"
+  if (lookupGazetteer(query)) {
+    return { nameQuery: '', locationText: query, via: 'explicit' };
+  }
+
+  // 2. Explicit separators: "X in Y", "X at Y", "X near Y", "X @ Y"
   const sep = query.match(/^(.*?)\s+(?:in|at|near|around|@)\s+(.+)$/i);
   if (sep && sep[2].trim().length >= 3) {
     return { nameQuery: sep[1].trim(), locationText: sep[2].trim(), via: 'explicit' };
   }
 
-  // 2. Comma form: "Name, Area" or "Name, Area, City"
+  // 3. Comma form: "Name, Area" or "Name, Area, City"
   const commaIdx = query.indexOf(',');
   if (commaIdx > 0) {
     const name = query.slice(0, commaIdx).trim();
@@ -367,8 +379,22 @@ export function parseLocationFromQuery(raw: string): ParsedLocationQuery {
     if (name && loc.length >= 3) return { nameQuery: name, locationText: loc, via: 'explicit' };
   }
 
-  // 3. Trailing known city / suburb: "Prashant Corner Thane", "Mamledar Misal Thane West"
   const tokens = query.split(' ');
+
+  // 4. Leading known city / suburb: "Thane Shree Durga", "Goa Britto", "Mumbai Bademiya"
+  if (tokens.length >= 2) {
+    for (let take = Math.min(3, tokens.length - 1); take >= 1; take--) {
+      const head = tokens.slice(0, take).join(' ');
+      if (lookupGazetteer(head)) {
+        const name = tokens.slice(take).join(' ').trim();
+        if (name.length >= 2) {
+          return { nameQuery: name, locationText: head, via: 'explicit' };
+        }
+      }
+    }
+  }
+
+  // 5. Trailing known city / suburb: "Prashant Corner Thane", "Mamledar Misal Thane West"
   for (let take = Math.min(4, tokens.length); take >= 1; take--) {
     const tail = tokens.slice(tokens.length - take).join(' ');
     if (lookupGazetteer(tail)) {

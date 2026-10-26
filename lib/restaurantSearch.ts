@@ -39,6 +39,7 @@ import { generateLiveMenuForRestaurant } from './liveMenu';
 import { isDishRelevantToSearch, isPureVegRestaurantName } from './dishAssets';
 import { pickCuisineImage, getDeterministicPlaceId } from './livePlaces';
 import { searchZomatoRestaurants, getZomatoHeritageKey, ICONIC_ZOMATO_RESTAURANTS } from './zomatoEngine';
+import { isGooglePlacesConfigured, searchGoogleRestaurantsByText } from './googlePlaces';
 
 const RESULT_LIMIT = 15;
 const HUB_CONCURRENCY = 6;
@@ -98,7 +99,9 @@ const VENUE_NOISE_WORDS = new Set([
   'hall', 'house', 'bhojanalay', 'bhojanalaya', 'khanawal', 'kitchen', 'foods', 'food',
   'joint', 'corner', 'center', 'centre', 'pure', 'veg', 'nonveg', 'non-veg', 'family',
   'bar', 'stall', 'stalls', 'tapri', 'thela', 'cart', 'street', 'streetfood', 'adda',
-  'the', 'and', '&', 'by', 'of', 'shree', 'shri', 'sri', 'new'
+  'the', 'and', '&', 'by', 'of', 'new', 'lunch', 'home', 'lunchhome', 'mess', 'tiffin',
+  'eatery', 'bistro', 'lounge', 'sweets', 'sweet', 'snack', 'snacks', 'bhandar', 'mithai',
+  'point', 'spot', 'place', 'express', 'shack', 'inn'
 ]);
 
 function normalizeText(text: string): string {
@@ -406,7 +409,7 @@ function createCustomPlaceEntry(
     image: pickCuisineImage(cleanName),
     description: area || city ? `Authentic food joint in ${[area, city].filter(Boolean).join(', ')}` : `Authentic food joint`,
     is_campaign_active: 1,
-    total_visits: 1450,
+    total_visits: 1,
     status: 'active',
     is_veg: isVeg,
     is_verified: 1,
@@ -555,6 +558,11 @@ async function searchDbVerified(
         });
       }
     }
+    // Cap database matches so local DB spots do not drown out live nationwide results
+    if (!targetLoc && results.length > 3) {
+      results.sort((a, b) => (b.nameScore || b.score) - (a.nameScore || a.score));
+      return results.slice(0, 3);
+    }
     return results;
   } catch (err) {
     console.warn('searchDbVerified error:', err);
@@ -579,7 +587,7 @@ async function searchLiveSwiggySuggestions(
   const lng = searchCoords?.lng ?? userCoords?.lng ?? 72.8777;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 1800);
+  const timer = setTimeout(() => controller.abort(), 850);
 
   try {
     const url = `https://www.swiggy.com/dapi/restaurants/search/suggest?lat=${lat}&lng=${lng}&str=${encodeURIComponent(q)}`;
@@ -665,7 +673,7 @@ async function searchLiveSwiggySuggestions(
           image: iconicZomato?.image || swiggyImg,
           description: finalArea || finalCity ? `Popular food spot in ${[finalArea, finalCity].filter(Boolean).join(', ')}` : `Popular verified food spot`,
           is_campaign_active: 1,
-          total_visits: 1200,
+          total_visits: 1,
           status: 'active',
           is_veg: isVeg,
           is_verified: 1,
@@ -702,21 +710,25 @@ async function searchNominatimRestaurants(
   if (q.length < 2) return [];
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 2200);
+  const timer = setTimeout(() => controller.abort(), 800);
 
   try {
     let fullQuery = q;
-    if (cityName && !q.toLowerCase().includes(cityName.toLowerCase())) {
+    // Only append cityName if it was explicitly extracted from user query (i.e. searchCoords is present as an explicit target location)
+    if (cityName && searchCoords && !q.toLowerCase().includes(cityName.toLowerCase())) {
       fullQuery = `${q}, ${cityName}`;
     }
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullQuery)}&countrycodes=in&format=json&addressdetails=1&limit=${limit}`;
+    let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullQuery)}&countrycodes=in&format=json&addressdetails=1&limit=${limit}`;
+    if (searchCoords) {
+      url += `&viewbox=${searchCoords.lng - 0.5},${searchCoords.lat + 0.5},${searchCoords.lng + 0.5},${searchCoords.lat - 0.5}`;
+    }
     const res = await fetch(url, {
       headers: {
         'User-Agent': 'BhookasurFoodTour/3.0 (foodtour@bakasur.com)'
       },
       signal: controller.signal
     });
-    if (!res.ok) return [];
+    if (!res.ok || res.status === 429) return [];
     const items = await res.json();
     if (!Array.isArray(items)) return [];
 
@@ -732,14 +744,45 @@ async function searchNominatimRestaurants(
       // Restrict strictly to India boundaries
       if (itemLat < 6.0 || itemLat > 38.0 || itemLon < 68.0 || itemLon > 98.0) continue;
 
+      // When searching a specific target location, reject places located outside that city/area
+      if (searchCoords) {
+        const dist = haversineKm(searchCoords.lat, searchCoords.lng, itemLat, itemLon);
+        const maxDist = cityName ? 65 : 45;
+        if (dist > maxDist) continue;
+      }
+
+      const osmClass = String(item.class || item.category || '').toLowerCase();
+      const osmType = String(item.type || '').toLowerCase();
+      const lowerRaw = rawName.toLowerCase();
+
+      // Reject non-food amenities, places, boundaries, highways, railways, public transport
+      const isExplicitNonFood = 
+        ['place_of_worship', 'church', 'temple', 'mosque', 'school', 'college', 'university', 'hospital', 'clinic', 'pharmacy', 'bank', 'atm', 'police', 'grave_yard', 'cemetery', 'library', 'post_office', 'townhall', 'courthouse', 'fire_station'].includes(osmType) ||
+        (osmClass === 'place' && ['village', 'hamlet', 'isolated_dwelling', 'locality', 'island', 'sea', 'ocean', 'county', 'suburb', 'neighbourhood'].includes(osmType)) ||
+        (osmClass === 'boundary' && ['administrative', 'political', 'postal_code'].includes(osmType)) ||
+        (osmClass === 'highway' || osmClass === 'railway' || osmClass === 'public_transport') ||
+        ['bus_stop', 'stop_position', 'platform', 'station', 'tram_stop', 'subway_entrance'].includes(osmType);
+
+      const hasFoodName = /(hotel|restaurant|cafe|dhaba|bhojanalay|bhojanalaya|dining|hall|canteen|bhel|misal|sweets|bakery|snacks|kitchen|paratha|biryani|dosa|thali|punjabi|khanawal|corner|eatery|mastani|street\s*food|stall|tapri|thela|chaat|chat|pani\s*puri|vada\s*pav|vadapav|dabeli|samosa|kachori|sandwich|frankie|roll|shawarma|momo|momos|pav\s*bhaji|pavbhaji|juice|shake|falooda|kulfi|chai|tea|amruttulya|amrittulya|rasoi|bhandar|mithai|farsan|tiffin|mess|chole|kulcha|bhature|idli|vada|uttapam|kebab|kabab|tandoor|roti|naan|curry|chinese|pizza|burger|grill|ice\s*cream|bar|pub|bistro|lounge|seafood|treats)/i.test(lowerRaw);
+
+      if (isExplicitNonFood && !hasFoodName) continue;
+
+      // Reject road infrastructure, transit stops, societies, hostels, libraries, clinics, bhavans even if partially named
+      const isTransitOrInfraName = /\b(bus\s*stop|bus\s*stand|stop|station|junction|depot|terminal|railway|metro|flyover|underpass|overpass|bridge|bypass|expressway|highway|toll|circle|chowk|signal|traffic|library|hostel|office|complex|society|residency|apartments|vaddo|vado|clinic|hospital|doctor|dr\b|dispensary|krida|stadium|ground|gym|bhavan|bhawan)\b/i.test(lowerRaw);
+      if (isTransitOrInfraName && !/(restaurant|cafe|dhaba|hotel|kitchen|canteen|bhel|snacks|bhojanalay|bar|bistro|diner|eatery|lunch\s*home)/i.test(lowerRaw)) {
+        continue;
+      }
+
       const addr = item.address || {};
       const area = String(addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || addr.district || addr.road || '').trim();
       const city = String(addr.city || addr.town || addr.county || addr.state_district || addr.state || cityName || 'Local').trim();
       const display = item.display_name || `${rawName}, ${area}, ${city}`;
 
       const { score, nameScore, isMatch } = calculateFuzzyRestaurantScore(q, rawName, area, city);
-      const containsQuery = display.toLowerCase().includes(q.toLowerCase());
-      const finalScore = isMatch ? Math.max(score, 88) : (containsQuery ? 75 : 0);
+      const isExact = lowerRaw === q.toLowerCase().trim();
+      const isPrefix = lowerRaw.startsWith(q.toLowerCase().trim());
+      const finalScore = isExact ? 100 : (isPrefix ? 92 : (isMatch ? Math.max(score, 88) : (hasFoodName ? 75 : 0)));
+      const finalNameScore = isExact ? 100 : (isPrefix ? 92 : (isMatch ? Math.max(nameScore, 85) : 0));
       if (finalScore < 50) continue;
 
       const id = getDeterministicPlaceId(rawName, city, area);
@@ -758,7 +801,7 @@ async function searchNominatimRestaurants(
           image: pickCuisineImage(rawName),
           description: `Authentic food spot in ${area || city}, ${city}`,
           is_campaign_active: 1,
-          total_visits: 1450,
+          total_visits: 1,
           status: 'active',
           is_veg: isVeg,
           is_verified: 1,
@@ -819,6 +862,12 @@ async function searchLivePoiRestaurants(
       const osmKey = String(p.osm_key || '').toLowerCase();
       const lowerName = rawName.toLowerCase();
 
+      // Reject non-food infrastructure, transit stops, libraries, hostels, residential societies, clinics, bhavans
+      const isTransitOrInfraName = /\b(bus\s*stop|bus\s*stand|stop|station|junction|depot|terminal|railway|metro|flyover|underpass|overpass|bridge|bypass|expressway|highway|toll|circle|chowk|signal|traffic|library|hostel|office|complex|society|residency|apartments|vaddo|vado|clinic|hospital|doctor|dr\b|dispensary|krida|stadium|ground|gym|bhavan|bhawan)\b/i.test(lowerName);
+      if (isTransitOrInfraName && !/(restaurant|cafe|dhaba|hotel|kitchen|canteen|bhel|snacks|bhojanalay|bar|bistro|diner|eatery|lunch\s*home)/i.test(lowerName)) {
+        continue;
+      }
+
       const isFoodTag =
         (osmKey === 'amenity' && ['restaurant', 'cafe', 'fast_food', 'food_court', 'bar', 'pub', 'ice_cream', 'biergarten'].includes(osmVal)) ||
         (osmKey === 'shop' && ['bakery', 'confectionery', 'pastry', 'coffee', 'tea', 'ice_cream', 'deli', 'street_vendor', 'food'].includes(osmVal)) ||
@@ -826,9 +875,8 @@ async function searchLivePoiRestaurants(
 
       const hasFoodName = /(hotel|restaurant|cafe|dhaba|bhojanalay|bhojanalaya|dining|hall|canteen|bhel|misal|sweets|bakery|snacks|kitchen|paratha|biryani|dosa|thali|punjabi|khanawal|corner|eatery|mastani|street\s*food|stall|tapri|thela|chaat|chat|pani\s*puri|vada\s*pav|vadapav|dabeli|samosa|kachori|sandwich|frankie|roll|shawarma|momo|momos|pav\s*bhaji|pavbhaji|juice|shake|falooda|kulfi|chai|tea|amruttulya|amrittulya|rasoi|bhandar|mithai|farsan|tiffin|mess|chole|kulcha|bhature|idli|vada|uttapam|kebab|kabab|tandoor|roti|naan|curry|chinese|pizza|burger|grill|ice\s*cream)/i.test(lowerName);
 
-      const queryMatchesName = lowerName.includes(normalizeText(query));
-
-      if (!isFoodTag && !hasFoodName && !queryMatchesName) continue;
+      // Must be an OSM food amenity/shop or have a food-related venue name
+      if (!isFoodTag && !hasFoodName) continue;
 
       const [itemLon, itemLat] = f.geometry.coordinates;
       if (!Number.isFinite(itemLat) || !Number.isFinite(itemLon)) continue;
@@ -866,7 +914,7 @@ async function searchLivePoiRestaurants(
           image: pickCuisineImage(rawName),
           description: `Authentic food joint in ${area || city}, ${city}`,
           is_campaign_active: 1,
-          total_visits: 1450,
+          total_visits: 1,
           status: 'active',
           is_veg: isVeg,
           is_verified: 1,
@@ -893,6 +941,32 @@ async function searchLivePoiRestaurants(
 // 5. Filter & Rank Results
 // ---------------------------------------------------------------------------
 function filterResults(candidates: ScoredVerifiedRestaurant[], query: string): ScoredVerifiedRestaurant[] {
+  const normQ = normalizeText(query);
+  const parsed = parseLocationFromQuery(query);
+  const nameQuery = (parsed.nameQuery || query).trim();
+  const normName = normalizeText(nameQuery);
+
+  const isDishSearch = isGenericDishOnly(normName) || isGenericDishOnly(normQ);
+  const isGeneric = isGenericSearch(normName) || isGenericSearch(normQ);
+
+  // If user searched a specific establishment name (e.g. "Hemant Lunch Home", "Prithvi Cafe", "Britto's")
+  // strictly exclude candidates that do not match the distinctive keyword!
+  if (!isDishSearch && !isGeneric) {
+    const distinctiveTokens = normName
+      .split(' ')
+      .filter(t => !isVenueWord(t) && !lookupGazetteer(t) && t.length >= 2);
+
+    if (distinctiveTokens.length > 0) {
+      return candidates.filter(s => {
+        const cNameNorm = normalizeText(s.restaurant.name);
+        const cTokens = cNameNorm.split(' ');
+        return distinctiveTokens.some(dt => {
+          return cTokens.some(cnt => fuzzyTokenMatch(dt, cnt).matches);
+        });
+      });
+    }
+  }
+
   const hasStrongNameMatch = candidates.some(s => s.nameScore >= 60);
   if (hasStrongNameMatch) {
     return candidates.filter(s => s.nameScore >= 50);
@@ -912,6 +986,10 @@ function rank(list: ScoredVerifiedRestaurant[], anchor: Coords | null): Verified
   return list
     .slice()
     .sort((a, b) => {
+      // Prioritize strong establishment name matches first
+      if ((b.nameScore || 0) !== (a.nameScore || 0)) {
+        return (b.nameScore || 0) - (a.nameScore || 0);
+      }
       if (b.score !== a.score) return b.score - a.score;
       if (anchor) {
         const da = haversineKm(anchor.lat, anchor.lng, a.restaurant.latitude, a.restaurant.longitude);
@@ -974,6 +1052,10 @@ export async function searchRestaurantsAnywhere(
         searchLivePoiRestaurants(parsed.nameQuery || query, loc, userCoords, 8)
       ];
 
+      if (isGooglePlacesConfigured()) {
+        jobs.push(searchGoogleRestaurantsByText(parsed.nameQuery ? `${parsed.nameQuery} in ${loc.label}` : query, loc, 10));
+      }
+
       if (spellingSuggestion) {
         jobs.push(searchNominatimRestaurants(spellingSuggestion, loc, userCoords, loc.label, 6));
         jobs.push(searchLiveSwiggySuggestions(spellingSuggestion, loc, userCoords, 6, loc));
@@ -1013,10 +1095,35 @@ export async function searchRestaurantsAnywhere(
         mergeScored(merged, nationwide);
       }
 
-      const filtered = filterResults(Array.from(merged.values()), query);
+      const maxRad = loc.kind === 'area' ? 35 : 55;
+      const targetCityLower = loc.label.toLowerCase();
+      const locationFiltered = Array.from(merged.values()).filter(s => {
+        const r = s.restaurant;
+        const rCityLower = (r.city || '').toLowerCase();
+        const rAreaLower = (r.area || '').toLowerCase();
+        const textMatches = rCityLower.includes(targetCityLower) || targetCityLower.includes(rCityLower) || rAreaLower.includes(targetCityLower) || targetCityLower.includes(rAreaLower);
+        if (textMatches) return true;
+        if (r.latitude && r.longitude) {
+          return haversineKm(loc.lat, loc.lng, r.latitude, r.longitude) <= maxRad;
+        }
+        return false;
+      });
+
+      const candidatesToUse = locationFiltered.length > 0 ? locationFiltered : Array.from(merged.values());
+      const filtered = filterResults(candidatesToUse, query);
       let data = rank(filtered, loc);
 
-      if (data.length === 0 && query.trim().length >= 2) {
+      const targetQueryName = (parsed.nameQuery || query).trim();
+      const hasExactMatch = data.some(r => {
+        const rName = r.name.toLowerCase().trim();
+        const qName = targetQueryName.toLowerCase();
+        return rName === qName || rName.startsWith(qName);
+      });
+
+      if (!hasExactMatch && targetQueryName.length >= 2 && !isGenericSearch(targetQueryName)) {
+        const custom = createCustomPlaceEntry(query, searchedLocation, userCoords);
+        data = [custom, ...data];
+      } else if (data.length === 0 && query.trim().length >= 2) {
         const custom = createCustomPlaceEntry(query, searchedLocation, userCoords);
         const nearby = await fetchVerifiedNearbyRestaurants(loc.lat, loc.lng, 3).catch(() => []);
         data = [custom, ...nearby.map(r => withUserDistance(r, userCoords))];
@@ -1051,22 +1158,26 @@ export async function searchRestaurantsAnywhere(
 
   const primaryJobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
     searchDbVerified(query, userCoords, null),
-    searchNominatimRestaurants(query, defaultAnchor, userCoords, cityKey, 10),
+    searchNominatimRestaurants(query, null, userCoords, undefined, 12),
     searchLiveSwiggySuggestions(query, defaultAnchor, userCoords, 10, locAnchor),
-    searchZomatoRestaurants(query, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }),
+    searchZomatoRestaurants(query, { lat: userCoords?.lat, lng: userCoords?.lng }),
     searchLivePoiRestaurants(query, defaultAnchor, userCoords, 6)
   ];
 
+  if (isGooglePlacesConfigured()) {
+    primaryJobs.push(searchGoogleRestaurantsByText(query, userCoords || defaultAnchor, 10));
+  }
+
   if (spellingSuggestion) {
-    primaryJobs.push(searchNominatimRestaurants(spellingSuggestion, defaultAnchor, userCoords, cityKey, 8));
+    primaryJobs.push(searchNominatimRestaurants(spellingSuggestion, null, userCoords, undefined, 8));
     primaryJobs.push(searchLiveSwiggySuggestions(spellingSuggestion, defaultAnchor, userCoords, 8, locAnchor));
-    primaryJobs.push(searchZomatoRestaurants(spellingSuggestion, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }));
+    primaryJobs.push(searchZomatoRestaurants(spellingSuggestion, { lat: userCoords?.lat, lng: userCoords?.lng }));
   }
 
   if (queryDistinctive && queryDistinctive !== query && queryDistinctive.length >= 3) {
-    primaryJobs.push(searchNominatimRestaurants(queryDistinctive, defaultAnchor, userCoords, cityKey, 6));
+    primaryJobs.push(searchNominatimRestaurants(queryDistinctive, null, userCoords, undefined, 8));
     primaryJobs.push(searchLiveSwiggySuggestions(queryDistinctive, defaultAnchor, userCoords, 6, locAnchor));
-    primaryJobs.push(searchZomatoRestaurants(queryDistinctive, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }));
+    primaryJobs.push(searchZomatoRestaurants(queryDistinctive, { lat: userCoords?.lat, lng: userCoords?.lng }));
   }
 
   const targetAnchor = userCoords || defaultAnchor;
@@ -1122,15 +1233,27 @@ export async function searchRestaurantsAnywhere(
     currentCandidates = filterResults(Array.from(merged.values()), query);
   }
 
-  let data = rank(currentCandidates, defaultAnchor);
+  // Only use distance anchor if real GPS coordinates exist, NEVER default to Pune for global searches
+  const distanceAnchor = userCoords || null;
+  let data = rank(currentCandidates, distanceAnchor);
 
   // ------------------------------------------------------------------
   // 5. Zero-Failure Fallback: Always create a valid spot if typed query has >= 2 chars
   // ------------------------------------------------------------------
-  if (data.length === 0 && query.trim().length >= 2) {
-    const locRef = defaultAnchor
-      ? { lat: defaultAnchor.lat, lng: defaultAnchor.lng, label: (cityGazetteer?.label || 'Your City') }
-      : null;
+  const hasExactMatch = data.some(r => {
+    const rName = r.name.toLowerCase().trim();
+    const qName = query.toLowerCase().trim();
+    return rName === qName || rName.startsWith(qName);
+  });
+
+  const locRef = defaultAnchor
+    ? { lat: defaultAnchor.lat, lng: defaultAnchor.lng, label: (cityGazetteer?.label || 'Your City') }
+    : null;
+
+  if (!hasExactMatch && query.trim().length >= 2 && !isGenericSearch(query)) {
+    const custom = createCustomPlaceEntry(query, locRef, userCoords);
+    data = [custom, ...data];
+  } else if (data.length === 0 && query.trim().length >= 2) {
     const custom = createCustomPlaceEntry(query, locRef, userCoords);
     const nearby = defaultAnchor ? await fetchVerifiedNearbyRestaurants(defaultAnchor.lat, defaultAnchor.lng, 3).catch(() => []) : [];
     data = [custom, ...nearby.map(r => withUserDistance(r, userCoords))];

@@ -213,7 +213,9 @@ function paiseToRupees(raw: unknown): number | null {
 
 const GENERIC_NAME_WORDS = new Set([
   'hotel', 'restaurant', 'restaurants', 'the', 'and', 'pure', 'veg', 'family', 'bar',
-  'cafe', 'dhaba', 'kitchen', 'foods', 'food', 'new', 'shree', 'shri', 'sri', 'by', 'of'
+  'cafe', 'dhaba', 'kitchen', 'foods', 'food', 'new', 'shree', 'shri', 'sri', 'by', 'of',
+  'lunch', 'home', 'dining', 'hall', 'house', 'canteen', 'bhojanalay', 'eatery', 'corner',
+  'centre', 'center', 'sweets', 'sweet', 'snacks', 'snack', 'mess', 'tiffin'
 ]);
 
 function tokenize(text: string): string[] {

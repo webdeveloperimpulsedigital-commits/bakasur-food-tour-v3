@@ -413,6 +413,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
   const handleSelectDishItem = (dish: Dish) => {
     const cleanName = formatCleanDishName(dish.name, restaurant.name);
     const visual = getDishVisualAssets(cleanName, dish.image, restaurant.name);
+    setMenuSearchQuery(''); // Clear partial search input so chosen dish is cleanly preserved
     onSelectDish({
       ...dish,
       name: cleanName,
@@ -424,8 +425,20 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     let finalName = '';
     let finalImg = '';
 
-    const queryDish = menuSearchQuery.trim();
-    if (queryDish && (!selectedDish || selectedDish.name.toLowerCase() !== queryDish.toLowerCase())) {
+    // ALWAYS prioritize the chosen / selected dish over partial typing in the search box
+    if (selectedDish?.name) {
+      finalName = formatCleanDishName(selectedDish.name, restaurant.name);
+      const visual = getDishVisualAssets(finalName, selectedDish.image, restaurant.name);
+      finalImg = visual.flyingImage || selectedDish.image || visual.plateImage;
+    } else if (matchingSuggestions.length > 0) {
+      // If user typed a search and didn't tap an item, pick the top matching authentic dish
+      const topMatch = matchingSuggestions[0];
+      finalName = formatCleanDishName(topMatch.name, restaurant.name);
+      const visual = getDishVisualAssets(finalName, topMatch.image, restaurant.name);
+      finalImg = visual.flyingImage || visual.plateImage;
+    } else if (menuSearchQuery.trim().length >= 3) {
+      // User typed a full custom dish name with at least 3 characters
+      const queryDish = menuSearchQuery.trim();
       finalName = formatCleanDishName(queryDish, restaurant.name);
       const visual = getDishVisualAssets(finalName, undefined, restaurant.name);
       finalImg = visual.flyingImage || visual.plateImage;
@@ -434,10 +447,6 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
         price: 180,
         image: finalImg
       });
-    } else if (selectedDish?.name) {
-      finalName = formatCleanDishName(selectedDish.name, restaurant.name);
-      const visual = getDishVisualAssets(finalName, selectedDish.image, restaurant.name);
-      finalImg = visual.flyingImage || selectedDish.image || visual.plateImage;
     } else if (threeDishes.length > 0) {
       const first = threeDishes[0];
       finalName = formatCleanDishName(first.name, restaurant.name);
@@ -614,27 +623,8 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
 
                 <div className="max-h-[220px] xs:max-h-[260px] overflow-y-auto divide-y divide-slate-100 scrollbar-thin p-1 bg-white">
                   {matchingSuggestions.length === 0 ? (
-                    <div className="p-3 text-center space-y-2 bg-amber-50/50 rounded-xl m-1 border border-dashed border-orange-200">
-                      <p className="text-xs font-semibold text-slate-700">
-                        {restaurant.name} par &ldquo;{menuSearchQuery.trim()}&rdquo; khana chahte ho?
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const cleanCustomName = formatCleanDishName(menuSearchQuery.trim(), restaurant.name);
-                          const visual = getDishVisualAssets(cleanCustomName, undefined, restaurant.name);
-                          onSelectDish({
-                            name: cleanCustomName,
-                            price: 180,
-                            image: visual.flyingImage || visual.plateImage
-                          });
-                          setMenuSearchQuery('');
-                        }}
-                        className="w-full py-2 px-3 bg-[#D4380D] hover:bg-[#b8300b] text-white rounded-xl text-xs font-black shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-200" />
-                        YEH WALI PLATE SELECT KARO
-                      </button>
+                    <div className="p-4 text-center text-xs text-slate-500 font-medium">
+                      No matching dishes found for &ldquo;{menuSearchQuery.trim()}&rdquo;
                     </div>
                   ) : (
                     matchingSuggestions.map((dish) => {

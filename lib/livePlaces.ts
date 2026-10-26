@@ -188,7 +188,7 @@ export async function fetchLiveNearbyPlaces(lat: number, lng: number, cityFallba
               rating: Math.round((4.5 + ((i % 5) * 0.1)) * 10) / 10,
               image: pickCuisineImage(rawName),
               is_campaign_active: 1,
-              total_visits: 500 + ((i * 43) % 1500),
+              total_visits: 1,
               status: 'active',
               distanceKm: dist
             });
@@ -245,7 +245,7 @@ export async function fetchLiveNearbyPlaces(lat: number, lng: number, cityFallba
             rating: Math.round((4.5 + ((i % 5) * 0.1)) * 10) / 10,
             image: pickCuisineImage(rawName),
             is_campaign_active: 1,
-            total_visits: 600 + ((i * 37) % 1400),
+            total_visits: 1,
             status: 'active',
             distanceKm: dist
           });
@@ -290,7 +290,7 @@ export async function fetchLiveNearbyPlaces(lat: number, lng: number, cityFallba
           ? r.image
           : pickCuisineImage(r.name),
         is_campaign_active: r.is_campaign_active ?? 1,
-        total_visits: r.total_visits ?? 1200,
+        total_visits: r.total_visits ?? 1,
         status: 'active',
         distanceKm: dist
       });
@@ -462,7 +462,7 @@ async function fetchGoogleSuggestPlaces(
         rating: 4.8,
         image: pickCuisineImage(parsed.cleanName),
         is_campaign_active: 1,
-        total_visits: 850,
+        total_visits: 1,
         status: 'active'
       });
     }
@@ -520,7 +520,7 @@ async function fetchNominatimPlaces(
         rating: 4.8,
         image: pickCuisineImage(name),
         is_campaign_active: 1,
-        total_visits: 900,
+        total_visits: 1,
         status: 'active'
       });
     }
@@ -580,7 +580,7 @@ export async function searchLivePlaces(options: {
       is_veg: isPureVegSpot ? 1 : 0,
       image: pickCuisineImage(parsed.cleanName),
       is_campaign_active: 1,
-      total_visits: 750,
+      total_visits: 1,
       status: 'active',
       distanceKm: calculateDistance(lat, lng, parsed.latitude, parsed.longitude),
       relevanceScore: 1300 // Highest priority exact user query
@@ -700,7 +700,7 @@ export async function searchLivePlaces(options: {
             rating: Math.round((4.6 + ((i % 4) * 0.1)) * 10) / 10,
             image: pickCuisineImage(rawName),
             is_campaign_active: 1,
-            total_visits: 800 + ((i * 31) % 1200),
+            total_visits: 1,
             status: 'active',
             distanceKm: dist,
             relevanceScore: placeScore
@@ -726,7 +726,7 @@ export async function searchLivePlaces(options: {
       rating: 4.8,
       image: pickCuisineImage(parsed.cleanName),
       is_campaign_active: 1,
-      total_visits: 750,
+      total_visits: 1,
       status: 'active',
       distanceKm: calculateDistance(lat, lng, parsed.latitude, parsed.longitude),
       relevanceScore: 1000
