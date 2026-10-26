@@ -346,14 +346,31 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     const isVeg = isPureVegRestaurantName(cleanTitle) ? 1 : 0;
     const city = selectedCity || '';
     const id = getDeterministicPlaceId(cleanTitle, city, locArea);
+    const parsed = parseRestaurantQuery(cleanTitle, selectedCity || 'Pune', coords);
+    let finalLat = coords?.lat || (parsed.latitude !== 0 ? parsed.latitude : 0);
+    let finalLng = coords?.lng || (parsed.longitude !== 0 ? parsed.longitude : 0);
+    if (!finalLat || !finalLng || (finalLat >= 18.8 && finalLat <= 19.5 && finalLng < 72.80)) {
+      const cityLower = (selectedCity || '').toLowerCase();
+      const titleLower = cleanTitle.toLowerCase();
+      if (cityLower.includes('thane') || titleLower.includes('thane')) {
+        finalLat = 19.2183;
+        finalLng = 72.9781;
+      } else if (cityLower.includes('mumbai') || titleLower.includes('mumbai')) {
+        finalLat = 19.0760;
+        finalLng = 72.8777;
+      } else {
+        finalLat = 18.5204;
+        finalLng = 73.8567;
+      }
+    }
     return {
       id,
       name: cleanTitle,
       address: locArea ? `${locArea}${city && city !== locArea ? `, ${city}` : ''}` : (cleanTitle || 'Food Spot'),
       area: locArea || city || 'Local',
       city: city || 'Local',
-      latitude: coords?.lat || 0,
-      longitude: coords?.lng || 0,
+      latitude: finalLat,
+      longitude: finalLng,
       rating: 4.8,
       image: '/images/default-restaurant.jpg',
       description: `Authentic food spot${locArea ? ` in ${locArea}` : ''}`,

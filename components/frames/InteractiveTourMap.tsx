@@ -69,14 +69,84 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
         const mob = getStoredUserMobile();
         if (mob) params.set('mobile', mob);
 
-        const url = `/api/campaign/map?${params.toString()}`;
+        const url = withBasePath(`/api/campaign/map?${params.toString()}`);
         const res = await fetch(url);
         const json = await res.json();
+
+        // Coordinate sanitizer: guarantees real land coordinates (especially for Thane / Mumbai / Pune)
+        const getValidCoords = (spot: { latitude?: number; longitude?: number; city?: string; name?: string; address?: string }): [number, number] => {
+          let lat = typeof spot.latitude === 'number' ? spot.latitude : Number(spot.latitude);
+          let lng = typeof spot.longitude === 'number' ? spot.longitude : Number(spot.longitude);
+
+          // Valid Indian land coordinates roughly: Lat 8 to 36, Lng 68 to 97
+          // Coastline of Mumbai/Thane is ~72.80° E. Any coordinate with Lng < 72.80 between Lat 18.8 and 19.5 is in the Arabian Sea!
+          const isInvalidOrInSea =
+            !lat || !lng || isNaN(lat) || isNaN(lng) ||
+            lat < 8 || lat > 37 || lng < 68 || lng > 98 ||
+            (lat >= 18.8 && lat <= 19.5 && lng < 72.80);
+
+          if (isInvalidOrInSea) {
+            const locStr = `${spot.city || ''} ${spot.name || ''} ${spot.address || ''}`.toLowerCase();
+            if (
+              locStr.includes('thane') ||
+              locStr.includes('naupada') ||
+              locStr.includes('viviana') ||
+              locStr.includes('pakhadi') ||
+              locStr.includes('majiwada') ||
+              locStr.includes('vartak') ||
+              locStr.includes('ghodbunder') ||
+              locStr.includes('kalwa') ||
+              locStr.includes('mumbra') ||
+              locStr.includes('kalyan') ||
+              locStr.includes('dombivli')
+            ) {
+              return [19.2183, 72.9781]; // Accurate Thane City Center
+            }
+            if (
+              locStr.includes('navi mumbai') ||
+              locStr.includes('vashi') ||
+              locStr.includes('nerul') ||
+              locStr.includes('belapur') ||
+              locStr.includes('airoli') ||
+              locStr.includes('kharghar')
+            ) {
+              return [19.0330, 73.0297]; // Navi Mumbai
+            }
+            if (
+              locStr.includes('mumbai') ||
+              locStr.includes('bandra') ||
+              locStr.includes('dadar') ||
+              locStr.includes('andheri') ||
+              locStr.includes('juhu') ||
+              locStr.includes('kurla')
+            ) {
+              return [19.0760, 72.8777]; // Mumbai
+            }
+            if (locStr.includes('bengaluru') || locStr.includes('bangalore')) {
+              return [12.9716, 77.5946];
+            }
+            if (locStr.includes('delhi')) {
+              return [28.6139, 77.2090];
+            }
+            const cLower = (spot.city || '').toLowerCase().trim();
+            if (cLower === 'thane') return [19.2183, 72.9781];
+            if (cLower === 'mumbai') return [19.0760, 72.8777];
+            return [18.5204, 73.8567]; // default Pune
+          }
+          return [lat, lng];
+        };
 
         if (!isCancelled && json.success && json.data) {
           let list: TourMapPoint[] = (json.data.points || []).filter(
             (p: any) => typeof p.latitude === 'number' && typeof p.longitude === 'number' && !isNaN(p.latitude) && !isNaN(p.longitude)
           );
+
+          // Sanitize coordinates for all database points
+          list.forEach((p) => {
+            const [pLat, pLng] = getValidCoords(p);
+            p.latitude = pLat;
+            p.longitude = pLng;
+          });
 
           // Determine all user visited spots (either passed via prop or retrieved from DB by session_id)
           const propSpots: CurrentUserSpotInfo[] = (currentUserSpots && currentUserSpots.length > 0)
@@ -112,11 +182,14 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           const cleanUserSpots: CurrentUserSpotInfo[] = [];
           const seenStopKeys = new Set<string>();
           rawUserSpots.forEach((s) => {
+            const [validLat, validLng] = getValidCoords(s);
             const k = `${normalizeKey(s.name)}_${s.stopNumber || 0}`;
             if (!seenStopKeys.has(k)) {
               seenStopKeys.add(k);
               cleanUserSpots.push({
                 ...s,
+                latitude: validLat,
+                longitude: validLng,
                 stopNumber: s.stopNumber || (cleanUserSpots.length + 1)
               });
             }
@@ -282,11 +355,11 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
       // Add neat top-left zoom control
       L.control.zoom({ position: 'topleft' }).addTo(map);
 
-      // Helper function to create custom DivIcons
-      // BLUE PIN for Current User, RED PIN for Existing Visited Spots
+      // BLUE PIN for Current User, RED PIN for Other Visited Spots
       const markersLayer = L.layerGroup().addTo(map);
 
       let userMarkerInstance: any = null;
+      const userSpots = points.filter(p => p.isCurrentUserSpot);
 
       points.forEach((point) => {
         const isCurrent = Boolean(point.isCurrentUserSpot);
@@ -302,30 +375,34 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           const blueIcon = L.divIcon({
             className: 'custom-user-blue-pin',
             html: `
-              <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
-                <!-- High-visibility Floating Name Badge Label -->
-                <div style="background: #1D4ED8; color: #FFFFFF; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(29,78,216,0.45); white-space: nowrap; margin-bottom: 3px; border: 1.5px solid #FFFFFF; letter-spacing: 0.2px; display: flex; align-items: center; gap: 4px; pointer-events: none;">
+              <div style="position: absolute; left: 0; bottom: 0; transform: translate(-50%, 0); display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer; user-select: none;">
+                <!-- High-visibility Floating Blue Name Badge Label -->
+                <div style="background: #1D4ED8; color: #FFFFFF; font-size: 10px; font-weight: 900; padding: 2.5px 8px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(29,78,216,0.5); white-space: nowrap; margin-bottom: 2px; border: 1.5px solid #FFFFFF; letter-spacing: 0.2px; display: flex; align-items: center; gap: 4px; pointer-events: none;">
                   <span style="color: #93C5FD; font-size: 9px; text-transform: uppercase;">${stopTitle}</span>
                   <span style="color: #FFFFFF;">${cleanDisplayName}</span>
                 </div>
-                <!-- Pulsing outer halo to highlight user's spot -->
-                <div style="position: absolute; top: 20px; width: 34px; height: 34px; border-radius: 50%; background-color: rgba(37,99,235,0.35); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-                <!-- Teardrop Pin Marker with Visit / Stop Number -->
-                <div style="position: relative; display: flex; align-items: center; justify-content: center; z-index: 10;">
-                  <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #1D4ED8); border: 2.5px solid #FFFFFF; box-shadow: 0 6px 16px rgba(37,99,235,0.6); display: flex; align-items: center; justify-content: center;">
-                    <span style="font-size: 11px; font-weight: 900; color: #FFFFFF; line-height: 1;">${pinBadgeText}</span>
+                <!-- Teardrop Pin Marker: Solid Royal Blue (#1D4ED8) with white center disc -->
+                <div style="position: relative; width: 34px; height: 42px; display: flex; align-items: center; justify-content: center;">
+                  <!-- Pulsing blue halo ring -->
+                  <div style="position: absolute; top: 0; left: 0; width: 34px; height: 34px; border-radius: 50%; background-color: rgba(29,78,216,0.45); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+                  <svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 10px rgba(29,78,216,0.6)); display: block;">
+                    <path d="M17 42C17 42 32 26 32 15C32 6.71573 25.2843 0 17 0C8.71573 0 2 6.71573 2 15C2 26 17 42 17 42Z" fill="#1D4ED8" stroke="#FFFFFF" stroke-width="2.2"/>
+                    <circle cx="17" cy="15" r="7.5" fill="#FFFFFF"/>
+                  </svg>
+                  <div style="position: absolute; top: 6px; left: 0; width: 34px; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                    <span style="font-size: 11px; font-weight: 900; color: #1D4ED8; line-height: 1;">${pinBadgeText}</span>
                   </div>
-                  <div style="position: absolute; bottom: -4px; width: 8px; height: 8px; background-color: #1D4ED8; transform: rotate(45deg);"></div>
                 </div>
               </div>
             `,
-            iconSize: [160, 58],
-            iconAnchor: [80, 58]
+            iconSize: [0, 0],
+            iconAnchor: [0, 0],
+            popupAnchor: [0, -48]
           });
 
           const marker = L.marker([point.latitude, point.longitude], {
             icon: blueIcon,
-            zIndexOffset: 1000
+            zIndexOffset: 10000
           });
 
           marker.bindPopup(`
@@ -371,22 +448,33 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           marker.addTo(markersLayer);
           userMarkerInstance = marker;
         } else {
-          // RED PIN: Existing Visited Restaurants (Clean teardrop marker without bulky text label)
+          // RED PIN: Other Visited Spots from database
+          // Skip red marker if practically overlapping with any user blue spot to avoid duplicate clutter underneath
+          const isOverlappingUser = userSpots.some(u =>
+            Math.abs(u.latitude - pointLat) < 0.003 &&
+            Math.abs(u.longitude - pointLng) < 0.003
+          );
+          if (isOverlappingUser) return;
+
           const redIcon = L.divIcon({
             className: 'custom-existing-red-pin',
             html: `
-              <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
-                <!-- Teardrop Pin Marker with Visit Count Inside -->
-                <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-                  <div style="width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #EF4444, #DC2626); border: 2px solid #FFFFFF; box-shadow: 0 4px 10px rgba(220,38,38,0.5); display: flex; align-items: center; justify-content: center;">
-                    <span style="font-size: 9px; font-weight: 900; color: #FFFFFF; line-height: 1;">${point.total_visits}</span>
+              <div style="position: absolute; left: 0; bottom: 0; transform: translate(-50%, 0); display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer; user-select: none;">
+                <!-- Teardrop Pin Marker: Solid Crimson Red (#DC2626) with white center disc -->
+                <div style="position: relative; width: 24px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                  <svg width="24" height="30" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 5px rgba(220,38,38,0.5)); display: block;">
+                    <path d="M12 30C12 30 23 18.5 23 11C23 4.92487 18.0751 0 12 0C5.92487 0 1 4.92487 1 11C1 18.5 12 30 12 30Z" fill="#DC2626" stroke="#FFFFFF" stroke-width="1.8"/>
+                    <circle cx="12" cy="11" r="5" fill="#FFFFFF"/>
+                  </svg>
+                  <div style="position: absolute; top: 4.5px; left: 0; width: 24px; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                    <span style="font-size: 8.5px; font-weight: 900; color: #DC2626; line-height: 1;">${point.total_visits}</span>
                   </div>
-                  <div style="position: absolute; bottom: -3.5px; width: 6px; height: 6px; background-color: #DC2626; transform: rotate(45deg);"></div>
                 </div>
               </div>
             `,
-            iconSize: [22, 28],
-            iconAnchor: [11, 28]
+            iconSize: [0, 0],
+            iconAnchor: [0, 0],
+            popupAnchor: [0, -34]
           });
 
           const marker = L.marker([pointLat, pointLng], {
@@ -426,7 +514,6 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
       });
 
       // View: Focus initial camera on user's visited spots, or region of visited tour spots
-      const userSpots = points.filter(p => p.isCurrentUserSpot);
       if (userSpots.length > 1) {
         const userBounds = L.latLngBounds(userSpots.map(p => [p.latitude, p.longitude]));
         if (userBounds.isValid()) {
@@ -531,16 +618,14 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
       </div>
 
       {/* Pin Legend Overlay (Bottom-Left) */}
-      <div className="absolute bottom-2.5 left-2.5 z-30 bg-white/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200/90 shadow-md text-[10px] font-bold flex items-center gap-3 pointer-events-none">
+      <div className="absolute bottom-2.5 left-2.5 z-30 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-md text-[10px] font-bold flex items-center gap-3.5 pointer-events-none">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-blue-600 border border-white shadow-xs inline-block" />
-          <span className="text-[#0B1B48]">Aapka Spot</span>
+          <span className="w-3.5 h-3.5 rounded-full bg-[#1D4ED8] border-2 border-white shadow-xs inline-block" />
+          <span className="text-[#0B1B48] font-black">Aapka Spot (Blue)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-4 h-4 rounded-full bg-red-600 text-[9px] text-white flex items-center justify-center font-black border border-white shadow-xs inline-flex">
-            #
-          </span>
-          <span className="text-slate-700">Visited Count (DB)</span>
+          <span className="w-3.5 h-3.5 rounded-full bg-[#DC2626] border-2 border-white shadow-xs inline-block" />
+          <span className="text-slate-700 font-bold">Other Spots (Red)</span>
         </div>
       </div>
 
