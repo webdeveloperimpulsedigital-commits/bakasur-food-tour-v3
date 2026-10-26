@@ -112,7 +112,20 @@ export default function CampaignPage() {
   useEffect(() => {
     let isMounted = true;
 
-    // High-precision GPS refinement if granted by user (with WiFi triangulation fallback)
+    if (typeof window === 'undefined' || !navigator.geolocation) return;
+
+    // Check permission status if permissions API is available
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        if (!isMounted) return;
+        if (result.state === 'denied') {
+          setUserCoords(null);
+          setSelectedCity('');
+          return;
+        }
+      }).catch(() => {});
+    }
+
     const handleGpsSuccess = async (pos: GeolocationPosition) => {
       if (!isMounted) return;
       const lat = pos.coords.latitude;
@@ -127,22 +140,18 @@ export default function CampaignPage() {
       } catch {}
     };
 
-    if (typeof window !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        handleGpsSuccess,
-        () => {
-          // If high accuracy GPS times out or fails (e.g. on laptops/desktops), fallback immediately to standard network/WiFi location
-          navigator.geolocation.getCurrentPosition(
-            handleGpsSuccess,
-            () => {
-              // Location access not granted/allowed by user: keep coords null and city unset
-            },
-            { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
-          );
-        },
-        { timeout: 6000, enableHighAccuracy: true, maximumAge: 30000 }
-      );
-    }
+    const handleGpsError = () => {
+      // Location access not granted/allowed or denied by user: keep coords null and city unset
+      if (!isMounted) return;
+      setUserCoords(null);
+      setSelectedCity('');
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      handleGpsSuccess,
+      handleGpsError,
+      { timeout: 8000, enableHighAccuracy: true, maximumAge: 60000 }
+    );
 
     return () => {
       isMounted = false;
@@ -821,7 +830,7 @@ export default function CampaignPage() {
         <div className="w-full h-full bg-[#07153B] overflow-hidden relative flex flex-col">
           {feastingStage === 1 ? (
             <Frame6FeedingLoop
-              restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: 'Pune' }}
+              restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: selectedCity || 'Local' }}
               dish={selectedDish || { name: 'Signature Food', id: 1 }}
               onCompleteLoop={handleStartSecondEatingStage}
               onBack={() => setCurrentFrame(5)}

@@ -250,9 +250,20 @@ export function getDishVisualAssets(dishName?: string, dishImage?: string, resta
     };
   }
 
-  let aiPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName || '')}&v=v37`;
-  // Only forward verified remote Swiggy CDN or Cloudinary API images, never generic placeholders
-  if (dishImage && (dishImage.startsWith('http://') || dishImage.startsWith('https://')) && (dishImage.includes('swiggy.com') || dishImage.includes('cloudinary.com'))) {
+  let aiPngUrl = `/api/ai/dish-image?dish=${encodeURIComponent(cleanName)}&restaurant=${encodeURIComponent(restaurantName || '')}&v=v39`;
+  // Forward verified remote Swiggy, Zomato CDN, Cloudinary, Google, or Unsplash dish photos
+  if (
+    dishImage &&
+    (dishImage.startsWith('http://') || dishImage.startsWith('https://')) &&
+    (
+      dishImage.includes('swiggy.com') ||
+      dishImage.includes('cloudinary.com') ||
+      dishImage.includes('zmtcdn.com') ||
+      dishImage.includes('zomato.com') ||
+      dishImage.includes('googleusercontent.com') ||
+      dishImage.includes('unsplash.com')
+    )
+  ) {
     aiPngUrl += `&imgUrl=${encodeURIComponent(dishImage)}`;
   }
 

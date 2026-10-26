@@ -38,7 +38,7 @@ import { db, type Restaurant } from './db';
 import { generateLiveMenuForRestaurant } from './liveMenu';
 import { isDishRelevantToSearch, isPureVegRestaurantName } from './dishAssets';
 import { pickCuisineImage, getDeterministicPlaceId } from './livePlaces';
-import { searchZomatoRestaurants, getZomatoHeritageKey } from './zomatoEngine';
+import { searchZomatoRestaurants, getZomatoHeritageKey, ICONIC_ZOMATO_RESTAURANTS } from './zomatoEngine';
 
 const RESULT_LIMIT = 15;
 const HUB_CONCURRENCY = 6;
@@ -381,26 +381,30 @@ function createCustomPlaceEntry(
     .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
 
-  const locLabel = targetLoc?.label || 'Local Area';
-  const parts = locLabel.split(',').map(s => s.trim());
-  const area = parts[0] || 'Local';
-  const city = parts[1] || parts[0] || 'City';
-  const lat = targetLoc?.lat ?? userCoords?.lat ?? 19.076;
-  const lng = targetLoc?.lng ?? userCoords?.lng ?? 72.8777;
+  const locLabel = targetLoc?.label || '';
+  const parts = locLabel ? locLabel.split(',').map(s => s.trim()) : [];
+  const area = parts[0] || '';
+  const city = parts[1] || (parts[0] && !['local', 'area', 'local area'].includes(parts[0].toLowerCase()) ? parts[0] : '') || '';
+  const lat = targetLoc?.lat ?? userCoords?.lat ?? 0;
+  const lng = targetLoc?.lng ?? userCoords?.lng ?? 0;
   const id = getDeterministicPlaceId(cleanName, city, area);
   const isVeg = isPureVegRestaurantName(cleanName) ? 1 : 0;
+
+  const address = area && city && area.toLowerCase() !== city.toLowerCase()
+    ? `${cleanName}, ${area}, ${city}`
+    : (area || city ? `${cleanName}, ${area || city}` : cleanName);
 
   return {
     id,
     name: cleanName,
-    address: `${area}, ${city}`,
+    address,
     area,
     city,
     latitude: lat,
     longitude: lng,
     rating: 4.8,
     image: pickCuisineImage(cleanName),
-    description: `Authentic food joint in ${area}, ${city}`,
+    description: area || city ? `Authentic food joint in ${[area, city].filter(Boolean).join(', ')}` : `Authentic food joint`,
     is_campaign_active: 1,
     total_visits: 1450,
     status: 'active',
@@ -410,7 +414,7 @@ function createCustomPlaceEntry(
     sources: ['google'],
     source_platform: 'google',
     cuisine: isVeg ? ['Pure Veg', 'Street Food'] : ['Authentic Dining', 'Street Food'],
-    distanceKm: userCoords ? haversineKm(userCoords.lat, userCoords.lng, lat, lng) : undefined
+    distanceKm: userCoords && lat && lng ? haversineKm(userCoords.lat, userCoords.lng, lat, lng) : undefined
   } as VerifiedRestaurant;
 }
 
@@ -510,7 +514,7 @@ async function searchDbVerified(
       let finalScore = score;
       let finalNameScore = nameScore;
 
-      if (!isMatch && isDishQuery) {
+      if (!isMatch && isDishQuery && (targetLoc || userCoords)) {
         const dishes = generateLiveMenuForRestaurant({
           id: r.id,
           name: r.name,
@@ -565,13 +569,14 @@ async function searchLiveSwiggySuggestions(
   rawQuery: string,
   searchCoords: Coords | null,
   userCoords: Coords | null,
-  limit: number = 8
+  limit: number = 8,
+  targetLoc?: { label?: string; city?: string; area?: string } | null
 ): Promise<ScoredVerifiedRestaurant[]> {
   const q = rawQuery.trim();
   if (q.length < 2) return [];
 
-  const lat = searchCoords?.lat ?? userCoords?.lat ?? 18.5204;
-  const lng = searchCoords?.lng ?? userCoords?.lng ?? 73.8567;
+  const lat = searchCoords?.lat ?? userCoords?.lat ?? 19.076;
+  const lng = searchCoords?.lng ?? userCoords?.lng ?? 72.8777;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 1800);
@@ -589,6 +594,11 @@ async function searchLiveSwiggySuggestions(
     const json = await res.json();
     const suggestions = json?.data?.suggestions || [];
     const results: ScoredVerifiedRestaurant[] = [];
+
+    const locLabel = targetLoc?.label || '';
+    const labelParts = locLabel ? locLabel.split(',').map(s => s.trim()) : [];
+    const resolvedArea = targetLoc?.area || (labelParts.length > 1 ? labelParts[0] : '');
+    const resolvedCity = targetLoc?.city || (labelParts.length > 1 ? labelParts[labelParts.length - 1] : (labelParts[0] || ''));
 
     for (const item of suggestions) {
       if (item.type !== 'RESTAURANT' && !item.tagToDisplay?.toLowerCase().includes('restaurant')) continue;
@@ -613,35 +623,57 @@ async function searchLiveSwiggySuggestions(
         ? (cloudinaryId.startsWith('http') ? cloudinaryId : `https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/${cloudinaryId}`)
         : pickCuisineImage(rawName);
 
-      const { score, nameScore, isMatch } = calculateFuzzyRestaurantScore(q, rawName, '', '');
+      const subTitleStr = typeof item.subTitle === 'string' ? item.subTitle.trim() : '';
+      const subParts = subTitleStr ? subTitleStr.split(',').map((s: string) => s.trim()) : [];
+      const itemArea = (d.areaName as string) || (d.locality as string) || (subParts.length > 1 ? subParts[0] : (subParts[0] || resolvedArea));
+      const itemCity = (d.city as string) || (subParts.length > 1 ? subParts[subParts.length - 1] : (resolvedCity || resolvedArea));
+      const finalArea = itemArea || resolvedArea;
+      const finalCity = itemCity || resolvedCity;
+
+      // Cross-reference with iconic Zomato restaurants to automatically attach Zomato URL
+      const normRaw = rawName.toLowerCase();
+      const iconicZomato = ICONIC_ZOMATO_RESTAURANTS.find(ir => {
+        const iname = ir.name.toLowerCase();
+        return normRaw.includes(iname) || iname.includes(normRaw) || (ir.aliases || []).some(a => normRaw.includes(a));
+      });
+      const zomatoUrl = iconicZomato ? `https://www.zomato.com/${iconicZomato.city.toLowerCase()}/${iconicZomato.zomato_slug}` : undefined;
+      const zomatoId = iconicZomato?.zomato_id;
+
+      const { score, nameScore, isMatch } = calculateFuzzyRestaurantScore(q, rawName, finalCity, finalArea);
       if (!isMatch && score < 40) continue;
 
       const isVeg = isPureVegRestaurantName(rawName) ? 1 : 0;
-      const id = swiggyId ? `swiggy_${swiggyId}` : getDeterministicPlaceId(rawName, 'Local', 'Area');
+      const id = swiggyId ? `swiggy_${swiggyId}` : getDeterministicPlaceId(rawName, finalCity, finalArea);
+
+      const cleanAddress = finalArea && finalCity && finalArea.toLowerCase() !== finalCity.toLowerCase()
+        ? `${rawName}, ${finalArea}, ${finalCity}`
+        : (finalArea || finalCity ? `${rawName}, ${finalArea || finalCity}` : rawName);
 
       results.push({
         restaurant: {
           id,
           swiggy_id: swiggyId || undefined,
+          zomato_id: zomatoId,
+          zomato_url: zomatoUrl,
           name: rawName,
-          address: `${rawName}, Area`,
-          area: 'Area',
-          city: 'City',
+          address: cleanAddress,
+          area: finalArea,
+          city: finalCity,
           latitude: lat,
           longitude: lng,
           rating: 4.5,
-          image: swiggyImg,
-          description: `Popular verified spot on Swiggy`,
+          image: iconicZomato?.image || swiggyImg,
+          description: finalArea || finalCity ? `Popular food spot in ${[finalArea, finalCity].filter(Boolean).join(', ')}` : `Popular verified food spot`,
           is_campaign_active: 1,
           total_visits: 1200,
           status: 'active',
           is_veg: isVeg,
           is_verified: 1,
-          verification_source: 'swiggy',
-          sources: ['swiggy'],
+          verification_source: zomatoUrl ? 'swiggy_and_zomato' : 'swiggy',
+          sources: zomatoUrl ? ['swiggy', 'zomato'] : ['swiggy'],
           source_platform: 'swiggy',
           cuisine: isVeg ? ['Pure Veg', 'Quick Bites'] : ['Casual Dining', 'Quick Bites'],
-          distanceKm: userCoords ? haversineKm(userCoords.lat, userCoords.lng, lat, lng) : undefined
+          distanceKm: userCoords && lat && lng ? haversineKm(userCoords.lat, userCoords.lng, lat, lng) : undefined
         } as VerifiedRestaurant,
         score: Math.max(score, 88),
         nameScore: Math.max(nameScore, 88)
@@ -937,14 +969,14 @@ export async function searchRestaurantsAnywhere(
       const jobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
         searchDbVerified(query, userCoords, loc),
         searchNominatimRestaurants(parsed.nameQuery || query, loc, userCoords, loc.label, 10),
-        searchLiveSwiggySuggestions(parsed.nameQuery || query, loc, userCoords, 10),
+        searchLiveSwiggySuggestions(parsed.nameQuery || query, loc, userCoords, 10, loc),
         searchZomatoRestaurants(parsed.nameQuery || query, { city: loc.label, lat: loc.lat, lng: loc.lng }),
         searchLivePoiRestaurants(parsed.nameQuery || query, loc, userCoords, 8)
       ];
 
       if (spellingSuggestion) {
         jobs.push(searchNominatimRestaurants(spellingSuggestion, loc, userCoords, loc.label, 6));
-        jobs.push(searchLiveSwiggySuggestions(spellingSuggestion, loc, userCoords, 6));
+        jobs.push(searchLiveSwiggySuggestions(spellingSuggestion, loc, userCoords, 6, loc));
         jobs.push(searchZomatoRestaurants(spellingSuggestion, { city: loc.label, lat: loc.lat, lng: loc.lng }));
       }
 
@@ -1013,23 +1045,27 @@ export async function searchRestaurantsAnywhere(
     .join(' ')
     .trim();
 
+  const locAnchor = defaultAnchor
+    ? { label: cityGazetteer?.label || options.selectedCity || '', city: cityGazetteer?.label || options.selectedCity || '' }
+    : null;
+
   const primaryJobs: Array<Promise<ScoredVerifiedRestaurant[]>> = [
     searchDbVerified(query, userCoords, null),
     searchNominatimRestaurants(query, defaultAnchor, userCoords, cityKey, 10),
-    searchLiveSwiggySuggestions(query, defaultAnchor, userCoords, 10),
+    searchLiveSwiggySuggestions(query, defaultAnchor, userCoords, 10, locAnchor),
     searchZomatoRestaurants(query, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }),
     searchLivePoiRestaurants(query, defaultAnchor, userCoords, 6)
   ];
 
   if (spellingSuggestion) {
     primaryJobs.push(searchNominatimRestaurants(spellingSuggestion, defaultAnchor, userCoords, cityKey, 8));
-    primaryJobs.push(searchLiveSwiggySuggestions(spellingSuggestion, defaultAnchor, userCoords, 8));
+    primaryJobs.push(searchLiveSwiggySuggestions(spellingSuggestion, defaultAnchor, userCoords, 8, locAnchor));
     primaryJobs.push(searchZomatoRestaurants(spellingSuggestion, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }));
   }
 
   if (queryDistinctive && queryDistinctive !== query && queryDistinctive.length >= 3) {
     primaryJobs.push(searchNominatimRestaurants(queryDistinctive, defaultAnchor, userCoords, cityKey, 6));
-    primaryJobs.push(searchLiveSwiggySuggestions(queryDistinctive, defaultAnchor, userCoords, 6));
+    primaryJobs.push(searchLiveSwiggySuggestions(queryDistinctive, defaultAnchor, userCoords, 6, locAnchor));
     primaryJobs.push(searchZomatoRestaurants(queryDistinctive, { city: cityKey, lat: defaultAnchor?.lat, lng: defaultAnchor?.lng }));
   }
 

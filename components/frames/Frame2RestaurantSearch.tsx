@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, MapPin, X, Check, Sparkles, Navigation, Compass } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, X, Check } from 'lucide-react';
 import type { Restaurant } from '@/lib/db';
 import { isPureVegRestaurantName } from '@/lib/dishAssets';
-import { parseRestaurantQuery, getDeterministicPlaceId } from '@/lib/locationParser';
+import { getDeterministicPlaceId } from '@/lib/locationParser';
 
 interface Frame2RestaurantSearchProps {
   selectedCity: string;
@@ -31,11 +31,8 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   });
   const [chosenSpot, setChosenSpot] = useState<Restaurant | null>(selectedRestaurant);
   const [searchResults, setSearchResults] = useState<Restaurant[]>([]);
-  const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(userCoords || null);
   const [locationLabel, setLocationLabel] = useState<string>('');
-  const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(false);
-  const [isLoadingNearby, setIsLoadingNearby] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchMessage, setSearchMessage] = useState<string>('');
   const [spellingSuggestion, setSpellingSuggestion] = useState<string | null>(null);
@@ -50,109 +47,23 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sync coords if prop updates
+  // Sync coords if prop updates from page
   useEffect(() => {
-    if (userCoords && (!coords || userCoords.lat !== coords.lat || userCoords.lng !== coords.lng)) {
-      setCoords(userCoords);
+    setCoords(userCoords || null);
+    if (!userCoords) {
+      setLocationLabel('');
     }
   }, [userCoords]);
 
-  // Geolocation detection on Frame 2 ONLY if coords not passed yet and user allows it
-  useEffect(() => {
-    if (!coords && !userCoords && typeof window !== 'undefined' && navigator.geolocation) {
-      setIsDetectingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          setIsDetectingLocation(false);
-        },
-        () => {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-              setIsDetectingLocation(false);
-            },
-            () => {
-              // Location access was NOT allowed by user (or unavailable)
-              setCoords(null);
-              setNearbyRestaurants([]);
-              setIsDetectingLocation(false);
-            },
-            { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
-          );
-        },
-        { timeout: 5000, enableHighAccuracy: true, maximumAge: 30000 }
-      );
-    }
-  }, [coords, userCoords]);
-
-  // Live Nearby Restaurants Fetch - ONLY WHEN USER HAS ALLOWED LOCATION ACCESS
-  useEffect(() => {
-    let isCancelled = false;
-
-    // CRITICAL: If user has NOT allowed location (no coords), do NOT fetch or show any nearby restaurants!
-    if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
-      setNearbyRestaurants([]);
-      setIsLoadingNearby(false);
-      setIsDetectingLocation(false);
+  // Show dropdown when user focuses on search box ONLY if there is an active search query
+  const handleFocus = () => {
+    if (searchQuery.trim() && searchResults.length > 0) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
       if (!searchQuery.trim()) {
         setSearchResults([]);
       }
-      return;
-    }
-
-    async function fetchNearbyForGrantedLocation() {
-      setIsLoadingNearby(true);
-      try {
-        const cityParam = selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : '';
-        const res = await fetch(`/api/restaurants/search?lat=${coords!.lat}&lng=${coords!.lng}${cityParam}`);
-        const data = await res.json();
-        if (!isCancelled && data.success && Array.isArray(data.data)) {
-          const limitedSpots = data.data.slice(0, 5);
-          setNearbyRestaurants(limitedSpots);
-          if (!searchQuery.trim()) {
-            setSearchResults(limitedSpots);
-          }
-        }
-      } catch (err) {
-        console.warn('Nearby restaurants fetch notice:', err);
-      } finally {
-        if (!isCancelled) setIsLoadingNearby(false);
-      }
-
-      // Fetch location label for display
-      if (!locationLabel) {
-        try {
-          const locRes = await fetch(`/api/location?lat=${coords!.lat}&lng=${coords!.lng}`);
-          const locData = await locRes.json();
-          if (!isCancelled && locData.success) {
-            const label = locData.locationDisplay || (locData.detectedCity?.name ? `${locData.detectedCity.name}` : selectedCity);
-            if (label) setLocationLabel(label);
-          }
-        } catch {
-          // ignore
-        }
-      }
-    }
-
-    fetchNearbyForGrantedLocation();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [coords?.lat, coords?.lng, selectedCity]);
-
-  // Show dropdown when user focuses on search box
-  const handleFocus = () => {
-    if (searchQuery.trim()) {
-      setShowDropdown(true);
-    } else if (coords && nearbyRestaurants.length > 0) {
-      setShowDropdown(true);
-      setSearchResults(nearbyRestaurants.slice(0, 5));
-    } else {
-      // User has not allowed location and search query is empty -> show blank!
-      setShowDropdown(false);
-      setSearchResults([]);
     }
   };
 
@@ -207,12 +118,8 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   useEffect(() => {
     const q = searchQuery.trim();
     if (!q) {
-      if (coords && nearbyRestaurants.length > 0) {
-        setSearchResults(nearbyRestaurants.slice(0, 5));
-      } else {
-        setSearchResults([]);
-        setShowDropdown(false);
-      }
+      setSearchResults([]);
+      setShowDropdown(false);
       setSpellingSuggestion(null);
       setIsSearching(false);
       return;
@@ -232,6 +139,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         const json = await res.json();
         const verifiedList = json.success && Array.isArray(json.data) ? json.data.slice(0, 15) : [];
         setSearchResults(verifiedList);
+        setShowDropdown(true);
         setSpellingSuggestion(json.spellingSuggestion || null);
         setSearchMessage(verifiedList.length === 0 ? String(json.message || '') : '');
       } catch (err: unknown) {
@@ -249,7 +157,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [searchQuery, selectedCity, nearbyRestaurants, coords]);
+  }, [searchQuery, selectedCity, coords]);
 
   // Click outside listener for dropdown
   useEffect(() => {
@@ -459,9 +367,6 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               setSearchQuery(val);
               if (val.trim()) {
                 setShowDropdown(true);
-              } else if (coords && nearbyRestaurants.length > 0) {
-                setShowDropdown(true);
-                setSearchResults(nearbyRestaurants.slice(0, 5));
               } else {
                 setShowDropdown(false);
                 setSearchResults([]);
@@ -470,13 +375,17 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
             onFocus={handleFocus}
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                setShowDropdown(true);
-                setSelectedIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : 0));
+                if (searchResults.length > 0) {
+                  e.preventDefault();
+                  setShowDropdown(true);
+                  setSelectedIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : 0));
+                }
               } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                setShowDropdown(true);
-                setSelectedIndex((prev) => (prev > 0 ? prev - 1 : searchResults.length - 1));
+                if (searchResults.length > 0) {
+                  e.preventDefault();
+                  setShowDropdown(true);
+                  setSelectedIndex((prev) => (prev > 0 ? prev - 1 : searchResults.length - 1));
+                }
               } else if (e.key === 'Enter') {
                 e.preventDefault();
                 if (selectedIndex >= 0 && searchResults[selectedIndex]) {
@@ -502,13 +411,8 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                 setSearchQuery('');
                 setFirstVisitorInfo(null);
                 setSelectedIndex(-1);
-                if (coords && nearbyRestaurants.length > 0) {
-                  setShowDropdown(true);
-                  setSearchResults(nearbyRestaurants.slice(0, 5));
-                } else {
-                  setShowDropdown(false);
-                  setSearchResults([]);
-                }
+                setShowDropdown(false);
+                setSearchResults([]);
               }}
               className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer mr-1"
             >
@@ -527,60 +431,6 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
         {/* Live Search Autocomplete Dropdown */}
         {showDropdown && (
           <div className="absolute top-[105%] inset-x-0 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-[260px] sm:max-h-[300px] overflow-y-auto p-1.5 scrollbar-thin">
-            {/* Quick 1-Click Instant Selection for Typed Query */}
-            {searchQuery.trim().length >= 2 && (() => {
-              const parsed = parseRestaurantQuery(searchQuery, selectedCity, coords);
-              return (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const customSpot: Restaurant = {
-                      id: getDeterministicPlaceId(parsed.cleanName, parsed.city, parsed.area),
-                      name: parsed.cleanName,
-                      description: `Popular dining spot in ${[parsed.area, parsed.city].filter(Boolean).join(', ') || 'your area'}`,
-                      address: parsed.address,
-                      area: parsed.area || 'Local',
-                      city: parsed.city || 'Local',
-                      latitude: parsed.latitude,
-                      longitude: parsed.longitude,
-                      rating: 4.8,
-                      image: '/images/eating/pav_bhaji.jpg',
-                      is_campaign_active: 1,
-                      total_visits: 100,
-                      status: 'active'
-                    };
-                    handleSelectSpot(customSpot);
-                  }}
-                  className="w-full text-left p-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all flex items-center justify-between gap-2 cursor-pointer mb-1.5 shadow-xs"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-[#1D4ED8] text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-black text-xs sm:text-sm text-[#0B1B48] truncate">
-                        Select &ldquo;{parsed.cleanName}&rdquo;
-                      </p>
-                      <p className="text-[11px] text-[#1D4ED8] font-bold truncate">
-                        📍 {parsed.area && parsed.city && parsed.area !== parsed.city ? `${parsed.area}, ${parsed.city}` : parsed.area || parsed.city || 'Food Spot'}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-[#1D4ED8] bg-white px-2.5 py-1 rounded-md border border-blue-200 shrink-0">
-                    Choose
-                  </span>
-                </button>
-              );
-            })()}
-
-            {/* Header for nearby results when search query is empty */}
-            {!searchQuery.trim() && coords && searchResults.length > 0 && (
-              <div className="px-2.5 py-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100">
-                <Navigation className="w-3 h-3 text-[#1D4ED8]" />
-                <span>Nearby Restaurants</span>
-              </div>
-            )}
-
             {/* List of matching search results */}
             {searchResults.length > 0 ? (
               searchResults.map((spot, idx) => {
@@ -609,21 +459,42 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                         <p className="font-bold text-xs sm:text-sm text-[#0B1B48] truncate">
                           {spot.name}
                         </p>
-                        <p className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
-                          <span className="text-[#1D4ED8] font-semibold">{spot.area || spot.city}</span>
-                          {spot.city && spot.area !== spot.city && (
-                            <>
-                              <span className="text-slate-300">•</span>
-                              <span>{spot.city}</span>
-                            </>
-                          )}
-                          {spot.distanceKm ? (
-                            <>
-                              <span className="text-slate-300">•</span>
-                              <span className="text-emerald-700 font-bold">{spot.distanceKm} km away</span>
-                            </>
-                          ) : null}
-                        </p>
+                        {(() => {
+                          const isPlaceholder = (val?: string) => !val || ['area', 'city', 'local', 'unknown', 'null', 'undefined'].includes(val.toLowerCase().trim());
+                          const cleanArea = !isPlaceholder(spot.area) ? spot.area!.trim() : '';
+                          const cleanCity = !isPlaceholder(spot.city) ? spot.city!.trim() : '';
+                          const hasLocation = Boolean(cleanArea || cleanCity);
+                          const primaryLoc = cleanArea || cleanCity;
+                          const secondaryLoc = cleanCity && cleanCity !== cleanArea ? cleanCity : '';
+                          const rawCuisine = (spot as unknown as { cuisine?: string[] })?.cuisine;
+                          const cuisineTag = (Array.isArray(spot.cuisine_tags) && spot.cuisine_tags[0]) ||
+                                             (Array.isArray(rawCuisine) && rawCuisine[0]) ||
+                                             (spot.is_veg === 1 ? 'Pure Veg' : 'Food Spot');
+
+                          return (
+                            <p className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
+                              {hasLocation ? (
+                                <>
+                                  <span className="text-[#1D4ED8] font-semibold">{primaryLoc}</span>
+                                  {secondaryLoc && (
+                                    <>
+                                      <span className="text-slate-300">•</span>
+                                      <span>{secondaryLoc}</span>
+                                    </>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-[#1D4ED8] font-semibold">{cuisineTag}</span>
+                              )}
+                              {spot.distanceKm ? (
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <span className="text-emerald-700 font-bold">{spot.distanceKm} km away</span>
+                                </>
+                              ) : null}
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -655,9 +526,17 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               <p className="text-xs sm:text-sm font-black text-emerald-950 truncate">
                 {selectedRestaurant.name}
               </p>
-              <p className="text-[10px] sm:text-xs text-emerald-700 font-medium truncate">
-                📍 {selectedRestaurant.area && selectedRestaurant.city && selectedRestaurant.area !== selectedRestaurant.city ? `${selectedRestaurant.area}, ${selectedRestaurant.city}` : selectedRestaurant.area || selectedRestaurant.city || 'Verified Spot'} • ⭐ {selectedRestaurant.rating || 4.8}
-              </p>
+              {(() => {
+                const isPlaceholder = (val?: string) => !val || ['area', 'city', 'local', 'unknown', 'null', 'undefined'].includes(val.toLowerCase().trim());
+                const cleanArea = !isPlaceholder(selectedRestaurant.area) ? selectedRestaurant.area!.trim() : '';
+                const cleanCity = !isPlaceholder(selectedRestaurant.city) ? selectedRestaurant.city!.trim() : '';
+                const locStr = [cleanArea, cleanCity && cleanCity !== cleanArea ? cleanCity : ''].filter(Boolean).join(', ');
+                return (
+                  <p className="text-[10px] sm:text-xs text-emerald-700 font-medium truncate">
+                    {locStr ? `📍 ${locStr} • ` : ''}⭐ {selectedRestaurant.rating || 4.8}
+                  </p>
+                );
+              })()}
             </div>
           </div>
           <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 bg-white px-2 py-0.5 sm:py-1 rounded-lg border border-emerald-200 shrink-0">

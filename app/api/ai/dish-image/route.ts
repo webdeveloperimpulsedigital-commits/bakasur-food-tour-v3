@@ -7,7 +7,7 @@ import { isPureVegRestaurantName } from '@/lib/dishAssets';
 export const dynamic = 'force-dynamic';
 
 // Cache key salt to instantly bust any previous stale in-memory cached buffers
-const CACHE_VERSION = 'v38_accurate_bhel_dosa_uttapam_all_types';
+const CACHE_VERSION = 'v39_accurate_sweets_zomato_swiggy_cutouts';
 const imageBufferCache = new Map<string, { buffer: Buffer; contentType: string; timestamp: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -1347,18 +1347,70 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
   if (d.includes('salad')) return 'garden_salad';
   if (d.includes('soup') || d.includes('shorba')) return 'soup';
 
-  // === 13. DESSERTS, SWEETS & BAKERY ===
+  // === 13. DESSERTS, SWEETS, CONFECTIONERY & BAKERY ===
+  // Jellies, Fruit Sweets & Candies
+  if (d.includes('jelly')) {
+    if (d.includes('strawberry') || d.includes('berry')) return 'strawberry_ice_cream';
+    return 'fruit_sundae';
+  }
+
+  // Anjeer / Fig Sweets, Rolls & Chakras
+  if (d.includes('anjeer') || d.includes('anjir') || d.includes('fig')) {
+    if (d.includes('mastani')) return 'dryfruit_mastani';
+    if (d.includes('ice cream') || d.includes('icecream')) return 'kaju_draksh_ice_cream';
+    return 'kaju_katli';
+  }
+
+  // Pista / Pistachio Sweets & Rolls
+  if (d.includes('pista') || d.includes('pistachio')) {
+    if (d.includes('mastani')) return 'kesar_pista_mastani';
+    if (d.includes('ice cream') || d.includes('icecream') || d.includes('kulfi')) return 'kesar_pista_ice_cream';
+    return 'kaju_katli';
+  }
+
+  // Mithai Rolls, Chakras, Bites, Katlis
+  if (
+    d.includes('chakra') || d.includes('chakkar') ||
+    ((d.includes('roll') || d.includes('bite') || d.includes('bites') || d.includes('diamond')) &&
+      !d.includes('kathi') && !d.includes('spring') && !d.includes('egg') && !d.includes('chicken') && !d.includes('paneer roll'))
+  ) {
+    return 'kaju_katli';
+  }
+
+  // Strawberries (fresh, sweet, jelly, ice cream or dessert)
+  if (d.includes('strawberry')) {
+    if (d.includes('mastani')) return 'strawberry_mastani';
+    return 'strawberry_ice_cream';
+  }
+
+  // Kaju & Cashew Sweets
+  if (d.includes('kaju') || d.includes('cashew') || d.includes('katli')) return 'kaju_katli';
+
+  // Badam & Almond Sweets
+  if (d.includes('badam') || d.includes('almond')) {
+    if (d.includes('mastani')) return 'dryfruit_mastani';
+    return 'kaju_katli';
+  }
+
+  // Dry Fruit Sweets & Mewa Bites
+  if (d.includes('dry fruit') || d.includes('dryfruit') || d.includes('mewa')) {
+    if (d.includes('mastani')) return 'dryfruit_mastani';
+    return 'kaju_katli';
+  }
+
+  // Barfi, Peda & Milk Sweets
   if (d.includes('mango barfi') || d.includes('amba barfi') || d.includes('aamba barfi')) return 'mango_barfi';
   if (d.includes('kaju katli') || d.includes('kaju barfi') || d.includes('katli')) return 'kaju_katli';
-  if (d.includes('barfi') || d.includes('burfi') || d.includes('milk cake') || d.includes('peda') || d.includes('pedhe') || d.includes('sandesh') || d.includes('kalakand')) return 'barfi';
+  if (d.includes('barfi') || d.includes('burfi') || d.includes('milk cake') || d.includes('peda') || d.includes('pedhe') || d.includes('dharwad') || d.includes('sandesh') || d.includes('kalakand') || d.includes('mishri') || d.includes('khoya')) return 'barfi';
   if (d.includes('bhakarwadi') || d.includes('bhakrwadi') || d.includes('bakarwadi') || d.includes('bakrwadi')) return 'bhakarwadi';
-  if (d.includes('ladoo') || d.includes('laddoo') || d.includes('laddu') || d.includes('motichoor') || d.includes('besan laddu') || d.includes('boondi lad')) return 'ladoo';
-  if (d.includes('rasmalai') || d.includes('ras malai') || d.includes('rasgulla') || d.includes('rossogolla') || d.includes('cham cham')) return 'rasmalai';
-  if (d.includes('gulab jamun') || d.includes('gulabjamun') || d.includes('kala jamun')) return 'gulab_jamun';
+  if (d.includes('ladoo') || d.includes('laddoo') || d.includes('laddu') || d.includes('motichoor') || d.includes('besan laddu') || d.includes('boondi lad') || d.includes('gond laddu')) return 'ladoo';
+  if (d.includes('rasmalai') || d.includes('ras malai') || d.includes('rasgulla') || d.includes('rossogolla') || d.includes('cham cham') || d.includes('chhena') || d.includes('chenna') || d.includes('rajbhog') || d.includes('chhena poda')) return 'rasmalai';
+  if (d.includes('gulab jamun') || d.includes('gulabjamun') || d.includes('kala jamun') || d.includes('pantua')) return 'gulab_jamun';
   if (d.includes('jalebi') || d.includes('jilbi') || d.includes('imarti')) return 'jalebi';
-  if (d.includes('shrikhand') || d.includes('amrakhand')) return 'shrikhand';
+  if (d.includes('shrikhand') || d.includes('amrakhand') || d.includes('matha')) return 'shrikhand';
   if (d.includes('basundi')) return 'basundi';
-  if (d.includes('gajar halwa') || d.includes('gajar ka halwa') || d.includes('halwa') || d.includes('sheera')) return 'gajar_halwa';
+  if (d.includes('gajar halwa') || d.includes('gajar ka halwa') || d.includes('halwa') || d.includes('sheera') || d.includes('soan papdi') || d.includes('mysore pak')) return 'gajar_halwa';
+  if (d.includes('mithai') || d.includes('sweet mart') || d.includes('halwai')) return 'kaju_katli';
 
   // Falooda & Kulfi
   if (d.includes('falooda') || d.includes('faluda')) return 'falooda';
@@ -1494,6 +1546,44 @@ function matchDishToCanonicalKey(dishName: string, restaurantName: string = ''):
     return 'wood_fired_pizza';
   }
 
+  // Intelligent context-aware default fallbacks (strictly avoids showing full Thalis for sweets/bakery/snacks)
+  if (
+    r.includes('sweet') || r.includes('mithai') || r.includes('halwai') ||
+    r.includes('chitale') || r.includes('kaka') || r.includes('dairy') ||
+    r.includes('confection') || r.includes('dessert') ||
+    d.includes('(kg)') || d.includes('(g)') || d.includes('(gm)') || d.includes('(nos)') || d.includes('(pcs)') ||
+    d.includes('100g') || d.includes('250g') || d.includes('500g') || d.includes('1kg')
+  ) {
+    return 'kaju_katli';
+  }
+  if (r.includes('bakery') || r.includes('baker') || r.includes('cake') || r.includes('pastry') || r.includes('patisserie')) {
+    return 'cake';
+  }
+  if (r.includes('cafe') || r.includes('coffee') || r.includes('tea') || r.includes('chai')) {
+    return 'coffee';
+  }
+  if (r.includes('ice cream') || r.includes('icecream') || r.includes('gelato') || r.includes('kulfi') || r.includes('creamery')) {
+    return 'vanilla_ice_cream';
+  }
+  if (r.includes('farsan') || r.includes('namkeen') || r.includes('snack')) {
+    return 'bhakarwadi';
+  }
+  if (r.includes('dosa') || r.includes('idli') || r.includes('udupi') || r.includes('udipi') || r.includes('south')) {
+    return 'masala_dosa';
+  }
+  if (r.includes('biryani') || r.includes('briyani')) {
+    return 'biryani';
+  }
+  if (r.includes('burger') || r.includes('sandwich')) {
+    return 'burger';
+  }
+  if (r.includes('pizza') || r.includes('pizzeria')) {
+    return 'margherita_pizza';
+  }
+  if (r.includes('chaat') || r.includes('bhel') || r.includes('panipuri')) {
+    return 'oli_bhel';
+  }
+
   return 'thali';
 }
 
@@ -1591,17 +1681,19 @@ async function getRawFoodImageBuffer(canonicalKey: string, explicitUrl?: string)
     console.warn('Remote CDN food photo fetch failed:', remoteErr);
   }
 
-  // 4. Fallback to local default thali feast
+  // 4. Fallback to local default authentic asset
   try {
-    const defaultWebpPath = path.join(process.cwd(), 'public', 'images', 'food', 'thali.webp');
-    const defaultLocalPath = path.join(process.cwd(), 'public', 'images', 'food', 'thali.jpg');
+    const isSweetOrDessert = ['barfi', 'kaju_katli', 'ladoo', 'rasmalai', 'gulab_jamun', 'jalebi', 'shrikhand', 'modak', 'fruit_sundae', 'cake'].includes(canonicalKey);
+    const fallbackBase = isSweetOrDessert ? 'kaju_katli' : 'thali';
+    const defaultWebpPath = path.join(process.cwd(), 'public', 'images', 'food', `${fallbackBase}.webp`);
+    const defaultLocalPath = path.join(process.cwd(), 'public', 'images', 'food', `${fallbackBase}.jpg`);
     if (fs.existsSync(defaultWebpPath)) {
       return await fs.promises.readFile(defaultWebpPath);
     } else if (fs.existsSync(defaultLocalPath)) {
       return await fs.promises.readFile(defaultLocalPath);
     }
   } catch (defErr) {
-    console.warn('Default local thali fallback failed:', defErr);
+    console.warn('Default local food fallback failed:', defErr);
   }
 
   return null;
@@ -1652,11 +1744,19 @@ export async function GET(request: Request) {
       });
     }
 
-    // 3. Identify authentic food source & fetch raw buffer
+    // 3. Identify authentic food source & fetch raw buffer (Swiggy, Zomato CDN, Cloudinary, Google, Unsplash)
     const isVerifiedExplicit = Boolean(
       explicitImgUrl &&
       (explicitImgUrl.startsWith('http://') || explicitImgUrl.startsWith('https://')) &&
-      (explicitImgUrl.includes('swiggy.com') || explicitImgUrl.includes('cloudinary.com'))
+      (
+        explicitImgUrl.includes('swiggy.com') ||
+        explicitImgUrl.includes('cloudinary.com') ||
+        explicitImgUrl.includes('zmtcdn.com') ||
+        explicitImgUrl.includes('zomato.com') ||
+        explicitImgUrl.includes('googleusercontent.com') ||
+        explicitImgUrl.includes('images.unsplash.com') ||
+        explicitImgUrl.includes('unsplash.com')
+      )
     );
 
     const canonicalKey = matchDishToCanonicalKey(dish, restaurant);

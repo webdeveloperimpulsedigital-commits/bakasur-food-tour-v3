@@ -409,6 +409,66 @@ export async function fetchLiveZomatoMenu(
   }
 }
 
+export const ZOMATO_CITY_ALIASES: Record<string, string[]> = {
+  thane: ['mumbai', 'thane'],
+  'thane west': ['mumbai', 'thane'],
+  'thane-west': ['mumbai', 'thane'],
+  'navi mumbai': ['mumbai', 'navi-mumbai'],
+  'navi-mumbai': ['mumbai', 'navi-mumbai'],
+  vashi: ['mumbai', 'navi-mumbai'],
+  sanpada: ['mumbai', 'navi-mumbai'],
+  ghansoli: ['mumbai', 'navi-mumbai'],
+  kharghar: ['mumbai', 'navi-mumbai'],
+  kalyan: ['mumbai', 'thane'],
+  dombivli: ['mumbai', 'thane'],
+  'mira bhayandar': ['mumbai', 'mira-bhayandar'],
+  'mira-bhayandar': ['mumbai', 'mira-bhayandar'],
+  mumbai: ['mumbai', 'thane'],
+  bombay: ['mumbai'],
+  delhi: ['ncr', 'delhi'],
+  'new delhi': ['ncr', 'delhi'],
+  'new-delhi': ['ncr', 'delhi'],
+  ncr: ['ncr', 'delhi'],
+  noida: ['ncr', 'noida'],
+  gurgaon: ['ncr', 'gurgaon'],
+  gurugram: ['ncr', 'gurgaon'],
+  ghaziabad: ['ncr', 'ghaziabad'],
+  faridabad: ['ncr', 'faridabad'],
+  pune: ['pune'],
+  pcmc: ['pune'],
+  pimpri: ['pune'],
+  chinchwad: ['pune'],
+  haveli: ['pune'],
+  bangalore: ['bangalore'],
+  bengaluru: ['bangalore'],
+  hyderabad: ['hyderabad'],
+  secunderabad: ['hyderabad'],
+  chennai: ['chennai'],
+  madras: ['chennai'],
+  kolkata: ['kolkata'],
+  calcutta: ['kolkata'],
+  ahmedabad: ['ahmedabad'],
+  jaipur: ['jaipur'],
+  chandigarh: ['chandigarh'],
+  mohali: ['chandigarh'],
+  panchkula: ['chandigarh'],
+  aurangabad: ['aurangabad'],
+  'chhatrapati sambhaji nagar': ['aurangabad'],
+  'chhatrapati-sambhaji-nagar': ['aurangabad']
+};
+
+export function getZomatoCities(city?: string): string[] {
+  if (!city) return ['mumbai', 'pune', 'bangalore', 'ncr'];
+  const clean = city.toLowerCase().trim();
+  for (const [key, cities] of Object.entries(ZOMATO_CITY_ALIASES)) {
+    if (clean === key || clean.includes(key) || key.includes(clean)) {
+      return cities;
+    }
+  }
+  const cleanSlug = clean.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  return [cleanSlug, 'mumbai', 'pune'];
+}
+
 const COMMON_CITY_AREAS: Record<string, string[]> = {
   pune: [
     'dange-chowk', 'sinhgad-road', 'ravet', 'hinjewadi', 'wakad', 'kothrud', 'fc-road',
@@ -416,8 +476,10 @@ const COMMON_CITY_AREAS: Record<string, string[]> = {
     'chinchwad', 'nigdi', 'hadapsar', 'kondhwa', 'sadashiv-peth', 'swargate', 'aundh', 'deccan-gymkhana'
   ],
   mumbai: [
-    'bandra-west', 'andheri-west', 'andheri-east', 'juhu', 'colaba', 'lower-parel',
-    'dadar', 'borivali-west', 'malad-west', 'thane-west', 'powai', 'chembur', 'vashi', 'kandivali-west', 'fort'
+    'panch-pakhadi-thane-west', 'majiwada-thane-west-thane', 'wagle-estate-thane-west-thane', 'naupada-thane-west',
+    'thane-west', 'vashi', 'sanpada', 'ghansoli', 'kharghar', 'kalwa', 'bandra-west', 'andheri-west',
+    'andheri-east', 'juhu', 'colaba', 'lower-parel', 'dadar', 'borivali-west', 'malad-west', 'powai',
+    'chembur', 'kandivali-west', 'fort', 'ghatkopar-east', 'mulund-west'
   ],
   bangalore: [
     'koramangala', 'indiranagar', 'hsr', 'whitefield', 'jayanagar', 'jp-nagar',
@@ -430,11 +492,94 @@ const COMMON_CITY_AREAS: Record<string, string[]> = {
   delhi: [
     'connaught-place', 'hauz-khas', 'karol-bagh', 'chandni-chowk', 'south-extension',
     'saket', 'rajouri-garden', 'lajpat-nagar', 'nehru-place', 'dwarka', 'rohini'
+  ],
+  ncr: [
+    'connaught-place', 'sector-18-noida', 'cyber-hub-gurgaon', 'hauz-khas', 'karol-bagh',
+    'chandni-chowk', 'south-extension', 'saket', 'rajouri-garden', 'lajpat-nagar', 'nehru-place'
   ]
 };
 
 /**
- * Fetch verified dishes for a restaurant from Zomato (Live web extraction + outlet permutations + verified heritage fallback)
+ * Automated Real-Time Zomato Outlet Discovery
+ * Discovers live order URLs across Indian cities by parsing the search preloaded state
+ */
+export async function discoverZomatoOrderUrlsFromSearch(
+  restaurantName: string,
+  city?: string,
+  area?: string
+): Promise<string[]> {
+  const cities = getZomatoCities(city);
+  const qSlug = restaurantName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim();
+  if (!qSlug || qSlug.length < 2) return [];
+
+  const foundOutlets: Array<{ name: string; locality: string; url: string }> = [];
+
+  for (const c of cities) {
+    const searchUrl = `https://www.zomato.com/${c}/restaurants/${qSlug}`;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2500);
+
+      const res = await fetch(searchUrl, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9'
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) continue;
+      const html = await res.text();
+      const preloadedMatch = html.match(/window\.__PRELOADED_STATE__\s*=\s*JSON\.parse\("([\s\S]*?)"\);/);
+      if (!preloadedMatch) continue;
+
+      const unescaped = JSON.parse(`"${preloadedMatch[1]}"`);
+      const parsed = JSON.parse(unescaped);
+      const searchPages = parsed.pages?.search || {};
+      const searchPage = Object.values(searchPages)[0] as any;
+      const results = (searchPage?.sections?.SECTION_SEARCH_RESULT || []) as any[];
+
+      for (const item of results) {
+        const clickUrl = item?.cardAction?.clickUrl;
+        const name = item?.info?.name || '';
+        const locality = item?.info?.locality?.name || '';
+        if (typeof clickUrl === 'string' && clickUrl.includes('/')) {
+          const cleanPath = clickUrl.replace(/^\/(?:[a-z]{2}-[a-z]{2}\/)?/, '').replace(/\/info$/, '/order');
+          const finalUrl = `https://www.zomato.com/${cleanPath}`;
+          if (!foundOutlets.some(o => o.url === finalUrl)) {
+            foundOutlets.push({ name, locality, url: finalUrl });
+          }
+        }
+      }
+
+      if (foundOutlets.length > 0) break;
+    } catch {
+      // network/abort skip
+    }
+  }
+
+  if (foundOutlets.length === 0) return [];
+
+  // Sort outlets: prioritize matching locality/area/city if provided
+  const preferredLoc = (area || city || '').toLowerCase().trim();
+  if (preferredLoc) {
+    foundOutlets.sort((a, b) => {
+      const aLoc = (a.locality || '').toLowerCase();
+      const bLoc = (b.locality || '').toLowerCase();
+      const aScore = aLoc.includes(preferredLoc) ? 2 : (preferredLoc.split(/\s+/).some(w => aLoc.includes(w)) ? 1 : 0);
+      const bScore = bLoc.includes(preferredLoc) ? 2 : (preferredLoc.split(/\s+/).some(w => bLoc.includes(w)) ? 1 : 0);
+      return bScore - aScore;
+    });
+  }
+
+  return foundOutlets.map(o => o.url);
+}
+
+/**
+ * Fetch verified dishes for a restaurant from Zomato (Dynamic discovery + multi-outlet merge + verified heritage fallback)
  */
 export async function fetchZomatoDishesForRestaurant(
   restaurantName: string,
@@ -477,8 +622,58 @@ export async function fetchZomatoDishesForRestaurant(
     }
   }
 
-  // 3. Build candidate slug permutations:
-  // e.g. "Rayba Biryani" in Pune -> rayba-biryani, rayba-biryani-dange-chowk, rayba-dum-biryani-sinhgad-road, etc.
+  // 3. Check iconic registry for matching brand URL
+  const normName = restaurantName.toLowerCase().trim();
+  const iconicMatch = ICONIC_ZOMATO_RESTAURANTS.find(item => {
+    const itemNorm = item.name.toLowerCase().trim();
+    if (normName.includes(itemNorm) || itemNorm.includes(normName)) return true;
+    return (item.aliases || []).some(a => normName.includes(a) || a.includes(normName));
+  });
+
+  const targetUrls: string[] = [];
+  if (iconicMatch) {
+    targetUrls.push(`https://www.zomato.com/${iconicMatch.city.toLowerCase()}/${iconicMatch.zomato_slug}/order`);
+  }
+
+  // 4. Automated Live Zomato Discovery across all cities & outlets
+  const discoveredUrls = await discoverZomatoOrderUrlsFromSearch(restaurantName, city, area);
+  for (const u of discoveredUrls) {
+    if (!targetUrls.includes(u)) {
+      targetUrls.push(u);
+    }
+  }
+
+  // 5. Fetch top candidate outlets concurrently (up to 3 outlets) and merge unique items
+  // (e.g. chaat/pani-puri branch and sweet shop branch items combine seamlessly)
+  if (targetUrls.length > 0) {
+    const topUrls = targetUrls.slice(0, 3);
+    const results = await Promise.allSettled(
+      topUrls.map(u => fetchLiveZomatoMenu(u, city))
+    );
+
+    const mergedDishes = new Map<string, Dish>();
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value.length > 0) {
+        for (const dish of r.value) {
+          const key = dish.name.toLowerCase().trim();
+          if (!mergedDishes.has(key)) {
+            mergedDishes.set(key, dish);
+          } else {
+            const existing = mergedDishes.get(key)!;
+            if (!existing.image && dish.image) {
+              mergedDishes.set(key, { ...existing, image: dish.image });
+            }
+          }
+        }
+      }
+    }
+
+    if (mergedDishes.size > 0) {
+      return Array.from(mergedDishes.values());
+    }
+  }
+
+  // 6. Fast Concurrent Fallback: Candidate slug permutations checked in parallel
   const baseSlug = toZomatoSlug(restaurantName, '', normCity);
   const candidateSlugs = new Set<string>();
 
@@ -494,19 +689,26 @@ export async function fetchZomatoDishesForRestaurant(
     candidateSlugs.add(`${baseSlug}-house`);
   }
 
-  const cityAreas = COMMON_CITY_AREAS[normCity] || [];
-  for (const a of cityAreas.slice(0, 10)) {
+  const cityAreas = COMMON_CITY_AREAS[normCity] || COMMON_CITY_AREAS['mumbai'] || [];
+  for (const a of cityAreas.slice(0, 8)) {
     candidateSlugs.add(`${baseSlug}-${a}`);
-    if (baseSlug.includes('biryani') && !baseSlug.includes('dum-biryani')) {
-      candidateSlugs.add(`${baseSlug.replace('biryani', 'dum-biryani')}-${a}`);
+  }
+
+  const citiesToCheck = getZomatoCities(city);
+  const fallbackUrls: string[] = [];
+  for (const c of citiesToCheck.slice(0, 2)) {
+    for (const slug of candidateSlugs) {
+      fallbackUrls.push(`https://www.zomato.com/${c}/${slug}/order`);
     }
   }
 
-  for (const slug of candidateSlugs) {
-    const guessedUrl = `https://www.zomato.com/${normCity}/${slug}/order`;
-    const dishes = await fetchLiveZomatoMenu(guessedUrl, city);
-    if (dishes.length > 0) {
-      return dishes;
+  const fallbackResults = await Promise.allSettled(
+    fallbackUrls.slice(0, 6).map(u => fetchLiveZomatoMenu(u, city))
+  );
+
+  for (const r of fallbackResults) {
+    if (r.status === 'fulfilled' && r.value.length > 0) {
+      return r.value;
     }
   }
 
@@ -534,6 +736,24 @@ export const ICONIC_ZOMATO_RESTAURANTS: Array<{
   zomato_id: string;
   description: string;
 }> = [
+  {
+    name: "Prashant Corner",
+    aliases: ["prashant corner", "prashant", "prashant sweets", "prashant mithai", "prashant corner thane", "prashant thane"],
+    area: "Panch Pakhadi, Thane West",
+    city: "Mumbai",
+    address: "Shop 1-4, Ground Floor, Gagangiri Apartments, Panch Pakhadi, Thane West, Thane",
+    latitude: 19.1950,
+    longitude: 72.9680,
+    rating: 4.7,
+    rating_count: "8.5K+ reviews on Zomato",
+    cost_for_two: "₹300 for two",
+    is_veg: 1,
+    cuisine: ["Mithai", "Street Food", "Chaat", "Fast Food", "Pure Veg"],
+    image: "https://b.zmtcdn.com/data/pictures/5/21295405/8419a7cb36d28180a9d4bc4b76889a70_featured_v2.jpg",
+    zomato_slug: "prashant-corner-panch-pakhadi-thane-west",
+    zomato_id: "zom_prashant_corner_thane",
+    description: "Iconic legendary Thane & Mumbai sweet and chaat landmark famous for authentic Pani Puri, Sev Puri, Bhel Puri, and traditional Indian sweets."
+  },
   {
     name: "Badshahi Boarding House",
     aliases: ["badshahi", "badshahi lodging", "badshahi khanawal", "badshahi pune", "badshahi boarding"],

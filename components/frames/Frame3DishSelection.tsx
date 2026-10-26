@@ -99,7 +99,7 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
     setLoadingStatus('Connecting to verified live menu...');
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6500);
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const statusTimer = setTimeout(() => {
       if (activeRequestIdRef.current === currentReqId) {
@@ -117,6 +117,10 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
       });
       if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
       if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
+      const customRest = restaurant as unknown as { zomato_url?: string; swiggy_id?: string; zomato_id?: string };
+      if (customRest.zomato_url) queryParams.set('zomato_url', customRest.zomato_url);
+      if (customRest.swiggy_id) queryParams.set('swiggy_id', customRest.swiggy_id);
+      if (customRest.zomato_id) queryParams.set('zomato_id', customRest.zomato_id);
 
       const res = await fetch(withBasePath(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`), {
         signal: controller.signal
@@ -616,15 +620,6 @@ export const Frame3DishSelection: React.FC<Frame3DishSelectionProps> = ({
                                 {dish.is_recommended === 1 && (
                                   <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded shrink-0">
                                     ★ Top Pick
-                                  </span>
-                                )}
-                                {(dish as any).has_original_photo ? (
-                                  <span className="text-[8px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded shrink-0" title="Authentic restaurant photo from Swiggy">
-                                    📷 Original
-                                  </span>
-                                ) : (
-                                  <span className="text-[8px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-1 py-0.2 rounded shrink-0" title="Representative AI dish visual">
-                                    ✨ AI Visual
                                   </span>
                                 )}
                               </div>

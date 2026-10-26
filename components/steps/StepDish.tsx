@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search, ArrowRight, ArrowLeft, PlusCircle, Check, Flame, Sparkles } from 'lucide-react';
 import type { Restaurant, Dish } from '@/lib/db';
 import { getDishImage } from '../BakasurVideoPlayer';
+import { withBasePath } from '@/lib/basePath';
 
 export interface SpiceOption {
   id: string;
@@ -50,7 +51,7 @@ export const StepDish: React.FC<StepDishProps> = ({
     const currentReqId = ++activeReqIdRef.current;
     setIsLoading(true);
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
+    const timer = setTimeout(() => controller.abort(), 10000);
 
     try {
       const queryParams = new URLSearchParams({
@@ -60,7 +61,11 @@ export const StepDish: React.FC<StepDishProps> = ({
       });
       if (restaurant.latitude) queryParams.set('lat', String(restaurant.latitude));
       if (restaurant.longitude) queryParams.set('lng', String(restaurant.longitude));
-      const res = await fetch(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`, {
+      const customRest = restaurant as unknown as { zomato_url?: string; swiggy_id?: string; zomato_id?: string };
+      if (customRest.zomato_url) queryParams.set('zomato_url', customRest.zomato_url);
+      if (customRest.swiggy_id) queryParams.set('swiggy_id', customRest.swiggy_id);
+      if (customRest.zomato_id) queryParams.set('zomato_id', customRest.zomato_id);
+      const res = await fetch(withBasePath(`/api/restaurants/${restaurant.id}/dishes?${queryParams.toString()}`), {
         signal: controller.signal
       });
       const json = await res.json();

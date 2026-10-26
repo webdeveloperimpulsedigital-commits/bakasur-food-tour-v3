@@ -19,11 +19,15 @@ export async function GET(request: Request) {
       targetUrl = `https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_600,h_600,c_fit/${cleanId}`;
     }
 
+    const referer = (targetUrl.includes('zmtcdn.com') || targetUrl.includes('zomato.com'))
+      ? 'https://www.zomato.com/'
+      : 'https://www.swiggy.com/';
+
     const res = await fetch(targetUrl, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Referer: 'https://www.swiggy.com/',
+        Referer: referer,
         Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
       },
       next: { revalidate: 604800 } // 7-day edge cache

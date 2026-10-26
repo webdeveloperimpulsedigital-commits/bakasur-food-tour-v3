@@ -28,13 +28,55 @@ const CACHE_HEADERS = {
   'Cache-Control': 'public, max-age=300, stale-while-revalidate=600'
 };
 
+function isRealDishPhoto(url?: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.toLowerCase().trim();
+  if (!u.startsWith('http://') && !u.startsWith('https://')) return false;
+  if (u.includes('placeholder') || u.includes('default_feast') || u.includes('thali.jpg')) return false;
+  return (
+    u.includes('swiggy.com') ||
+    u.includes('cloudinary.com') ||
+    u.includes('media-assets.swiggy.com') ||
+    u.includes('zmtcdn.com') ||
+    u.includes('zomato.com') ||
+    u.includes('googleusercontent.com') ||
+    u.includes('images.unsplash.com') ||
+    u.includes('unsplash.com')
+  );
+}
+
+function mergeDishLists(primary: Dish[], secondary: Dish[]): Dish[] {
+  const mergedMap = new Map<string, Dish>();
+
+  for (const d of primary) {
+    const key = d.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (key) mergedMap.set(key, d);
+  }
+
+  for (const d of secondary) {
+    const key = d.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!key) continue;
+    const existing = mergedMap.get(key);
+    if (!existing) {
+      mergedMap.set(key, d);
+    } else {
+      // If secondary has a real photo while existing doesn't, elevate it!
+      if (!isRealDishPhoto(existing.image) && isRealDishPhoto(d.image)) {
+        mergedMap.set(key, { ...existing, image: d.image, price: existing.price || d.price });
+      }
+    }
+  }
+
+  return Array.from(mergedMap.values());
+}
+
 /**
- * Restaurant menu (strict authentic mode).
- * Multi-Source Menu Priority:
- *  1. Zomato: Fetch actual menu if available
- *  2. Swiggy: Fetch actual menu if available
- *  3. Google Search: Discover official website, published menu, or customer-reviewed dishes
- *  4. Other verified sources: Database registry
+ * Restaurant menu (strict authentic mode with dual Zomato + Swiggy multi-source retrieval).
+ * Multi-Source Menu Strategy:
+ *  1. Dual Check: Query BOTH Zomato AND Swiggy so dishes missing on one platform are populated from the other
+ *  2. Merge: Combine menus and prefer verified photos from Zomato CDN (b.zmtcdn.com) or Swiggy
+ *  3. Google Search / Places: Discover published menu or customer dishes
+ *  4. Verified Database Registry
  * If no verified source has menu data, strictly returns "Menu currently unavailable".
  */
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -48,6 +90,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const paramArea = (searchParams.get('area') || '').trim();
     const paramCity = (searchParams.get('city') || '').trim();
     const paramIsVeg = searchParams.get('is_veg');
+    const paramZomatoUrl = (searchParams.get('zomato_url') || '').trim();
+    const paramSwiggyId = (searchParams.get('swiggy_id') || '').trim();
+    const paramZomatoId = (searchParams.get('zomato_id') || '').trim();
 
     const cacheKey = `${params.id}_${paramCity.toLowerCase()}_${paramName.toLowerCase()}_${searchQuery.toLowerCase()}`;
     const cached = dishesCache.get(cacheKey);
@@ -78,71 +123,85 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const restCity = paramCity || restInfo?.city || (lat && lng ? 'current' : 'pune');
     const restArea = paramArea || restInfo?.area || '';
 
+    const cleanSwiggyId = (paramSwiggyId || params.id).replace(/^swiggy_/, '');
+    const isSwiggyNumericId = /^\d{2,10}$/.test(cleanSwiggyId) && !isOsmOrPoiId;
+
+    let zomatoDishes: Dish[] = [];
+    let swiggyDishes: Dish[] = [];
+
     // =========================================================================
-    // PRIORITY 1: ZOMATO (Fetch the restaurant's actual menu if available)
+    // DUAL PLATFORM FETCH: ZOMATO + SWIGGY (Check BOTH to maximize menu coverage)
     // =========================================================================
-    if (baseDishes.length === 0 && restName) {
+
+    // 1. ZOMATO: Fetch actual live menu or heritage menu
+    if (restName || paramZomatoUrl) {
       try {
-        const zomatoDishes = await fetchZomatoDishesForRestaurant(restName, {
+        const zDishes = await fetchZomatoDishesForRestaurant(restName, {
           city: restCity,
           area: restArea,
+          zomatoUrl: paramZomatoUrl || undefined,
           restaurantId: params.id
         });
-        if (zomatoDishes && zomatoDishes.length > 0) {
-          baseDishes = zomatoDishes;
-          source = 'zomato';
+        if (zDishes && zDishes.length > 0) {
+          zomatoDishes = zDishes;
         }
       } catch (zomErr) {
         console.warn('Zomato menu fetch notice for', restName, zomErr);
       }
     }
 
-    // =========================================================================
-    // PRIORITY 2: SWIGGY (Fetch the actual menu if available)
-    // =========================================================================
-    if (baseDishes.length === 0 && !isOsmOrPoiId && /^\d{2,10}$/.test(params.id)) {
+    // 2. SWIGGY: Fetch actual live menu (numeric Swiggy ID or direct search)
+    if (isSwiggyNumericId) {
       try {
-        const swiggyResult = await verifySwiggyRestaurant(params.id, { lat, lng });
+        const swiggyResult = await verifySwiggyRestaurant(cleanSwiggyId, { lat, lng });
         if (swiggyResult.verified) {
           const profile = swiggyResult.profile;
           if (!restInfo) restInfo = toVerifiedRestaurant(profile);
-          baseDishes = profile.vegOnly ? profile.dishes.filter(d => d.is_veg !== 0) : profile.dishes;
+          swiggyDishes = profile.vegOnly ? profile.dishes.filter(d => d.is_veg !== 0) : profile.dishes;
           fssaiLicense = profile.fssaiLicense || null;
           verifiedAt = profile.verifiedAt || null;
-          source = 'swiggy';
         }
       } catch {
         // Swiggy numeric ID lookup failed
       }
     }
 
-    // Direct multi-zone Swiggy search by restaurant name
-    if (baseDishes.length === 0 && restName) {
+    if (swiggyDishes.length === 0 && restName) {
       try {
-        const swiggyDishes = await searchSwiggyDirectForMenu(restName, restCity, {
+        const directDishes = await searchSwiggyDirectForMenu(restName, restCity, {
           lat: !isNaN(lat) ? lat : undefined,
           lng: !isNaN(lng) ? lng : undefined,
           area: restArea
         });
-        if (swiggyDishes && swiggyDishes.length > 0) {
-          baseDishes = swiggyDishes;
-          source = 'swiggy';
+        if (directDishes && directDishes.length > 0) {
+          swiggyDishes = directDishes;
         }
       } catch (err) {
         console.warn('Direct Swiggy multi-zone search notice for', restName, err);
       }
     }
 
-    if (baseDishes.length === 0 && restName) {
+    if (swiggyDishes.length === 0 && restName) {
       try {
         const liveDishes = await fetchSwiggyDishesViaApify(restName, restCity, { lat, lng });
         if (liveDishes && liveDishes.length > 0) {
-          baseDishes = liveDishes;
-          source = 'swiggy';
+          swiggyDishes = liveDishes;
         }
       } catch (err) {
         console.warn('Live Swiggy menu fetch notice for', restName, err);
       }
+    }
+
+    // 3. COMBINE & MERGE: Provide complete menu coverage from both platforms
+    if (zomatoDishes.length > 0 && swiggyDishes.length > 0) {
+      baseDishes = mergeDishLists(zomatoDishes, swiggyDishes);
+      source = 'zomato_and_swiggy';
+    } else if (zomatoDishes.length > 0) {
+      baseDishes = zomatoDishes;
+      source = 'zomato';
+    } else if (swiggyDishes.length > 0) {
+      baseDishes = swiggyDishes;
+      source = 'swiggy';
     }
 
     // =========================================================================
@@ -269,17 +328,13 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
     const finalDishes = filteredDishes.map(d => {
       const name = formatCleanDishName(d.name, activeRestInfo.name);
-      const hasRealPhoto =
-        typeof d.image === 'string' &&
-        (d.image.startsWith('https://') || d.image.startsWith('http://')) &&
-        (d.image.includes('swiggy.com') || d.image.includes('cloudinary.com') || d.image.includes('media-assets.swiggy.com')) &&
-        !d.image.includes('placeholder');
+      const hasRealPhoto = isRealDishPhoto(d.image);
 
       let resolvedImage: string;
-      if (hasRealPhoto) {
-        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(activeRestInfo.name)}&imgUrl=${encodeURIComponent(d.image)}&v=v37`;
+      if (hasRealPhoto && d.image) {
+        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(activeRestInfo.name)}&imgUrl=${encodeURIComponent(d.image)}&v=v39`;
       } else {
-        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(activeRestInfo.name)}&v=v37`;
+        resolvedImage = `/api/ai/dish-image?dish=${encodeURIComponent(name)}&restaurant=${encodeURIComponent(activeRestInfo.name)}&v=v39`;
       }
 
       let isVeg = d.is_veg !== undefined ? Number(d.is_veg) : (isDishVeg(name) ? 1 : 0);
@@ -300,7 +355,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         is_recommended: d.is_recommended ? 1 : 0,
         category,
         image: resolvedImage,
-        proxy_image: hasRealPhoto ? (customDish.proxy_image || `/api/swiggy-image?url=${encodeURIComponent(d.image)}`) : resolvedImage,
+        proxy_image: hasRealPhoto && d.image ? (customDish.proxy_image || `/api/swiggy-image?url=${encodeURIComponent(d.image)}`) : resolvedImage,
         flying_image: resolvedImage,
         has_original_photo: hasRealPhoto,
         image_source: hasRealPhoto ? 'restaurant_photo' : 'ai_generated'
