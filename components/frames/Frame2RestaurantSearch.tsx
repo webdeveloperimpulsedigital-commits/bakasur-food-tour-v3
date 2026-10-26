@@ -35,8 +35,8 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(userCoords || null);
   const [locationLabel, setLocationLabel] = useState<string>('');
-  const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(!userCoords);
-  const [isLoadingNearby, setIsLoadingNearby] = useState<boolean>(true);
+  const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(false);
+  const [isLoadingNearby, setIsLoadingNearby] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchMessage, setSearchMessage] = useState<string>('');
   const [spellingSuggestion, setSpellingSuggestion] = useState<string | null>(null);
@@ -58,19 +58,27 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     }
   }, [userCoords]);
 
-  // Direct geolocation detection on Frame 2 if coords not passed yet
+  // Geolocation detection on Frame 2 ONLY if coords not passed yet and user allows it
   useEffect(() => {
     if (!coords && !userCoords && typeof window !== 'undefined' && navigator.geolocation) {
+      setIsDetectingLocation(true);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setIsDetectingLocation(false);
         },
         () => {
           navigator.geolocation.getCurrentPosition(
             (pos) => {
               setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+              setIsDetectingLocation(false);
             },
-            () => {},
+            () => {
+              // Location access was NOT allowed by user (or unavailable)
+              setCoords(null);
+              setNearbyRestaurants([]);
+              setIsDetectingLocation(false);
+            },
             { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
           );
         },
@@ -79,13 +87,22 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
     }
   }, [coords, userCoords]);
 
-  // 1. IP Location Detection & Live Nearby Restaurants Fetch
+  // Live Nearby Restaurants Fetch - ONLY WHEN USER HAS ALLOWED LOCATION ACCESS
   useEffect(() => {
     let isCancelled = false;
 
-    async function initLocationAndNearby() {
-      let activeCoords = coords;
+    // CRITICAL: If user has NOT allowed location (no coords), do NOT fetch or show any nearby restaurants!
+    if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
+      setNearbyRestaurants([]);
+      setIsLoadingNearby(false);
+      setIsDetectingLocation(false);
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+      }
+      return;
+    }
 
+<<<<<<< HEAD
       const fetchNearby = async (latToUse: number, lngToUse: number) => {
         setIsLoadingNearby(true);
         try {
@@ -95,58 +112,64 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
             const limitedSpots = data.data.slice(0, 5);
             setNearbyRestaurants(limitedSpots);
             setSearchResults((prev) => (!searchQuery.trim() ? limitedSpots : prev));
+=======
+    async function fetchNearbyForGrantedLocation() {
+      setIsLoadingNearby(true);
+      try {
+        const cityParam = selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : '';
+        const res = await fetch(`/api/restaurants/search?lat=${coords!.lat}&lng=${coords!.lng}${cityParam}`);
+        const data = await res.json();
+        if (!isCancelled && data.success && Array.isArray(data.data)) {
+          const limitedSpots = data.data.slice(0, 5);
+          setNearbyRestaurants(limitedSpots);
+          if (!searchQuery.trim()) {
+            setSearchResults(limitedSpots);
+>>>>>>> bcf20f972e2d02924ad781a1fa7ba7ced58c77a6
           }
-        } catch (err) {
-          console.warn('Nearby restaurants fetch notice:', err);
-        } finally {
-          if (!isCancelled) setIsLoadingNearby(false);
         }
-      };
+      } catch (err) {
+        console.warn('Nearby restaurants fetch notice:', err);
+      } finally {
+        if (!isCancelled) setIsLoadingNearby(false);
+      }
 
-      // 1. Fire nearby restaurants fetch immediately using available or default coordinates
-      const initialLat = activeCoords?.lat || 18.5204;
-      const initialLng = activeCoords?.lng || 73.8407;
-      fetchNearby(initialLat, initialLng);
-
-      // 2. Concurrently resolve IP location if active coordinates are not yet set
-      if (!activeCoords) {
-        setIsDetectingLocation(true);
+      // Fetch location label for display
+      if (!locationLabel) {
         try {
+<<<<<<< HEAD
           const locRes = await fetch(withBasePath('/api/location'));
+=======
+          const locRes = await fetch(`/api/location?lat=${coords!.lat}&lng=${coords!.lng}`);
+>>>>>>> bcf20f972e2d02924ad781a1fa7ba7ced58c77a6
           const locData = await locRes.json();
           if (!isCancelled && locData.success) {
-            const detected = locData.userCoords || { lat: 18.5204, lng: 73.8407 };
-            activeCoords = detected;
-            setCoords(detected);
             const label = locData.locationDisplay || (locData.detectedCity?.name ? `${locData.detectedCity.name}` : selectedCity);
-            setLocationLabel(label);
-            // Refresh nearby if detected coordinates significantly differ from initial
-            if (Math.abs(detected.lat - initialLat) > 0.1 || Math.abs(detected.lng - initialLng) > 0.1) {
-              fetchNearby(detected.lat, detected.lng);
-            }
+            if (label) setLocationLabel(label);
           }
-        } catch (err) {
-          console.warn('IP location fetch error:', err);
-        } finally {
-          if (!isCancelled) setIsDetectingLocation(false);
+        } catch {
+          // ignore
         }
-      } else if (!locationLabel) {
-        setLocationLabel(selectedCity || 'Your Location');
       }
     }
 
-    initLocationAndNearby();
+    fetchNearbyForGrantedLocation();
 
     return () => {
       isCancelled = true;
     };
   }, [coords?.lat, coords?.lng, selectedCity]);
 
-  // Show dropdown with strictly 4-5 live nearby spots when user focuses on search box
+  // Show dropdown when user focuses on search box
   const handleFocus = () => {
-    setShowDropdown(true);
-    if (!searchQuery.trim() && nearbyRestaurants.length > 0) {
+    if (searchQuery.trim()) {
+      setShowDropdown(true);
+    } else if (coords && nearbyRestaurants.length > 0) {
+      setShowDropdown(true);
       setSearchResults(nearbyRestaurants.slice(0, 5));
+    } else {
+      // User has not allowed location and search query is empty -> show blank!
+      setShowDropdown(false);
+      setSearchResults([]);
     }
   };
 
@@ -201,7 +224,12 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   useEffect(() => {
     const q = searchQuery.trim();
     if (!q) {
-      setSearchResults(nearbyRestaurants.slice(0, 5));
+      if (coords && nearbyRestaurants.length > 0) {
+        setSearchResults(nearbyRestaurants.slice(0, 5));
+      } else {
+        setSearchResults([]);
+        setShowDropdown(false);
+      }
       setSpellingSuggestion(null);
       setIsSearching(false);
       return;
@@ -213,8 +241,13 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
       try {
         const latParam = coords?.lat ? `&lat=${coords.lat}` : '';
         const lngParam = coords?.lng ? `&lng=${coords.lng}` : '';
+        const cityParam = selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : '';
         const res = await fetch(
+<<<<<<< HEAD
           withBasePath(`/api/restaurants/search?q=${encodeURIComponent(q)}&city=${encodeURIComponent(selectedCity || 'Pune')}${latParam}${lngParam}`),
+=======
+          `/api/restaurants/search?q=${encodeURIComponent(q)}${cityParam}${latParam}${lngParam}`,
+>>>>>>> bcf20f972e2d02924ad781a1fa7ba7ced58c77a6
           { signal: controller.signal }
         );
         const json = await res.json();
@@ -324,26 +357,26 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
   };
 
   const createCustomRestaurant = (name: string): Restaurant => {
-    const locArea = locationLabel || selectedCity || 'Local';
+    const locArea = locationLabel || selectedCity || '';
     const cleanTitle = name
       .split(' ')
       .filter(Boolean)
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(' ');
     const isVeg = isPureVegRestaurantName(cleanTitle) ? 1 : 0;
-    const city = selectedCity || 'Local';
+    const city = selectedCity || '';
     const id = getDeterministicPlaceId(cleanTitle, city, locArea);
     return {
       id,
       name: cleanTitle,
-      address: `${locArea}`,
-      area: locArea,
-      city: selectedCity || 'Local',
-      latitude: coords?.lat || 18.5204,
-      longitude: coords?.lng || 73.8567,
+      address: locArea ? `${locArea}${city && city !== locArea ? `, ${city}` : ''}` : (cleanTitle || 'Food Spot'),
+      area: locArea || city || 'Local',
+      city: city || 'Local',
+      latitude: coords?.lat || 0,
+      longitude: coords?.lng || 0,
       rating: 4.8,
       image: '/images/default-restaurant.jpg',
-      description: `Authentic food spot in ${locArea}`,
+      description: `Authentic food spot${locArea ? ` in ${locArea}` : ''}`,
       is_campaign_active: 1,
       total_visits: 1200,
       status: 'active',
@@ -443,8 +476,17 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setShowDropdown(true);
+              const val = e.target.value;
+              setSearchQuery(val);
+              if (val.trim()) {
+                setShowDropdown(true);
+              } else if (coords && nearbyRestaurants.length > 0) {
+                setShowDropdown(true);
+                setSearchResults(nearbyRestaurants.slice(0, 5));
+              } else {
+                setShowDropdown(false);
+                setSearchResults([]);
+              }
             }}
             onFocus={handleFocus}
             onKeyDown={(e) => {
@@ -479,9 +521,15 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               type="button"
               onClick={() => {
                 setSearchQuery('');
-                setShowDropdown(true);
                 setFirstVisitorInfo(null);
                 setSelectedIndex(-1);
+                if (coords && nearbyRestaurants.length > 0) {
+                  setShowDropdown(true);
+                  setSearchResults(nearbyRestaurants.slice(0, 5));
+                } else {
+                  setShowDropdown(false);
+                  setSearchResults([]);
+                }
               }}
               className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer mr-1"
             >
@@ -510,10 +558,10 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                     const customSpot: Restaurant = {
                       id: getDeterministicPlaceId(parsed.cleanName, parsed.city, parsed.area),
                       name: parsed.cleanName,
-                      description: `Popular dining spot in ${parsed.area}, ${parsed.city}`,
+                      description: `Popular dining spot in ${[parsed.area, parsed.city].filter(Boolean).join(', ') || 'your area'}`,
                       address: parsed.address,
-                      area: parsed.area,
-                      city: parsed.city,
+                      area: parsed.area || 'Local',
+                      city: parsed.city || 'Local',
                       latitude: parsed.latitude,
                       longitude: parsed.longitude,
                       rating: 4.8,
@@ -535,7 +583,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                         Select &ldquo;{parsed.cleanName}&rdquo;
                       </p>
                       <p className="text-[11px] text-[#1D4ED8] font-bold truncate">
-                        📍 {parsed.area}, {parsed.city}
+                        📍 {parsed.area && parsed.city && parsed.area !== parsed.city ? `${parsed.area}, ${parsed.city}` : parsed.area || parsed.city || 'Food Spot'}
                       </p>
                     </div>
                   </div>
@@ -545,6 +593,14 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                 </button>
               );
             })()}
+
+            {/* Header for nearby results when search query is empty */}
+            {!searchQuery.trim() && coords && searchResults.length > 0 && (
+              <div className="px-2.5 py-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100">
+                <Navigation className="w-3 h-3 text-[#1D4ED8]" />
+                <span>Nearby Restaurants</span>
+              </div>
+            )}
 
             {/* List of matching search results */}
             {searchResults.length > 0 ? (
@@ -602,7 +658,7 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
               })
             ) : (
               <div className="p-3 text-center text-xs text-slate-500">
-                {isSearching ? 'Searching live restaurants...' : 'Type name or select from nearby list'}
+                {isSearching ? 'Searching live restaurants...' : coords ? 'Type name or select from nearby list' : 'Type restaurant name to search'}
               </div>
             )}
           </div>

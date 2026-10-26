@@ -25,35 +25,26 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = (searchParams.get('q') || searchParams.get('query') || '').trim();
     const city = (searchParams.get('city') || '').trim();
-    let lat = parseFloat(searchParams.get('lat') || searchParams.get('latitude') || '');
-    let lng = parseFloat(searchParams.get('lng') || searchParams.get('longitude') || '');
-    let hasUserCoords = !isNaN(lat) && !isNaN(lng);
+    const latParam = parseFloat(searchParams.get('lat') || searchParams.get('latitude') || '');
+    const lngParam = parseFloat(searchParams.get('lng') || searchParams.get('longitude') || '');
+    const hasExplicitCoords = !isNaN(latParam) && !isNaN(lngParam);
 
-    // Resolve the user's position: explicit coords -> selected city centre -> IP geolocation
-    const cityKey = city.toLowerCase();
-    const gazetteerMatch = cityKey ? (CITY_COORDINATES[cityKey] || lookupGazetteer(cityKey)) : null;
-    if (!hasUserCoords && gazetteerMatch) {
-      lat = gazetteerMatch.lat;
-      lng = gazetteerMatch.lng;
-      hasUserCoords = true;
-    } else if (!hasUserCoords) {
-      const forwarded = request.headers.get('x-forwarded-for');
-      const realIp = request.headers.get('x-real-ip');
-      const cfIp = request.headers.get('cf-connecting-ip');
-      const clientIp = (cfIp || forwarded?.split(',')[0] || realIp || '').trim();
-      const ipGeo = await fetchLocationFromIP(clientIp);
-      if (ipGeo) {
-        lat = ipGeo.lat;
-        lng = ipGeo.lng;
-        hasUserCoords = true;
-      }
-    }
+    const userCoords = hasExplicitCoords ? { lat: latParam, lng: lngParam } : null;
 
-    const userCoords = hasUserCoords ? { lat, lng } : null;
-
-    // 1. No query -> closest verified restaurants to the user
+    // 1. No query -> closest verified restaurants to the user ONLY if explicit coordinates were provided
     if (!query) {
-      const nearby = userCoords ? await fetchVerifiedNearbyRestaurants(lat, lng, 5) : [];
+      if (!hasExplicitCoords) {
+        return NextResponse.json({
+          success: true,
+          count: 0,
+          isLiveAPI: true,
+          verification: 'multi_source_verified',
+          userCoords: null,
+          data: []
+        });
+      }
+
+      const nearby = await fetchVerifiedNearbyRestaurants(latParam, lngParam, 5);
       return NextResponse.json({
         success: true,
         count: nearby.length,

@@ -211,25 +211,34 @@ export async function GET(request: Request) {
   const requestedCity = searchParams.get('city') || '';
 
   const hasGPS = !isNaN(userLat) && !isNaN(userLng);
-  
-  // Extract client IP address from headers
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIp = request.headers.get('x-real-ip');
-  const cfIp = request.headers.get('cf-connecting-ip');
-  const clientIp = (cfIp || forwarded?.split(',')[0] || realIp || '').trim();
+
+  // If user has not allowed GPS location and has not explicitly selected a city, do not infer or default to Pune
+  if (!hasGPS && !requestedCity) {
+    return NextResponse.json({
+      success: true,
+      detectionSource: 'none',
+      hasGPS: false,
+      hasCoords: false,
+      userCoords: null,
+      detectedCity: null,
+      detectedArea: null,
+      preciseSublocality: null,
+      locationDisplay: '',
+      areas: [],
+      supportedCities: POPULAR_CITIES
+    });
+  }
 
   let effectiveLat = userLat;
   let effectiveLng = userLng;
-  let detectionSource: 'gps' | 'ip' | 'default' = hasGPS ? 'gps' : 'default';
-  let ipGeoInfo: Awaited<ReturnType<typeof fetchLocationFromIP>> = null;
+  let detectionSource: 'gps' | 'city' = hasGPS ? 'gps' : 'city';
 
-  // 1. If GPS is absent, fetch location via IP address
-  if (!hasGPS) {
-    ipGeoInfo = await fetchLocationFromIP(clientIp);
-    if (ipGeoInfo) {
-      effectiveLat = ipGeoInfo.lat;
-      effectiveLng = ipGeoInfo.lng;
-      detectionSource = 'ip';
+  // If GPS is absent but user requested a city, resolve city coordinates
+  if (!hasGPS && requestedCity) {
+    const matchedCity = matchCityByName(requestedCity) || POPULAR_CITIES.find(c => c.name.toLowerCase() === requestedCity.toLowerCase());
+    if (matchedCity) {
+      effectiveLat = matchedCity.latitude;
+      effectiveLng = matchedCity.longitude;
     }
   }
 
@@ -290,22 +299,20 @@ export async function GET(request: Request) {
       }
     }
 
-    // Step B: If proximity didn't match, check aliases of returned city/sublocality/state or IP city
+    // Step B: If proximity didn't match, check aliases of returned city/sublocality/state
     if (!detectedCity) {
       const aliasMatch = 
         matchCityByName(geoInfo?.sublocality) || 
         matchCityByName(geoInfo?.city) || 
-        matchCityByName(ipGeoInfo?.city) ||
-        matchCityByName(geoInfo?.state) ||
-        matchCityByName(ipGeoInfo?.state);
+        matchCityByName(geoInfo?.state);
 
       if (aliasMatch) {
         detectedCity = aliasMatch;
-      } else if (geoInfo?.city || ipGeoInfo?.city) {
-        const cName = geoInfo?.city || ipGeoInfo?.city || 'Local Area';
+      } else if (geoInfo?.city) {
+        const cName = geoInfo?.city || 'Local Area';
         detectedCity = {
           name: cName,
-          state: geoInfo?.state || ipGeoInfo?.state || 'India',
+          state: geoInfo?.state || 'India',
           latitude: effectiveLat,
           longitude: effectiveLng,
           popularSpots: 20,
@@ -333,9 +340,16 @@ export async function GET(request: Request) {
     if (match) detectedCity = match;
   }
 
-  // 3. Fallback to default Pune if still unresolved
+  // 3. Fallback if still unresolved
   if (!detectedCity) {
-    detectedCity = POPULAR_CITIES[0];
+    detectedCity = {
+      name: requestedCity || 'Local Area',
+      state: 'India',
+      latitude: effectiveLat,
+      longitude: effectiveLng,
+      popularSpots: 10,
+      description: 'Local Area'
+    };
   }
 
   // Clean sublocality if it matches the city name
@@ -418,7 +432,7 @@ export async function GET(request: Request) {
     detectionSource,
     hasGPS,
     hasCoords,
-    userCoords: hasCoords ? { lat: effectiveLat, lng: effectiveLng } : { lat: detectedCity.latitude, lng: detectedCity.longitude },
+    userCoords: hasCoords ? { lat: effectiveLat, lng: effectiveLng } : null,
     detectedCity,
     detectedArea,
     preciseSublocality,

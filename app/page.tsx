@@ -31,7 +31,7 @@ export default function CampaignPage() {
   const [currentFrame, setCurrentFrame] = useState<FrameNumber>(1);
   const [hasMounted, setHasMounted] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string>('');
-  const [selectedCity, setSelectedCity] = useState<string>('Pune');
+  const [selectedCity, setSelectedCity] = useState<string>('');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [selectedDish, setSelectedDish] = useState<Dish | { name: string; id?: number; price?: number; image?: string; description?: string } | null>(null);
@@ -108,27 +108,11 @@ export default function CampaignPage() {
     preloadUpcomingFrameMedia(currentFrame);
   }, [currentFrame]);
 
-  // Instant Location Detection via IP address + GPS refinement on app mount
+  // Location Detection: ONLY if user explicitly allows location access
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Immediately fetch location via IP address (Fast, no permissions required)
-    fetch('/api/location')
-      .then(r => r.json())
-      .then(data => {
-        if (!isMounted) return;
-        if (data.success) {
-          if (data.detectedCity?.name) {
-            setSelectedCity(data.detectedCity.name);
-          }
-          if (data.userCoords?.lat && data.userCoords?.lng) {
-            setUserCoords({ lat: data.userCoords.lat, lng: data.userCoords.lng });
-          }
-        }
-      })
-      .catch(() => {});
-
-    // 2. High-precision GPS refinement if granted by user (with WiFi triangulation fallback)
+    // High-precision GPS refinement if granted by user (with WiFi triangulation fallback)
     const handleGpsSuccess = async (pos: GeolocationPosition) => {
       if (!isMounted) return;
       const lat = pos.coords.latitude;
@@ -150,8 +134,10 @@ export default function CampaignPage() {
           // If high accuracy GPS times out or fails (e.g. on laptops/desktops), fallback immediately to standard network/WiFi location
           navigator.geolocation.getCurrentPosition(
             handleGpsSuccess,
-            () => {},
-            { timeout: 10000, enableHighAccuracy: false, maximumAge: 60000 }
+            () => {
+              // Location access not granted/allowed by user: keep coords null and city unset
+            },
+            { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
           );
         },
         { timeout: 6000, enableHighAccuracy: true, maximumAge: 30000 }
@@ -303,9 +289,9 @@ export default function CampaignPage() {
           restaurant_name: selectedRestaurant?.name || 'Local Food Spot',
           dish_id: (finalDish as { id?: number })?.id || 1,
           dish_name: finalDish.name,
-          city: selectedRestaurant?.city || selectedCity || 'Pune',
-          latitude: selectedRestaurant?.latitude || userCoords?.lat || 18.5204,
-          longitude: selectedRestaurant?.longitude || userCoords?.lng || 73.8407,
+          city: selectedRestaurant?.city || selectedCity || 'Local',
+          latitude: selectedRestaurant?.latitude ?? userCoords?.lat ?? null,
+          longitude: selectedRestaurant?.longitude ?? userCoords?.lng ?? null,
           round_number: feastingStage === 2 ? 2 : 1
         })
       });
@@ -601,9 +587,9 @@ export default function CampaignPage() {
           restaurant_name: selectedRestaurant?.name || 'Local Restaurant',
           dish_id: (selectedDish as { id?: number })?.id || null,
           dish_name: selectedDish?.name || 'Signature Food',
-          city: selectedRestaurant?.city || selectedCity || 'Pune',
-          latitude: selectedRestaurant?.latitude || userCoords?.lat || 18.5204,
-          longitude: selectedRestaurant?.longitude || userCoords?.lng || 73.8407,
+          city: selectedRestaurant?.city || selectedCity || 'Local',
+          latitude: selectedRestaurant?.latitude ?? userCoords?.lat ?? null,
+          longitude: selectedRestaurant?.longitude ?? userCoords?.lng ?? null,
           round_number: feastingStage === 2 ? 2 : 1
         })
       });
@@ -1075,7 +1061,7 @@ export default function CampaignPage() {
               {/* Frame 10: Shukriya Dost / Map Par Dekho (Matching User Mockup 2) */}
               {currentFrame === 10 && (
                 <Frame10Submitted
-                  restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: selectedCity || 'Pune' }}
+                  restaurant={selectedRestaurant || { id: 1, name: 'Local Restaurant', city: selectedCity || 'Local' }}
                   dish={selectedDish || { name: 'Signature Food' }}
                   onViewMap={handleViewMap}
                 />
