@@ -328,55 +328,60 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
       let userMarkerInstance: any = null;
       const userSpots = points.filter(p => p.isCurrentUserSpot);
 
+      // Track rendered coordinates to prevent complete visual stacking of close markers
+      const renderedCoords: Array<{ lat: number; lng: number }> = [];
+
       points.forEach((point) => {
         const isCurrent = Boolean(point.isCurrentUserSpot);
         const pointLat = point.latitude;
         const pointLng = point.longitude;
 
         if (isCurrent) {
+          // Track blue marker coords
+          renderedCoords.push({ lat: pointLat, lng: pointLng });
+
           // BLUE PIN: Current User's Visited Spot with clear Floating Name Label & Glowing Halo
-          const stopTitle = point.stopNumber ? `Stop ${point.stopNumber}` : 'Aapka Spot';
-          const pinBadgeText = point.stopNumber ? `${point.stopNumber}` : `${point.total_visits || 1}`;
           const cleanDisplayName = point.name.length > 22 ? point.name.slice(0, 20) + '...' : point.name;
 
+          // Note: Clean teardrop pin [34, 42] with crisp white center dot (no numbers).
+          // The floating label badge and pulsing ring have pointer-events: none so they never intercept clicks.
           const blueIcon = L.divIcon({
             className: 'custom-user-blue-pin',
             html: `
-              <div style="position: absolute; left: 0; bottom: 0; transform: translate(-50%, 0); display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer; user-select: none;">
-                <!-- High-visibility Floating Blue Name Badge Label -->
-                <div style="background: #1D4ED8; color: #FFFFFF; font-size: 10px; font-weight: 900; padding: 2.5px 8px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(29,78,216,0.5); white-space: nowrap; margin-bottom: 2px; border: 1.5px solid #FFFFFF; letter-spacing: 0.2px; display: flex; align-items: center; gap: 4px; pointer-events: none;">
-                  <span style="color: #93C5FD; font-size: 9px; text-transform: uppercase;">${stopTitle}</span>
+              <div style="position: relative; width: 34px; height: 42px; pointer-events: none; user-select: none;">
+                <!-- Floating Blue Name Badge: pointer-events strictly none so neighboring pins can be clicked freely -->
+                <div style="position: absolute; bottom: 45px; left: 50%; transform: translateX(-50%); background: #1D4ED8; color: #FFFFFF; font-size: 10px; font-weight: 900; padding: 2.5px 8px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(29,78,216,0.45); white-space: nowrap; border: 1.5px solid #FFFFFF; letter-spacing: 0.2px; display: flex; align-items: center; gap: 4px; pointer-events: none; z-index: 20;">
+                  <span style="color: #93C5FD; font-size: 9px; text-transform: uppercase;">Aapka Spot</span>
                   <span style="color: #FFFFFF;">${cleanDisplayName}</span>
                 </div>
-                <!-- Teardrop Pin Marker: Solid Royal Blue (#1D4ED8) with white center disc -->
-                <div style="position: relative; width: 34px; height: 42px; display: flex; align-items: center; justify-content: center;">
-                  <!-- Pulsing blue halo ring -->
-                  <div style="position: absolute; top: 0; left: 0; width: 34px; height: 34px; border-radius: 50%; background-color: rgba(29,78,216,0.45); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-                  <svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 10px rgba(29,78,216,0.6)); display: block;">
+                <!-- Pulsing blue halo ring (pointer-events none) -->
+                <div style="position: absolute; top: 0; left: 0; width: 34px; height: 34px; border-radius: 50%; background-color: rgba(29,78,216,0.35); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; pointer-events: none;"></div>
+                <!-- Teardrop Pin Marker: Solid Royal Blue (#1D4ED8) with clean white center disc (No numbers) -->
+                <div style="position: relative; width: 34px; height: 42px; pointer-events: auto; cursor: pointer;">
+                  <svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 10px rgba(29,78,216,0.5)); display: block;">
                     <path d="M17 42C17 42 32 26 32 15C32 6.71573 25.2843 0 17 0C8.71573 0 2 6.71573 2 15C2 26 17 42 17 42Z" fill="#1D4ED8" stroke="#FFFFFF" stroke-width="2.2"/>
-                    <circle cx="17" cy="15" r="7.5" fill="#FFFFFF"/>
+                    <circle cx="17" cy="15" r="5.5" fill="#FFFFFF"/>
                   </svg>
-                  <div style="position: absolute; top: 6px; left: 0; width: 34px; display: flex; align-items: center; justify-content: center; pointer-events: none;">
-                    <span style="font-size: 11px; font-weight: 900; color: #1D4ED8; line-height: 1;">${pinBadgeText}</span>
-                  </div>
                 </div>
               </div>
             `,
-            iconSize: [0, 0],
-            iconAnchor: [0, 0],
+            iconSize: [34, 42],
+            iconAnchor: [17, 42],
             popupAnchor: [0, -48]
           });
 
           const marker = L.marker([point.latitude, point.longitude], {
             icon: blueIcon,
-            zIndexOffset: 10000
+            zIndexOffset: 300,
+            riseOnHover: true,
+            riseOffset: 5000
           });
 
           marker.bindPopup(`
             <div style="font-family: inherit; padding: 4px 6px; min-width: 150px; text-align: left;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 6px;">
                 <span style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1D4ED8; background: #DBEAFE; padding: 1px 6px; border-radius: 4px;">
-                  Aapka Visited Spot ${point.stopNumber ? `(Stop ${point.stopNumber})` : ''}
+                  Aapka Visited Spot
                 </span>
                 <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 900; color: #1D4ED8; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 1px 6px; border-radius: 9999px;">
                   👥 ${point.total_visits} ${point.total_visits === 1 ? 'Visit' : 'Visits'}
@@ -410,43 +415,67 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           marker.on('click', () => {
             setActivePoint(point);
             if (onSelectPoint) onSelectPoint(point);
+            marker.setZIndexOffset(6000);
+
+            // If zoomed out, smoothly fly into location so all nearby food spots disperse cleanly
+            if (map.getZoom() < 11) {
+              map.flyTo([point.latitude, point.longitude], 12, { duration: 0.8 });
+              map.once('moveend', () => {
+                marker.openPopup();
+              });
+            } else {
+              marker.openPopup();
+            }
+          });
+
+          marker.on('popupclose', () => {
+            marker.setZIndexOffset(300);
           });
 
           marker.addTo(markersLayer);
           userMarkerInstance = marker;
         } else {
           // RED PIN: Other Visited Spots from database
-          // Skip red marker if practically overlapping with any user blue spot to avoid duplicate clutter underneath
-          const isOverlappingUser = userSpots.some(u =>
-            Math.abs(u.latitude - pointLat) < 0.003 &&
-            Math.abs(u.longitude - pointLng) < 0.003
+          // Skip red marker only if it is the EXACT same restaurant or exact same coordinates as the user's blue spot
+          const isSameUserRestaurant = userSpots.some(u =>
+            u.name.trim().toLowerCase() === point.name.trim().toLowerCase() ||
+            (Math.abs(u.latitude - pointLat) < 0.0003 && Math.abs(u.longitude - pointLng) < 0.0003)
           );
-          if (isOverlappingUser) return;
+          if (isSameUserRestaurant) return;
+
+          // Prevent exact pixel overlapping with existing pins by applying a subtle micro-offset
+          let displayLat = pointLat;
+          let displayLng = pointLng;
+          const hasNearCollision = renderedCoords.some(c =>
+            Math.abs(c.lat - displayLat) < 0.0004 && Math.abs(c.lng - displayLng) < 0.0004
+          );
+          if (hasNearCollision) {
+            displayLat += 0.00035;
+            displayLng += 0.00035;
+          }
+          renderedCoords.push({ lat: displayLat, lng: displayLng });
 
           const redIcon = L.divIcon({
             className: 'custom-existing-red-pin',
             html: `
-              <div style="position: absolute; left: 0; bottom: 0; transform: translate(-50%, 0); display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer; user-select: none;">
-                <!-- Teardrop Pin Marker: Solid Crimson Red (#DC2626) with white center disc -->
-                <div style="position: relative; width: 24px; height: 30px; display: flex; align-items: center; justify-content: center;">
-                  <svg width="24" height="30" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 5px rgba(220,38,38,0.5)); display: block;">
-                    <path d="M12 30C12 30 23 18.5 23 11C23 4.92487 18.0751 0 12 0C5.92487 0 1 4.92487 1 11C1 18.5 12 30 12 30Z" fill="#DC2626" stroke="#FFFFFF" stroke-width="1.8"/>
-                    <circle cx="12" cy="11" r="5" fill="#FFFFFF"/>
-                  </svg>
-                  <div style="position: absolute; top: 4.5px; left: 0; width: 24px; display: flex; align-items: center; justify-content: center; pointer-events: none;">
-                    <span style="font-size: 8.5px; font-weight: 900; color: #DC2626; line-height: 1;">${point.total_visits}</span>
-                  </div>
-                </div>
+              <div style="position: relative; width: 24px; height: 30px; pointer-events: auto; cursor: pointer; user-select: none;">
+                <!-- Teardrop Pin Marker: Solid Crimson Red (#DC2626) with clean white center disc (No numbers) -->
+                <svg width="24" height="30" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 5px rgba(220,38,38,0.45)); display: block;">
+                  <path d="M12 30C12 30 23 18.5 23 11C23 4.92487 18.0751 0 12 0C5.92487 0 1 4.92487 1 11C1 18.5 12 30 12 30Z" fill="#DC2626" stroke="#FFFFFF" stroke-width="1.8"/>
+                  <circle cx="12" cy="11" r="4.2" fill="#FFFFFF"/>
+                </svg>
               </div>
             `,
-            iconSize: [0, 0],
-            iconAnchor: [0, 0],
+            iconSize: [24, 30],
+            iconAnchor: [12, 30],
             popupAnchor: [0, -34]
           });
 
-          const marker = L.marker([pointLat, pointLng], {
+          const marker = L.marker([displayLat, displayLng], {
             icon: redIcon,
-            zIndexOffset: 100
+            zIndexOffset: 150,
+            riseOnHover: true,
+            riseOffset: 5000
           });
 
           marker.bindPopup(`
@@ -474,6 +503,21 @@ export const InteractiveTourMap: React.FC<InteractiveTourMapProps> = ({
           marker.on('click', () => {
             setActivePoint(point);
             if (onSelectPoint) onSelectPoint(point);
+            marker.setZIndexOffset(6000);
+
+            // If zoomed out, smoothly fly into location so all nearby food spots disperse cleanly
+            if (map.getZoom() < 11) {
+              map.flyTo([displayLat, displayLng], 12, { duration: 0.8 });
+              map.once('moveend', () => {
+                marker.openPopup();
+              });
+            } else {
+              marker.openPopup();
+            }
+          });
+
+          marker.on('popupclose', () => {
+            marker.setZIndexOffset(150);
           });
 
           marker.addTo(markersLayer);

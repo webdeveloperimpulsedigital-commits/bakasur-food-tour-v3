@@ -477,31 +477,37 @@ export const Frame2RestaurantSearch: React.FC<Frame2RestaurantSearchProps> = ({
                           {spot.name}
                         </p>
                         {(() => {
-                          const isPlaceholder = (val?: string) => !val || ['area', 'city', 'local', 'unknown', 'null', 'undefined'].includes(val.toLowerCase().trim());
-                          const cleanArea = !isPlaceholder(spot.area) ? spot.area!.trim() : '';
-                          const cleanCity = !isPlaceholder(spot.city) ? spot.city!.trim() : '';
-                          const hasLocation = Boolean(cleanArea || cleanCity);
+                          const isPlaceholder = (val?: string) =>
+                            !val || ['area', 'city', 'local', 'unknown', 'null', 'undefined', ''].includes(val.toLowerCase().trim());
+                          let cleanArea = !isPlaceholder(spot.area) ? spot.area!.trim() : '';
+                          let cleanCity = !isPlaceholder(spot.city) ? spot.city!.trim() : '';
+
+                          // If location fields are empty, extract from address
+                          if (!cleanArea && !cleanCity && spot.address) {
+                            const addrParts = spot.address.split(',').map(s => s.trim()).filter(Boolean);
+                            if (addrParts.length > 1) {
+                              cleanCity = addrParts[addrParts.length - 1];
+                              cleanArea = addrParts[addrParts.length - 2];
+                            } else if (addrParts.length === 1 && addrParts[0] !== spot.name) {
+                              cleanCity = addrParts[0];
+                            }
+                          }
+
+                          if (!cleanCity && !cleanArea) {
+                            cleanCity = selectedCity || locationLabel || 'India';
+                          }
+
                           const primaryLoc = cleanArea || cleanCity;
                           const secondaryLoc = cleanCity && cleanCity !== cleanArea ? cleanCity : '';
-                          const rawCuisine = (spot as unknown as { cuisine?: string[] })?.cuisine;
-                          const cuisineTag = (Array.isArray(spot.cuisine_tags) && spot.cuisine_tags[0]) ||
-                                             (Array.isArray(rawCuisine) && rawCuisine[0]) ||
-                                             (spot.is_veg === 1 ? 'Pure Veg' : 'Food Spot');
 
                           return (
                             <p className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
-                              {hasLocation ? (
+                              <span className="text-[#1D4ED8] font-semibold">{primaryLoc}</span>
+                              {secondaryLoc && (
                                 <>
-                                  <span className="text-[#1D4ED8] font-semibold">{primaryLoc}</span>
-                                  {secondaryLoc && (
-                                    <>
-                                      <span className="text-slate-300">•</span>
-                                      <span>{secondaryLoc}</span>
-                                    </>
-                                  )}
+                                  <span className="text-slate-300">•</span>
+                                  <span>{secondaryLoc}</span>
                                 </>
-                              ) : (
-                                <span className="text-[#1D4ED8] font-semibold">{cuisineTag}</span>
                               )}
                             </p>
                           );

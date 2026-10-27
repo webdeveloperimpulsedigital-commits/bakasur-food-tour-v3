@@ -610,6 +610,7 @@ async function searchLiveSwiggySuggestions(
 
     for (const item of suggestions) {
       if (item.type !== 'RESTAURANT' && !item.tagToDisplay?.toLowerCase().includes('restaurant')) continue;
+      if (item.suggestionType === 'SUGGESTION_TYPE_LOW_CONFIDENCE') continue;
       const rawName = String(item.text || '').trim();
       if (!rawName || rawName.length < 2) continue;
 
@@ -635,8 +636,24 @@ async function searchLiveSwiggySuggestions(
       const subParts = subTitleStr ? subTitleStr.split(',').map((s: string) => s.trim()) : [];
       const itemArea = (d.areaName as string) || (d.locality as string) || (subParts.length > 1 ? subParts[0] : (subParts[0] || resolvedArea));
       const itemCity = (d.city as string) || (subParts.length > 1 ? subParts[subParts.length - 1] : (resolvedCity || resolvedArea));
-      const finalArea = itemArea || resolvedArea;
-      const finalCity = itemCity || resolvedCity;
+      let finalArea = itemArea || resolvedArea;
+      let finalCity = itemCity || resolvedCity;
+
+      if (!finalCity) {
+        if (targetLoc?.city) {
+          finalCity = targetLoc.city;
+        } else {
+          for (const hubName of MAJOR_SEARCH_HUBS) {
+            const hub = getHubCoordinates(hubName);
+            if (hub && haversineKm(lat, lng, hub.lat, hub.lng) <= 35) {
+              finalCity = hub.label;
+              break;
+            }
+          }
+        }
+      }
+      if (!finalCity) finalCity = 'India';
+      if (!finalArea) finalArea = finalCity;
 
       // Cross-reference with iconic Zomato restaurants to automatically attach Zomato URL
       const normRaw = rawName.toLowerCase();
